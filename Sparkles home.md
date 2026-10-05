@@ -11,6 +11,8 @@ Diamond research and dated evaluations in the dedicated Sparkles repository. Eac
 
 ## Research
 
+- [[resources/IGI-LG811638512/Sparkles IGI-LG811638512 research|IGI LG811638512 — 2.60 ct E/VVS1 Asscher]] — Pass 2 partial; 15 original motion frames and animated preview saved; £725 inc. VAT snapshot preserved.
+
 - [[resources/IGI-LG756520111/Sparkles IGI-LG756520111 research|IGI LG756520111 — 2.59 ct F/VVS1 Asscher]] — Pass 2 partial; inspected PDF, photograph, 16 curated motion originals and retailer SVG diagrams saved; ASET pending.
 
 - [[resources/IGI-LG756580087/Sparkles IGI-LG756580087 research|IGI LG756580087 — 2.52 ct D/VVS1 Asscher]] — Pass 2 partial; report/still plus 16 original transition/profile frames saved from verified 256-frame recovery; ASET unresolved.

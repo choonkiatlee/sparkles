@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "certificate_key": "IGI-LG811638512",
+  "original_listing": {
+    "listing_url": "https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/247D4B367",
+    "retailer": "Quality Diamonds",
+    "sku": "133/247D4B367",
+    "observed_at": "2026-10-05T08:41:25.165513+00:00",
+    "price_amount": 725,
+    "currency": "GBP",
+    "displayed_price_text": "\u00a3725.00",
+    "tax_basis": "including VAT; \u00a3604.17 ex. VAT displayed",
+    "price_basis": "loose stone",
+    "availability": "offered for selection; inventory not independently confirmed",
+    "price_source_url": "https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/247D4B367",
+    "evidence_path": "artifacts/IGI-LG811638512-listing-excerpt.html",
+    "status": "captured",
+    "notes": "First observed during this research, not historical launch price."
+  },
+  "subsequent_observations": []
+}
