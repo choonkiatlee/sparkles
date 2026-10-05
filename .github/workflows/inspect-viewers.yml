@@ -9,20 +9,36 @@ jobs:
     steps:
       - uses: actions/setup-python@v5
         with: {python-version: "3.11"}
-      - name: Inspect Diajewel CryptoJS logic
+      - name: Decode Diajewel ordering metadata
         run: |
           python - <<'PY'
-          import urllib.request,re
-          u='https://vision.diajewel360.com/js/vision360.js'
-          req=urllib.request.Request(u,headers={'User-Agent':'Mozilla/5.0'})
-          js=urllib.request.urlopen(req,timeout=60).read().decode('utf-8','replace')
-          print('len',len(js))
-          for term in ['CryptoJS','scramble','AES','decrypt','Utf8','Pkcs7','CBC']:
-              print('\nTERM',term)
-              start=0; count=0
-              while True:
-                  i=js.find(term,start)
-                  if i<0 or count>=8: break
-                  print('INDEX',i,repr(js[max(0,i-1800):i+4200]))
-                  start=i+len(term); count+=1
+          import ast,json,re,subprocess,urllib.request
+          def get(u):
+              req=urllib.request.Request(u,headers={'User-Agent':'Mozilla/5.0'})
+              return urllib.request.urlopen(req,timeout=60).read()
+          js=get('https://vision.diajewel360.com/js/vision360.js').decode('utf-8','replace')
+          m=re.search(r'var\s+_0xb946\s*=\s*(\[.*?\]);',js,re.S)
+          print('table found',bool(m))
+          arr=ast.literal_eval(m.group(1))
+          print('table len',len(arr))
+          for idx in [292,328,329,330,331,332,333,334,335,336,337,338,339,340,341]:
+              print(idx,repr(arr[idx]))
+          key=arr[332].encode()
+          print('key',len(key),key)
+          metas={
+            'ref':'https://vision.diajewel360.com/imaged/VL-131355/0.json',
+            '818':'https://vision.diajewel360.com/imaged/PD-230293/0.json',
+            '836':'https://vision.diajewel360.com/imaged/PD-249203/0.json',
+          }
+          for name,u in metas.items():
+              meta=json.loads(get(u)); scramble=meta['scramble']
+              p=subprocess.run(['openssl','enc','-d','-aes-128-cbc','-K',key.hex(),'-iv',key.hex(),'-base64','-A'],
+                               input=scramble.encode(),stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+              print('\n',name,'rc',p.returncode,'stderr',p.stderr.decode())
+              print('plain',repr(p.stdout[:5000]))
+              try:
+                  x=json.loads(p.stdout)
+                  print('shape type',type(x).__name__,'len',len(x))
+                  print('first',repr(x[0])[:5000] if isinstance(x,list) and x else repr(x)[:5000])
+              except Exception as e: print('json error',e)
           PY
