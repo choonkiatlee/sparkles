@@ -9,40 +9,35 @@ jobs:
     steps:
       - uses: actions/setup-python@v5
         with: {python-version: "3.11"}
-      - name: Inspect metadata and player ordering logic
+      - name: Decode ordering metadata
         run: |
           python - <<'PY'
-          import json,re,urllib.request
+          import ast,base64,json,re,subprocess,urllib.request
           def get(u):
               req=urllib.request.Request(u,headers={'User-Agent':'Mozilla/5.0'})
               return urllib.request.urlopen(req,timeout=60).read()
+          js=get('https://vision.diajewel360.com/js/vision360.js').decode('utf-8','replace')
+          m=re.search(r'var _0x18db=(\[.*?\]);',js)
+          print('table found',bool(m))
+          arr=ast.literal_eval(m.group(1))
+          print('table len',len(arr),'431',repr(arr[431]))
+          key=arr[431].encode()
+          print('key bytes',len(key),key)
           metas={
             'ref':'https://vision.diajewel360.com/imaged/VL-131355/0.json',
             '818':'https://vision.diajewel360.com/imaged/PD-230293/0.json',
             '836':'https://vision.diajewel360.com/imaged/PD-249203/0.json',
             '756':'https://data1.360view.link/data/1/imaged/2612250-YK-808/0.json?version=',
           }
-          for k,u in metas.items():
-              print('\n===== META',k,'=====')
-              m=json.loads(get(u))
-              for key,val in m.items():
-                  if key.lower()=='image': continue
-                  text=repr(val)
-                  if len(text)>3000: text=text[:3000]+'...'
-                  print(key,'=',text)
-          scripts=[
-            'https://vision.diajewel360.com/js/vision360.js',
-            'https://workshop.360view.link/360viewer/js/360view.js',
-          ]
-          terms=re.compile(r'version|json|order|shuffle|interleave|reverse|sort|frame|imageData|totalImage|top_index|index',re.I)
-          for u in scripts:
-              print('\n===== SCRIPT',u,'=====')
-              text=get(u).decode('utf-8','replace')
-              print('bytes',len(text))
-              lines=text.splitlines()
-              for i,line in enumerate(lines):
-                  if terms.search(line):
-                      lo=max(0,i-2); hi=min(len(lines),i+3)
-                      print(f'--- {lo+1}-{hi} ---')
-                      print('\n'.join(f'{j+1}: {lines[j]}' for j in range(lo,hi)))
+          for name,u in metas.items():
+              meta=json.loads(get(u)); scramble=meta['scramble']
+              p=subprocess.run(['openssl','enc','-d','-aes-128-cbc','-K',key.hex(),'-iv',key.hex(),'-base64','-A'],
+                               input=scramble.encode(),stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+              print('\n',name,'openssl rc',p.returncode,'stderr',p.stderr.decode())
+              print('plain head',repr(p.stdout[:1000]))
+              try:
+                  x=json.loads(p.stdout)
+                  print('type',type(x).__name__,'len',len(x))
+                  print('structure',repr(x)[:5000])
+              except Exception as e: print('json error',e)
           PY
