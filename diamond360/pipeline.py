@@ -24,6 +24,7 @@ def _run(source, output, order_manifest=None, gain=1.0, diagnostic_indices=None,
     # Validate gain even when every frame fails segmentation.
     represent(np.zeros((1,1,3),np.uint8),np.ones((1,1),bool),np.ones((1,1),bool),gain)
     metadata = ingest(source, order_manifest)
+    metadata['segmentation_acceptance'] = 'ok_or_review' if accept_review else 'ok_only'
     metadata['photometry'] = specification(gain)
     metadata['regions'] = regions.specification()
     output.mkdir(parents=True, exist_ok=True)
