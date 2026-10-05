@@ -52,3 +52,12 @@ def geometry_chart(records, destination):
         for i,r in enumerate(records):
             draw.text((left+i*(right-left)/max(1,len(records)-1)-8,bottom+8),str(r['source_index']),fill='black')
     sheet.save(destination)
+
+
+def region_overlay(rgb, regions, names):
+    colours=np.array([[230,80,60],[60,190,100],[60,120,235],[235,190,50],
+                      [160,80,210],[30,210,210],[230,120,190],[130,170,70]])
+    canvas=np.asarray(rgb).copy()
+    for i,name in enumerate(names):
+        m=regions[name];canvas[m]=(.65*canvas[m]+.35*colours[i]).astype(np.uint8)
+    return Image.fromarray(canvas)

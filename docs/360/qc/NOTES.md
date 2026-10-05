@@ -33,3 +33,10 @@ adjustment. A fixed user-supplied gain (default 1) writes a separate unclipped
 channel and never alters raw channels/RGB. Synthetic bright/dark pulses survive;
 real LG756580087 near-face-up brightness variation remains visible. Chroma range
 is recorded colour variation, not spectral dispersion/fire evidence.
+
+Stage 6: partition overlays inspected on LG756580087 frame 0. Radial bands follow
+a square-like (Chebyshev) coordinate, with centre/inner/middle/outer bounds
+0.20/0.45/0.70 of the fixed half-extent. Quadrants and eight side/corner wedges
+use image axes and intersect the silhouette. Partitions cover each mask exactly,
+with no overlap within a partition family. Wedges are not windmill/facet masks;
+in-plane roll and perspective make them only approximate diamond regions.

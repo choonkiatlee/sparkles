@@ -10,6 +10,8 @@ from .qc import contact_sheet, overlay, geometry_chart
 from .geometry import measure
 from .registration import canonicalise
 from .photometry import represent, specification
+from . import regions
+from .qc import region_overlay
 
 
 def run(source, output, order_manifest=None, gain=1.0):
@@ -21,11 +23,12 @@ def run(source, output, order_manifest=None, gain=1.0):
     represent(np.zeros((1,1,3),np.uint8),np.ones((1,1),bool),np.ones((1,1),bool),gain)
     metadata = ingest(source, order_manifest)
     metadata['photometry'] = specification(gain)
+    metadata['regions'] = regions.specification()
     output.mkdir(parents=True, exist_ok=True)
     (output/'masks').mkdir(exist_ok=True)
-    for folder in ['camera','diamond','photometry']:
+    for folder in ['camera','diamond','photometry','regions']:
         (output/folder).mkdir(exist_ok=True)
-    items,registered = [],[]
+    items,registered,region_items = [],[],[]
     for record in metadata['frames']:
         if record['status'] != 'valid': continue
         rgb = load_rgb(source/record['path'])
@@ -55,11 +58,18 @@ def run(source, output, order_manifest=None, gain=1.0):
             channel_path=f'photometry/{stem}.npz'
             np.savez_compressed(output/channel_path,**channels)
             record['photometry_path']=channel_path
+            spatial=regions.build(normal['mask'],normal['target_extent'])
+            region_path=f'regions/{stem}.npz'
+            np.savez_compressed(output/region_path,**spatial)
+            record['regions_path']=region_path
+            for names,title in [(regions.RADIAL,'radial'),(regions.QUADRANTS,'quadrants'),(regions.SECTORS,'side/corner')]:
+                region_items.append((str(record['source_index'])+' '+title,region_overlay(normal['rgb'],spatial,names)))
             label=str(record['source_index'])
             registered.extend([(label+' camera',Image.fromarray(rgb)),
                                (label+' normalised',Image.fromarray(normal['rgb']))])
         items.append((f'{record["source_index"]} {result["status"]}',overlay(rgb,result['mask'],result['boundary'])))
     contact_sheet(items,output/'segmentation.jpg')
+    if region_items: contact_sheet(region_items,output/'regions.jpg',columns=3)
     if registered: contact_sheet(registered,output/'registration.jpg',columns=4)
     geometry_chart(metadata['frames'],output/'geometry.png')
     (output/'sequence.json').write_text(json.dumps(metadata,indent=2,allow_nan=False)+'\n')
