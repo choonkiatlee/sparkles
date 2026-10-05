@@ -1,0 +1,51 @@
+name: debug faceup acceptance
+on:
+  push:
+    branches: [verify-issue-18-benchmark-v2]
+    paths: [.github/workflows/debug-faceup.yml]
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install -e .
+      - name: Recover audited reference face-up window and inspect segmentation
+        run: |
+          python - <<'PY'
+          import base64,hashlib,json,urllib.request
+          from pathlib import Path
+          ref=json.loads(Path('docs/360/full-sequence/IGI-LG756580087/source-manifest.json').read_text())
+          byidx={f['source_index']:f for f in ref['frames']}
+          ids=list(range(240,256))+list(range(17))
+          root=Path('/tmp/ref'); (root/'frames').mkdir(parents=True)
+          entries=[]
+          cache={}
+          for i in ids:
+              old=byidx[i]; b=old['batch']; pos=old['stored_position']
+              if b not in cache:
+                  u=f'https://vision.diajewel360.com/imaged/VL-131355/{b}.json?version=1'
+                  req=urllib.request.Request(u,headers={'User-Agent':'Mozilla/5.0'})
+                  cache[b]=json.loads(urllib.request.urlopen(req,timeout=60).read())
+              blob=base64.b64decode(cache[b][pos])
+              sha=hashlib.sha256(blob).hexdigest()
+              print(i,'hash-match',sha==old['sha256'],sha,old['sha256'])
+              assert sha==old['sha256']
+              rel=f'frames/frame-{i:03d}.jpg'
+              (root/rel).write_bytes(blob)
+              entries.append({'source_index':i,'path':rel,'sha256':sha})
+          m={'schema_version':'diamond360-source/1','source_frame_count':256,'sequence_complete':False,'frames':entries}
+          (root/'source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+          rm -rf /tmp/ref-out
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from diamond360.pipeline import run
+          root=Path('/tmp/ref')
+          m=run(root,Path('/tmp/ref-out'),root/'source-manifest.json',gain=1.0,diagnostic_indices=list(range(240,256))+list(range(17)))
+          print('valid',m['valid_count'],'accepted',sum('registration' in r for r in m['frames']))
+          for r in m['frames']:
+              print(r['source_index'],r.get('segmentation',{}).get('status'),r.get('segmentation',{}).get('reasons'),bool(r.get('registration')))
+          PY
