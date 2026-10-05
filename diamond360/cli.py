@@ -2,7 +2,7 @@
 import argparse
 import json
 from pathlib import Path
-from .ingestion import ingest
+from .pipeline import run
 
 
 def main():
@@ -15,7 +15,7 @@ def main():
     if source == output or source in output.parents or output in source.parents:
         parser.error('Input and output must be disjoint directories')
     try:
-        metadata = ingest(source, args.order_manifest)
+        metadata = run(source, output, args.order_manifest)
     except (ValueError, OSError) as error:
         parser.error(str(error))
     output.mkdir(parents=True, exist_ok=True)
