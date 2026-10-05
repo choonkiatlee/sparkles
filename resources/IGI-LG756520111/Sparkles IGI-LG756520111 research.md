@@ -6,14 +6,14 @@ aliases: [IGI LG756520111]
 certificate_lab: IGI
 certificate_number: LG756520111
 researched_at: 2026-10-05
-research_pass: 1
+research_pass: 2
 research_status: partial
 last_saved_at: 2026-10-05
 ---
 
 # IGI-LG756520111 research
 
-Working identity: **2.59 ct F VVS1 laboratory-grown Asscher**, reported by IGI as square emerald cut. [Quality Diamonds listing](https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/9155264EA), certificate-bound Nivoda record and inspected supplier-hosted PDF agree on full certificate, origin, shape, weight, colour, clarity and dimensions. Independent IGI verification is deferred by user preference. This first-pass evidence supports reported proportions and a single visual composition; dynamic behaviour and leakage remain unresolved. No optical verdict is assigned.
+Working identity: **2.59 ct F VVS1 laboratory-grown Asscher**, reported by IGI as square emerald cut. [Quality Diamonds listing](https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/9155264EA), certificate-bound Nivoda record and inspected supplier-hosted PDF agree on full certificate, origin, shape, weight, colour, clarity and dimensions. Independent IGI verification is deferred by user preference. This first-pass evidence supports reported proportions and a single visual composition; selected dynamic behaviour is now inspectable; leakage remains unresolved. No optical verdict is assigned.
 
 ## Facts
 
@@ -65,10 +65,26 @@ Provenance discrepancy: Quality Diamonds advertises `top_index=0`; certificate q
 | IGI-LG756520111-loupe-media-record.json | 497 | `e6e8ec4af03fa04e2923967a29f1ea59a98c2202f1d5efc9eb27eb1455beb8f2` |
 | IGI-LG756520111-listing-record.json | 845 | `5b8ec8a963d62cf6795abe715f742098d44765051b252d05584a99e6024e1433` |
 
-## Next pass
+## Pass 2 — motion and retailer diagrams
 
-1. Inspect the exact supplier rotation above and recover useful near-face-up transitions/profile evidence using its supported public route; this workshop viewer is not the Diajewel helper's supported host. Resolve face-up interval visually rather than trusting either top index.
-2. Inspect the linked supplier still/BK/S1/S2 only if they add useful views or optical imagery. Their content is not yet known.
-3. Search exact-stone ASET/Ideal-Scope or complementary lighting. This class is **not searched yet**, rather than searched and absent.
+Recovered and decode-validated **256 unique original JPEG frames, 758 × 598**, from the exact linked Workshop viewer. The public page-linked player establishes `https://data1.360view.link/data/1/imaged/2612250-YK-808/0.json?version=` and batches 1–7 with `?version=2`. Its ordering map uses the same public AES-CBC display constants and inverse-permutation/interleave rule as Diajewel. All source-batch URLs and hashes are preserved in the new manifest. Supplier capture metadata: 26 December 2025, after the 22 December report. Lighting profile and camera metadata do not calibrate light return or angles.
 
-No upload failures anticipated in the prepared bundle; publication must be verified separately. No retailer contact is authorized or attempted.
+The exact Loupe360 certificate query returns this **same Workshop viewer**, not a second independent rotation. Both retailer and Loupe360 routes are therefore one unique motion asset. No further supplier search is needed merely to obtain the same footage.
+
+| New asset | Association / source | Saved / inspected | Use and limit |
+|---|---|---|---|
+| V1 ordered motion originals | Certificate-bound Workshop source above | 256 decoded/validated; overview every 4th frame and selected 16 originals visually inspected; browser playback inspected; 16 originals saved in ZIP | Near-face-up transitions and profile/pavilion-side context; unknown calibrated angles and timing; ordinary imagery cannot diagnose leakage |
+| D1/D2 top/side SVG | Original Quality Diamonds listing, SVG IDs `asscher-top-mm`, `asscher-side-mm` | Original inline SVG elements saved in ZIP | Fixed-coordinate illustrative facet paths with stone-specific measurements/table/depth/girdle text; no scan, individual facet angles, pavilion tier widths or measured P3 geometry. SVG top illustration should not be used to infer actual tier count. |
+| G1 animated preview | Derived from V1 indices [244, 246, 248, 250, 252, 254, 255, 0, 2, 4, 6, 8] | Resized/palette-converted GIF; 220 ms per sample then reverse progression | Convenient near-face-up preview; selected frames only, synthetic timing; use original JPEGs for evaluation |
+
+Selection reading order **[244, 246, 248, 250, 252, 254, 255, 0, 2, 4, 6, 8, 64, 128, 192, 208]**. The first 12 show nearby states on both sides of the face-up boundary; the remaining four show distinct broader orientation/profile context. Includes strongly contrasting and pale states; no cut-quality verdict assigned. The inner side panels remain pale in some sampled views; this is a recorded visual feature, not a leakage finding.
+
+[Pass 2 originals and SVGs](artifacts/IGI-LG756520111-pass2-motion-diagrams.zip) — 411,362 bytes, SHA-256 `1dc56f355f16a13295ce8dc195ada414187220daa3085666398674d1a707a6bb`. [Animated face-up preview](artifacts/IGI-LG756520111-faceup-motion-preview.gif) — 537,328 bytes, SHA-256 `85c634b7f64aa721b9d0d1fc685c0e1114f1491a15741a38c3b5b059ad19d56f`. Combined new binary evidence: 948,690 bytes. ZIP CRC, original frame hashes/dimensions and unique indices verified. Full 256-frame working sequence and raw source batches deliberately excluded from compact publication.
+
+## Next useful evidence
+
+- Exact-stone ASET/Ideal-Scope remains **not searched yet**; current task prioritised requested motion and diagrams.
+- A measured facet scan/wireframe would be needed for actual tier angles/P3 geometry. No such asset is exposed in the inspected listing; available SVGs are illustrations.
+- Supplier BK/S1/S2 photo links remain uninspected; profile context is now available in selected rotation originals.
+
+Independent official IGI verification remains deferred by user preference. No retailer contact attempted.
