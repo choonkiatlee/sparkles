@@ -200,6 +200,12 @@ class ActivationTests(unittest.TestCase):
         self.assertEqual(result["status"], "unavailable")
         self.assertEqual(result["reasons"], ["segmentation_review", "missing_edges"])
 
+    def test_adapter_definitions_are_unique(self):
+        import inspect
+        source = inspect.getsource(a)
+        for name in ("load_coarse_masks", "load_semantic_masks", "activation_validity"):
+            self.assertEqual(source.count(f"def {name}("), 1, name)
+
 
 if __name__ == "__main__":
     unittest.main()
