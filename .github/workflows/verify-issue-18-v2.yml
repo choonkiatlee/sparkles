@@ -1,0 +1,32 @@
+name: verify issue 18 v2
+on:
+  push:
+    branches: [verify-issue-18-benchmark-v2]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: python -m pip install --upgrade pip
+      - run: pip install -e .
+      - run: python -m unittest discover -s tests -v
+      - run: python -m diamond360.benchmark docs/360/benchmark/benchmark.json --output /tmp/sparkles-benchmark
+      - run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          s=json.loads(Path('/tmp/sparkles-benchmark/summary.json').read_text())
+          assert len(s['rows']) == 8
+          statuses={x['certificate']:x['status'] for x in s['stones']}
+          assert statuses['IGI-LG756580087'] == 'measured'
+          assert statuses['IGI-LG756520111'] == 'source_available'
+          assert statuses['IGI-LG818659722'] == 'source_available'
+          assert statuses['IGI-LG836619414'] == 'source_available'
+          assert statuses['IGI-LG811638512'] == 'partial_source'
+          for name in ('summary.csv','metrics.png','sensitivity.png','redundancy.png'):
+              assert (Path('/tmp/sparkles-benchmark')/name).exists()
+          PY
