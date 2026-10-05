@@ -5,7 +5,8 @@ import numpy as np
 from PIL import Image
 from .ingestion import ingest, load_rgb
 from .segmentation import segment
-from .qc import contact_sheet, overlay
+from .qc import contact_sheet, overlay, geometry_chart
+from .geometry import measure
 
 
 def run(source, output, order_manifest=None):
@@ -27,7 +28,10 @@ def run(source, output, order_manifest=None):
         record['segmentation'] = {k:v for k,v in result.items() if k not in ('mask','boundary')}
         record['segmentation']['mask_path'] = mask_path
         record['segmentation']['boundary_path'] = f'masks/{stem}-boundary.png'
+        if result['status'] == 'ok':
+            record['geometry'] = measure(result['mask'])
         items.append((f'{record["source_index"]} {result["status"]}',overlay(rgb,result['mask'],result['boundary'])))
     contact_sheet(items,output/'segmentation.jpg')
+    geometry_chart(metadata['frames'],output/'geometry.png')
     (output/'sequence.json').write_text(json.dumps(metadata,indent=2,allow_nan=False)+'\n')
     return metadata

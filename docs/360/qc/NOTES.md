@@ -11,3 +11,10 @@ to manufacture complete outlines. `segmentation-overview.jpg` includes every fra
 
 Validation data are sparse curated subsets, not uniform or timed full rotations.
 Source hashes and exact source indices are preserved in manifests.
+
+Stage 3: 47 accepted masks measured. LG756580087 centroid changes approximately
+x=349..363, y=355..400 across the selected views; dimensions change with pose.
+PCA is ambiguous for 3/16 frames there, 5/16 on LG836619414 and 4/15 on
+LG811638512. An apparent axis flip is not stone spin: square silhouette moments
+are intrinsically ambiguous. Registration will not use PCA rotation.
+`geometry.png` shows ordered samples with original indices, not elapsed time.
