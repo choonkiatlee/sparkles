@@ -181,7 +181,7 @@ def run(manifest_path,output,source_root=None):
         if not source.is_dir(): stones.append(_stone_status(s,"source_missing",f"expected recovered frames at {source}")); continue
         order_manifest=source_contract(source,s["source_frame_count"])
         target=out/"per-stone"/s["certificate"]; processed=target/"processed"; wide=cyclic_window(s["faceup_center"],m["wide_window"],s["source_frame_count"])
-        preprocess(source,processed,order_manifest=order_manifest,gain=1.0,diagnostic_indices=wide)
+        preprocess(source,processed,order_manifest=order_manifest,gain=1.0,diagnostic_indices=wide,accept_review=True)
         for window,size in (("core",m["core_window"]),("wide",m["wide_window"])):
             indices=cyclic_window(s["faceup_center"],size,s["source_frame_count"]); trace=trace_run(processed,target/window,indices,wrap=any(b<a for a,b in zip(indices,indices[1:])))
             rows+=summarise_trace(trace,s["certificate"],s["source_pipeline"],window)
