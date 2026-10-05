@@ -24,7 +24,7 @@ jobs:
       - name: Recover and validate original sequences
         run: |
           python - <<'PY'
-          import base64, hashlib, io, json, re, time, urllib.request, zipfile
+          import ast,base64,hashlib,io,json,re,subprocess,time,urllib.request,zipfile
           from datetime import datetime, timezone
           from pathlib import Path
           from PIL import Image
@@ -32,13 +32,57 @@ jobs:
           repo=Path.cwd()
           root=Path('/tmp/sources'); root.mkdir()
           reference=json.loads((repo/'docs/360/full-sequence/IGI-LG756580087/source-manifest.json').read_text())
-          order={}
-          for f in reference['frames']:
-              order.setdefault(f['batch'],{})[f['stored_position']]=f['source_index']
-          assert set(order)==set(range(1,8))
-          assert {b:len(m) for b,m in order.items()}=={1:4,2:4,3:8,4:16,5:32,6:64,7:128}
-          for b,m in order.items():
-              assert set(m)==set(range(len(m)))
+
+          def fetch(url):
+              last=None
+              for attempt in range(5):
+                  try:
+                      req=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0'})
+                      return urllib.request.urlopen(req,timeout=60).read()
+                  except Exception as e:
+                      last=e; time.sleep(2*(attempt+1))
+              raise last
+
+          # Derive the public viewer's AES display key from its own current JavaScript.
+          js=fetch('https://vision.diajewel360.com/js/vision360.js').decode('utf-8','replace')
+          table_match=re.search(r'var\s+_0xb946\s*=\s*(\[.*?\]);',js,re.S)
+          assert table_match, 'Diajewel string table not found'
+          table=ast.literal_eval(table_match.group(1))
+          key=table[332].encode()
+          assert len(key)==16
+
+          def permutations(meta):
+              p=subprocess.run(
+                  ['openssl','enc','-d','-aes-128-cbc','-K',key.hex(),'-iv',key.hex(),'-base64','-A'],
+                  input=meta['scramble'].encode(),stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+              if p.returncode:
+                  raise RuntimeError(p.stderr.decode())
+              value=json.loads(p.stdout)
+              expected=[4,4,8,16,32,64,128]
+              assert [len(x) for x in value]==expected
+              for n,perm in zip(expected,value):
+                  assert sorted(perm)==list(range(n))
+              return value
+
+          def ordered_slots(perms):
+              current=[]
+              for batch,perm in enumerate(perms,1):
+                  inverse=[perm.index(i) for i in range(len(perm))]
+                  items=[(batch,stored) for stored in inverse]
+                  if batch==1:
+                      current=items
+                  else:
+                      for i,item in enumerate(items):
+                          current.insert(((i+1)*2)-1,item)
+              assert len(current)==256 and len(set(current))==256
+              return current
+
+          # Guard the reconstructed player algorithm against the audited issue-15 manifest.
+          ref_meta=json.loads(fetch('https://vision.diajewel360.com/imaged/VL-131355/0.json'))
+          ref_slots=ordered_slots(permutations(ref_meta))
+          audited=[(f['batch'],f['stored_position']) for f in sorted(reference['frames'],key=lambda x:x['source_index'])]
+          assert ref_slots==audited, 'player reconstruction does not reproduce issue-15 ordering'
+          print('Reference ordering exactly reproduces audited issue-15 manifest')
 
           configs={
             'IGI-LG756580087': dict(
@@ -58,22 +102,10 @@ jobs:
               archive='resources/IGI-LG756520111/artifacts/IGI-LG756520111-pass2-motion-diagrams.zip'),
           }
 
-          def fetch(url):
-              last=None
-              for attempt in range(5):
-                  try:
-                      req=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0'})
-                      return urllib.request.urlopen(req,timeout=60).read()
-                  except Exception as e:
-                      last=e; time.sleep(2*(attempt+1))
-              raise last
-
           def archived_hashes(path):
               found={}
               if not path: return found
-              zpath=repo/path
-              with zipfile.ZipFile(zpath) as z:
-                  # Prefer explicit JSON manifests.
+              with zipfile.ZipFile(repo/path) as z:
                   for name in z.namelist():
                       if name.lower().endswith('.json'):
                           try: obj=json.loads(z.read(name))
@@ -87,8 +119,8 @@ jobs:
                                   if type(idx) is int and isinstance(sha,str) and re.fullmatch(r'[0-9a-f]{64}',sha):
                                       found[idx]=sha
                                   stack.extend(x.values())
-                              elif isinstance(x,list): stack.extend(x)
-                  # Fallback to image filenames with an explicit 3-digit frame number.
+                              elif isinstance(x,list):
+                                  stack.extend(x)
                   for name in z.namelist():
                       if not re.search(r'\.(jpe?g|png)$',name,re.I): continue
                       m=re.search(r'(?:frame[-_ ]?|[/_-])(\d{3})(?=\D|$)',name,re.I)
@@ -97,34 +129,35 @@ jobs:
               return found
 
           for cert,cfg in configs.items():
-              dest=root/cert; frames=dest/'frames'; frames.mkdir(parents=True)
+              dest=root/cert; frames_dir=dest/'frames'; frames_dir.mkdir(parents=True)
               meta_url=cfg['base']+'0.json'+(('?version=') if cfg['pipeline']=='workshop' else '')
               meta_raw=fetch(meta_url); meta=json.loads(meta_raw)
-              records=[]; all_hashes=set(); dimensions=set(); batches=[]
+              slots=ordered_slots(permutations(meta))
+              batches={}; batch_records=[]
               for b in range(1,8):
                   url=cfg['base']+f'{b}.json?version={cfg["version"]}'
                   raw=fetch(url); values=json.loads(raw)
-                  assert isinstance(values,list), (cert,b,type(values))
-                  assert len(values)==len(order[b]), (cert,b,len(values),len(order[b]))
-                  batches.append(dict(batch=b,url=url,sha256=hashlib.sha256(raw).hexdigest(),count=len(values)))
-                  for stored,value in enumerate(values):
-                      idx=order[b][stored]
-                      blob=base64.b64decode(value,validate=True)
-                      assert blob[:2]==b'\xff\xd8' and blob[-2:]==b'\xff\xd9', (cert,b,stored)
-                      sha=hashlib.sha256(blob).hexdigest()
-                      assert sha not in all_hashes, (cert,'duplicate',idx)
-                      all_hashes.add(sha)
-                      name=f'{cert}-frame-{idx:03d}.jpg'; rel=f'frames/{name}'
-                      (frames/name).write_bytes(blob)
-                      with Image.open(io.BytesIO(blob)) as im:
-                          im.verify()
-                      with Image.open(io.BytesIO(blob)) as im:
-                          dimensions.add(im.size)
-                      records.append(dict(source_index=idx,path=rel,sha256=sha,bytes=len(blob),
-                                          batch=b,stored_position=stored,source_url=url))
-              assert len(records)==256 and {r['source_index'] for r in records}==set(range(256))
-              assert len(dimensions)==1, (cert,dimensions)
-              records.sort(key=lambda r:r['source_index'])
+                  assert isinstance(values,list) and len(values) in (4,8,16,32,64,128)
+                  batches[b]=values
+                  batch_records.append(dict(batch=b,url=url,sha256=hashlib.sha256(raw).hexdigest(),count=len(values)))
+              records=[]; all_hashes=set(); dimensions=set()
+              for idx,(batch,stored) in enumerate(slots):
+                  value=batches[batch][stored]
+                  blob=base64.b64decode(value,validate=True)
+                  assert blob[:2]==b'\xff\xd8' and blob[-2:]==b'\xff\xd9', (cert,batch,stored)
+                  sha=hashlib.sha256(blob).hexdigest()
+                  assert sha not in all_hashes, (cert,'duplicate',idx)
+                  all_hashes.add(sha)
+                  name=f'{cert}-frame-{idx:03d}.jpg'; rel=f'frames/{name}'
+                  (frames_dir/name).write_bytes(blob)
+                  with Image.open(io.BytesIO(blob)) as im:
+                      im.verify()
+                  with Image.open(io.BytesIO(blob)) as im:
+                      dimensions.add(im.size)
+                  records.append(dict(source_index=idx,path=rel,sha256=sha,bytes=len(blob),
+                                      batch=batch,stored_position=stored,
+                                      source_url=cfg['base']+f'{batch}.json?version={cfg["version"]}'))
+              assert len(records)==256 and len(dimensions)==1
               archived=archived_hashes(cfg['archive'])
               verified=[i for i,sha in archived.items() if i<256 and records[i]['sha256']==sha]
               mismatched=[i for i,sha in archived.items() if i<256 and records[i]['sha256']!=sha]
@@ -143,14 +176,14 @@ jobs:
                 source_frame_count=256,
                 sequence_complete=True,
                 dimensions=list(next(iter(dimensions))),
-                ordering='source indices reconstructed from audited issue-15 batch-position map',
-                ordering_reference='docs/360/full-sequence/IGI-LG756580087/source-manifest.json',
-                batches=batches,
+                ordering='viewer scramble inverse permutation, progressive odd-position interleave',
+                ordering_validation='algorithm exactly reproduces audited issue-15 reference mapping; selected archived originals hash-checked where available',
+                batches=batch_records,
                 frames=records,
               )
               (dest/'source-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
               print(cert,'recovered',len(records),'unique JPEGs',next(iter(dimensions)),
-                    'metadata keys',sorted(meta)[:20])
+                    'version',meta.get('version'),'createdDate',meta.get('createdDate'))
           PY
       - name: Run full benchmark
         run: |
@@ -165,8 +198,10 @@ jobs:
           repo=Path.cwd(); source=Path('/tmp/sources'); run=Path('/tmp/benchmark-run')
           bench=repo/'docs/360/benchmark'
           manifest=json.loads((bench/'benchmark.json').read_text())
-          measured={s['certificate'] for s in json.loads((run/'summary.json').read_text())['stones'] if s['status']=='measured'}
-          assert measured=={'IGI-LG756580087','IGI-LG756520111','IGI-LG818659722','IGI-LG836619414'}, measured
+          result=json.loads((run/'summary.json').read_text())
+          measured={s['certificate'] for s in result['stones'] if s['status']=='measured'}
+          expected={'IGI-LG756580087','IGI-LG756520111','IGI-LG818659722','IGI-LG836619414'}
+          assert measured==expected, (measured,expected)
           for stone in manifest['stones']:
               cert=stone['certificate']
               if cert not in measured: continue
