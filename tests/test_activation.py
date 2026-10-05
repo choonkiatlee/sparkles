@@ -119,6 +119,87 @@ class ActivationTests(unittest.TestCase):
         self.assertEqual(unavailable["status"], "unavailable")
         self.assertEqual(unavailable["reasons"], ["upstream_review", "no_support"])
 
+    def test_load_coarse_masks_uses_each_frames_regions(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            first = np.array([[1, 0], [0, 0]], bool)
+            second = np.array([[0, 1], [0, 0]], bool)
+            for i, centre in enumerate((first, second)):
+                np.savez_compressed(root / f"r{i}.npz", centre=centre, inner=~centre, middle=np.zeros_like(centre), outer=np.zeros_like(centre))
+            records = [{"regions_path": "r0.npz"}, {"regions_path": "r1.npz"}]
+            masks = a.load_coarse_masks(root, records)
+            self.assertTrue(np.array_equal(masks["centre"][0], first))
+            self.assertTrue(np.array_equal(masks["centre"][1], second))
+
+    def test_load_semantic_masks_preserves_template_and_frame_qc(self):
+        import json
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (root / "regions").mkdir()
+            centre = np.array([[1, 0], [0, 0]], bool)
+            payload = dict(centre=centre, inner_step=~centre, middle_step=np.zeros_like(centre), outer_step=np.zeros_like(centre))
+            np.savez_compressed(root / "regions" / "0000.npz", **payload)
+            np.savez_compressed(root / "regions" / "0001.npz", **payload)
+            (root / "steps.json").write_text(json.dumps({
+                "template_status": "review",
+                "template_reason": "semantic_window_edge",
+                "frames": [
+                    {"source_index": 0, "position": 0, "status": "ok", "region_path": "regions/0000.npz"},
+                    {"source_index": 1, "position": 1, "status": "review", "region_path": "regions/0001.npz"},
+                ],
+            }))
+            masks, qc = a.load_semantic_masks(root, [{"source_index": 0}, {"source_index": 1}])
+            self.assertEqual(masks["centre"].shape, (2, 2, 2))
+            self.assertEqual(qc["template_status"], "review")
+            self.assertEqual(qc["template_reason"], "semantic_window_edge")
+            self.assertEqual(qc["selected_frame_statuses"], ["ok", "review"])
+
+    def test_load_semantic_masks_unavailable_returns_no_masks(self):
+        import json
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (root / "steps.json").write_text(json.dumps({
+                "template_status": "unavailable",
+                "template_reason": "missing_edges",
+                "frames": [],
+            }))
+            masks, qc = a.load_semantic_masks(root, [{"source_index": 0}])
+            self.assertEqual(masks, {})
+            self.assertEqual(qc["template_status"], "unavailable")
+
+    def test_activation_validity_isolates_semantic_qc(self):
+        upstream = {"status": "ok", "reasons": []}
+        step_qc = {
+            "template_status": "review",
+            "template_reason": "semantic_window_edge",
+            "selected_frame_statuses": ["ok", "review"],
+        }
+        coarse = a.activation_validity("coarse", upstream, step_qc, "ok", [])
+        whole = a.activation_validity("whole_stone", upstream, step_qc, "ok", [])
+        semantic = a.activation_validity("semantic", upstream, step_qc, "ok", [])
+        self.assertEqual(coarse["status"], "ok")
+        self.assertEqual(whole["status"], "ok")
+        self.assertEqual(semantic["status"], "review")
+        self.assertIn("semantic_window_edge", semantic["reasons"])
+        self.assertIn("semantic_frame_review", semantic["reasons"])
+
+    def test_activation_validity_semantic_unavailable_dominates(self):
+        result = a.activation_validity(
+            "semantic",
+            {"status": "review", "reason": "segmentation_review"},
+            {"template_status": "unavailable", "template_reason": "missing_edges", "selected_frame_statuses": []},
+            "ok",
+            [],
+        )
+        self.assertEqual(result["status"], "unavailable")
+        self.assertEqual(result["reasons"], ["segmentation_review", "missing_edges"])
+
 
 if __name__ == "__main__":
     unittest.main()
