@@ -196,7 +196,9 @@ def load_semantic_masks(step_output, selected_records):
     qc = {
         "template_status": template_status,
         "template_reason": payload.get("template_reason"),
+        "boundaries": payload.get("boundaries", {}),
         "selected_frame_statuses": [],
+        "selected_frames": [],
     }
     if template_status == "unavailable":
         return {}, qc
@@ -214,7 +216,13 @@ def load_semantic_masks(step_output, selected_records):
             statuses.append("unavailable")
             continue
         paths.append(step_output / frame["region_path"])
-        statuses.append(frame.get("status", "unavailable"))
+        status = frame.get("status", "unavailable")
+        statuses.append(status)
+        qc["selected_frames"].append({
+            "source_index": record.get("source_index"),
+            "status": status,
+            "boundary_support": frame.get("boundary_support", []),
+        })
     qc["selected_frame_statuses"] = statuses
     return _stack_masks(paths, SEMANTIC_BANDS), qc
 
