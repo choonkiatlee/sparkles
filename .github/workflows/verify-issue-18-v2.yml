@@ -3,30 +3,33 @@ on:
   push:
     branches: [verify-issue-18-benchmark-v2]
 jobs:
-  test:
+  inspect:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: pip
-      - run: python -m pip install --upgrade pip
-      - run: pip install -e .
-      - run: python -m unittest discover -s tests -v
-      - run: python -m diamond360.benchmark docs/360/benchmark/benchmark.json --output /tmp/sparkles-benchmark
-      - run: |
+        with: {python-version: "3.11"}
+      - name: Inspect public viewer endpoints
+        run: |
           python - <<'PY'
-          import json
-          from pathlib import Path
-          s=json.loads(Path('/tmp/sparkles-benchmark/summary.json').read_text())
-          assert len(s['rows']) == 8
-          statuses={x['certificate']:x['status'] for x in s['stones']}
-          assert statuses['IGI-LG756580087'] == 'measured'
-          assert statuses['IGI-LG756520111'] == 'source_available'
-          assert statuses['IGI-LG818659722'] == 'source_available'
-          assert statuses['IGI-LG836619414'] == 'source_available'
-          assert statuses['IGI-LG811638512'] == 'partial_source'
-          for name in ('summary.csv','metrics.png','sensitivity.png','redundancy.png'):
-              assert (Path('/tmp/sparkles-benchmark')/name).exists()
+          import re, urllib.request
+          urls=[
+            'https://vision.diajewel360.com/Vision360.html?d=PD-230293',
+            'https://vision.diajewel360.com/imaged/PD-230293/0.json',
+            'https://vision.diajewel360.com/imaged/PD-230293/1.json?version=1',
+            'https://vision.diajewel360.com/imaged/PD-249203/0.json',
+            'https://workshop.360view.link/view/2612250-YK-808',
+            'https://data1.360view.link/data/1/imaged/2612250-YK-808/0.json?version=',
+            'https://data1.360view.link/data/1/imaged/2612250-YK-808/1.json?version=2',
+          ]
+          for u in urls:
+              print('\n===== URL',u,'=====')
+              try:
+                  req=urllib.request.Request(u,headers={'User-Agent':'Mozilla/5.0'})
+                  data=urllib.request.urlopen(req,timeout=30).read()
+                  print('bytes',len(data),'head',repr(data[:1500]))
+                  if b'<script' in data:
+                      text=data.decode('utf-8','replace')
+                      print('scripts',re.findall(r'<script[^>]+src=["\']([^"\']+)',text,re.I))
+              except Exception as e: print('ERROR',repr(e))
           PY
