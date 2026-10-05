@@ -1,0 +1,94 @@
+{
+  "schema_version": "diamond360-benchmark/1",
+  "core_window": 17,
+  "wide_window": 33,
+  "protocol": {
+    "preprocessing": "diamond360 defaults, fixed gain 1.0; no stone-specific threshold tuning",
+    "regions": [
+      "centre",
+      "inner",
+      "middle",
+      "outer"
+    ],
+    "faceup_policy": "centre fixed from curated source imagery/provenance before benchmark traces are inspected",
+    "temporal_policy": "run/transition statistics require complete ordered consecutive source steps; sparse samples are refused"
+  },
+  "stones": [
+    {
+      "certificate": "IGI-LG756580087",
+      "source_pipeline": "diajewel",
+      "source_status": "complete",
+      "source_frame_count": 256,
+      "available_frame_count": 256,
+      "faceup_center": 0,
+      "viewer": "https://vision.diajewel360.com/Vision360.html?d=VL-131355",
+      "source_provenance": "per-stone/IGI-LG756580087/source-manifest.json",
+      "faceup_basis": "issue #15 reference run; primary interval 248..255,0..8",
+      "trace_files": {
+        "core": "per-stone/IGI-LG756580087/core/traces.json",
+        "wide": "per-stone/IGI-LG756580087/wide/traces.json"
+      },
+      "note": "complete sequence regenerated from public viewer batches and measured by the fixed benchmark protocol"
+    },
+    {
+      "certificate": "IGI-LG756520111",
+      "source_pipeline": "workshop",
+      "source_status": "complete",
+      "source_frame_count": 256,
+      "available_frame_count": 256,
+      "faceup_center": 0,
+      "viewer": "https://workshop.360view.link/view/2612250-YK-808",
+      "source_provenance": "per-stone/IGI-LG756520111/source-manifest.json",
+      "faceup_basis": "curated near-face-up order 244..255,0..8 crosses the loop boundary",
+      "note": "complete sequence regenerated from public viewer batches and measured by the fixed benchmark protocol",
+      "trace_files": {
+        "core": "per-stone/IGI-LG756520111/core/traces.json",
+        "wide": "per-stone/IGI-LG756520111/wide/traces.json"
+      }
+    },
+    {
+      "certificate": "IGI-LG818659722",
+      "source_pipeline": "diajewel",
+      "source_status": "complete",
+      "source_frame_count": 256,
+      "available_frame_count": 256,
+      "faceup_center": 0,
+      "viewer": "https://vision.diajewel360.com/Vision360.html?d=PD-230293",
+      "source_provenance": "per-stone/IGI-LG818659722/source-manifest.json",
+      "faceup_basis": "curated near-face-up order 246..255,0..10 crosses the loop boundary",
+      "note": "complete sequence regenerated from public viewer batches and measured by the fixed benchmark protocol",
+      "trace_files": {
+        "core": "per-stone/IGI-LG818659722/core/traces.json",
+        "wide": "per-stone/IGI-LG818659722/wide/traces.json"
+      }
+    },
+    {
+      "certificate": "IGI-LG836619414",
+      "source_pipeline": "diajewel",
+      "source_status": "complete",
+      "source_frame_count": 256,
+      "available_frame_count": 256,
+      "faceup_center": 0,
+      "viewer": "https://vision.diajewel360.com/Vision360.html?d=PD-249203",
+      "source_provenance": "per-stone/IGI-LG836619414/source-manifest.json",
+      "faceup_basis": "curated near-face-up order 246..255,0..10 crosses the loop boundary",
+      "note": "complete sequence regenerated from public viewer batches and measured by the fixed benchmark protocol",
+      "trace_files": {
+        "core": "per-stone/IGI-LG836619414/core/traces.json",
+        "wide": "per-stone/IGI-LG836619414/wide/traces.json"
+      }
+    },
+    {
+      "certificate": "IGI-LG811638512",
+      "source_pipeline": "diajewel",
+      "source_status": "partial",
+      "source_frame_count": 256,
+      "available_frame_count": 128,
+      "faceup_center": 0,
+      "viewer": "https://vision.diajewel360.com/Vision360.html?d=PD-223805",
+      "source_provenance": "../../../resources/IGI-LG811638512/Sparkles IGI-LG811638512 research.md",
+      "faceup_basis": "visually curated near-face-up region crosses 246..254,0..12",
+      "note": "only even source indices 0..254 were recovered; benchmark must not infer source-step runs/transitions from this sparse sequence"
+    }
+  ]
+}

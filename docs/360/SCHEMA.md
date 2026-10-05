@@ -11,6 +11,8 @@ values. Paths are relative to the published output directory unless stated.
 `brightness_definition`. `source_frame_count` can be null; unknown completeness
 must not be interpreted as complete merely because `sparse` is false.
 
+`segmentation_acceptance` records whether only `ok` silhouettes were registered (`ok_only`) or an explicit caller opted into carrying `review` silhouettes through registration (`ok_or_review`). Review status/reasons remain unchanged and must be treated as QC limitations.
+
 `photometry` records assumed sRGB, formulas, constant gain and mask semantics.
 `regions` records radial boundaries and axes. `diagnostics` records request,
 accepted/excluded indices, equal-frame weighting, thresholds, paths and statuses.

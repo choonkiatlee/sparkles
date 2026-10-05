@@ -16,7 +16,7 @@ from .qc import region_overlay
 from .temporal import write_diagnostics
 
 
-def _run(source, output, order_manifest=None, gain=1.0, diagnostic_indices=None):
+def _run(source, output, order_manifest=None, gain=1.0, diagnostic_indices=None, accept_review=False):
     source, output = Path(source).resolve(), Path(output).resolve()
     if source == output or source in output.parents or output in source.parents:
         raise ValueError('Input and output must be disjoint directories')
@@ -24,6 +24,7 @@ def _run(source, output, order_manifest=None, gain=1.0, diagnostic_indices=None)
     # Validate gain even when every frame fails segmentation.
     represent(np.zeros((1,1,3),np.uint8),np.ones((1,1),bool),np.ones((1,1),bool),gain)
     metadata = ingest(source, order_manifest)
+    metadata['segmentation_acceptance'] = 'ok_or_review' if accept_review else 'ok_only'
     metadata['photometry'] = specification(gain)
     metadata['regions'] = regions.specification()
     output.mkdir(parents=True, exist_ok=True)
@@ -45,7 +46,7 @@ def _run(source, output, order_manifest=None, gain=1.0, diagnostic_indices=None)
         record['segmentation'] = {k:v for k,v in result.items() if k not in ('mask','boundary')}
         record['segmentation']['mask_path'] = mask_path
         record['segmentation']['boundary_path'] = f'masks/{stem}-boundary.png'
-        if result['status'] == 'ok':
+        if result['status'] == 'ok' or (accept_review and result['status'] == 'review'):
             record['geometry'] = measure(result['mask'])
             normal = canonicalise(rgb,result['mask'],record['geometry'])
             record['registration'] = {k:(v.tolist() if isinstance(v,np.ndarray) else v)
@@ -79,7 +80,7 @@ def _run(source, output, order_manifest=None, gain=1.0, diagnostic_indices=None)
     return metadata
 
 
-def run(source, output, order_manifest=None, gain=1.0, diagnostic_indices=None):
+def run(source, output, order_manifest=None, gain=1.0, diagnostic_indices=None, accept_review=False):
     """Publish a complete output directory atomically; never mix runs."""
     source,output=Path(source).resolve(),Path(output).resolve()
     if source==output or source in output.parents or output in source.parents:
@@ -89,6 +90,6 @@ def run(source, output, order_manifest=None, gain=1.0, diagnostic_indices=None):
     output.parent.mkdir(parents=True,exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='.diamond360-',dir=output.parent) as temporary:
         stage=Path(temporary)
-        metadata=_run(source,stage,order_manifest,gain,diagnostic_indices)
+        metadata=_run(source,stage,order_manifest,gain,diagnostic_indices,accept_review)
         stage.rename(output)
     return metadata
