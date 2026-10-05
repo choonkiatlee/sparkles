@@ -101,6 +101,21 @@ class BenchmarkTests(unittest.TestCase):
             self.assertEqual(result["stones"][0]["status"], "measured")
             self.assertEqual(result["stones"][1]["status"], "source_available")
 
+    def test_complete_source_requires_authoritative_source_contract(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            with self.assertRaises(ValueError):
+                b.source_contract(root, 256)
+            (root / "source-manifest.json").write_text(json.dumps({
+                "schema_version": "diamond360-source/1",
+                "source_frame_count": 256,
+                "sequence_complete": True,
+                "frames": [],
+            }))
+            self.assertEqual(b.source_contract(root, 256), root / "source-manifest.json")
+            with self.assertRaises(ValueError):
+                b.source_contract(root, 128)
+
     def test_write_outputs_creates_machine_readable_summary_and_plots(self):
         with tempfile.TemporaryDirectory() as td:
             out = Path(td)
