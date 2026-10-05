@@ -7,6 +7,12 @@ on:
       - ".github/workflows/issue26-validation.yml"
       - "diamond360/**"
       - "tests/**"
+  pull_request:
+    branches: [master]
+    paths:
+      - ".github/workflows/issue26-validation.yml"
+      - "diamond360/**"
+      - "tests/**"
 
 permissions:
   contents: write
@@ -179,6 +185,7 @@ jobs:
           cp -R /tmp/issue26-validation docs/360/activation
           python -m unittest discover -s tests -v
       - name: Commit generated evidence
+        if: github.event_name == 'push'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
