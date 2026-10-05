@@ -1,4 +1,5 @@
 name: populate issue 18 benchmark
+# rerun with explicit review-mask registration
 on:
   push:
     branches: [verify-issue-18-benchmark-v2]
