@@ -58,7 +58,11 @@ def segment(rgb, contrast_threshold=18.0, gradient_threshold=4.0):
         reasons.append('fragmented_foreground')
     by,bx = np.nonzero(boundary)
     boundary_points = np.column_stack([bx,by])
-    vertices = boundary_points[ConvexHull(boundary_points).vertices]
+    try:
+        vertices = boundary_points[ConvexHull(boundary_points).vertices]
+    except (ValueError,QhullError):
+        result['reasons'] = ['empty_or_degenerate_contour_after_erosion']
+        return result
     result.update(status='review' if reasons else 'ok', reasons=reasons,
                   mask=mask, boundary=boundary, vertices_xy=vertices.tolist(),
                   area_fraction=fraction, component_seed_pixels=int(sizes.max()))

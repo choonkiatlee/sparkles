@@ -36,6 +36,25 @@ class PipelineTests(unittest.TestCase):
             with self.assertRaises(ValueError):run(source,fresh,diagnostic_indices=[999])
             self.assertFalse(fresh.exists())
 
+    def test_ambiguous_selected_numeric_indices_rejected(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);source=root/'input';self.make_frames(source)
+            (source/'copy-0.png').write_bytes((source/'frame-2.png').read_bytes())
+            with self.assertRaisesRegex(ValueError,'Ambiguous'):
+                run(source,root/'output',diagnostic_indices=[0,2])
+            self.assertFalse((root/'output').exists())
+
+    def test_deduplicate_only_inside_requested_subset(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);source=root/'input';self.make_frames(source)
+            (source/'frame-4.png').write_bytes((source/'frame-0.png').read_bytes())
+            r=run(source,root/'output',diagnostic_indices=[2,4])
+            self.assertEqual(r['diagnostics']['accepted_indices'],[2,4])
+            self.assertEqual(r['diagnostics']['status'],'complete')
+            r=run(source,root/'duplicate-output',diagnostic_indices=[0,4])
+            self.assertEqual(r['diagnostics']['accepted_indices'],[0])
+            self.assertEqual(r['diagnostics']['excluded'][0]['reason'],'duplicate_frame')
+
     def test_flat_frames_have_visible_exclusions(self):
         with tempfile.TemporaryDirectory() as d:
             root=Path(d);source=root/'input';source.mkdir()

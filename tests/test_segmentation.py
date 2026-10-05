@@ -33,6 +33,13 @@ class SegmentationTests(unittest.TestCase):
         r = segmentation.segment(rgb)
         self.assertNotEqual(r['status'], 'ok')
 
+    def test_thin_clipped_border_artifact_fails_without_crash(self):
+        for size in [32,100,160]:
+            rgb=np.full((size,size,3),200,np.uint8);rgb[:,0]=0
+            r=segmentation.segment(rgb)
+            self.assertEqual(r['status'],'failed')
+            self.assertFalse(r['mask'].any())
+
     def test_complex_background_is_not_accepted(self):
         rng = np.random.default_rng(3)
         r = segmentation.segment(rng.integers(0,255,(100,100,3),dtype=np.uint8))

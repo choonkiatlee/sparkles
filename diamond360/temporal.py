@@ -13,17 +13,25 @@ def write_diagnostics(metadata,output,indices):
         return dict(status='not_requested',reason='Select an explicit comparable face-up subset')
     if len(indices)!=len(set(indices)):
         raise ValueError('Duplicate diagnostic indices')
-    available={r['source_index']:r for r in metadata['frames']}
+    grouped={}
+    for record in metadata['frames']:
+        grouped.setdefault(record['source_index'],[]).append(record)
+    ambiguous=[i for i in indices if len(grouped.get(i,[]))>1]
+    if ambiguous:raise ValueError(f'Ambiguous selected source indices: {ambiguous}')
+    available={i:rs[0] for i,rs in grouped.items()}
     if set(indices)-set(available):
         raise ValueError('Requested diagnostic indices missing from sequence')
-    accepted=[];excluded=[]
+    accepted=[];excluded=[];selected_hashes={}
     for i in indices:
         record=available[i]
         if 'registration' not in record:
             excluded.append(dict(source_index=i,reason='invalid_image_or_unaccepted_segmentation'))
-        elif 'duplicate_of' in record or 'pixel_duplicate_of' in record:
-            excluded.append(dict(source_index=i,reason='duplicate_frame'))
-        else:accepted.append(record)
+        elif record.get('pixel_sha256',record['sha256']) in selected_hashes:
+            excluded.append(dict(source_index=i,reason='duplicate_frame',
+                                 duplicate_of_index=selected_hashes[record.get('pixel_sha256',record['sha256'])]))
+        else:
+            selected_hashes[record.get('pixel_sha256',record['sha256'])]=i
+            accepted.append(record)
     status=dict(status='complete' if len(accepted)>=2 else 'insufficient_accepted_frames',
                 requested_indices=indices,accepted_indices=[r['source_index'] for r in accepted],
                 excluded=excluded,weighting='equal weight per supplied frame; no calibrated time/angle',
