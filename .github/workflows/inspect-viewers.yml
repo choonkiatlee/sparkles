@@ -9,7 +9,7 @@ jobs:
     steps:
       - uses: actions/setup-python@v5
         with: {python-version: "3.11"}
-      - name: Inspect string table declaration
+      - name: Inspect Diajewel CryptoJS logic
         run: |
           python - <<'PY'
           import urllib.request,re
@@ -17,6 +17,12 @@ jobs:
           req=urllib.request.Request(u,headers={'User-Agent':'Mozilla/5.0'})
           js=urllib.request.urlopen(req,timeout=60).read().decode('utf-8','replace')
           print('len',len(js))
-          for pat in ['_0x18db','0x18db','var _0x']:
-              i=js.find(pat); print('PAT',pat,'INDEX',i); print(repr(js[max(0,i-1500):i+3000]))
+          for term in ['CryptoJS','scramble','AES','decrypt','Utf8','Pkcs7','CBC']:
+              print('\nTERM',term)
+              start=0; count=0
+              while True:
+                  i=js.find(term,start)
+                  if i<0 or count>=8: break
+                  print('INDEX',i,repr(js[max(0,i-1800):i+4200]))
+                  start=i+len(term); count+=1
           PY
