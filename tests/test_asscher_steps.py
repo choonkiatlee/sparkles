@@ -9,7 +9,7 @@ from PIL import Image
 from diamond360 import asscher_steps as s
 
 
-def synthetic_sector_frames(boundaries=(.31, .54, .76), frames=9, samples=160):
+def synthetic_sector_frames(boundaries=(.50, .75, .87), frames=9, samples=160):
     u = np.linspace(0, 1, samples)
     sector_frames = []
     for frame in range(frames):
@@ -45,7 +45,7 @@ class AsscherStepTests(unittest.TestCase):
         result = s.discover_template(frames, u)
         self.assertIn(result["status"], {"ok", "review"})
         found = [c["global_u"] for c in result["controls"]]
-        for got, expected in zip(found, (.31, .54, .76)):
+        for got, expected in zip(found, (.50, .75, .87)):
             self.assertAlmostEqual(got, expected, delta=.035)
         for sector in range(8):
             vals = [c["sector_u"][sector] for c in result["controls"]]
@@ -53,10 +53,22 @@ class AsscherStepTests(unittest.TestCase):
         alignment = s.boundary_alignment(frames, u, result["controls"])
         self.assertTrue(all(row["edge_ratio"] > 1 for row in alignment))
 
+    def test_stronger_inner_reflection_does_not_steal_semantic_boundary(self):
+        u, frames = synthetic_sector_frames()
+        distractor = np.exp(-0.5 * ((u - .245) / .012) ** 2) * .12
+        frames = frames + distractor[None, None, :]
+        result = s.discover_template(frames, u)
+        self.assertIn(result["status"], {"ok", "review"})
+        found = [c["global_u"] for c in result["controls"]]
+        self.assertAlmostEqual(found[0], .50, delta=.04)
+        self.assertGreater(found[0], .42)
+        self.assertAlmostEqual(found[1], .75, delta=.04)
+        self.assertAlmostEqual(found[2], .87, delta=.04)
+
     def test_masks_partition_silhouette_and_allow_side_corner_shape(self):
         mask = octagon_mask()
         controls = []
-        for base in (.30, .53, .76):
+        for base in (.50, .75, .87):
             vals = np.array([base-.015, base+.012, base-.015, base+.012,
                              base-.015, base+.012, base-.015, base+.012])
             controls.append(dict(sector_u=vals))
@@ -86,9 +98,9 @@ class AsscherStepTests(unittest.TestCase):
             rr = np.maximum(np.abs(x-c), np.abs(y-c)) / (128*.38)
             records = []
             for pos in range(7):
-                brightness = np.where(rr < .31, .65,
-                                      np.where(rr < .54, 1.0,
-                                               np.where(rr < .76, .58, .92)))
+                brightness = np.where(rr < .50, .65,
+                                      np.where(rr < .75, 1.0,
+                                               np.where(rr < .87, .58, .92)))
                 if pos % 2:
                     brightness = 1.2 - .45 * brightness
                 brightness = np.clip(brightness + .015*np.sin(x*.23+pos), 0, 1)
