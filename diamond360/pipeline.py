@@ -12,9 +12,10 @@ from .registration import canonicalise
 from .photometry import represent, specification
 from . import regions
 from .qc import region_overlay
+from .temporal import write_diagnostics
 
 
-def run(source, output, order_manifest=None, gain=1.0):
+def run(source, output, order_manifest=None, gain=1.0, diagnostic_indices=None):
     source, output = Path(source).resolve(), Path(output).resolve()
     if source == output or source in output.parents or output in source.parents:
         raise ValueError('Input and output must be disjoint directories')
@@ -72,5 +73,6 @@ def run(source, output, order_manifest=None, gain=1.0):
     if region_items: contact_sheet(region_items,output/'regions.jpg',columns=3)
     if registered: contact_sheet(registered,output/'registration.jpg',columns=4)
     geometry_chart(metadata['frames'],output/'geometry.png')
+    metadata['diagnostics'] = write_diagnostics(metadata,output,diagnostic_indices)
     (output/'sequence.json').write_text(json.dumps(metadata,indent=2,allow_nan=False)+'\n')
     return metadata

@@ -61,3 +61,20 @@ def region_overlay(rgb, regions, names):
     for i,name in enumerate(names):
         m=regions[name];canvas[m]=(.65*canvas[m]+.35*colours[i]).astype(np.uint8)
     return Image.fromarray(canvas)
+
+
+def map_image(values, maximum=1):
+    values=np.asarray(values);valid=np.isfinite(values)
+    scaled=np.nan_to_num(values/maximum,nan=0).clip(0,1)
+    # Fixed blue -> cyan -> yellow ramp, grey = no support.
+    rgb=np.stack([np.clip(2*scaled-.3,0,1),np.clip(1.8*scaled,0,1),1-scaled],axis=2)
+    rgb=(rgb*255).astype(np.uint8);rgb[~valid]=[150,150,150]
+    return Image.fromarray(rgb)
+
+
+def diagnostic_sheet(summary,destination):
+    groups=[('mean brightness 0..1','mean',1),('std 0..0.25 (display cap)','std',.25),
+            ('relative dark fraction 0..1','relative_dark_fraction',1),
+            ('support fraction 0..1','support_fraction',1)]
+    contact_sheet([(label,map_image(summary[key],scale)) for label,key,scale in groups],
+                  destination,columns=4)

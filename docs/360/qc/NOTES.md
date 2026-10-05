@@ -40,3 +40,14 @@ a square-like (Chebyshev) coordinate, with centre/inner/middle/outer bounds
 use image axes and intersect the silhouette. Partitions cover each mask exactly,
 with no overlap within a partition family. Wedges are not windmill/facet masks;
 in-plane roll and perspective make them only approximate diamond regions.
+
+Stage 7: temporal sheets inspected for 12 nearby face-up frames on each of
+LG756580087/LG836619414/LG811638512, excluding their context/profile frames.
+Centring reduces silhouette-motion effects relative to camera space. The central
+and stepped patterns still change, with broad activity bands; residual roll/tilt
+means pixels are not homologous facets. Support maps expose varying silhouette
+coverage. Grey denotes unsupported pixels; std is undefined with <2 observations.
+Dark fraction uses brightness <0.65× each frame's valid-pixel median; fractions
+are equal-weight frame counts, not durations. Low std/dark patches can reflect
+lighting/obstruction, pose and sampling. No camera-fixed artefact was isolated or
+causally identified; the two coordinate systems support inspection, not attribution.
