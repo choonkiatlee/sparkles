@@ -69,3 +69,15 @@ Square Diajewel archives pass these checks; unfamiliar or independent capture
 pipelines, uniform full rotations, varied backgrounds and calibrated lighting
 remain outside this validation. Output publication is atomic and refuses reused
 nonempty directories, preventing stale masks/maps from appearing in a new run.
+
+Final verification: independent code review identified degenerate post-erosion
+contours and ambiguous numeric diagnostic indices; regression tests reproduce
+both and now pass. Deduplication is scoped to the selected subset, preserving a
+selected frame whose duplicate is outside that subset. Full suite: 28 tests.
+Fresh final archive run reproduces validation.json exactly. Editable installation
+and the installed CLI were exercised on real LG756580087 frames with an explicit
+four-frame subset. Documentation links and git diff whitespace checks pass.
+
+Deferred validation: a disconnected faint outer silhouette around a dark centre
+can be falsely accepted as only the centre. There is no ground-truth benchmark
+for this case; inspect original/overlay and do not treat `ok` as proof of accuracy.
