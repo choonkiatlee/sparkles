@@ -22,6 +22,10 @@ from .region_traces import validate_interval
 SCHEMA = "diamond360-asscher-steps/1"
 BANDS = ("centre", "inner_step", "middle_step", "outer_step")
 BOUNDARIES = ("centre_inner", "inner_middle", "middle_outer")
+# Broad silhouette-normalised zones keep ordinal labels semantically comparable.
+# A strong reflection edge outside its zone is not allowed to substitute for a
+# missing Asscher step boundary.
+BOUNDARY_WINDOWS = ((.42, .60), (.64, .82), (.82, .92))
 SECTOR_NAMES = ("side_E", "corner_SE", "side_S", "corner_SW",
                 "side_W", "corner_NW", "side_N", "corner_NE")
 
@@ -157,7 +161,7 @@ def discover_template(frame_sector_evidence, u):
         sectors = np.nanmedian(data, axis=0)
         consensus = np.nanmedian(sectors, axis=0)
     consensus = ndi.gaussian_filter1d(np.nan_to_num(consensus, nan=0.0), 1.2)
-    interior = (u >= .16) & (u <= .89)
+    interior = (u >= .16) & (u <= .92)
     distance = max(3, int(round(.095 * (len(u) - 1))))
     raw_peaks, _ = find_peaks(consensus, distance=distance)
     raw_peaks = raw_peaks[interior[raw_peaks]]
@@ -189,24 +193,20 @@ def discover_template(frame_sector_evidence, u):
 
     prom_values = np.array([c["prominence"] for c in candidates])
     prom_scale = max(float(np.median(prom_values[prom_values > 0])) if np.any(prom_values > 0) else 0.0, 1e-6)
-    targets = np.array([.30, .53, .76])
-    best = None
-    from itertools import combinations
-    for combo in combinations(sorted(candidates, key=lambda c: c["u"]), 3):
-        pos = np.array([c["u"] for c in combo])
-        if np.min(np.diff(pos)) < .105:
-            continue
-        edge_score = sum(np.log1p(c["prominence"] / prom_scale) + 1.25 * c["sector_support"] for c in combo)
-        prior = .22 * float(np.sum(((pos - targets) / .22) ** 2))
-        span_bonus = .35 * float(pos[-1] - pos[0])
-        score = edge_score - prior + span_bonus
-        if best is None or score > best[0]:
-            best = (score, combo)
-    if best is None:
-        return dict(status="unavailable", reason="persistent_edges_not_separable",
+    selected = []
+    for name, (lo, hi) in zip(BOUNDARIES, BOUNDARY_WINDOWS):
+        options = [c for c in candidates
+                   if lo <= c["u"] <= hi and c["sector_support"] >= .25]
+        if not options:
+            return dict(status="unavailable", reason=f"no_supported_{name}_edge",
+                        consensus=consensus, sectors=sectors, candidates=candidates)
+        selected.append(max(
+            options,
+            key=lambda c: np.log1p(c["prominence"] / prom_scale) + 1.25 * c["sector_support"],
+        ))
+    if np.min(np.diff([c["u"] for c in selected])) < .075:
+        return dict(status="unavailable", reason="semantic_boundaries_not_separable",
                     consensus=consensus, sectors=sectors, candidates=candidates)
-
-    selected = list(best[1])
     controls = []
     for boundary in selected:
         global_u = boundary["u"]
