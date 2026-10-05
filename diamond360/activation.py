@@ -237,3 +237,101 @@ def activation_validity(representation, upstream, step_qc, local_status, local_r
             elif "review" in statuses:
                 sources.append({"status": "review", "reason": "semantic_frame_review"})
     return compose_validity(sources)
+
+
+COARSE_BANDS = ("centre", "inner", "middle", "outer")
+SEMANTIC_BANDS = ("centre", "inner_step", "middle_step", "outer_step")
+
+
+def _first_mask_shape(root, records, bands):
+    for record in records:
+        if record is None:
+            continue
+        path = record.get("regions_path")
+        if not path:
+            continue
+        with np.load(root / path) as data:
+            return data[bands[0]].shape
+    return None
+
+
+def load_coarse_masks(processed, selected_records):
+    from pathlib import Path
+    processed = Path(processed)
+    shape = _first_mask_shape(processed, selected_records, COARSE_BANDS)
+    if shape is None:
+        raise ValueError("No accepted coarse region masks in selected records")
+    out = {name: [] for name in COARSE_BANDS}
+    for record in selected_records:
+        if record is None:
+            for name in COARSE_BANDS:
+                out[name].append(np.zeros(shape, bool))
+            continue
+        path = record.get("regions_path")
+        if not path:
+            raise ValueError("Selected coarse record is missing regions_path")
+        with np.load(processed / path) as data:
+            for name in COARSE_BANDS:
+                out[name].append(np.asarray(data[name], bool).copy())
+    return {name: np.stack(frames) for name, frames in out.items()}
+
+
+def load_semantic_masks(step_output, selected_records):
+    import json
+    from pathlib import Path
+    step_output = Path(step_output)
+    metadata = json.loads((step_output / "steps.json").read_text())
+    qc = {
+        "template_status": metadata.get("template_status", "unavailable"),
+        "template_reason": metadata.get("template_reason"),
+        "selected_frame_statuses": [],
+    }
+    if qc["template_status"] == "unavailable":
+        return {}, qc
+
+    lookup = {frame.get("source_index"): frame for frame in metadata.get("frames", [])}
+    available = [lookup.get(record.get("source_index")) for record in selected_records if record is not None]
+    available = [frame for frame in available if frame and frame.get("region_path")]
+    if not available:
+        raise ValueError("No semantic region masks match selected records")
+    with np.load(step_output / available[0]["region_path"]) as data:
+        shape = data[SEMANTIC_BANDS[0]].shape
+
+    out = {name: [] for name in SEMANTIC_BANDS}
+    for record in selected_records:
+        if record is None:
+            qc["selected_frame_statuses"].append("unavailable")
+            for name in SEMANTIC_BANDS:
+                out[name].append(np.zeros(shape, bool))
+            continue
+        frame = lookup.get(record.get("source_index"))
+        if not frame or not frame.get("region_path"):
+            qc["selected_frame_statuses"].append("unavailable")
+            for name in SEMANTIC_BANDS:
+                out[name].append(np.zeros(shape, bool))
+            continue
+        qc["selected_frame_statuses"].append(frame.get("status", "unavailable"))
+        with np.load(step_output / frame["region_path"]) as data:
+            for name in SEMANTIC_BANDS:
+                out[name].append(np.asarray(data[name], bool).copy())
+    return {name: np.stack(frames) for name, frames in out.items()}, qc
+
+
+def activation_validity(representation, upstream, step_qc, local_status, local_reasons):
+    if representation not in {"whole_stone", "coarse", "semantic"}:
+        raise ValueError("unknown activation representation")
+    sources = [upstream, {"status": local_status, "reasons": list(local_reasons)}]
+    if representation == "semantic":
+        if step_qc is None:
+            sources.append({"status": "unavailable", "reason": "semantic_qc_missing"})
+        else:
+            sources.append({
+                "status": step_qc.get("template_status", "unavailable"),
+                "reason": step_qc.get("template_reason"),
+            })
+            statuses = step_qc.get("selected_frame_statuses", [])
+            if any(status == "unavailable" for status in statuses):
+                sources.append({"status": "unavailable", "reason": "semantic_frame_unavailable"})
+            elif any(status == "review" for status in statuses):
+                sources.append({"status": "review", "reason": "semantic_frame_review"})
+    return compose_validity(sources)
