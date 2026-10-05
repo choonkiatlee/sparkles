@@ -31,3 +31,10 @@ Diamond research and dated evaluations in the dedicated Sparkles repository. Eac
 - [[evaluations/Sparkles IGI-LG756520111 evaluation 2026-10-05-110119|IGI LG756520111 — first visual assessment]] — [[evaluations/IGI-LG756520111-visual-report-2026-10-05-110119.html|Visual HTML report]]; provisional candidate, pale central side panels need checking.
 
 - [[evaluations/Sparkles IGI-LG811638512 evaluation 2026-10-05-131523|IGI LG811638512 — first visual assessment]] — [[evaluations/IGI-LG811638512-visual-report-2026-10-05-131523.html|Visual HTML report]]; changing tiers/corners, central brightness unresolved.
+
+## Revised outcome reports · 5 October 2026
+
+- [[evaluations/Sparkles IGI-LG811638512 evaluation 2026-10-05-140217|IGI LG811638512 — Reserve]] — [[evaluations/IGI-LG811638512-visual-report-2026-10-05-140217.html|Visual report with checklist]].
+- [[evaluations/Sparkles IGI-LG756520111 evaluation 2026-10-05-140217|IGI LG756520111 — Shortlist]] — [[evaluations/IGI-LG756520111-visual-report-2026-10-05-140217.html|Visual report with checklist]].
+- [[evaluations/Sparkles IGI-LG756580087 evaluation 2026-10-05-140217|IGI LG756580087 — Shortlist]] — [[evaluations/IGI-LG756580087-visual-report-2026-10-05-140217.html|Visual report with checklist]].
+- [[evaluations/Sparkles IGI-LG836619414 evaluation 2026-10-05-140217|IGI LG836619414 — Shortlist]] — [[evaluations/IGI-LG836619414-visual-report-2026-10-05-140217.html|Visual report with checklist]].
