@@ -34,7 +34,7 @@ All grading/proportion facts below were read from the [supplier-hosted IGI PDF](
 | Crown/pavilion tier angles | Not reported; heights do not establish individual facet angles |
 | Inscription | LG756520111 with laboratory-grown mark; report's inscription photo labelled “Sample Image Used” |
 
-[Listing](https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/9155264EA) price observed 5 October 2026: **£685 including VAT** (£570.833 excluding VAT in listing metadata); availability can change. Retailer dimension SVGs and report clarity plots are diagrams, not measured 3D wireframes or actual-stone optical images.
+Price: [£685](https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/9155264EA). Retailer dimension SVGs and report clarity plots are diagrams, not measured 3D wireframes or actual-stone optical images.
 
 ## Best media and inventory
 
