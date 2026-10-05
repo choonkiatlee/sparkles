@@ -144,12 +144,15 @@ class ActivationTests(unittest.TestCase):
             payload = dict(centre=centre, inner_step=~centre, middle_step=np.zeros_like(centre), outer_step=np.zeros_like(centre))
             np.savez_compressed(root / "regions" / "0000.npz", **payload)
             np.savez_compressed(root / "regions" / "0001.npz", **payload)
+            boundary = {"global_u": 0.597, "window_margin": 0.003, "near_window_edge": True}
+            support = [{"support_fraction": 0.75, "median_abs_offset": 0.01}]
             (root / "steps.json").write_text(json.dumps({
                 "template_status": "review",
                 "template_reason": "semantic_window_edge",
+                "boundaries": {"centre_inner": boundary},
                 "frames": [
-                    {"source_index": 0, "position": 0, "status": "ok", "region_path": "regions/0000.npz"},
-                    {"source_index": 1, "position": 1, "status": "review", "region_path": "regions/0001.npz"},
+                    {"source_index": 0, "position": 0, "status": "ok", "region_path": "regions/0000.npz", "boundary_support": support},
+                    {"source_index": 1, "position": 1, "status": "review", "region_path": "regions/0001.npz", "boundary_support": []},
                 ],
             }))
             masks, qc = a.load_semantic_masks(root, [{"source_index": 0}, {"source_index": 1}])
@@ -157,6 +160,8 @@ class ActivationTests(unittest.TestCase):
             self.assertEqual(qc["template_status"], "review")
             self.assertEqual(qc["template_reason"], "semantic_window_edge")
             self.assertEqual(qc["selected_frame_statuses"], ["ok", "review"])
+            self.assertEqual(qc["boundaries"]["centre_inner"], boundary)
+            self.assertEqual(qc["selected_frames"][0]["boundary_support"], support)
 
     def test_load_semantic_masks_unavailable_returns_no_masks(self):
         import json
