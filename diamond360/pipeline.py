@@ -1,6 +1,7 @@
 """Stage orchestration. Failure records remain visible in sequence metadata."""
 import json
 import shutil
+import tempfile
 from pathlib import Path
 import numpy as np
 from PIL import Image
@@ -15,7 +16,7 @@ from .qc import region_overlay
 from .temporal import write_diagnostics
 
 
-def run(source, output, order_manifest=None, gain=1.0, diagnostic_indices=None):
+def _run(source, output, order_manifest=None, gain=1.0, diagnostic_indices=None):
     source, output = Path(source).resolve(), Path(output).resolve()
     if source == output or source in output.parents or output in source.parents:
         raise ValueError('Input and output must be disjoint directories')
@@ -75,4 +76,19 @@ def run(source, output, order_manifest=None, gain=1.0, diagnostic_indices=None):
     geometry_chart(metadata['frames'],output/'geometry.png')
     metadata['diagnostics'] = write_diagnostics(metadata,output,diagnostic_indices)
     (output/'sequence.json').write_text(json.dumps(metadata,indent=2,allow_nan=False)+'\n')
+    return metadata
+
+
+def run(source, output, order_manifest=None, gain=1.0, diagnostic_indices=None):
+    """Publish a complete output directory atomically; never mix runs."""
+    source,output=Path(source).resolve(),Path(output).resolve()
+    if source==output or source in output.parents or output in source.parents:
+        raise ValueError('Input and output must be disjoint directories')
+    if output.exists() and (not output.is_dir() or any(output.iterdir())):
+        raise ValueError('Output must be a new or empty directory; choose a fresh run path')
+    output.parent.mkdir(parents=True,exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix='.diamond360-',dir=output.parent) as temporary:
+        stage=Path(temporary)
+        metadata=_run(source,stage,order_manifest,gain,diagnostic_indices)
+        stage.rename(output)
     return metadata

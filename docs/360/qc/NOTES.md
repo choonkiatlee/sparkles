@@ -51,3 +51,21 @@ Dark fraction uses brightness <0.65× each frame's valid-pixel median; fractions
 are equal-weight frame counts, not durations. Low std/dark patches can reflect
 lighting/obstruction, pose and sampling. No camera-fixed artefact was isolated or
 causally identified; the two coordinate systems support inspection, not attribution.
+
+Stage 8: repeatable archive validation ran across all five bundles (79 frames).
+47 complete silhouettes canonicalise; 32 cropped/border-affected views remain
+review-only, with no fabricated geometry or temporal maps. Maximum raster mask
+centroid discrepancy after registration is 0.152 px across the 47 frames.
+On the three 12-frame face-up subsets, camera vs normalised mean-brightness
+series correlations exceed 0.99998; largest mean difference is 0.000438 (0..1).
+These check mean preservation only: fine-highlight preservation still requires
+originals, and spatial activity remains affected by roll/perspective.
+
+`cross-registration.jpg` includes all 47 before/after pairs. `validation.json`
+records archive SHA-256, source pipelines, dimensions, counts, exclusion indices
+and preservation checks. Workshop's bottom-cropped images and Diajewel's
+rectangular tightly cropped images are visible source-format failure modes.
+Square Diajewel archives pass these checks; unfamiliar or independent capture
+pipelines, uniform full rotations, varied backgrounds and calibrated lighting
+remain outside this validation. Output publication is atomic and refuses reused
+nonempty directories, preventing stale masks/maps from appearing in a new run.

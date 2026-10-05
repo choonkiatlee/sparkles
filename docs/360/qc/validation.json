@@ -1,0 +1,299 @@
+{
+  "schema_version": "1.0",
+  "scope": "79 sparse archived originals; no full-rotation validation",
+  "sequences": [
+    {
+      "certificate": "IGI-LG756520111",
+      "source_pipeline": "Workshop",
+      "archive": "resources/IGI-LG756520111/artifacts/IGI-LG756520111-pass2-motion-diagrams.zip",
+      "archive_sha256": "1dc56f355f16a13295ce8dc195ada414187220daa3085666398674d1a707a6bb",
+      "frames": 16,
+      "valid": 16,
+      "dimensions": [
+        [
+          758,
+          598
+        ]
+      ],
+      "segmentation": {
+        "review": 16
+      },
+      "diagnostic_status": "insufficient_accepted_frames",
+      "diagnostic_indices": [],
+      "exclusions": [
+        {
+          "source_index": 244,
+          "reason": "invalid_image_or_unaccepted_segmentation"
+        },
+        {
+          "source_index": 246,
+          "reason": "invalid_image_or_unaccepted_segmentation"
+        },
+        {
+          "source_index": 248,
+          "reason": "invalid_image_or_unaccepted_segmentation"
+        },
+        {
+          "source_index": 250,
+          "reason": "invalid_image_or_unaccepted_segmentation"
+        },
+        {
+          "source_index": 252,
+          "reason": "invalid_image_or_unaccepted_segmentation"
+        },
+        {
+          "source_index": 254,
+          "reason": "invalid_image_or_unaccepted_segmentation"
+        },
+        {
+          "source_index": 255,
+          "reason": "invalid_image_or_unaccepted_segmentation"
+        },
+        {
+          "source_index": 0,
+          "reason": "invalid_image_or_unaccepted_segmentation"
+        },
+        {
+          "source_index": 2,
+          "reason": "invalid_image_or_unaccepted_segmentation"
+        },
+        {
+          "source_index": 4,
+          "reason": "invalid_image_or_unaccepted_segmentation"
+        },
+        {
+          "source_index": 6,
+          "reason": "invalid_image_or_unaccepted_segmentation"
+        },
+        {
+          "source_index": 8,
+          "reason": "invalid_image_or_unaccepted_segmentation"
+        }
+      ],
+      "max_raster_centroid_error_px": null,
+      "temporal_preservation": {},
+      "source_sha256_verified": true,
+      "qc_paths": [
+        "segmentation.jpg",
+        "geometry.png"
+      ]
+    },
+    {
+      "certificate": "IGI-LG818659722",
+      "source_pipeline": "Diajewel",
+      "archive": "resources/IGI-LG818659722/artifacts/IGI-LG818659722-compact-evaluation-evidence.zip",
+      "archive_sha256": "374ae402e8c333cb3bbaf08cdfada08a3236658c424722f5a32a1907a586fd5e",
+      "frames": 16,
+      "valid": 16,
+      "dimensions": [
+        [
+          659,
+          517
+        ]
+      ],
+      "segmentation": {
+        "review": 16
+      },
+      "diagnostic_status": "insufficient_accepted_frames",
+      "diagnostic_indices": [],
+      "exclusions": [
+        {
+          "source_index": 246,
+          "reason": "invalid_image_or_unaccepted_segmentation"
+        },
+        {
+          "source_index": 248,
+          "reason": "invalid_image_or_unaccepted_segmentation"
+        },
+        {
+          "source_index": 250,
+          "reason": "invalid_image_or_unaccepted_segmentation"
+        },
+        {
+          "source_index": 252,
+          "reason": "invalid_image_or_unaccepted_segmentation"
+        },
+        {
+          "source_index": 254,
+          "reason": "invalid_image_or_unaccepted_segmentation"
+        },
+        {
+          "source_index": 255,
+          "reason": "invalid_image_or_unaccepted_segmentation"
+        },
+        {
+          "source_index": 0,
+          "reason": "invalid_image_or_unaccepted_segmentation"
+        },
+        {
+          "source_index": 2,
+          "reason": "invalid_image_or_unaccepted_segmentation"
+        },
+        {
+          "source_index": 4,
+          "reason": "invalid_image_or_unaccepted_segmentation"
+        },
+        {
+          "source_index": 6,
+          "reason": "invalid_image_or_unaccepted_segmentation"
+        },
+        {
+          "source_index": 8,
+          "reason": "invalid_image_or_unaccepted_segmentation"
+        },
+        {
+          "source_index": 10,
+          "reason": "invalid_image_or_unaccepted_segmentation"
+        }
+      ],
+      "max_raster_centroid_error_px": null,
+      "temporal_preservation": {},
+      "source_sha256_verified": true,
+      "qc_paths": [
+        "segmentation.jpg",
+        "geometry.png"
+      ]
+    },
+    {
+      "certificate": "IGI-LG836619414",
+      "source_pipeline": "Diajewel",
+      "archive": "resources/IGI-LG836619414/artifacts/IGI-LG836619414-compact-evaluation-evidence.zip",
+      "archive_sha256": "1946642a4e0198229ef7f3753073e3f6dfd4237369699be3d950b42f212e84eb",
+      "frames": 16,
+      "valid": 16,
+      "dimensions": [
+        [
+          682,
+          682
+        ]
+      ],
+      "segmentation": {
+        "ok": 16
+      },
+      "diagnostic_status": "complete",
+      "diagnostic_indices": [
+        246,
+        248,
+        250,
+        252,
+        254,
+        255,
+        0,
+        2,
+        4,
+        6,
+        8,
+        10
+      ],
+      "exclusions": [],
+      "max_raster_centroid_error_px": 0.15143281365998007,
+      "temporal_preservation": {
+        "mean_brightness_max_abs_difference": 0.00043780180865160556,
+        "mean_brightness_series_correlation": 0.9999865519702911
+      },
+      "source_sha256_verified": true,
+      "qc_paths": [
+        "segmentation.jpg",
+        "geometry.png",
+        "registration.jpg",
+        "regions.jpg",
+        "temporal-camera.jpg",
+        "temporal-diamond.jpg"
+      ]
+    },
+    {
+      "certificate": "IGI-LG756580087",
+      "source_pipeline": "Diajewel",
+      "archive": "resources/IGI-LG756580087/artifacts/IGI-LG756580087-pass2-compact-evaluation-evidence.zip",
+      "archive_sha256": "a2da3b0536823dcbdacf90394957bd49490ec2d112bf2c7e49d30a5d8bc838cd",
+      "frames": 16,
+      "valid": 16,
+      "dimensions": [
+        [
+          704,
+          704
+        ]
+      ],
+      "segmentation": {
+        "ok": 16
+      },
+      "diagnostic_status": "complete",
+      "diagnostic_indices": [
+        240,
+        244,
+        248,
+        250,
+        252,
+        254,
+        0,
+        2,
+        4,
+        8,
+        12,
+        16
+      ],
+      "exclusions": [],
+      "max_raster_centroid_error_px": 0.13276987747070734,
+      "temporal_preservation": {
+        "mean_brightness_max_abs_difference": 0.00016734107531168885,
+        "mean_brightness_series_correlation": 0.9999926476814519
+      },
+      "source_sha256_verified": true,
+      "qc_paths": [
+        "segmentation.jpg",
+        "geometry.png",
+        "registration.jpg",
+        "regions.jpg",
+        "temporal-camera.jpg",
+        "temporal-diamond.jpg"
+      ]
+    },
+    {
+      "certificate": "IGI-LG811638512",
+      "source_pipeline": "Diajewel",
+      "archive": "resources/IGI-LG811638512/artifacts/IGI-LG811638512-pass2-motion-evidence.zip",
+      "archive_sha256": "afaa628cc2e9d882982f812b7377dbbc732ca2146fc76e832d4493e5b7616d30",
+      "frames": 15,
+      "valid": 15,
+      "dimensions": [
+        [
+          823,
+          823
+        ]
+      ],
+      "segmentation": {
+        "ok": 15
+      },
+      "diagnostic_status": "complete",
+      "diagnostic_indices": [
+        246,
+        248,
+        250,
+        252,
+        254,
+        0,
+        2,
+        4,
+        6,
+        8,
+        10,
+        12
+      ],
+      "exclusions": [],
+      "max_raster_centroid_error_px": 0.08251687902939864,
+      "temporal_preservation": {
+        "mean_brightness_max_abs_difference": 0.00031842925883251993,
+        "mean_brightness_series_correlation": 0.9999956990104353
+      },
+      "source_sha256_verified": true,
+      "qc_paths": [
+        "segmentation.jpg",
+        "geometry.png",
+        "registration.jpg",
+        "regions.jpg",
+        "temporal-camera.jpg",
+        "temporal-diamond.jpg"
+      ]
+    }
+  ]
+}

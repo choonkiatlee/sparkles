@@ -21,9 +21,9 @@ def main():
         metadata = run(source, output, args.order_manifest,gain=args.gain,diagnostic_indices=indices)
     except (ValueError, OSError) as error:
         parser.error(str(error))
-    output.mkdir(parents=True, exist_ok=True)
-    (output / 'sequence.json').write_text(json.dumps(metadata, indent=2, allow_nan=False) + '\n')
-    print(f'{metadata["valid_count"]}/{metadata["frame_count"]} valid frames -> {output}')
+    accepted=sum('registration' in r for r in metadata['frames'])
+    print(f'{metadata["valid_count"]}/{metadata["frame_count"]} valid images; {accepted} accepted outlines; diagnostics: {metadata["diagnostics"]["status"]} -> {output}')
+    if not accepted: print('QC required: no complete outline accepted; candidate masks/failures are recorded')
 
 if __name__ == '__main__':
     main()
