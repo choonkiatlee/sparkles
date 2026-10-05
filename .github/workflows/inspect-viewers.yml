@@ -9,35 +9,14 @@ jobs:
     steps:
       - uses: actions/setup-python@v5
         with: {python-version: "3.11"}
-      - name: Decode ordering metadata
+      - name: Inspect string table declaration
         run: |
           python - <<'PY'
-          import ast,base64,json,re,subprocess,urllib.request
-          def get(u):
-              req=urllib.request.Request(u,headers={'User-Agent':'Mozilla/5.0'})
-              return urllib.request.urlopen(req,timeout=60).read()
-          js=get('https://vision.diajewel360.com/js/vision360.js').decode('utf-8','replace')
-          m=re.search(r'var _0x18db=(\[.*?\]);',js)
-          print('table found',bool(m))
-          arr=ast.literal_eval(m.group(1))
-          print('table len',len(arr),'431',repr(arr[431]))
-          key=arr[431].encode()
-          print('key bytes',len(key),key)
-          metas={
-            'ref':'https://vision.diajewel360.com/imaged/VL-131355/0.json',
-            '818':'https://vision.diajewel360.com/imaged/PD-230293/0.json',
-            '836':'https://vision.diajewel360.com/imaged/PD-249203/0.json',
-            '756':'https://data1.360view.link/data/1/imaged/2612250-YK-808/0.json?version=',
-          }
-          for name,u in metas.items():
-              meta=json.loads(get(u)); scramble=meta['scramble']
-              p=subprocess.run(['openssl','enc','-d','-aes-128-cbc','-K',key.hex(),'-iv',key.hex(),'-base64','-A'],
-                               input=scramble.encode(),stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-              print('\n',name,'openssl rc',p.returncode,'stderr',p.stderr.decode())
-              print('plain head',repr(p.stdout[:1000]))
-              try:
-                  x=json.loads(p.stdout)
-                  print('type',type(x).__name__,'len',len(x))
-                  print('structure',repr(x)[:5000])
-              except Exception as e: print('json error',e)
+          import urllib.request,re
+          u='https://vision.diajewel360.com/js/vision360.js'
+          req=urllib.request.Request(u,headers={'User-Agent':'Mozilla/5.0'})
+          js=urllib.request.urlopen(req,timeout=60).read().decode('utf-8','replace')
+          print('len',len(js))
+          for pat in ['_0x18db','0x18db','var _0x']:
+              i=js.find(pat); print('PAT',pat,'INDEX',i); print(repr(js[max(0,i-1500):i+3000]))
           PY
