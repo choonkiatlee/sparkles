@@ -5,10 +5,10 @@ Issue #18 extends the issue #15 continuous-trace protocol across real Asscher ro
 ## Fixed protocol
 
 - Recover the original ordered supplier sequence upstream; vendor extraction is not part of the benchmark module.
-- Run the existing `diamond360` preprocessing at fixed gain `1.0` with no stone-specific threshold tuning.
+- Run the existing `diamond360` preprocessing at fixed gain `1.0` with no stone-specific threshold tuning. Benchmark runs explicitly allow `review` silhouettes to proceed to registration while preserving their review reasons; strict/default pipeline behaviour remains `ok`-only.
 - Use a predeclared visually face-up centre and fixed **17-frame core** / **33-frame sensitivity** windows.
 - Measure the existing centre / inner / middle / outer regions on fixed common support.
-- Keep raw and normalized temporal measurements together: activation amplitude, relative-dark occupancy, transition count/rate, longest dark/bright runs, pixel switching, and support QC.
+- Keep raw and normalized temporal measurements together: activation amplitude, relative-dark occupancy, transition count/rate, longest dark/bright runs, pixel switching, and support QC. Segmentation review counts are source/QC evidence, not optical quality.
 - Refuse run/transition interpretation for sparse source indices. Missing frames are not silently interpolated.
 
 ## Benchmark set
