@@ -1,0 +1,9 @@
+certificate,source_pipeline,window,region,requested_frames,accepted_frames,excluded_frames,common_support_fraction,activation_amplitude_p90_p10,mean_relative_dark_pixel_fraction,region_dark_occupancy,transition_count,observed_adjacent_pairs,transition_rate,longest_dark_run_frames,longest_bright_run_frames,longest_dark_run_fraction,longest_bright_run_fraction,pixel_fraction_with_transitions,pixel_transitions_median,pixel_transitions_p90,pixel_longest_dark_run_p90_frames,pixel_longest_bright_run_p90_frames
+IGI-LG756580087,diajewel,core,centre,17,17,0,1,0.07676898241043084,0.048028352615284334,0,0,16,0,0,17,0,1,0.3635734072022161,0,3,2,17
+IGI-LG756580087,diajewel,core,inner,17,17,0,1,0.034589076042175315,0.07776921252371916,0,0,16,0,0,17,0,1,0.4322916666666667,0,3,4,17
+IGI-LG756580087,diajewel,core,middle,17,17,0,1,0.03437271118164065,0.11214349376114083,0,0,16,0,0,17,0,1,0.5602272727272727,2,4,4,17
+IGI-LG756580087,diajewel,core,outer,17,17,0,0.8235294117647058,0.00822416543960569,0.11907494705199152,0,0,16,0,0,17,0,1,0.5212543554006969,1,4,5,17
+IGI-LG756580087,diajewel,wide,centre,33,33,0,1,0.06741003990173344,0.05525476370351716,0,0,32,0,0,33,0,1,0.5498614958448753,2,4,4.7000000000000455,33
+IGI-LG756580087,diajewel,wide,inner,33,33,0,1,0.03449958562850952,0.07285557184750734,0,0,32,0,0,33,0,1,0.655241935483871,2,4,4,33
+IGI-LG756580087,diajewel,wide,middle,33,33,0,0.9966793168880456,0.030660569667816162,0.10232356886331184,0,0,32,0,0,33,0,1,0.7000475963826749,2,7,5,33
+IGI-LG756580087,diajewel,wide,outer,33,33,0,0.5789598670149608,0.019036614894866966,0.12164093767867354,0,0,32,0,0,33,0,1,0.7294913863822805,2,7,6,33
