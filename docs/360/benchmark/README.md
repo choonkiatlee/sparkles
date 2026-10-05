@@ -31,7 +31,7 @@ To aggregate whatever continuous trace files are already committed:
 python -m diamond360.benchmark docs/360/benchmark/benchmark.json --output /tmp/sparkles-benchmark
 ```
 
-To rerun the same preprocessing + trace workflow after regenerating the complete source directories, place them under `<source-root>/<certificate>/` and run:
+To rerun the same preprocessing + trace workflow after regenerating the complete source directories, place them under `<source-root>/<certificate>/`. Each complete directory must include an authoritative `source-manifest.json` using `diamond360-source/1`, with `source_frame_count` matching the benchmark and `sequence_complete: true`; this prevents filename order from being mistaken for source order. Then run:
 
 ```bash
 python -m diamond360.benchmark docs/360/benchmark/benchmark.json \
@@ -39,7 +39,7 @@ python -m diamond360.benchmark docs/360/benchmark/benchmark.json \
   --output /tmp/sparkles-benchmark
 ```
 
-This creates `summary.json`, `summary.csv`, `metrics.png`, `sensitivity.png`, `redundancy.png`, and per-stone preprocessing/trace outputs. A missing complete-source directory remains visible as `source_missing`; a partial sequence remains `partial_source`.
+The repository includes the current `summary.json` / `summary.csv` for the committed reference traces. A fresh run creates `summary.json`, `summary.csv`, `metrics.png`, `sensitivity.png`, `redundancy.png`, and per-stone preprocessing/trace outputs. A missing complete-source directory remains visible as `source_missing`; a partial sequence remains `partial_source`.
 
 ## Current evidence and metric disposition
 
