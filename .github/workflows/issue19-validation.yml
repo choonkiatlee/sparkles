@@ -1,0 +1,33 @@
+name: issue19 validation probe
+
+on:
+  push:
+    branches: [issue-19-asscher-step-bands]
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Probe known public 360 endpoints
+        run: |
+          python - <<'PY'
+          import requests
+          urls = [
+              "https://vision.diajewel360.com/imaged/VL-131355/1.json?version=1",
+              "https://vision.diajewel360.com/Vision360.html?d=VL-131355",
+              "https://workshop.360view.link/view/2612250-YK-808",
+          ]
+          for url in urls:
+              print("\nURL", url)
+              r = requests.get(url, timeout=30)
+              print("status", r.status_code, "type", r.headers.get("content-type"), "bytes", len(r.content))
+              text = r.text[:1200].replace("\n", "\\n")
+              print("prefix", text)
+          PY
