@@ -55,6 +55,21 @@ class PipelineTests(unittest.TestCase):
             self.assertEqual(r['diagnostics']['accepted_indices'],[0])
             self.assertEqual(r['diagnostics']['excluded'][0]['reason'],'duplicate_frame')
 
+    def test_review_masks_require_explicit_opt_in(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);source=root/'input';source.mkdir()
+            image=Image.new('RGB',(160,140),(190,193,199))
+            draw=ImageDraw.Draw(image)
+            draw.polygon([(50,30),(110,30),(125,45),(125,95),(110,110),(50,110),(35,95),(35,45)],fill=(70,75,80))
+            draw.rectangle((0,30,54,109),fill=(50,50,50))
+            image.save(source/'frame-0.png')
+            strict=run(source,root/'strict')
+            self.assertEqual(strict['frames'][0]['segmentation']['status'],'review')
+            self.assertNotIn('registration',strict['frames'][0])
+            inclusive=run(source,root/'inclusive',accept_review=True)
+            self.assertEqual(inclusive['frames'][0]['segmentation']['status'],'review')
+            self.assertIn('registration',inclusive['frames'][0])
+
     def test_flat_frames_have_visible_exclusions(self):
         with tempfile.TemporaryDirectory() as d:
             root=Path(d);source=root/'input';source.mkdir()
