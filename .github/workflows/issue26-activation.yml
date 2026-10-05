@@ -1,0 +1,33 @@
+name: Issue 26 activation benchmark
+
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - "diamond360/**"
+      - "tests/test_activation*.py"
+      - "scripts/issue26_activation_benchmark.py"
+      - ".github/workflows/issue26-activation.yml"
+      - "docs/360/benchmark/**"
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e .
+      - name: Activation unit tests
+        run: python -m unittest tests.test_activation tests.test_activation_benchmark -v
+        continue-on-error: true
+      - name: Generate four-stone activation evidence
+        run: python scripts/issue26_activation_benchmark.py
+      - name: Verify activation tests with committed-artifact contract
+        run: python -m unittest tests.test_activation tests.test_activation_benchmark -v
+      - uses: actions/upload-artifact@v4
+        with:
+          name: issue26-activation-evidence
+          path: docs/360/activation
