@@ -1,33 +1,226 @@
-name: issue19 validation probe
+name: validate issue 19 step bands
 
 on:
   push:
     branches: [issue-19-asscher-step-bands]
+    paths:
+      - ".github/workflows/issue19-validation.yml"
+      - "diamond360/**"
+      - "tests/**"
 
 permissions:
   contents: read
 
 jobs:
-  probe:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-      - name: Probe known public 360 endpoints
+          python-version: "3.11"
+      - name: Install
+        run: python -m pip install -e .
+      - name: Recover four complete benchmark sequences
         run: |
           python - <<'PY'
-          import requests
-          urls = [
-              "https://vision.diajewel360.com/imaged/VL-131355/1.json?version=1",
-              "https://vision.diajewel360.com/Vision360.html?d=VL-131355",
-              "https://workshop.360view.link/view/2612250-YK-808",
-          ]
-          for url in urls:
-              print("\nURL", url)
-              r = requests.get(url, timeout=30)
-              print("status", r.status_code, "type", r.headers.get("content-type"), "bytes", len(r.content))
-              text = r.text[:1200].replace("\n", "\\n")
-              print("prefix", text)
+          import ast,base64,hashlib,io,json,re,subprocess,time,urllib.request,zipfile
+          from datetime import datetime, timezone
+          from pathlib import Path
+          from PIL import Image
+
+          repo=Path.cwd()
+          root=Path('/tmp/sources'); root.mkdir(exist_ok=True)
+          reference=json.loads((repo/'docs/360/benchmark/per-stone/IGI-LG756580087/source-manifest.json').read_text())
+
+          def fetch(url):
+              last=None
+              for attempt in range(5):
+                  try:
+                      req=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0'})
+                      return urllib.request.urlopen(req,timeout=60).read()
+                  except Exception as e:
+                      last=e; time.sleep(2*(attempt+1))
+              raise last
+
+          js=fetch('https://vision.diajewel360.com/js/vision360.js').decode('utf-8','replace')
+          table_match=re.search(r'var\s+_0xb946\s*=\s*(\[.*?\]);',js,re.S)
+          assert table_match, 'Diajewel string table not found'
+          table=ast.literal_eval(table_match.group(1))
+          key=table[332].encode()
+          assert len(key)==16
+
+          def permutations(meta):
+              p=subprocess.run(
+                  ['openssl','enc','-d','-aes-128-cbc','-K',key.hex(),'-iv',key.hex(),'-base64','-A'],
+                  input=meta['scramble'].encode(),stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+              if p.returncode:
+                  raise RuntimeError(p.stderr.decode())
+              value=json.loads(p.stdout)
+              expected=[4,4,8,16,32,64,128]
+              assert [len(x) for x in value]==expected
+              for n,perm in zip(expected,value):
+                  assert sorted(perm)==list(range(n))
+              return value
+
+          def ordered_slots(perms):
+              current=[]
+              for batch,perm in enumerate(perms,1):
+                  inverse=[perm.index(i) for i in range(len(perm))]
+                  items=[(batch,stored) for stored in inverse]
+                  if batch==1:
+                      current=items
+                  else:
+                      for i,item in enumerate(items):
+                          current.insert(((i+1)*2)-1,item)
+              assert len(current)==256 and len(set(current))==256
+              return current
+
+          ref_meta=json.loads(fetch('https://vision.diajewel360.com/imaged/VL-131355/0.json'))
+          ref_slots=ordered_slots(permutations(ref_meta))
+          audited=[(f['batch'],f['stored_position']) for f in sorted(reference['frames'],key=lambda x:x['source_index'])]
+          assert ref_slots==audited, 'player reconstruction does not reproduce issue-15 ordering'
+
+          configs={
+            'IGI-LG756580087': dict(
+              pipeline='diajewel', viewer='https://vision.diajewel360.com/Vision360.html?d=VL-131355',
+              base='https://vision.diajewel360.com/imaged/VL-131355/', version='1', archive=None),
+            'IGI-LG818659722': dict(
+              pipeline='diajewel', viewer='https://vision.diajewel360.com/Vision360.html?d=PD-230293',
+              base='https://vision.diajewel360.com/imaged/PD-230293/', version='1',
+              archive='resources/IGI-LG818659722/artifacts/IGI-LG818659722-compact-evaluation-evidence.zip'),
+            'IGI-LG836619414': dict(
+              pipeline='diajewel', viewer='https://vision.diajewel360.com/Vision360.html?d=PD-249203',
+              base='https://vision.diajewel360.com/imaged/PD-249203/', version='1',
+              archive='resources/IGI-LG836619414/artifacts/IGI-LG836619414-compact-evaluation-evidence.zip'),
+            'IGI-LG756520111': dict(
+              pipeline='workshop', viewer='https://workshop.360view.link/view/2612250-YK-808',
+              base='https://data1.360view.link/data/1/imaged/2612250-YK-808/', version='2',
+              archive='resources/IGI-LG756520111/artifacts/IGI-LG756520111-pass2-motion-diagrams.zip'),
+          }
+
+          def archived_hashes(path):
+              found={}
+              if not path: return found
+              with zipfile.ZipFile(repo/path) as z:
+                  for name in z.namelist():
+                      if name.lower().endswith('.json'):
+                          try: obj=json.loads(z.read(name))
+                          except Exception: continue
+                          stack=[obj]
+                          while stack:
+                              x=stack.pop()
+                              if isinstance(x,dict):
+                                  idx=x.get('source_index',x.get('frame_index_zero_based',x.get('index')))
+                                  sha=x.get('sha256')
+                                  if type(idx) is int and isinstance(sha,str) and re.fullmatch(r'[0-9a-f]{64}',sha):
+                                      found[idx]=sha
+                                  stack.extend(x.values())
+                              elif isinstance(x,list):
+                                  stack.extend(x)
+                  for name in z.namelist():
+                      if not re.search(r'\.(jpe?g|png)$',name,re.I): continue
+                      m=re.search(r'(?:frame[-_ ]?|[/_-])(\d{3})(?=\D|$)',name,re.I)
+                      if m:
+                          found.setdefault(int(m.group(1)),hashlib.sha256(z.read(name)).hexdigest())
+              return found
+
+          for cert,cfg in configs.items():
+              dest=root/cert; frames_dir=dest/'frames'; frames_dir.mkdir(parents=True)
+              meta_url=cfg['base']+'0.json'+(('?version=') if cfg['pipeline']=='workshop' else '')
+              meta_raw=fetch(meta_url); meta=json.loads(meta_raw)
+              slots=ordered_slots(permutations(meta))
+              batches={}; batch_records=[]
+              for b in range(1,8):
+                  url=cfg['base']+f'{b}.json?version={cfg["version"]}'
+                  raw=fetch(url); values=json.loads(raw)
+                  assert isinstance(values,list) and len(values) in (4,8,16,32,64,128)
+                  batches[b]=values
+                  batch_records.append(dict(batch=b,url=url,sha256=hashlib.sha256(raw).hexdigest(),count=len(values)))
+              records=[]; hashes=set(); dimensions=set()
+              for idx,(batch,stored) in enumerate(slots):
+                  blob=base64.b64decode(batches[batch][stored],validate=True)
+                  assert blob[:2]==b'\xff\xd8' and blob[-2:]==b'\xff\xd9'
+                  sha=hashlib.sha256(blob).hexdigest()
+                  assert sha not in hashes
+                  hashes.add(sha)
+                  name=f'{cert}-frame-{idx:03d}.jpg'; rel=f'frames/{name}'
+                  (frames_dir/name).write_bytes(blob)
+                  with Image.open(io.BytesIO(blob)) as im:
+                      im.verify()
+                  with Image.open(io.BytesIO(blob)) as im:
+                      dimensions.add(im.size)
+                  records.append(dict(source_index=idx,path=rel,sha256=sha,bytes=len(blob),
+                                      batch=batch,stored_position=stored,
+                                      source_url=cfg['base']+f'{batch}.json?version={cfg["version"]}'))
+              assert len(records)==256 and len(dimensions)==1
+              archived=archived_hashes(cfg['archive'])
+              mismatched=[i for i,sha in archived.items() if i<256 and records[i]['sha256']!=sha]
+              if cfg['archive']:
+                  verified=[i for i,sha in archived.items() if i<256 and records[i]['sha256']==sha]
+                  assert verified and not mismatched, (cert,verified,mismatched)
+              manifest=dict(
+                schema_version='diamond360-source/1', certificate=cert,
+                source_pipeline=cfg['pipeline'], viewer=cfg['viewer'],
+                retrieved_at=datetime.now(timezone.utc).isoformat(),
+                metadata_url=meta_url, metadata_sha256=hashlib.sha256(meta_raw).hexdigest(),
+                source_frame_count=256, sequence_complete=True,
+                dimensions=list(next(iter(dimensions))),
+                ordering='viewer scramble inverse permutation, progressive odd-position interleave',
+                ordering_validation='reuses issue-18 validated player reconstruction; selected archived originals hash-checked where available',
+                batches=batch_records, frames=records)
+              (dest/'source-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+              print(cert,'recovered',len(records),'unique JPEGs',next(iter(dimensions)))
           PY
+      - name: Preprocess benchmark sources
+        run: |
+          rm -rf /tmp/benchmark-run
+          python -m diamond360.benchmark docs/360/benchmark/benchmark.json             --source-root /tmp/sources --output /tmp/benchmark-run
+      - name: Run issue 19 step-band validation
+        run: |
+          rm -rf /tmp/issue19-validation
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from diamond360.benchmark import cyclic_window
+          from diamond360.asscher_steps import run
+
+          manifest=json.loads(Path('docs/360/benchmark/benchmark.json').read_text())
+          root=Path('/tmp/issue19-validation'); root.mkdir()
+          summary=[]
+          for stone in manifest['stones']:
+              if stone['source_status']!='complete':
+                  continue
+              cert=stone['certificate']
+              indices=cyclic_window(stone['faceup_center'],manifest['core_window'],stone['source_frame_count'])
+              processed=Path('/tmp/benchmark-run/per-stone')/cert/'processed'
+              out=root/cert
+              result=run(processed,out,indices,wrap=True)
+              boundaries={name:{
+                  'global_u':data['global_u'],
+                  'sector_support':data['sector_support'],
+                  'sector_u':data['sector_u'],
+              } for name,data in result.get('boundaries',{}).items()}
+              summary.append({
+                  'certificate':cert,
+                  'source_pipeline':stone['source_pipeline'],
+                  'template_status':result['template_status'],
+                  'template_reason':result.get('template_reason'),
+                  'boundaries':boundaries,
+                  'coarse_comparison':result.get('coarse_comparison'),
+                  'frame_status_counts':{state:sum(f['status']==state for f in result['frames'])
+                                       for state in ('ok','review','unavailable')},
+              })
+              print(cert,result['template_status'],
+                    [round(x['global_u'],3) for x in result.get('boundaries',{}).values()],
+                    result.get('coarse_comparison',{}).get('edge_alignment') if result.get('coarse_comparison') else None)
+          (root/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
+          PY
+      - name: Run repository tests
+        run: python -m unittest discover -s tests -v
+      - name: Upload validation QC
+        uses: actions/upload-artifact@v4
+        with:
+          name: issue19-step-band-qc
+          path: /tmp/issue19-validation
+          retention-days: 7
