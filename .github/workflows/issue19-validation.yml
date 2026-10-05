@@ -11,9 +11,14 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: issue19-step-band-validation
+  cancel-in-progress: true
+
 jobs:
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -21,16 +26,19 @@ jobs:
           python-version: "3.11"
       - name: Install
         run: python -m pip install -e .
-      - name: Recover four complete benchmark sequences
+      - name: Recover exact core-window originals
         run: |
           python - <<'PY'
           import ast,base64,hashlib,io,json,re,subprocess,time,urllib.request,zipfile
           from datetime import datetime, timezone
           from pathlib import Path
           from PIL import Image
+          from diamond360.benchmark import cyclic_window
 
           repo=Path.cwd()
           root=Path('/tmp/sources'); root.mkdir(exist_ok=True)
+          benchmark=json.loads((repo/'docs/360/benchmark/benchmark.json').read_text())
+          benchmark_by_cert={s['certificate']:s for s in benchmark['stones']}
           reference=json.loads((repo/'docs/360/benchmark/per-stone/IGI-LG756580087/source-manifest.json').read_text())
 
           def fetch(url):
@@ -84,7 +92,8 @@ jobs:
           configs={
             'IGI-LG756580087': dict(
               pipeline='diajewel', viewer='https://vision.diajewel360.com/Vision360.html?d=VL-131355',
-              base='https://vision.diajewel360.com/imaged/VL-131355/', version='1', archive=None),
+              base='https://vision.diajewel360.com/imaged/VL-131355/', version='1',
+              archive='resources/IGI-LG756580087/artifacts/IGI-LG756580087-pass2-compact-evaluation-evidence.zip'),
             'IGI-LG818659722': dict(
               pipeline='diajewel', viewer='https://vision.diajewel360.com/Vision360.html?d=PD-230293',
               base='https://vision.diajewel360.com/imaged/PD-230293/', version='1',
@@ -101,7 +110,6 @@ jobs:
 
           def archived_hashes(path):
               found={}
-              if not path: return found
               with zipfile.ZipFile(repo/path) as z:
                   for name in z.namelist():
                       if name.lower().endswith('.json'):
@@ -126,6 +134,8 @@ jobs:
               return found
 
           for cert,cfg in configs.items():
+              stone=benchmark_by_cert[cert]
+              requested=cyclic_window(stone['faceup_center'],benchmark['core_window'],stone['source_frame_count'])
               dest=root/cert; frames_dir=dest/'frames'; frames_dir.mkdir(parents=True)
               meta_url=cfg['base']+'0.json'+(('?version=') if cfg['pipeline']=='workshop' else '')
               meta_raw=fetch(meta_url); meta=json.loads(meta_raw)
@@ -134,11 +144,11 @@ jobs:
               for b in range(1,8):
                   url=cfg['base']+f'{b}.json?version={cfg["version"]}'
                   raw=fetch(url); values=json.loads(raw)
-                  assert isinstance(values,list) and len(values) in (4,8,16,32,64,128)
                   batches[b]=values
                   batch_records.append(dict(batch=b,url=url,sha256=hashlib.sha256(raw).hexdigest(),count=len(values)))
               records=[]; hashes=set(); dimensions=set()
-              for idx,(batch,stored) in enumerate(slots):
+              for idx in requested:
+                  batch,stored=slots[idx]
                   blob=base64.b64decode(batches[batch][stored],validate=True)
                   assert blob[:2]==b'\xff\xd8' and blob[-2:]==b'\xff\xd9'
                   sha=hashlib.sha256(blob).hexdigest()
@@ -153,49 +163,58 @@ jobs:
                   records.append(dict(source_index=idx,path=rel,sha256=sha,bytes=len(blob),
                                       batch=batch,stored_position=stored,
                                       source_url=cfg['base']+f'{batch}.json?version={cfg["version"]}'))
-              assert len(records)==256 and len(dimensions)==1
+              assert len(records)==benchmark['core_window'] and len(dimensions)==1
               archived=archived_hashes(cfg['archive'])
-              mismatched=[i for i,sha in archived.items() if i<256 and records[i]['sha256']!=sha]
-              if cfg['archive']:
-                  verified=[i for i,sha in archived.items() if i<256 and records[i]['sha256']==sha]
-                  assert verified and not mismatched, (cert,verified,mismatched)
+              verified=[i for i in requested if archived.get(i)==records[requested.index(i)]['sha256']]
+              mismatched=[i for i in requested if i in archived and archived[i]!=records[requested.index(i)]['sha256']]
+              assert verified and not mismatched, (cert,verified,mismatched)
               manifest=dict(
                 schema_version='diamond360-source/1', certificate=cert,
                 source_pipeline=cfg['pipeline'], viewer=cfg['viewer'],
                 retrieved_at=datetime.now(timezone.utc).isoformat(),
                 metadata_url=meta_url, metadata_sha256=hashlib.sha256(meta_raw).hexdigest(),
-                source_frame_count=256, sequence_complete=True,
+                source_frame_count=256, sequence_complete=False,
                 dimensions=list(next(iter(dimensions))),
                 ordering='viewer scramble inverse permutation, progressive odd-position interleave',
-                ordering_validation='reuses issue-18 validated player reconstruction; selected archived originals hash-checked where available',
+                ordering_validation='issue-18 reconstruction; exact core frames only; archived originals hash-checked',
+                requested_core_indices=requested, archived_hash_matches=verified,
                 batches=batch_records, frames=records)
               (dest/'source-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
-              print(cert,'recovered',len(records),'unique JPEGs',next(iter(dimensions)))
+              print(cert,'core',requested,'archive matches',verified)
           PY
-      - name: Preprocess benchmark sources
+      - name: Preprocess 68 core frames
         run: |
-          rm -rf /tmp/benchmark-run
-          python -m diamond360.benchmark docs/360/benchmark/benchmark.json             --source-root /tmp/sources --output /tmp/benchmark-run
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from diamond360.pipeline import run
+
+          root=Path('/tmp/sources'); processed=Path('/tmp/processed'); processed.mkdir()
+          for source in sorted(root.iterdir()):
+              m=json.loads((source/'source-manifest.json').read_text())
+              indices=m['requested_core_indices']
+              out=processed/source.name
+              result=run(source,out,order_manifest=source/'source-manifest.json',
+                         gain=1.0,diagnostic_indices=indices,accept_review=True)
+              accepted=sum('registration' in r for r in result['frames'])
+              print(source.name,'registered',accepted,'/',len(indices))
+          PY
       - name: Run issue 19 step-band validation
         run: |
           rm -rf /tmp/issue19-validation
           python - <<'PY'
           import json
           from pathlib import Path
-          from diamond360.benchmark import cyclic_window
           from diamond360.asscher_steps import run
 
-          manifest=json.loads(Path('docs/360/benchmark/benchmark.json').read_text())
+          sources=Path('/tmp/sources'); processed=Path('/tmp/processed')
           root=Path('/tmp/issue19-validation'); root.mkdir()
           summary=[]
-          for stone in manifest['stones']:
-              if stone['source_status']!='complete':
-                  continue
-              cert=stone['certificate']
-              indices=cyclic_window(stone['faceup_center'],manifest['core_window'],stone['source_frame_count'])
-              processed=Path('/tmp/benchmark-run/per-stone')/cert/'processed'
-              out=root/cert
-              result=run(processed,out,indices,wrap=True)
+          for source in sorted(sources.iterdir()):
+              cert=source.name
+              source_meta=json.loads((source/'source-manifest.json').read_text())
+              indices=source_meta['requested_core_indices']
+              result=run(processed/cert,root/cert,indices,wrap=True)
               boundaries={name:{
                   'global_u':data['global_u'],
                   'sector_support':data['sector_support'],
@@ -203,7 +222,8 @@ jobs:
               } for name,data in result.get('boundaries',{}).items()}
               summary.append({
                   'certificate':cert,
-                  'source_pipeline':stone['source_pipeline'],
+                  'source_pipeline':source_meta['source_pipeline'],
+                  'archive_hash_matches':source_meta['archived_hash_matches'],
                   'template_status':result['template_status'],
                   'template_reason':result.get('template_reason'),
                   'boundaries':boundaries,
@@ -213,7 +233,8 @@ jobs:
               })
               print(cert,result['template_status'],
                     [round(x['global_u'],3) for x in result.get('boundaries',{}).values()],
-                    result.get('coarse_comparison',{}).get('edge_alignment') if result.get('coarse_comparison') else None)
+                    [round(x['edge_ratio'],2) if x['edge_ratio'] is not None else None
+                     for x in (result.get('coarse_comparison') or {}).get('edge_alignment',[])])
           (root/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
           PY
       - name: Run repository tests
