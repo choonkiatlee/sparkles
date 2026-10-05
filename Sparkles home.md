@@ -40,3 +40,6 @@ Diamond research and dated evaluations in the dedicated Sparkles repository. Eac
 - [[evaluations/Sparkles IGI-LG756520111 evaluation 2026-10-05-140217|IGI LG756520111 — Shortlist]] — [[evaluations/IGI-LG756520111-visual-report-2026-10-05-140217.html|Visual report with checklist]].
 - [[evaluations/Sparkles IGI-LG756580087 evaluation 2026-10-05-140217|IGI LG756580087 — Shortlist]] — [[evaluations/IGI-LG756580087-visual-report-2026-10-05-140217.html|Visual report with checklist]].
 - [[evaluations/Sparkles IGI-LG836619414 evaluation 2026-10-05-140217|IGI LG836619414 — Shortlist]] — [[evaluations/IGI-LG836619414-visual-report-2026-10-05-140217.html|Visual report with checklist]].
+
+
+- [[evaluations/Sparkles IGI-LG818659722 evaluation 2026-10-05-144629|IGI LG818659722 — Reserve]] — [[evaluations/IGI-LG818659722-visual-report-2026-10-05-144629.html|Visual report with checklist]]; clear layers, grouped upper/lower darkness; diffuse-light check decisive.
