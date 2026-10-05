@@ -95,6 +95,12 @@ Separate command: `python -m diamond360.region_traces PROCESSED --output FRESH -
 `steps.json` records the requested/accepted source indices, exclusions, the
 sequence-level template status (`ok`/`review`/`unavailable`), three ordered
 boundary names and eight `side_*`/`corner_*` control points per boundary.
+Each boundary also records its `semantic_window`, raw `window_margin` (distance
+to its nearest window edge in u units), `window_margin_samples`, and
+`near_window_edge`. A margin no larger than one radial sample downgrades a
+usable template to `review` with reason `semantic_window_edge`; this diagnostic
+is not a calibrated probability. Per-frame status remains local edge support
+and must be read alongside template and upstream preprocessing status.
 The radial coordinate is silhouette-normalised: distance from the registered
 canvas centre divided by the silhouette radius in the same direction.
 

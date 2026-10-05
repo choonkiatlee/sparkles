@@ -208,8 +208,10 @@ def discover_template(frame_sector_evidence, u):
         return dict(status="unavailable", reason="semantic_boundaries_not_separable",
                     consensus=consensus, sectors=sectors, candidates=candidates)
     controls = []
-    for boundary in selected:
+    radial_spacing = float(np.median(np.diff(u)))
+    for boundary, window in zip(selected, BOUNDARY_WINDOWS):
         global_u = boundary["u"]
+        margin = float(min(global_u - window[0], window[1] - global_u))
         vals = np.full(8, global_u, float)
         observed = np.zeros(8, bool)
         zscores = np.full(8, np.nan)
@@ -226,7 +228,9 @@ def discover_template(frame_sector_evidence, u):
                 vals[t] = .8 * vals[t] + .2 * mean
         controls.append(dict(global_u=global_u, sector_u=vals, observed=observed,
                              zscores=zscores, sector_support=float(observed.mean()),
-                             prominence=boundary["prominence"]))
+                             prominence=boundary["prominence"], semantic_window=window,
+                             window_margin=margin, window_margin_samples=margin / radial_spacing,
+                             near_window_edge=bool(margin <= radial_spacing)))
 
     global_u = np.array([c["global_u"] for c in controls])
     for s in range(8):
@@ -241,6 +245,9 @@ def discover_template(frame_sector_evidence, u):
         c["sector_support"] = support
     status = "ok" if min(supports) >= .5 else "review" if min(supports) >= .25 else "unavailable"
     reason = None if status != "unavailable" else "insufficient_cross_sector_support"
+    if status != "unavailable" and any(c["near_window_edge"] for c in controls):
+        status = "review"
+        reason = "semantic_window_edge"
     return dict(status=status, reason=reason, consensus=consensus, sectors=sectors,
                 candidates=candidates, controls=controls)
 
@@ -402,7 +409,11 @@ def _json_control(control):
                 observed=[bool(x) for x in control["observed"]],
                 zscores=[float(x) if np.isfinite(x) else None for x in control["zscores"]],
                 sector_support=float(control["sector_support"]),
-                prominence=float(control["prominence"]))
+                prominence=float(control["prominence"]),
+                semantic_window=list(control["semantic_window"]),
+                window_margin=float(control["window_margin"]),
+                window_margin_samples=float(control["window_margin_samples"]),
+                near_window_edge=bool(control["near_window_edge"]))
 
 
 def run(processed, output, indices, wrap=False, angle_count=96, radial_samples=160):
@@ -516,8 +527,7 @@ def run(processed, output, indices, wrap=False, angle_count=96, radial_samples=1
                                          position=frame["record"]["position"],
                                          status="unavailable",
                                          boundary_support=[]))
-    (output / "steps.json").write_text(json.dumps(result, indent=2, allow_nan=False) + "
-")
+    (output / "steps.json").write_text(json.dumps(result, indent=2, allow_nan=False) + "\n")
     return result
 
 

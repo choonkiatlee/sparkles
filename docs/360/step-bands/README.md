@@ -63,16 +63,59 @@ The #18 benchmark supplies the real validation set: four complete 256-frame Assc
 
 Local validation found an important failure in the first global-peak selector: on LG756580087 it chose a strong inner reflection near `u=0.245` as the first boundary, while LG836619414 chose the visually corresponding major step junction near `u=0.50`. The semantic-zone rule above fixes that ordinal mismatch rather than tuning peak strength stone-by-stone.
 
-| Stone | Local evidence | selected `u` boundaries | frame QC | edge ratio vs legacy radii |
-|---|---|---|---|---|
-| LG756580087 | 8 original near-face-up processed frames | 0.497 / 0.780 / 0.874 | 8/8 ok | 2.14 / 2.15 / 1.87 |
-| LG756520111 | 12 original near-face-up frames embedded in its evaluation evidence | 0.528 / 0.755 / 0.887 | 12/12 ok | 1.35 / 3.34 / 1.22 |
-| LG818659722 | 12 original near-face-up frames embedded in its evaluation evidence | 0.597 / 0.742 / 0.881 | 12/12 ok | 5.16 / 2.38 / 1.12 |
-| LG836619414 | exact 17-frame core window from the retained full 256-frame source | 0.503 / 0.748 / 0.887 | 17/17 ok | 1.78 / 2.24 / 1.25 |
+## Exact-core validation · 5 October 2026
 
-Manual overlay review on these four stones shows the zoned boundaries following the same visually meaningful nested junctions much more consistently than the original unconstrained selector. The two Workshop/Diajewel evidence sets whose preprocessing segmentation is already marked `review` remain review-limited upstream even though their step-template frame support is strong.
+Ran locally from PR #25 head `cb9b366`, with the JSON syntax fix and semantic-window
+margin diagnostic below; no GitHub Actions. All four regenerated sources use the
+same exact wrapped indices `248..255,0..8` (17 frames each), default preprocessing,
+`gain=1.0`, and the #18 `accept_review=True` policy. No stone-specific thresholds
+or semantic windows were changed. Viewer ordering reproduces the full archived
+LG756580087 source manifest. All 38 overlapping archived-original hashes match;
+there are no mismatches. New core positions without retained originals are recorded
+with source batch, stored position and SHA-256 rather than claimed independently verified.
 
-For strict #18 parity, the remaining validation gap is rerunning the exact 17 consecutive core frames for LG756580087, LG756520111 and LG818659722. Those complete raw working stacks were deliberately not retained locally; the representative original frames above are useful cross-stone evidence but are not a substitute for that final consecutive-window rerun. The 33-frame windows remain sensitivity checks rather than template-training windows because #18 showed substantial outer-support degradation with wider pose excursions.
+| Stone | matched originals | selected `u` boundaries | template | local frame support | edge ratios vs coarse | upstream segmentation |
+|---|---:|---|---|---|---|---|
+| [LG756580087](exact-core/IGI-LG756580087/overlays.jpg) | 8 | 0.497 / 0.780 / 0.874 | ok | 17/17 ok | 1.96 / 2.01 / 1.61 | 17/17 ok |
+| [LG756520111](exact-core/IGI-LG756520111/overlays.jpg) | 10 | 0.522 / 0.755 / 0.887 | ok | 17/17 ok | 1.35 / 2.81 / 1.39 | 17/17 review |
+| [LG818659722](exact-core/IGI-LG818659722/overlays.jpg) | 10 | 0.597 / 0.742 / 0.887 | **review** | 17/17 ok | 5.65 / 1.91 / 1.08 | 17/17 review |
+| [LG836619414](exact-core/IGI-LG836619414/overlays.jpg) | 10 | 0.503 / 0.748 / 0.887 | ok | 17/17 ok | 1.78 / 2.24 / 1.25 | 17/17 ok |
+
+Manual inspection of the nine representative overlays per stone (248,250,252,254,
+0,2,4,6,8), together with the edge profiles, finds ordered broad central / inner /
+middle / outer junctions through the changing brightness. LG756580087 does not
+revert to the unrelated reflection at `u≈0.245`. The outer division is approximate,
+especially along corners; these masks are broad image bands, not physical facet labels.
+LG756520111's late pale frames retain local edge support, but neither its strong
+step support nor LG818659722's clears their upstream silhouette uncertainty.
+
+**Confirmed failure/confidence case:** LG818659722's first selected boundary remains
+`u=0.597484`, only `0.002516` from the fixed upper limit 0.60, or 0.40 radial samples.
+Each boundary now reports `semantic_window`, `window_margin`,
+`window_margin_samples` and `near_window_edge`. A usable template within one radial
+sample of either limit becomes `review` with reason `semantic_window_edge`.
+This exposes prior sensitivity without widening the window or moving the boundary.
+The margin is a raw diagnostic, not a calibrated confidence probability. Local
+frame statuses describe edge support only; consumers must also check template and
+upstream preprocessing status before using masks.
+
+Saved evidence: [summary](exact-core/summary.json),
+[artifact hashes](exact-core/artifact-manifest.json), and one directory per stone
+with `source-manifest.json`, `preprocessing-qc.json`, `steps.json`, `edge-profile.png`,
+`overlays.jpg` and all 17 `regions/*.npz`. The source stacks themselves remain
+uncommitted. The detector file hash in the summary identifies the exact code used.
+
+The baseline PR could not import because the `steps.json` trailing-newline string
+was malformed; the existing end-to-end test reproduced this and passes after the
+fix. The new window-edge regression fails without the margin/status change and
+passes with it. `python -m unittest discover -s tests -v`: **54 tests pass**.
+The stronger-inner-reflection regression is preserved.
+
+The strict four-stone #18-core rerun gap is closed. The method is suitable for
+reviewable broad-band correspondence on these windows, with the explicit review
+cases above. Semantic-versus-coarse temporal trace stability remains a downstream
+comparison, not established by these edge ratios. The 33-frame windows remain
+sensitivity checks because #18 showed outer-support degradation at wider poses.
 
 ## Limits
 

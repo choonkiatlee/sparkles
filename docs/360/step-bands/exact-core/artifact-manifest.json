@@ -1,0 +1,449 @@
+{
+  "artifacts": [
+    {
+      "path": "IGI-LG756520111/edge-profile.png",
+      "sha256": "e9b14a871ffeecc20a0ad8c182f41c764a40e0708efc265ed5ade96092eecff7",
+      "bytes": 13659
+    },
+    {
+      "path": "IGI-LG756520111/overlays.jpg",
+      "sha256": "325b08d48895581debd5998d3a0671587a89169418f05808dc1a51b75e476c4d",
+      "bytes": 95626
+    },
+    {
+      "path": "IGI-LG756520111/preprocessing-qc.json",
+      "sha256": "eae4b174c8659599ce7b204520784bd8003cec93786073868d2a5224f11d6bb5",
+      "bytes": 224
+    },
+    {
+      "path": "IGI-LG756520111/regions/0000.npz",
+      "sha256": "eda30ce8b0e50c9c6a5aaa741f2ff11ffce9602cd1b21d034198db438edae68a",
+      "bytes": 3134
+    },
+    {
+      "path": "IGI-LG756520111/regions/0001.npz",
+      "sha256": "2e68158b37fb8cf6a39c2bd51f0e5854e08229dc8f6261a9d56f566876403d77",
+      "bytes": 3120
+    },
+    {
+      "path": "IGI-LG756520111/regions/0002.npz",
+      "sha256": "12d7d78e6489abd1c85508354a4d8e7ebbabd098284a350ce205bc6d03954266",
+      "bytes": 3121
+    },
+    {
+      "path": "IGI-LG756520111/regions/0003.npz",
+      "sha256": "19130c591c4aecc7d0d8c2cea61222b019b26ffd3076c3ff23158eb08eb5ced5",
+      "bytes": 3071
+    },
+    {
+      "path": "IGI-LG756520111/regions/0004.npz",
+      "sha256": "3a7d91f57044176f0c07cb88cc58d6e66c7c9b082ca9e58c2098ed83ad504266",
+      "bytes": 3122
+    },
+    {
+      "path": "IGI-LG756520111/regions/0005.npz",
+      "sha256": "47e7d54307f485849a2f95f5619beb33c242abd0f531e4d4e05a5341deef2cf3",
+      "bytes": 3028
+    },
+    {
+      "path": "IGI-LG756520111/regions/0006.npz",
+      "sha256": "483e2edff4e2b05f42db4c69106c74359e1ddfbd3776f59d34fe6696a9ccd3db",
+      "bytes": 3115
+    },
+    {
+      "path": "IGI-LG756520111/regions/0007.npz",
+      "sha256": "311fb37d23606aa727cc1996fe3f2fe1844ee6b1639f04b7b740d22c40d9a785",
+      "bytes": 3065
+    },
+    {
+      "path": "IGI-LG756520111/regions/0008.npz",
+      "sha256": "2aef2decc8de76cdf55aa85d7e5729908f87dfab1c4aefb826408b01d5bac870",
+      "bytes": 3137
+    },
+    {
+      "path": "IGI-LG756520111/regions/0009.npz",
+      "sha256": "3dda7fffcaaa676f25e6d332a8ab244755c329c852541eda6b4701f11cba9595",
+      "bytes": 3137
+    },
+    {
+      "path": "IGI-LG756520111/regions/0010.npz",
+      "sha256": "3b18a0dbd2829d75571eddfa35ab172791b11bf1b0d146cb654cacadd4996a72",
+      "bytes": 3170
+    },
+    {
+      "path": "IGI-LG756520111/regions/0011.npz",
+      "sha256": "a66132febe32400f9e582b9124fa8162f33fe2c5de3c054d9a91895a81b012f2",
+      "bytes": 3129
+    },
+    {
+      "path": "IGI-LG756520111/regions/0012.npz",
+      "sha256": "185c1b7da85377bba072207c7504596c262614fa3803c226f64f9420231e645e",
+      "bytes": 3072
+    },
+    {
+      "path": "IGI-LG756520111/regions/0013.npz",
+      "sha256": "afd11deeb7be663bbaba510a9ce712d489baf8004ae56921835a34bddcd78a46",
+      "bytes": 3022
+    },
+    {
+      "path": "IGI-LG756520111/regions/0014.npz",
+      "sha256": "f2d28940e6959957a100461c9e2cc987baf33352d30c03f773f784ca6be4b983",
+      "bytes": 3196
+    },
+    {
+      "path": "IGI-LG756520111/regions/0015.npz",
+      "sha256": "c4228dbd35aa9548263e3246aad3336feb4a7fcbf89072607e27305167955180",
+      "bytes": 3156
+    },
+    {
+      "path": "IGI-LG756520111/regions/0016.npz",
+      "sha256": "779e9dc35aba8b98ecaf5dd7c7b21401e809dc4d671197fe60fb1e7f1dbe0dfa",
+      "bytes": 3159
+    },
+    {
+      "path": "IGI-LG756520111/source-manifest.json",
+      "sha256": "395ff4078e56382b6bff8fba74effbfcad0b7c64130810c3dc17e05616deed07",
+      "bytes": 8377
+    },
+    {
+      "path": "IGI-LG756520111/steps.json",
+      "sha256": "9d34c0c3e06452344b294abb972da9496e2105733c31706424c4ee4d7db98faa",
+      "bytes": 87200
+    },
+    {
+      "path": "IGI-LG756580087/edge-profile.png",
+      "sha256": "6250ad3d8d76ad11299069bc84aa72b5de7f67f107e2403979866800f5b7005c",
+      "bytes": 13679
+    },
+    {
+      "path": "IGI-LG756580087/overlays.jpg",
+      "sha256": "c7bdcb938ff360c7e6025808542d486222d1aa49f4e887f48335ad25609d0c1f",
+      "bytes": 95273
+    },
+    {
+      "path": "IGI-LG756580087/preprocessing-qc.json",
+      "sha256": "1e860aa0b4030ce259cb5106e8a59c774bef09e5eab26e705ee333343965c135",
+      "bytes": 220
+    },
+    {
+      "path": "IGI-LG756580087/regions/0000.npz",
+      "sha256": "3337332720e2665577ddefa9b68bd813edc76dcf708e1c1382f588aedac46281",
+      "bytes": 3496
+    },
+    {
+      "path": "IGI-LG756580087/regions/0001.npz",
+      "sha256": "1d6258983709f4aa3cca270f578d9f069b3e36eb7a27ea6c47444819e7223a9d",
+      "bytes": 3415
+    },
+    {
+      "path": "IGI-LG756580087/regions/0002.npz",
+      "sha256": "b41fa11ee3f8af36b1e9cfd93047f6abe09ca65e183a9d2976e050816c43a360",
+      "bytes": 3402
+    },
+    {
+      "path": "IGI-LG756580087/regions/0003.npz",
+      "sha256": "9db440176b40591f51302c85c08a8a34ad0d8d9ecdf78bd519c281721f277805",
+      "bytes": 3298
+    },
+    {
+      "path": "IGI-LG756580087/regions/0004.npz",
+      "sha256": "0e9556caa01326923f966af3e5f08eb55f66ace73af0975e6fe600486ef97dc1",
+      "bytes": 3280
+    },
+    {
+      "path": "IGI-LG756580087/regions/0005.npz",
+      "sha256": "a2e0bc2ff0f9cbeba0b4af971d4c9cbea549f935143174bce49f7342ffa44b39",
+      "bytes": 3184
+    },
+    {
+      "path": "IGI-LG756580087/regions/0006.npz",
+      "sha256": "b05d5fb3fae61467787927f967c3402f60ddbfa0c8e4adb3a660356b4c74f0a3",
+      "bytes": 3138
+    },
+    {
+      "path": "IGI-LG756580087/regions/0007.npz",
+      "sha256": "1d733a54b1dde1ec6ebdbaf6478604156b9eaa6020eb7a498266d5b9dd558b2c",
+      "bytes": 3115
+    },
+    {
+      "path": "IGI-LG756580087/regions/0008.npz",
+      "sha256": "ee845b6c16e17df040622bee441a518951373c2b75e07578c4333a4092dc01f5",
+      "bytes": 3109
+    },
+    {
+      "path": "IGI-LG756580087/regions/0009.npz",
+      "sha256": "7e3b0f153874061b4f3ec7eebd7b1a584e579267718bc5e32174fbfa3ddca0c0",
+      "bytes": 3135
+    },
+    {
+      "path": "IGI-LG756580087/regions/0010.npz",
+      "sha256": "46c2b3064ea33d883d7ab5d161109eca8cac4abaf1f880962de886b0dfe11345",
+      "bytes": 3174
+    },
+    {
+      "path": "IGI-LG756580087/regions/0011.npz",
+      "sha256": "54168a666dbf98747f56e28c3c90cca22320c6d32527c179f3d014ea395097d9",
+      "bytes": 3222
+    },
+    {
+      "path": "IGI-LG756580087/regions/0012.npz",
+      "sha256": "14b95f1d4cc4a24bb0e6919c1885cc78fd43cd3a8cec8efc6f4b09231a813f53",
+      "bytes": 3261
+    },
+    {
+      "path": "IGI-LG756580087/regions/0013.npz",
+      "sha256": "f9cccaf0e7cffb753828770d1aea0008daab70c21e25ae0119c31c6fb1e237f0",
+      "bytes": 3325
+    },
+    {
+      "path": "IGI-LG756580087/regions/0014.npz",
+      "sha256": "2827efd24be7fa9716ee4273625e69554533fc8c101ff06ba0eb09df22f68fe5",
+      "bytes": 3355
+    },
+    {
+      "path": "IGI-LG756580087/regions/0015.npz",
+      "sha256": "1c07ad7bb1dfe14da3c070be671b1276239d19c637654b82d6bc824816916818",
+      "bytes": 3380
+    },
+    {
+      "path": "IGI-LG756580087/regions/0016.npz",
+      "sha256": "54fa3c3a04684f4a0497143c4632579f743d34626915db3bb9ce19c7ea2bc202",
+      "bytes": 3409
+    },
+    {
+      "path": "IGI-LG756580087/source-manifest.json",
+      "sha256": "8cc26ba1e5cefb00631661cc0c95f13dd749ac19d725dbb4c6a98f538580547f",
+      "bytes": 8162
+    },
+    {
+      "path": "IGI-LG756580087/steps.json",
+      "sha256": "9bf6350bd96c9ddda3ac1b6f92ee37b890919e37220126682bd7d2c0c36d9c33",
+      "bytes": 92527
+    },
+    {
+      "path": "IGI-LG818659722/edge-profile.png",
+      "sha256": "9d2d60f8604deaaae8d7f3a145c03a5ebbca068f62cef8ae2825e80b388f21a5",
+      "bytes": 13702
+    },
+    {
+      "path": "IGI-LG818659722/overlays.jpg",
+      "sha256": "d9774d6bc338d9f0e2d23866677b12171202ac54bdd4bca9e02c868800f2c27c",
+      "bytes": 112698
+    },
+    {
+      "path": "IGI-LG818659722/preprocessing-qc.json",
+      "sha256": "3a308d44038e4ded2db2e1b0bb73944a1c7bd74874a606dde4b8f89b72448506",
+      "bytes": 224
+    },
+    {
+      "path": "IGI-LG818659722/regions/0000.npz",
+      "sha256": "ecdc60e80b655ec081b7d50d0d768ffc734a2299c984a1cafb4341db8e40d7e3",
+      "bytes": 2936
+    },
+    {
+      "path": "IGI-LG818659722/regions/0001.npz",
+      "sha256": "22491819ff7054ae7d1c1439ac331010a15263fb616c855741428e3b439a8a55",
+      "bytes": 2859
+    },
+    {
+      "path": "IGI-LG818659722/regions/0002.npz",
+      "sha256": "b58dcc16c83e14fe4a2c26a2b576193d5be4f4f2a2520a0153303650c00133b6",
+      "bytes": 2882
+    },
+    {
+      "path": "IGI-LG818659722/regions/0003.npz",
+      "sha256": "0f7645f2b31768dfc7ffb6ed196fdfa94980cd6ddf9b7c40b41f2c588b020224",
+      "bytes": 2869
+    },
+    {
+      "path": "IGI-LG818659722/regions/0004.npz",
+      "sha256": "e400b3d735090319d30337683b0dc7a9e546d8bea305ab106306c62d3b87b402",
+      "bytes": 2885
+    },
+    {
+      "path": "IGI-LG818659722/regions/0005.npz",
+      "sha256": "d66afef689a4aff3b172f26ef14ad74b10ee0b4bd964cc39eb77cd39031003f0",
+      "bytes": 2878
+    },
+    {
+      "path": "IGI-LG818659722/regions/0006.npz",
+      "sha256": "5b95c7f7bc47d58e55e8da4745a6e92e158256288893d7877ddb821c974d9dc5",
+      "bytes": 2889
+    },
+    {
+      "path": "IGI-LG818659722/regions/0007.npz",
+      "sha256": "5e7e55a1140efb2458bce87d5ab309741d11f79ed6d182574ba4c2e6a4f116d9",
+      "bytes": 2882
+    },
+    {
+      "path": "IGI-LG818659722/regions/0008.npz",
+      "sha256": "409b22fcbfc94a47d27259c59f5f23cbb2fe9655930f4b4970b9903141e037bd",
+      "bytes": 2869
+    },
+    {
+      "path": "IGI-LG818659722/regions/0009.npz",
+      "sha256": "ddf7731ed8102725b1e03302ace40d22cc40fac4b4ba486e8032b1c9e7623b68",
+      "bytes": 2871
+    },
+    {
+      "path": "IGI-LG818659722/regions/0010.npz",
+      "sha256": "f13cf16384f059cea79d0272e205888ed17dd39142a84284ebeb83925fb6ea04",
+      "bytes": 2882
+    },
+    {
+      "path": "IGI-LG818659722/regions/0011.npz",
+      "sha256": "766096bbe4f63a9f515896b26f0efcb3e10094828dc896ccfac8ec535d6c6ea1",
+      "bytes": 2867
+    },
+    {
+      "path": "IGI-LG818659722/regions/0012.npz",
+      "sha256": "c1e1586729fab03a19d8b938970267e3de4dae4202f3b8e851236dbf3b0aa2f6",
+      "bytes": 2899
+    },
+    {
+      "path": "IGI-LG818659722/regions/0013.npz",
+      "sha256": "f52cf61c463a64ac3f405f7d417b3e01a9f597023c733b67f27ebaf792501ccf",
+      "bytes": 2911
+    },
+    {
+      "path": "IGI-LG818659722/regions/0014.npz",
+      "sha256": "030367cca263ed24aa16b0885cd6160f4916ec49a8afc9cf9edc1a8e9c92f9fa",
+      "bytes": 2938
+    },
+    {
+      "path": "IGI-LG818659722/regions/0015.npz",
+      "sha256": "8de721002448e09a5ee615f4b2ffcdf75ab4c09c8d1b834cc6b4896aa7ad89d3",
+      "bytes": 2939
+    },
+    {
+      "path": "IGI-LG818659722/regions/0016.npz",
+      "sha256": "908fe4ae9c9f3b4af0731a89a66ca9d142ea99616bc3a11ac8c660695b4b9448",
+      "bytes": 2928
+    },
+    {
+      "path": "IGI-LG818659722/source-manifest.json",
+      "sha256": "cdb652711433d4bca3c848d2dcbd376867a2bfb1da3fa5eb0294ca0cb88c19b0",
+      "bytes": 8183
+    },
+    {
+      "path": "IGI-LG818659722/steps.json",
+      "sha256": "ff612aa7c2ebdbed1b7eb6d4d77d30567f2ee441003307f464d8bf861b057de4",
+      "bytes": 91539
+    },
+    {
+      "path": "IGI-LG836619414/edge-profile.png",
+      "sha256": "955d5228e43ecc2f39235aa3e877390f986ab77ed82bb277e4918938db3ad733",
+      "bytes": 13726
+    },
+    {
+      "path": "IGI-LG836619414/overlays.jpg",
+      "sha256": "a6c7499d627874f7e16afb322cd9f5dfeef3d44f61031234a9bf662e7bdd53b8",
+      "bytes": 100031
+    },
+    {
+      "path": "IGI-LG836619414/preprocessing-qc.json",
+      "sha256": "fcffde8e3eee725e25de1971fbc5b3311b45e775b8c960745c4fbddb66b7a23b",
+      "bytes": 220
+    },
+    {
+      "path": "IGI-LG836619414/regions/0000.npz",
+      "sha256": "25091c37f62aef9a486f8282a46257daa244f410b152defc77985acc81441c24",
+      "bytes": 3504
+    },
+    {
+      "path": "IGI-LG836619414/regions/0001.npz",
+      "sha256": "eae8c465b866e8439ea5c36446f1e6eb7a8c5cf5151faca8977dd251a26f1ac8",
+      "bytes": 3437
+    },
+    {
+      "path": "IGI-LG836619414/regions/0002.npz",
+      "sha256": "8fd0e437948033ef16e6b29dbd28aad10fd8e5a1d03ef68992b7405017ef226d",
+      "bytes": 3430
+    },
+    {
+      "path": "IGI-LG836619414/regions/0003.npz",
+      "sha256": "c5f3c8e8b9f2ebb91d9d6dd81489b42db384adc65da753425099f18602c2f9ff",
+      "bytes": 3392
+    },
+    {
+      "path": "IGI-LG836619414/regions/0004.npz",
+      "sha256": "6518e449113a31c63cbe89b9de186d81eee627a1191ceb42ab69c70094b8c027",
+      "bytes": 3255
+    },
+    {
+      "path": "IGI-LG836619414/regions/0005.npz",
+      "sha256": "bbe4c40fb85927d5c6ea6370022f49f2ff300370f581ca658d99302ed3ff711a",
+      "bytes": 3232
+    },
+    {
+      "path": "IGI-LG836619414/regions/0006.npz",
+      "sha256": "7f2c35c8d9944169383a1c73b9e96cc45b0135d5df2eda5a9c90b2e569f47e25",
+      "bytes": 3204
+    },
+    {
+      "path": "IGI-LG836619414/regions/0007.npz",
+      "sha256": "880bdebd4fb6664c3c661b3c5fc89529d534ea8bfb620bc163ed0cd400f2acfd",
+      "bytes": 3185
+    },
+    {
+      "path": "IGI-LG836619414/regions/0008.npz",
+      "sha256": "8472bab7c5350aeb5a757e1443bbae58a79b714443827b3037cfba3a252f9a07",
+      "bytes": 3171
+    },
+    {
+      "path": "IGI-LG836619414/regions/0009.npz",
+      "sha256": "c37eee79fcd2eb480d64054cfb834a91a009951234cacbf70af1b55d6cfa8f23",
+      "bytes": 3100
+    },
+    {
+      "path": "IGI-LG836619414/regions/0010.npz",
+      "sha256": "8abe946f70967438cd81a730f2fe618c55f1580946e010991323c4e93f41d681",
+      "bytes": 3197
+    },
+    {
+      "path": "IGI-LG836619414/regions/0011.npz",
+      "sha256": "869b92c6be3907cd47b5e587f4f7146d9d7662b2396d0013faf8cfca4566de20",
+      "bytes": 3216
+    },
+    {
+      "path": "IGI-LG836619414/regions/0012.npz",
+      "sha256": "270830c4d4019603d796a7f1441421b4505aa9945cd7806a32dfbec35d2ddca8",
+      "bytes": 3304
+    },
+    {
+      "path": "IGI-LG836619414/regions/0013.npz",
+      "sha256": "5e86b971db969fd4c52d9431c890b9fb2d42ac373c3459bcc093c5d771abd0c2",
+      "bytes": 3367
+    },
+    {
+      "path": "IGI-LG836619414/regions/0014.npz",
+      "sha256": "ae119be606616e4f303a374c178df524251576c1527701e614aa9bb84970caf0",
+      "bytes": 3386
+    },
+    {
+      "path": "IGI-LG836619414/regions/0015.npz",
+      "sha256": "4c975deb22e24cd1ac53357b15420e6bfd42266ab54abc7a8c9d52a0f111bad4",
+      "bytes": 3340
+    },
+    {
+      "path": "IGI-LG836619414/regions/0016.npz",
+      "sha256": "937ab7aff96760bb20c40a0d89bd1ec34266ec029c54a1964c98f10dbaf6c27e",
+      "bytes": 3444
+    },
+    {
+      "path": "IGI-LG836619414/source-manifest.json",
+      "sha256": "15cb63e860ced3a49f88d2583e2fe13e7bb50f78ba130722539520dfc849a19d",
+      "bytes": 8175
+    },
+    {
+      "path": "IGI-LG836619414/steps.json",
+      "sha256": "57a57844d904e5f3ddf8be081664faf9925ea857ff4b2b01555bbf607b02bf4d",
+      "bytes": 89478
+    },
+    {
+      "path": "summary.json",
+      "sha256": "e4258f4a72786d134be6b0f318f3f5e508835966c9ebac312d0f4f246cd13be8",
+      "bytes": 7385
+    }
+  ]
+}

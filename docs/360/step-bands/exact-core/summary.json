@@ -1,0 +1,282 @@
+{
+  "validation_environment": "local ChatGPT container; no GitHub Actions",
+  "base_pr_head": "cb9b366f2a55f16f207c25a936339039a32e1d64",
+  "detector_sha256": "f64b12a28ce28da009689b916a97a6bbde159cf7de800c275eec245bcc306fa4",
+  "protocol": "exact 17 wrapped source indices 248..255,0..8; defaults, gain=1, accept_review=True; semantic windows unchanged",
+  "stones": [
+    {
+      "certificate": "IGI-LG756520111",
+      "archive_hash_matches": [
+        248,
+        250,
+        252,
+        254,
+        255,
+        0,
+        2,
+        4,
+        6,
+        8
+      ],
+      "preprocessing": {
+        "segmentation_status_counts": {
+          "review": 17
+        },
+        "registered_frames": 17,
+        "gain": 1.0,
+        "accept_review": true,
+        "sequence_manifest_sha256": "b3cea692b30204d1e95c575cd1f6eb4f4ecc2361df638111d9bdcb5ada31e32e"
+      },
+      "template_status": "ok",
+      "template_reason": null,
+      "boundaries": {
+        "centre_inner": {
+          "global_u": 0.5220125786163522,
+          "sector_support": 0.875,
+          "semantic_window": [
+            0.42,
+            0.6
+          ],
+          "window_margin": 0.07798742138364778,
+          "window_margin_samples": 12.4,
+          "near_window_edge": false
+        },
+        "inner_middle": {
+          "global_u": 0.7547169811320755,
+          "sector_support": 1.0,
+          "semantic_window": [
+            0.64,
+            0.82
+          ],
+          "window_margin": 0.06528301886792442,
+          "window_margin_samples": 10.379999999999987,
+          "near_window_edge": false
+        },
+        "middle_outer": {
+          "global_u": 0.8867924528301887,
+          "sector_support": 1.0,
+          "semantic_window": [
+            0.82,
+            0.92
+          ],
+          "window_margin": 0.033207547169811336,
+          "window_margin_samples": 5.280000000000004,
+          "near_window_edge": false
+        }
+      },
+      "frame_status_counts": {
+        "ok": 17
+      },
+      "edge_ratios": [
+        1.3477410838672292,
+        2.806546867171746,
+        1.3865275944934583
+      ]
+    },
+    {
+      "certificate": "IGI-LG756580087",
+      "archive_hash_matches": [
+        248,
+        250,
+        252,
+        254,
+        0,
+        2,
+        4,
+        8
+      ],
+      "preprocessing": {
+        "segmentation_status_counts": {
+          "ok": 17
+        },
+        "registered_frames": 17,
+        "gain": 1.0,
+        "accept_review": true,
+        "sequence_manifest_sha256": "7e0a59e0b4b41bffb72a1c7b4de83ea83f98a5ee326d080f34f109d5c26f4e7c"
+      },
+      "template_status": "ok",
+      "template_reason": null,
+      "boundaries": {
+        "centre_inner": {
+          "global_u": 0.4968553459119497,
+          "sector_support": 0.875,
+          "semantic_window": [
+            0.42,
+            0.6
+          ],
+          "window_margin": 0.0768553459119497,
+          "window_margin_samples": 12.220000000000006,
+          "near_window_edge": false
+        },
+        "inner_middle": {
+          "global_u": 0.779874213836478,
+          "sector_support": 0.875,
+          "semantic_window": [
+            0.64,
+            0.82
+          ],
+          "window_margin": 0.040125786163521915,
+          "window_margin_samples": 6.379999999999986,
+          "near_window_edge": false
+        },
+        "middle_outer": {
+          "global_u": 0.8742138364779874,
+          "sector_support": 0.875,
+          "semantic_window": [
+            0.82,
+            0.92
+          ],
+          "window_margin": 0.04578616352201259,
+          "window_margin_samples": 7.280000000000004,
+          "near_window_edge": false
+        }
+      },
+      "frame_status_counts": {
+        "ok": 17
+      },
+      "edge_ratios": [
+        1.957108361746586,
+        2.0071475758135326,
+        1.6058519298389837
+      ]
+    },
+    {
+      "certificate": "IGI-LG818659722",
+      "archive_hash_matches": [
+        248,
+        250,
+        252,
+        254,
+        255,
+        0,
+        2,
+        4,
+        6,
+        8
+      ],
+      "preprocessing": {
+        "segmentation_status_counts": {
+          "review": 17
+        },
+        "registered_frames": 17,
+        "gain": 1.0,
+        "accept_review": true,
+        "sequence_manifest_sha256": "050d518e8a0f2517de6067f2ebb8c002faa6dd68126958fbc6a219e3fbf8cd11"
+      },
+      "template_status": "review",
+      "template_reason": "semantic_window_edge",
+      "boundaries": {
+        "centre_inner": {
+          "global_u": 0.5974842767295597,
+          "sector_support": 1.0,
+          "semantic_window": [
+            0.42,
+            0.6
+          ],
+          "window_margin": 0.002515723270440251,
+          "window_margin_samples": 0.4,
+          "near_window_edge": true
+        },
+        "inner_middle": {
+          "global_u": 0.7421383647798743,
+          "sector_support": 1.0,
+          "semantic_window": [
+            0.64,
+            0.82
+          ],
+          "window_margin": 0.07786163522012568,
+          "window_margin_samples": 12.379999999999987,
+          "near_window_edge": false
+        },
+        "middle_outer": {
+          "global_u": 0.8867924528301887,
+          "sector_support": 1.0,
+          "semantic_window": [
+            0.82,
+            0.92
+          ],
+          "window_margin": 0.033207547169811336,
+          "window_margin_samples": 5.280000000000004,
+          "near_window_edge": false
+        }
+      },
+      "frame_status_counts": {
+        "ok": 17
+      },
+      "edge_ratios": [
+        5.648148975683339,
+        1.9132644966306576,
+        1.0756498755454094
+      ]
+    },
+    {
+      "certificate": "IGI-LG836619414",
+      "archive_hash_matches": [
+        248,
+        250,
+        252,
+        254,
+        255,
+        0,
+        2,
+        4,
+        6,
+        8
+      ],
+      "preprocessing": {
+        "segmentation_status_counts": {
+          "ok": 17
+        },
+        "registered_frames": 17,
+        "gain": 1.0,
+        "accept_review": true,
+        "sequence_manifest_sha256": "b1da227fee2febbbac86ee713365b428ca0aa11ed48a991eccb6e564e28c7ace"
+      },
+      "template_status": "ok",
+      "template_reason": null,
+      "boundaries": {
+        "centre_inner": {
+          "global_u": 0.5031446540880503,
+          "sector_support": 0.875,
+          "semantic_window": [
+            0.42,
+            0.6
+          ],
+          "window_margin": 0.08314465408805033,
+          "window_margin_samples": 13.220000000000006,
+          "near_window_edge": false
+        },
+        "inner_middle": {
+          "global_u": 0.7484276729559749,
+          "sector_support": 1.0,
+          "semantic_window": [
+            0.64,
+            0.82
+          ],
+          "window_margin": 0.07157232704402505,
+          "window_margin_samples": 11.379999999999987,
+          "near_window_edge": false
+        },
+        "middle_outer": {
+          "global_u": 0.8867924528301887,
+          "sector_support": 0.875,
+          "semantic_window": [
+            0.82,
+            0.92
+          ],
+          "window_margin": 0.033207547169811336,
+          "window_margin_samples": 5.280000000000004,
+          "near_window_edge": false
+        }
+      },
+      "frame_status_counts": {
+        "ok": 17
+      },
+      "edge_ratios": [
+        1.7828712239315416,
+        2.243415460603543,
+        1.2473183320196768
+      ]
+    }
+  ]
+}

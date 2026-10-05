@@ -65,6 +65,21 @@ class AsscherStepTests(unittest.TestCase):
         self.assertAlmostEqual(found[1], .75, delta=.04)
         self.assertAlmostEqual(found[2], .87, delta=.04)
 
+    def test_semantic_window_edge_downgrades_template_without_moving_prior(self):
+        u, frames = synthetic_sector_frames(boundaries=(.60, .75, .87))
+        result = s.discover_template(frames, u)
+        self.assertEqual(result["status"], "review")
+        self.assertEqual(result["reason"], "semantic_window_edge")
+        first = result["controls"][0]
+        self.assertEqual(first["semantic_window"], (.42, .60))
+        self.assertAlmostEqual(first["window_margin"],
+                               min(first["global_u"] - .42, .60 - first["global_u"]))
+        self.assertLessEqual(first["window_margin_samples"], 1)
+        self.assertTrue(first["near_window_edge"])
+        encoded = s._json_control(first)
+        self.assertEqual(encoded["window_margin"], first["window_margin"])
+        self.assertTrue(encoded["near_window_edge"])
+
     def test_masks_partition_silhouette_and_allow_side_corner_shape(self):
         mask = octagon_mask()
         controls = []
