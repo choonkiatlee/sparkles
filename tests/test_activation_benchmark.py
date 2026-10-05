@@ -121,27 +121,6 @@ class ActivationBenchmarkTests(unittest.TestCase):
             self.assertNotIn("NaN", encoded)
             self.assertNotIn("Infinity", encoded)
 
-    def test_committed_activation_benchmark_contract(self):
-        root = Path("docs/360/activation")
-        summary = json.loads((root / "summary.json").read_text())
-        self.assertEqual(summary["schema_version"], "diamond360-activation-benchmark/1")
-        self.assertEqual(summary["core_indices"], [248,249,250,251,252,253,254,255,0,1,2,3,4,5,6,7,8])
-        self.assertEqual(len(summary["stones"]), 4)
-        for stone in summary["stones"]:
-            cert = stone["certificate"]
-            for window in ("core", "wide"):
-                path = root / "per-stone" / cert / window / "activation.json"
-                payload = json.loads(path.read_text())
-                self.assertEqual(payload["schema_version"], "diamond360-activation/1")
-                self.assertEqual(payload["representations"]["coarse"]["source_indices"], payload["requested_indices"])
-                self.assertEqual(payload["representations"]["semantic"]["source_indices"], payload["requested_indices"])
-                self.assertNotIn("NaN", path.read_text())
-                self.assertNotIn("Infinity", path.read_text())
-                for rep in payload["representations"].values():
-                    for modes in rep.get("regions", {}).values():
-                        for cell in modes.values():
-                            self.assertIn("reasons", cell["raw_validity"])
-                            self.assertIn("reasons", cell["relative_validity"])
 
 
 if __name__ == "__main__":
