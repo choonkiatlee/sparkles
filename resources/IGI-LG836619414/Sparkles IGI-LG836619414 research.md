@@ -59,7 +59,7 @@ All grades/proportions below come from the saved retailer-hosted report unless s
 | Inscription | LG836619414 with IGI logo |
 | Lab cut grade | Not stated; polish/symmetry are not an overall optical cut grade |
 
-Listing feed price: USD 712.81, observed 4 October 2026; tax basis and rendered regional price not verified. Availability may change.
+Price: [USD 712.81](https://www.ritani.com/products/2-55-carat-asscher-lab-diamond-very-good-cut-d-color-vvs1-clarity-igi-lg836619414-sku-d-61oa7x5cba).
 
 
 ## Retailer-only discrepancies
