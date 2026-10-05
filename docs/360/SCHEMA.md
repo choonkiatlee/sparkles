@@ -81,7 +81,7 @@ not duration, calibrated angle coverage, leakage probability or quality scores.
 
 ## Ordered extraction handoff: `diamond360-source/1`
 
-Set `schema_version` to `diamond360-source/1`. `frames` is the authoritative ordered array. Each entry requires `source_index` (unique nonnegative integer), `path` (image path within input root) and `sha256` (64 lowercase hex characters). Paths need not contain indices. All discovered images must be listed once; missing, escaping, repeated paths/indices and hash mismatches fail. `source_frame_count`, when provided, bounds the indices. A true `sequence_complete` declaration requires every index 0..count−1. Source/vendor, extractor, URLs/batches, ordering semantics, missing/repeated indices and completeness provenance remain in the manifest. Unknown angle/timing calibration stays null. Legacy curated manifests remain supported.
+Set `schema_version` to `diamond360-source/1`. `frames` is the authoritative ordered array; legacy order fields are ignored for this version. Unsupported `diamond360-source/*` versions fail explicitly. Each entry requires `source_index` (unique nonnegative integer), `path` (image path within input root) and `sha256` (64 lowercase hex characters). Paths need not contain indices. All discovered images must be listed once; missing, escaping, repeated paths/indices and hash mismatches fail. `source_frame_count`, when provided, bounds the indices. A true `sequence_complete` declaration requires every index 0..count−1. Source/vendor, extractor, URLs/batches, ordering semantics, missing/repeated indices and completeness provenance remain in the manifest. Unknown angle/timing calibration stays null. Legacy curated manifests remain supported.
 
 ## Continuous traces: `diamond360-region-traces/1`
 

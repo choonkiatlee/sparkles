@@ -41,6 +41,8 @@ def ingest(directory, order_manifest=None):
         raise ValueError('No image frames found')
     metadata = json.loads(Path(order_manifest).read_text()) if order_manifest else {}
     contract = metadata.get('schema_version') == 'diamond360-source/1'
+    if str(metadata.get('schema_version', '')).startswith('diamond360-source/') and not contract:
+        raise ValueError('Unsupported source manifest schema version')
     path_entries = {}
     if contract:
         entries = metadata.get('frames', [])
@@ -49,6 +51,8 @@ def ingest(directory, order_manifest=None):
             raise ValueError('Source manifest requires unique nonnegative integer source indices')
         listed = []
         for entry in entries:
+            if not isinstance(entry.get('path'), str) or not entry['path']:
+                raise ValueError('Source manifest requires a frame path')
             path = (directory / entry['path']).resolve()
             if directory not in path.parents or not path.is_file():
                 raise ValueError('Source manifest path missing or outside input directory')
@@ -64,9 +68,9 @@ def ingest(directory, order_manifest=None):
         if metadata.get('sequence_complete') is True and (total is None or set(indices) != set(range(total))):
             raise ValueError('False sequence completeness declaration')
         paths = listed
-    order = next((metadata[k] for k in ('reading_order', 'reading_order_zero_based',
+    order = None if contract else next((metadata[k] for k in ('reading_order', 'reading_order_zero_based',
                   'selected_reading_order') if k in metadata), None)
-    if order is None and 'faceup_reading_order' in metadata:
+    if not contract and order is None and 'faceup_reading_order' in metadata:
         order = metadata['faceup_reading_order'] + metadata.get('context_reading_order', [])
     entries = metadata.get('frames', metadata.get('selected_frames', []))
     expected = {}

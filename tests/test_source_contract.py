@@ -32,3 +32,21 @@ class SourceContractTests(unittest.TestCase):
                 if case=='escape':m['frames'][0]['path']='../a.jpg'
                 (p/'manifest.json').write_text(json.dumps(m))
                 with self.assertRaises(ValueError):ingest(p,p/'manifest.json')
+
+class ManifestAuthorityTests(unittest.TestCase):
+    def test_versioned_frames_are_authoritative_even_with_legacy_order(self):
+        with tempfile.TemporaryDirectory() as d:
+            p=Path(d);m=SourceContractTests().fixture(p);m['reading_order']=[0,255]
+            (p/'manifest.json').write_text(json.dumps(m))
+            r=ingest(p,p/'manifest.json')
+            self.assertEqual([f['source_index'] for f in r['frames']],[255,0])
+    def test_missing_path_is_explicit_validation_error(self):
+        with tempfile.TemporaryDirectory() as d:
+            p=Path(d);m=SourceContractTests().fixture(p);del m['frames'][0]['path']
+            (p/'manifest.json').write_text(json.dumps(m))
+            with self.assertRaises(ValueError):ingest(p,p/'manifest.json')
+    def test_unknown_source_schema_cannot_bypass_hash_checks(self):
+        with tempfile.TemporaryDirectory() as d:
+            p=Path(d);m=SourceContractTests().fixture(p);m['schema_version']='diamond360-source/2';m['frames'][0]['sha256']='0'*64
+            (p/'manifest.json').write_text(json.dumps(m))
+            with self.assertRaisesRegex(ValueError,'Unsupported source manifest'):ingest(p,p/'manifest.json')
