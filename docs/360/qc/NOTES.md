@@ -27,3 +27,9 @@ centroids equal canvas centre to floating-point precision; this does not measure
 segmentation error or prove facet correspondence. Bilinear sampling can attenuate
 small highlights; retained originals allow checking this loss. Side/profile views
 remain labelled by source index and must not enter face-up temporal summaries.
+
+Stage 5: raw brightness and inverse-sRGB luminance saved without framewise
+adjustment. A fixed user-supplied gain (default 1) writes a separate unclipped
+channel and never alters raw channels/RGB. Synthetic bright/dark pulses survive;
+real LG756580087 near-face-up brightness variation remains visible. Chroma range
+is recorded colour variation, not spectral dispersion/fire evidence.

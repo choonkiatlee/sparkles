@@ -9,16 +9,21 @@ from .segmentation import segment
 from .qc import contact_sheet, overlay, geometry_chart
 from .geometry import measure
 from .registration import canonicalise
+from .photometry import represent, specification
 
 
-def run(source, output, order_manifest=None):
+def run(source, output, order_manifest=None, gain=1.0):
     source, output = Path(source).resolve(), Path(output).resolve()
     if source == output or source in output.parents or output in source.parents:
         raise ValueError('Input and output must be disjoint directories')
+    specification(gain)
+    # Validate gain even when every frame fails segmentation.
+    represent(np.zeros((1,1,3),np.uint8),np.ones((1,1),bool),np.ones((1,1),bool),gain)
     metadata = ingest(source, order_manifest)
+    metadata['photometry'] = specification(gain)
     output.mkdir(parents=True, exist_ok=True)
     (output/'masks').mkdir(exist_ok=True)
-    for folder in ['camera','diamond']:
+    for folder in ['camera','diamond','photometry']:
         (output/folder).mkdir(exist_ok=True)
     items,registered = [],[]
     for record in metadata['frames']:
@@ -46,6 +51,10 @@ def run(source, output, order_manifest=None):
             Image.fromarray(normal['rgb']).save(output/paths['rgb_path'])
             for key,array in [('mask_path',normal['mask']),('valid_mask_path',normal['valid_mask'])]:
                 Image.fromarray(array.astype(np.uint8)*255).save(output/paths[key])
+            channels=represent(normal['rgb'],normal['mask'],normal['valid_mask'],gain)
+            channel_path=f'photometry/{stem}.npz'
+            np.savez_compressed(output/channel_path,**channels)
+            record['photometry_path']=channel_path
             label=str(record['source_index'])
             registered.extend([(label+' camera',Image.fromarray(rgb)),
                                (label+' normalised',Image.fromarray(normal['rgb']))])

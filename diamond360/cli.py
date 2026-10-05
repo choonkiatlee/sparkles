@@ -10,12 +10,13 @@ def main():
     parser.add_argument('input', type=Path)
     parser.add_argument('--output', required=True, type=Path)
     parser.add_argument('--order-manifest', type=Path)
+    parser.add_argument('--gain',type=float,default=1.0,help='Optional fixed sequence-wide luminance gain (0.9..1.1)')
     args = parser.parse_args()
     source, output = args.input.resolve(), args.output.resolve()
     if source == output or source in output.parents or output in source.parents:
         parser.error('Input and output must be disjoint directories')
     try:
-        metadata = run(source, output, args.order_manifest)
+        metadata = run(source, output, args.order_manifest,gain=args.gain)
     except (ValueError, OSError) as error:
         parser.error(str(error))
     output.mkdir(parents=True, exist_ok=True)
