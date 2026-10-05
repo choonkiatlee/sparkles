@@ -4,7 +4,7 @@ on:
   push:
     branches: [verify-issue-19-step-bands]
     paths:
-      - ".github/workflows/issue19-validation.yml"
+      - ".github/workflows/verify-issue-19.yml"
       - "diamond360/**"
       - "tests/**"
 
