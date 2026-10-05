@@ -1,5 +1,5 @@
 {
-  "code_baseline": "4f050f38c8d731d44d14e7280ed58152aaa86ec9",
+  "code_baseline": "cbd60211d87cf1d40017358dc3baa092b536fab0",
   "valid_images": 256,
   "accepted_outlines": 256,
   "frame_count": 256,
@@ -10,7 +10,7 @@
   },
   "byte_duplicates": [],
   "pixel_duplicates": [],
-  "source_manifest_sha256": "086061450bbe1631224ba460906f4e9de077cc23bcee4e8a1ff52d96d03af0fb",
+  "source_manifest_sha256": "b3793f49e33c4ba84e98d992c65b034f25e98b673d30e8c99885b812e4fdf1b5",
   "core_indices": [
     248,
     249,
