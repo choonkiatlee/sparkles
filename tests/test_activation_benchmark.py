@@ -78,6 +78,19 @@ class ActivationBenchmarkTests(unittest.TestCase):
                         self.assertIn("raw_validity", cell)
                         self.assertIn("relative_validity", cell)
 
+    def test_measure_stone_preserves_upstream_segmentation_reason_codes(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            processed, steps = build_synthetic(root)
+            sequence_path = processed / "sequence.json"
+            sequence = json.loads(sequence_path.read_text())
+            sequence["frames"][1]["segmentation"] = {"status": "review", "reasons": ["border_outliers", "low_contrast"]}
+            sequence_path.write_text(json.dumps(sequence))
+            result = b.measure_stone(processed, steps, [0, 1, 2], wrap=False)
+            self.assertEqual(result["upstream_validity"]["status"], "review")
+            self.assertIn("border_outliers", result["upstream_validity"]["reasons"])
+            self.assertIn("low_contrast", result["upstream_validity"]["reasons"])
+
     def test_select_evidence_frames_breaks_moves_at_gaps(self):
         selected = b.select_evidence_frames([1.0, None, 3.0, 2.0, 5.0], [0, 1, 2, 3, 4])
         self.assertEqual(selected["q10"]["source_index"], 0)
