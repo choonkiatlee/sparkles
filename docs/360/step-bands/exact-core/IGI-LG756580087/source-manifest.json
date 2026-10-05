@@ -1,0 +1,245 @@
+{
+  "schema_version": "diamond360-source/1",
+  "certificate": "IGI-LG756580087",
+  "source_pipeline": "diajewel",
+  "viewer": "https://vision.diajewel360.com/Vision360.html?d=VL-131355",
+  "retrieved_at": "2026-10-05T20:30:29.575393+00:00",
+  "metadata_url": "https://vision.diajewel360.com/imaged/VL-131355/0.json",
+  "metadata_sha256": "e38a7f7bc941fadf96ee764e01c3f4c7b3bcae356c9de709a5d885b795475cb6",
+  "source_frame_count": 256,
+  "sequence_complete": false,
+  "dimensions": [
+    704,
+    704
+  ],
+  "ordering": "viewer scramble inverse permutation, progressive odd-position interleave",
+  "ordering_validation": "issue-18 reconstruction; exact core frames only; archived originals hash-checked",
+  "requested_core_indices": [
+    248,
+    249,
+    250,
+    251,
+    252,
+    253,
+    254,
+    255,
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "archived_hash_matches": [
+    248,
+    250,
+    252,
+    254,
+    0,
+    2,
+    4,
+    8
+  ],
+  "batches": [
+    {
+      "batch": 1,
+      "url": "https://vision.diajewel360.com/imaged/VL-131355/1.json?version=1",
+      "sha256": "68310987ae6e9716034888992c217bed345263a79c7f2aa62b56e885cbf44c24",
+      "count": 4
+    },
+    {
+      "batch": 2,
+      "url": "https://vision.diajewel360.com/imaged/VL-131355/2.json?version=1",
+      "sha256": "3947190a6b379c1d9007847794a1c02a38116e0e7f5da83bb0ce9957576eb2bc",
+      "count": 4
+    },
+    {
+      "batch": 3,
+      "url": "https://vision.diajewel360.com/imaged/VL-131355/3.json?version=1",
+      "sha256": "809c002c2cf16ec65f1c896d28436786431f0951152c3a7c8983d37d7802e47d",
+      "count": 8
+    },
+    {
+      "batch": 4,
+      "url": "https://vision.diajewel360.com/imaged/VL-131355/4.json?version=1",
+      "sha256": "d64d65b26ecd95ba871c711a0aba5db5a1e2130e5d550767951b4e7b0aaa799d",
+      "count": 16
+    },
+    {
+      "batch": 5,
+      "url": "https://vision.diajewel360.com/imaged/VL-131355/5.json?version=1",
+      "sha256": "93ac51ec7425941f2eb7da1ab0839fad658fcb1c958e36b971c14e3e10e895ef",
+      "count": 32
+    },
+    {
+      "batch": 6,
+      "url": "https://vision.diajewel360.com/imaged/VL-131355/6.json?version=1",
+      "sha256": "002a1b4672e7d9e9de022f35d6d9ac94f403284b4ee9edd277e827ee3539b9f3",
+      "count": 64
+    },
+    {
+      "batch": 7,
+      "url": "https://vision.diajewel360.com/imaged/VL-131355/7.json?version=1",
+      "sha256": "882697d7b227f2ec22f337a6c5399057fb2339a3b989a6e23103c1ad46d8b018",
+      "count": 128
+    }
+  ],
+  "frames": [
+    {
+      "source_index": 248,
+      "path": "frames/IGI-LG756580087-frame-248.jpg",
+      "sha256": "9c7a70756481c69e20c3336b07f92ee89d61a0e7a7c6927a533bd11fa1343530",
+      "bytes": 39629,
+      "batch": 4,
+      "stored_position": 6,
+      "source_url": "https://vision.diajewel360.com/imaged/VL-131355/4.json?version=1"
+    },
+    {
+      "source_index": 249,
+      "path": "frames/IGI-LG756580087-frame-249.jpg",
+      "sha256": "bd730b34e8a7c13af46cbb099bad921c9e05140f99d0f37023951b56d5f81896",
+      "bytes": 39682,
+      "batch": 7,
+      "stored_position": 122,
+      "source_url": "https://vision.diajewel360.com/imaged/VL-131355/7.json?version=1"
+    },
+    {
+      "source_index": 250,
+      "path": "frames/IGI-LG756580087-frame-250.jpg",
+      "sha256": "2b64fc16805b884e73fd194d3844308b9316a2a6d162f80d777299292a127a30",
+      "bytes": 40358,
+      "batch": 6,
+      "stored_position": 53,
+      "source_url": "https://vision.diajewel360.com/imaged/VL-131355/6.json?version=1"
+    },
+    {
+      "source_index": 251,
+      "path": "frames/IGI-LG756580087-frame-251.jpg",
+      "sha256": "ec7983a6c3ab9efb2e79f85751e49a2ee7c073930b8c6bceacf57c886fe23966",
+      "bytes": 40838,
+      "batch": 7,
+      "stored_position": 86,
+      "source_url": "https://vision.diajewel360.com/imaged/VL-131355/7.json?version=1"
+    },
+    {
+      "source_index": 252,
+      "path": "frames/IGI-LG756580087-frame-252.jpg",
+      "sha256": "152fd9a37294d4f0c3bd636e91b3244e27cd09720144bde629554e7f41c6017f",
+      "bytes": 40809,
+      "batch": 5,
+      "stored_position": 18,
+      "source_url": "https://vision.diajewel360.com/imaged/VL-131355/5.json?version=1"
+    },
+    {
+      "source_index": 253,
+      "path": "frames/IGI-LG756580087-frame-253.jpg",
+      "sha256": "f27ea6199754871f798fcc6433c1c4cfa0cb69e6b5999aed675f9cb4f0369902",
+      "bytes": 40404,
+      "batch": 7,
+      "stored_position": 21,
+      "source_url": "https://vision.diajewel360.com/imaged/VL-131355/7.json?version=1"
+    },
+    {
+      "source_index": 254,
+      "path": "frames/IGI-LG756580087-frame-254.jpg",
+      "sha256": "a0dff0c3f8d3a3f43c1191bd6bd29993fb67ed9a8e8f3b50f687a08f365349cf",
+      "bytes": 41343,
+      "batch": 6,
+      "stored_position": 50,
+      "source_url": "https://vision.diajewel360.com/imaged/VL-131355/6.json?version=1"
+    },
+    {
+      "source_index": 255,
+      "path": "frames/IGI-LG756580087-frame-255.jpg",
+      "sha256": "0c78aaa722615e64abb555af7d7e3752f18096889db414b11c29b729ee548258",
+      "bytes": 41592,
+      "batch": 7,
+      "stored_position": 24,
+      "source_url": "https://vision.diajewel360.com/imaged/VL-131355/7.json?version=1"
+    },
+    {
+      "source_index": 0,
+      "path": "frames/IGI-LG756580087-frame-000.jpg",
+      "sha256": "9cbaf1e9b8844c7f2a3712fbc8ac1e33ca681eb87d4710ba87c7d3b1e4fc12ff",
+      "bytes": 41234,
+      "batch": 1,
+      "stored_position": 2,
+      "source_url": "https://vision.diajewel360.com/imaged/VL-131355/1.json?version=1"
+    },
+    {
+      "source_index": 1,
+      "path": "frames/IGI-LG756580087-frame-001.jpg",
+      "sha256": "e16c80ec7447a6898cbb5120e75a97f0a15c545a662f0d7bee6ebe13922c4dfc",
+      "bytes": 41425,
+      "batch": 7,
+      "stored_position": 67,
+      "source_url": "https://vision.diajewel360.com/imaged/VL-131355/7.json?version=1"
+    },
+    {
+      "source_index": 2,
+      "path": "frames/IGI-LG756580087-frame-002.jpg",
+      "sha256": "228327bd0284fcbf9b81e312fca0e2a028d2d110720daa678d5a6dea89141271",
+      "bytes": 41493,
+      "batch": 6,
+      "stored_position": 27,
+      "source_url": "https://vision.diajewel360.com/imaged/VL-131355/6.json?version=1"
+    },
+    {
+      "source_index": 3,
+      "path": "frames/IGI-LG756580087-frame-003.jpg",
+      "sha256": "402285205a25d8d7ef4061e60140801e4723461b1f708f90ebc1b3b3f9249d50",
+      "bytes": 41927,
+      "batch": 7,
+      "stored_position": 42,
+      "source_url": "https://vision.diajewel360.com/imaged/VL-131355/7.json?version=1"
+    },
+    {
+      "source_index": 4,
+      "path": "frames/IGI-LG756580087-frame-004.jpg",
+      "sha256": "61c7da9e0ca54766b471ef898b562b0d4a9d3f6d5a3346ea53815af65526a664",
+      "bytes": 41482,
+      "batch": 5,
+      "stored_position": 3,
+      "source_url": "https://vision.diajewel360.com/imaged/VL-131355/5.json?version=1"
+    },
+    {
+      "source_index": 5,
+      "path": "frames/IGI-LG756580087-frame-005.jpg",
+      "sha256": "22b9a05c64dbd91a249eb5d52c58ed5895ff26939a7b3f969d202f647455db31",
+      "bytes": 42573,
+      "batch": 7,
+      "stored_position": 30,
+      "source_url": "https://vision.diajewel360.com/imaged/VL-131355/7.json?version=1"
+    },
+    {
+      "source_index": 6,
+      "path": "frames/IGI-LG756580087-frame-006.jpg",
+      "sha256": "825eb8a582304ef1801eebbb4ce098d78eac395087104b70d5ded25a3be35dba",
+      "bytes": 42556,
+      "batch": 6,
+      "stored_position": 31,
+      "source_url": "https://vision.diajewel360.com/imaged/VL-131355/6.json?version=1"
+    },
+    {
+      "source_index": 7,
+      "path": "frames/IGI-LG756580087-frame-007.jpg",
+      "sha256": "940d33cb710134167e05c63018cabb80a89f4633af5fdc8a566c34dd289024cc",
+      "bytes": 42259,
+      "batch": 7,
+      "stored_position": 20,
+      "source_url": "https://vision.diajewel360.com/imaged/VL-131355/7.json?version=1"
+    },
+    {
+      "source_index": 8,
+      "path": "frames/IGI-LG756580087-frame-008.jpg",
+      "sha256": "49c1863ab4bfaf3c65c798e86ab9510de79621de8fb174e928c91018e61c9455",
+      "bytes": 41406,
+      "batch": 4,
+      "stored_position": 13,
+      "source_url": "https://vision.diajewel360.com/imaged/VL-131355/4.json?version=1"
+    }
+  ]
+}

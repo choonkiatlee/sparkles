@@ -1,0 +1,9 @@
+{
+  "segmentation_status_counts": {
+    "ok": 17
+  },
+  "registered_frames": 17,
+  "gain": 1.0,
+  "accept_review": true,
+  "sequence_manifest_sha256": "b1da227fee2febbbac86ee713365b428ca0aa11ed48a991eccb6e564e28c7ace"
+}

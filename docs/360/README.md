@@ -117,3 +117,22 @@ then be warranted. Downstream Asscher quality scoring is outside this package.
 ## Complete-sequence example and region traces
 
 [LG756580087 full-sequence walkthrough](full-sequence/IGI-LG756580087/index.html) includes all 256 source-frame thumbnails, unchanged baseline QC, 17-frame primary / 33-frame sensitivity intervals, gap-aware region and pixel runs, and a controlled comparison with the earlier sparse sample. See its [reproduction instructions](full-sequence/IGI-LG756580087/README.md). Continuous measurement is a separate `diamond360.region_traces` command; it does not change preprocessing or provide optical quality scores.
+
+
+## Asscher step-band correspondence
+
+Issue #19 adds a separate semantic layer after preprocessing:
+
+```bash
+python -m diamond360.asscher_steps /path/to/processed \
+  --output /tmp/asscher-steps \
+  --indices 248,249,250,251,252,253,254,255,0,1,2,3,4,5,6,7,8 \
+  --wrap
+```
+
+It discovers three persistent ordered radial boundaries from the selected face-up
+sequence, with eight side/corner control points, and writes per-frame
+`centre`/`inner_step`/`middle_step`/`outer_step` masks plus visual QC.
+Per-frame edge matches are confidence diagnostics only; they do not claim
+individual-facet identity or move the sequence template. See
+[step-band method and validation](step-bands/README.md).

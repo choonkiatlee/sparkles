@@ -1,0 +1,9 @@
+{
+  "segmentation_status_counts": {
+    "review": 17
+  },
+  "registered_frames": 17,
+  "gain": 1.0,
+  "accept_review": true,
+  "sequence_manifest_sha256": "b3cea692b30204d1e95c575cd1f6eb4f4ecc2361df638111d9bdcb5ada31e32e"
+}

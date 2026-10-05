@@ -88,3 +88,27 @@ Set `schema_version` to `diamond360-source/1`. `frames` is the authoritative ord
 ## Continuous traces: `diamond360-region-traces/1`
 
 Separate command: `python -m diamond360.region_traces PROCESSED --output FRESH --indices 254,255,0,1 --wrap`. Explicit wrap requires known frame count. Source indices must be consecutive; sparse input cannot supply source-step run statistics. Missing/unaccepted/duplicate selected frames become gaps, never interpolated samples. Fixed common support uses accepted frames only. Regional median/amplitude, relative-dark pixel occupancy, median-state runs and pixel-state distributions are measured independently. No threshold is a quality category; paths/units/definitions/exclusions and processed-manifest SHA-256 remain in `traces.json`. CSV, trace plot and common-support mask accompany it. Region-median bright state is not a claim that all pixels are bright.
+
+
+## Asscher step bands: `diamond360-asscher-steps/1`
+
+`steps.json` records the requested/accepted source indices, exclusions, the
+sequence-level template status (`ok`/`review`/`unavailable`), three ordered
+boundary names and eight `side_*`/`corner_*` control points per boundary.
+Each boundary also records its `semantic_window`, raw `window_margin` (distance
+to its nearest window edge in u units), `window_margin_samples`, and
+`near_window_edge`. A margin no larger than one radial sample downgrades a
+usable template to `review` with reason `semantic_window_edge`; this diagnostic
+is not a calibrated probability. Per-frame status remains local edge support
+and must be read alongside template and upstream preprocessing status.
+The radial coordinate is silhouette-normalised: distance from the registered
+canvas centre divided by the silhouette radius in the same direction.
+
+When the template is usable, `regions/NNNN.npz` contains boolean
+`centre`, `inner_step`, `middle_step`, `outer_step` masks that partition that
+frame's silhouette exactly once. `frames[].boundary_support` records per-frame
+local edge matches as QC only; these matches do not move the sequence template.
+`coarse_comparison` compares persistent edge evidence at the selected boundaries
+with legacy fixed radii 0.20/0.45/0.70. `edge-profile.png` and `overlays.jpg`
+are derived QC. The schema does not imply exact physical facet identity, a
+windmill label, crown/pavilion separation, 3-D geometry or cut quality.
