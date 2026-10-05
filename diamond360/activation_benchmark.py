@@ -64,13 +64,14 @@ def _upstream_validity(selected, excluded):
             continue
         segmentation = record.get("segmentation", {})
         status = segmentation.get("status", "ok")
-        reason = None
-        if status == "review":
-            reason = "segmentation_review"
+        reasons = list(segmentation.get("reasons") or [])
+        if status == "review" and not reasons:
+            reasons = ["segmentation_review"]
         elif status in {"failed", "unavailable"}:
             status = "unavailable"
-            reason = "segmentation_unavailable"
-        sources.append({"status": status, "reason": reason})
+            if not reasons:
+                reasons = ["segmentation_unavailable"]
+        sources.append({"status": status, "reasons": reasons})
     if excluded:
         sources.append({"status": "review", "reason": "requested_frames_excluded"})
     return a.compose_validity(sources or [{"status": "unavailable", "reason": "no_accepted_frames"}])
