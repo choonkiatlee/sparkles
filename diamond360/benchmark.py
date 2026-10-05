@@ -72,6 +72,21 @@ def summarise_trace(trace,certificate,source_pipeline,window):
     return rows
 
 
+def source_contract(source,expected_frame_count):
+    source=Path(source)
+    path=source/'source-manifest.json'
+    if not path.is_file():
+        raise ValueError(f'Complete source requires {path} using diamond360-source/1')
+    metadata=json.loads(path.read_text())
+    if metadata.get('schema_version')!='diamond360-source/1':
+        raise ValueError(f'{path}: expected diamond360-source/1')
+    if metadata.get('source_frame_count')!=expected_frame_count:
+        raise ValueError(f'{path}: source_frame_count does not match benchmark manifest')
+    if metadata.get('sequence_complete') is not True:
+        raise ValueError(f'{path}: complete benchmark source must declare sequence_complete=true')
+    return path
+
+
 def _stone_status(s,status,reason=None):
     result={k:s[k] for k in ("certificate","source_pipeline","source_status","source_frame_count","available_frame_count")}; result["status"]=status
     if reason: result["reason"]=reason
@@ -164,8 +179,9 @@ def run(manifest_path,output,source_root=None):
         if s["source_status"]!="complete": stones.append(_stone_status(s,"partial_source","continuous benchmark withheld for incomplete ordered source")); continue
         source=root/s["certificate"]
         if not source.is_dir(): stones.append(_stone_status(s,"source_missing",f"expected recovered frames at {source}")); continue
+        order_manifest=source_contract(source,s["source_frame_count"])
         target=out/"per-stone"/s["certificate"]; processed=target/"processed"; wide=cyclic_window(s["faceup_center"],m["wide_window"],s["source_frame_count"])
-        preprocess(source,processed,gain=1.0,diagnostic_indices=wide)
+        preprocess(source,processed,order_manifest=order_manifest,gain=1.0,diagnostic_indices=wide)
         for window,size in (("core",m["core_window"]),("wide",m["wide_window"])):
             indices=cyclic_window(s["faceup_center"],size,s["source_frame_count"]); trace=trace_run(processed,target/window,indices,wrap=any(b<a for a,b in zip(indices,indices[1:])))
             rows+=summarise_trace(trace,s["certificate"],s["source_pipeline"],window)
