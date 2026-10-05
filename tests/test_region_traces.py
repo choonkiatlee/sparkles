@@ -47,3 +47,20 @@ class PixelTraceTests(unittest.TestCase):
         r=t.measure_regions(b,np.ones_like(b,bool),{'centre':np.ones((1,4),bool)})['centre']
         self.assertEqual(r['pixel_states']['max_transitions'],1)
         self.assertEqual(r['pixel_states']['longest_dark_run_max_frames'],2)
+
+class TraceIntegrationTests(unittest.TestCase):
+    def test_run_preserves_gaps_and_duplicate_exclusions(self):
+        import json,tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as d:
+            p=Path(d)/'processed';p.mkdir();out=Path(d)/'traces'
+            region=np.ones((2,2),bool)
+            np.savez(p/'regions.npz',**{name:region for name in ['centre','inner','middle','outer']})
+            np.savez(p/'photometry.npz',encoded_brightness=np.ones((2,2))*.8,valid_mask=region)
+            records=[dict(source_index=i,sha256=h,registration={},regions_path='regions.npz',photometry_path='photometry.npz') for i,h in [(254,'a'),(255,'b'),(1,'a')]]
+            (p/'sequence.json').write_text(json.dumps(dict(frames=records,source_frame_count=256,brightness_definition='test')))
+            r=t.run(p,out,[254,255,0,1],True)
+            self.assertEqual([x['reason'] for x in r['excluded']],['missing_frame','duplicate_frame'])
+            self.assertEqual(r['regions']['centre']['median_brightness'],[.8,.8,None,None])
+            self.assertEqual(r['regions']['centre']['states']['longest_bright_run_frames'],2)
+            self.assertTrue((out/'traces.csv').exists());self.assertTrue((out/'traces.png').exists())
