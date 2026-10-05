@@ -40,6 +40,30 @@ def ingest(directory, order_manifest=None):
     if not paths:
         raise ValueError('No image frames found')
     metadata = json.loads(Path(order_manifest).read_text()) if order_manifest else {}
+    contract = metadata.get('schema_version') == 'diamond360-source/1'
+    path_entries = {}
+    if contract:
+        entries = metadata.get('frames', [])
+        indices = [e.get('source_index') for e in entries]
+        if not entries or any(type(i) is not int or i < 0 for i in indices) or len(set(indices)) != len(indices):
+            raise ValueError('Source manifest requires unique nonnegative integer source indices')
+        listed = []
+        for entry in entries:
+            path = (directory / entry['path']).resolve()
+            if directory not in path.parents or not path.is_file():
+                raise ValueError('Source manifest path missing or outside input directory')
+            if not re.fullmatch(r'[0-9a-f]{64}', entry.get('sha256', '')):
+                raise ValueError('Source manifest requires SHA-256 for every frame')
+            listed.append(path)
+            path_entries[path] = entry
+        if len(set(listed)) != len(listed) or set(listed) != set(paths):
+            raise ValueError('Source manifest paths repeated or unlisted frames present')
+        total = metadata.get('source_frame_count')
+        if total is not None and (type(total) is not int or total <= 0 or any(i >= total for i in indices)):
+            raise ValueError('Invalid source frame count/indices')
+        if metadata.get('sequence_complete') is True and (total is None or set(indices) != set(range(total))):
+            raise ValueError('False sequence completeness declaration')
+        paths = listed
     order = next((metadata[k] for k in ('reading_order', 'reading_order_zero_based',
                   'selected_reading_order') if k in metadata), None)
     if order is None and 'faceup_reading_order' in metadata:
@@ -67,8 +91,9 @@ def ingest(directory, order_manifest=None):
     for position, path in enumerate(paths):
         raw = path.read_bytes()
         digest = hashlib.sha256(raw).hexdigest()
-        idx = source_index(path)
-        if expected.get(idx, {}).get('sha256', digest) != digest:
+        idx = path_entries[path]['source_index'] if contract else source_index(path)
+        expectation = path_entries[path] if contract else expected.get(idx, {})
+        if expectation.get('sha256', digest) != digest:
             raise ValueError(f'Source hash mismatch: {path.name}')
         r = dict(position=position, name=path.name, path=str(path.relative_to(directory)),
                  source_index=idx, bytes=len(raw), sha256=digest, status='valid')
@@ -103,7 +128,7 @@ def ingest(directory, order_manifest=None):
         warnings.append('Sparse selection; source indices are not elapsed time or calibrated angles')
     return dict(schema_version='1.0', frame_count=len(records), valid_count=valid,
                 dimensions=[list(d) for d in sorted(dimensions)], frames=records,
-                ordering='explicit_manifest' if order is not None else 'natural_filename',
+                ordering='explicit_manifest' if contract or order is not None else 'natural_filename',
                 sparse=total is not None and len(records) != total,
                 source_frame_count=total, source_manifest=metadata, warnings=warnings,
                 brightness_definition='Rec.709 weighted encoded sRGB, range 0..1; not linear luminance')
