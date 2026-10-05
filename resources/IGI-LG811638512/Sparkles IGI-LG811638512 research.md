@@ -63,3 +63,7 @@ Supplier capture **1 August 2026**, following the report dated 28 July 2026. Rec
 - [Animated face-up preview](artifacts/IGI-LG811638512-faceup-motion-preview.gif): 153837 bytes; SHA-256 `bfce4b374eea82d8173aac2f6ddba6a4355e85118f008e2c4244f268175d94e0`. Derived 150 px / 16-colour preview, forward then reversed, synthetic 160 ms timing. Use the ZIP for full-resolution originals.
 
 Combined new binary evidence: 859877 bytes. ZIP CRC and every selected original hash verified. Unselected frames/raw Base64 excluded; existing PDF/still preserved separately. Ordinary supplier lighting supports dynamic comparison, not leakage diagnosis or calibrated angles. ASET and exact-stone scan remain unresolved.
+
+## Evaluation history
+
+- [[evaluations/Sparkles IGI-LG811638512 evaluation 2026-10-05-131523|First visual assessment · 05 October 2026]] — [visual report](../../evaluations/IGI-LG811638512-visual-report-2026-10-05-131523.html); provisional candidate, central brightness needs checking.
