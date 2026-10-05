@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sparkles-diamond360"
+version = "0.1.0"
+description = "Auditable preprocessing and QC for extracted diamond 360 frames"
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.24", "Pillow>=9.2", "scipy>=1.10"]
+
+[project.scripts]
+diamond360 = "diamond360.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["diamond360*"]
