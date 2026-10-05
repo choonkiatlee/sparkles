@@ -1,0 +1,66 @@
+name: debug target faceup acceptance
+on:
+  push:
+    branches: [verify-issue-18-benchmark-v2]
+    paths: [.github/workflows/debug-target-faceup.yml]
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install -e .
+      - name: Recover only target wide windows and inspect segmentation
+        run: |
+          python - <<'PY'
+          import ast,base64,hashlib,json,re,subprocess,urllib.request
+          from pathlib import Path
+          from diamond360.pipeline import run
+
+          def get(u):
+              req=urllib.request.Request(u,headers={'User-Agent':'Mozilla/5.0'})
+              return urllib.request.urlopen(req,timeout=60).read()
+          js=get('https://vision.diajewel360.com/js/vision360.js').decode('utf-8','replace')
+          table=ast.literal_eval(re.search(r'var\s+_0xb946\s*=\s*(\[.*?\]);',js,re.S).group(1))
+          key=table[332].encode()
+          def slots(meta):
+              p=subprocess.run(['openssl','enc','-d','-aes-128-cbc','-K',key.hex(),'-iv',key.hex(),'-base64','-A'],
+                               input=meta['scramble'].encode(),stdout=subprocess.PIPE,check=True)
+              perms=json.loads(p.stdout); cur=[]
+              for b,perm in enumerate(perms,1):
+                  inv=[perm.index(i) for i in range(len(perm))]
+                  items=[(b,s) for s in inv]
+                  if b==1: cur=items
+                  else:
+                      for i,item in enumerate(items): cur.insert((i+1)*2-1,item)
+              return cur
+          cfgs={
+            'IGI-LG756520111':('https://data1.360view.link/data/1/imaged/2612250-YK-808/','2',True),
+            'IGI-LG818659722':('https://vision.diajewel360.com/imaged/PD-230293/','1',False),
+            'IGI-LG836619414':('https://vision.diajewel360.com/imaged/PD-249203/','1',False),
+          }
+          ids=list(range(240,256))+list(range(17))
+          for cert,(base,version,workshop) in cfgs.items():
+              print('\n====',cert,'====')
+              meta=json.loads(get(base+'0.json'+('?version=' if workshop else '')))
+              order=slots(meta); batches={}
+              root=Path('/tmp')/cert; (root/'frames').mkdir(parents=True)
+              entries=[]
+              for i in ids:
+                  b,pos=order[i]
+                  if b not in batches:
+                      batches[b]=json.loads(get(base+f'{b}.json?version={version}'))
+                  blob=base64.b64decode(batches[b][pos]); sha=hashlib.sha256(blob).hexdigest()
+                  rel=f'frames/frame-{i:03d}.jpg'; (root/rel).write_bytes(blob)
+                  entries.append({'source_index':i,'path':rel,'sha256':sha})
+              (root/'source-manifest.json').write_text(json.dumps({'schema_version':'diamond360-source/1','source_frame_count':256,'sequence_complete':False,'frames':entries}))
+              out=Path('/tmp')/(cert+'-out')
+              m=run(root,out,root/'source-manifest.json',gain=1.0,diagnostic_indices=ids)
+              accepted=[r['source_index'] for r in m['frames'] if 'registration' in r]
+              print('valid',m['valid_count'],'accepted',len(accepted),accepted)
+              for r in m['frames']:
+                  if 'registration' not in r:
+                      print('REJECT',r['source_index'],r.get('segmentation',{}).get('status'),r.get('segmentation',{}).get('reasons'),
+                            r.get('segmentation',{}).get('area_fraction'))
+          PY
