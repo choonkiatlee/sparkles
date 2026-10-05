@@ -1,0 +1,36 @@
+name: inspect diamond viewers
+on:
+  workflow_dispatch:
+  push:
+    paths: [.github/workflows/inspect-viewers.yml]
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - name: Inspect endpoints
+        run: |
+          python - <<'PY'
+          import re, urllib.request
+          urls=[
+            'https://vision.diajewel360.com/Vision360.html?d=PD-230293',
+            'https://vision.diajewel360.com/imaged/PD-230293/0.json',
+            'https://vision.diajewel360.com/imaged/PD-230293/1.json?version=1',
+            'https://vision.diajewel360.com/imaged/PD-249203/0.json',
+            'https://workshop.360view.link/view/2612250-YK-808',
+            'https://data1.360view.link/data/1/imaged/2612250-YK-808/0.json?version=',
+            'https://data1.360view.link/data/1/imaged/2612250-YK-808/1.json?version=2',
+          ]
+          for u in urls:
+              print('\n===== URL',u,'=====')
+              try:
+                  req=urllib.request.Request(u,headers={'User-Agent':'Mozilla/5.0'})
+                  data=urllib.request.urlopen(req,timeout=30).read()
+                  print('bytes',len(data),'head',repr(data[:1000]))
+                  if b'<script' in data:
+                      text=data.decode('utf-8','replace')
+                      print('scripts',re.findall(r'<script[^>]+src=["\']([^"\']+)',text,re.I))
+              except Exception as e: print('ERROR',repr(e))
+          PY
