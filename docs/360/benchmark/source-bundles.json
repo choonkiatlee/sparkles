@@ -1,0 +1,64 @@
+{
+  "schema_version": "sparkles-benchmark-sources/2",
+  "core_indices": [
+    248,
+    249,
+    250,
+    251,
+    252,
+    253,
+    254,
+    255,
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "sequence_complete": true,
+  "bundles": [
+    {
+      "certificate": "IGI-LG756580087",
+      "sha256": "d3a0ed93af5e2a089d2bf108a01fceafe21edf191f3bb79f6fc627718ec23016",
+      "bytes": 8963440,
+      "frame_count": 256,
+      "source_manifest": "docs/360/benchmark/per-stone/IGI-LG756580087/source-manifest.json",
+      "filename": "IGI-LG756580087-benchmark-full-sequence.zip",
+      "download_url": "https://github.com/choonkiatlee/sparkles/releases/download/benchmark-sources-v1/IGI-LG756580087-benchmark-full-sequence.zip"
+    },
+    {
+      "certificate": "IGI-LG756520111",
+      "sha256": "b45647292c207d46fab8871b66ff62c3aa4a7652c910c5cd975fce10f3c5fc90",
+      "bytes": 5504096,
+      "frame_count": 256,
+      "source_manifest": "docs/360/benchmark/per-stone/IGI-LG756520111/source-manifest.json",
+      "filename": "IGI-LG756520111-benchmark-full-sequence.zip",
+      "download_url": "https://github.com/choonkiatlee/sparkles/releases/download/benchmark-sources-v1/IGI-LG756520111-benchmark-full-sequence.zip"
+    },
+    {
+      "certificate": "IGI-LG818659722",
+      "sha256": "dbee1b288573d425c8f487a4e8b5965bf69d460e5c259ca63017abb202738939",
+      "bytes": 8121970,
+      "frame_count": 256,
+      "source_manifest": "docs/360/benchmark/per-stone/IGI-LG818659722/source-manifest.json",
+      "filename": "IGI-LG818659722-benchmark-full-sequence.zip",
+      "download_url": "https://github.com/choonkiatlee/sparkles/releases/download/benchmark-sources-v1/IGI-LG818659722-benchmark-full-sequence.zip"
+    },
+    {
+      "certificate": "IGI-LG836619414",
+      "sha256": "8de35bbc0193a18c183c037b3b8f3a61ace503a23d8ee4e0953d45399f9bf596",
+      "bytes": 8519867,
+      "frame_count": 256,
+      "source_manifest": "docs/360/benchmark/per-stone/IGI-LG836619414/source-manifest.json",
+      "filename": "IGI-LG836619414-benchmark-full-sequence.zip",
+      "download_url": "https://github.com/choonkiatlee/sparkles/releases/download/benchmark-sources-v1/IGI-LG836619414-benchmark-full-sequence.zip"
+    }
+  ],
+  "storage": "github-release-assets",
+  "release_tag": "benchmark-sources-v1",
+  "release_url": "https://github.com/choonkiatlee/sparkles/releases/tag/benchmark-sources-v1"
+}

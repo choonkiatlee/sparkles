@@ -22,7 +22,7 @@ Issue #18 extends the issue #15 continuous-trace protocol across real Asscher ro
 | IGI-LG836619414 | Diajewel | 256/256 | core + wide | 256 ok |
 | IGI-LG811638512 | Diajewel | 128 even frames | withheld | partial source |
 
-The three previously excluded complete sequences were regenerated from their public viewer batches. The reconstructed ordering algorithm exactly reproduces the audited issue #15 mapping for LG756580087; all 16 archived selected originals matched byte-for-byte for each of LG756520111, LG818659722 and LG836619414. Raw 256-frame stacks remain excluded from Git; compact source manifests, hashes and derived traces are committed.
+The three previously excluded complete sequences were regenerated from their public viewer batches. The reconstructed ordering algorithm exactly reproduces the audited issue #15 mapping for LG756580087; all 16 archived selected originals matched byte-for-byte for each of LG756520111, LG818659722 and LG836619414. All four original 256-frame rotations are now saved as maximum-compression GitHub Release assets; see the reusable sources below. Source manifests, hashes and derived traces remain committed.
 
 LG811638512 remains intentionally partial: only even source indices were recovered, so continuous run/transition statistics are not inferred from it.
 
@@ -73,3 +73,46 @@ Carry forward three pieces:
 3. **Relative-dark pixel level** only provisionally, until we decide whether it adds enough beyond switching to justify both.
 
 Drop region-median dark-state transitions. Treat common support and segmentation status strictly as QC. Do not use any of these as a quality grade or purchase score yet.
+
+## Reusable four-stone full sources
+
+[source-bundles.json](source-bundles.json) indexes four certificate-keyed ZIPs in
+[benchmark-sources-v1](https://github.com/choonkiatlee/sparkles/releases/tag/benchmark-sources-v1).
+The binaries are release assets, outside Git history; only this manifest and instructions
+are committed. There are 1,024 original JPEGs total, with no resizing
+or lossy recompression. Each archive uses maximum lossless ZIP compression and
+contains `source-manifest.json` with original source URLs, per-frame SHA-256,
+`sequence_complete: true`, and explicit `reading_order` of 0..255.
+All 1,024 frame hashes match the existing full-sequence benchmark manifests.
+These sources support both the fixed 17-frame core and wider sensitivity windows.
+
+Download, extract and verify from the repository root (Python standard library only):
+
+```python
+import hashlib, json, zipfile
+from pathlib import Path
+from urllib.request import urlretrieve
+
+manifest = json.loads(Path("docs/360/benchmark/source-bundles.json").read_text())
+for item in manifest["bundles"]:
+    archive = Path("outputs/benchmark-downloads") / item["filename"]
+    archive.parent.mkdir(parents=True, exist_ok=True)
+    if not archive.exists():
+        urlretrieve(item["download_url"], archive)
+    assert archive.stat().st_size == item["bytes"]
+    assert hashlib.sha256(archive.read_bytes()).hexdigest() == item["sha256"]
+    destination = Path("outputs/benchmark-sources") / item["certificate"]
+    with zipfile.ZipFile(archive) as bundle:
+        bundle.extractall(destination)
+    source = json.loads((destination / "source-manifest.json").read_text())
+    for frame in source["frames"]:
+        assert hashlib.sha256((destination / frame["path"]).read_bytes()).hexdigest() == frame["sha256"]
+```
+
+Use `outputs/benchmark-sources` as `--source-root` for the full benchmark command
+above. For activation validation in #26 / PR #35, preprocess each extracted certificate
+directory using its `source-manifest.json`, gain `1.0`, diagnostic indices
+`248..255,0..8` and explicit `accept_review=True`; preserve upstream review reasons.
+Run `diamond360.asscher_steps` on those identical indices with `--wrap` before
+activation measurement. Saving source images does not itself establish descriptor
+KEEP/REVISE/REJECT decisions.
