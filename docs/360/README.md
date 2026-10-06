@@ -174,3 +174,15 @@ remain revised/QC-only. Per-pixel Q90 is retained as a secondary diagnostic.
 The canonical inputs are the four `benchmark-sources-v1` GitHub Release assets
 indexed by [benchmark/source-bundles.json](benchmark/source-bundles.json); source
 ZIP and frame hashes are verified before preprocessing.
+
+
+## Contrast mobility descriptor validation
+
+Issue #30's four-stone contrast-mobility benchmark is documented in
+[mobility/README.md](mobility/README.md). It derives adjacent-step absolute
+change directly from #26's retained activation traces rather than rebuilding
+photometry or support. Coarse-fixed centre/inner/middle relative median mobility
+survives as the primary local continuous-change descriptor; Q90 remains an audit
+field, while whole-stone mobility is not retained as another primary scalar
+because it is redundant with whole-stone activation excursion. Outer and semantic
+variants inherit #26's REVISE status.
