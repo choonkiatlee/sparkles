@@ -1,0 +1,43 @@
+name: activation review bundle temp
+on:
+  push:
+    branches: [issue-26-activation-descriptor]
+    paths:
+      - .github/workflows/activation-review-temp.yml
+permissions:
+  contents: write
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: issue-26-activation-descriptor
+      - name: Bundle audit panels
+        run: |
+          mkdir -p /tmp/review
+          cp docs/360/activation/per-stone/IGI-LG836619414/core/evidence/semantic-middle_step-fixed-relative.png /tmp/review/LG836-middle-semantic-fixed-relative.png
+          cp docs/360/activation/per-stone/IGI-LG836619414/core/evidence/semantic-middle_step-dynamic-relative.png /tmp/review/LG836-middle-semantic-dynamic-relative.png
+          cp docs/360/activation/per-stone/IGI-LG836619414/core/evidence/coarse-middle-fixed-relative.png /tmp/review/LG836-middle-coarse-fixed-relative.png
+          cp docs/360/activation/per-stone/IGI-LG756580087/core/evidence/semantic-outer_step-fixed-relative.png /tmp/review/LG756580087-outer-semantic-fixed-relative.png
+          cp docs/360/activation/per-stone/IGI-LG756580087/core/evidence/semantic-outer_step-dynamic-relative.png /tmp/review/LG756580087-outer-semantic-dynamic-relative.png
+          cp docs/360/activation/per-stone/IGI-LG818659722/core/evidence/coarse-inner-fixed-relative.png /tmp/review/LG818-inner-coarse-fixed-relative.png
+          cp docs/360/activation/per-stone/IGI-LG818659722/core/evidence/semantic-inner_step-fixed-relative.png /tmp/review/LG818-inner-semantic-fixed-relative.png
+          cp docs/360/activation/per-stone/IGI-LG756520111/core/evidence/coarse-centre-fixed-relative.png /tmp/review/LG756520111-centre-coarse-fixed-relative.png
+          cp docs/360/activation/per-stone/IGI-LG756520111/core/evidence/semantic-centre-fixed-relative.png /tmp/review/LG756520111-centre-semantic-fixed-relative.png
+          for c in IGI-LG756580087 IGI-LG756520111 IGI-LG818659722 IGI-LG836619414; do
+            cp docs/360/activation/per-stone/$c/core/evidence/whole-stone.png /tmp/review/$c-whole-stone.png
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: activation-review-panels
+          path: /tmp/review
+          compression-level: 9
+      - name: Remove temporary workflow
+        run: |
+          rm .github/workflows/activation-review-temp.yml
+          git config user.name "chatgpt-benchmark"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A .github/workflows/activation-review-temp.yml
+          git commit -m "chore: remove activation review workflow"
+          git push origin HEAD:issue-26-activation-descriptor
