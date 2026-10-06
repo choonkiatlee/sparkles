@@ -80,6 +80,42 @@ media remain out of Git. All images and complete MP4s were decoded; archive
 integrity and per-file hashes were verified. Release v3 is 36,567,890 bytes;
 SHA-256: `379f411098e4d96df78d7c00fea5bb9fd18d5f37d890b873928c4003ba126da5`.
 
+## Normalized external benchmark
+
+[`benchmark-manifest.json`](benchmark-manifest.json) completes normalization for
+issue #64 step 2 using schema `sparkles-external-benchmark/1`. It joins all 32
+catalogued examples to their labels, relations and archived evidence:
+
+- 16 original standalone GIF/MP4 samples, 10 forum inline previews and two
+  complete D360 sequences (512 original frames);
+- four locator-only examples with explicit media gaps;
+- source performance progressions, paired views, the corner/windmill geometry
+  sweep and reviewer-specific comparison relationships;
+- per-label reviewer type, performance / geometry/style / personal-preference
+  categories, explicit label strength and separate inferred classifications;
+- three general expert principles kept outside per-stone labels.
+
+Read `samples` for normalized records, `groups` and `relations` for source
+comparisons, and `general_principles` for context. Each sample retains its complete
+`source_catalog_record`; label text preserves catalog paraphrases rather than
+claiming verbatim transcription. Missing reviewer/post provenance remains unknown
+or ambiguous. Post #58's label retains the separate media post #56.
+
+`media.assets` records ZIP-relative paths, exact source URLs, hashes and byte
+counts. `media.sequence` references an ordered source manifest in the pinned v3
+release, including its hash, frame index field, dimensions and total original
+JPEG bytes. Frame paths are relative to that manifest's directory. Simulation
+and real-stone domains stay explicit; previews are not full originals, and archived
+motion has not yet been validated against Sparkles preprocessing requirements.
+Source ordering carries no numerical quality score.
+
+Validation preserved every catalog sample and label, checked all 26 standalone
+asset hashes and all 512 ordered frame hashes against the published ZIP, and
+verified release bytes/SHA-256. Steps 3–5 (blind runs, comparison and disposition)
+remain pending; every sample's `analysis_status` is `not_run`. The normalized
+manifest is versioned in Git alongside the catalog and archive manifest; release
+v3 remains the unchanged raw-media bundle.
+
 ## Reproduce the byte probe
 
 ```bash
