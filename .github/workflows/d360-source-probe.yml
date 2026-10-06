@@ -16,55 +16,85 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Probe d360 viewer
+      - name: Decode d360 viewer protocol
         shell: bash
         run: |
           set -euxo pipefail
           python - <<'PY'
-          from urllib.request import Request, urlopen
-          from urllib.parse import urljoin
           from html.parser import HTMLParser
-          import re
+          from urllib.request import Request, urlopen
+          from pathlib import Path
 
-          viewers = [
-              "https://d360.tech/view.html?d=79-BB-5159600",
-              "https://d360.tech/view.html?d=79-BT-5165227",
-          ]
+          viewer="https://d360.tech/view.html?d=79-BB-5159600"
+          req=Request(viewer,headers={"User-Agent":"Mozilla/5.0 SparklesD360Probe/2"})
+          with urlopen(req,timeout=30) as r:
+              html=r.read().decode("utf-8","replace")
 
           class P(HTMLParser):
               def __init__(self):
                   super().__init__()
-                  self.scripts=[]
-                  self.links=[]
+                  self.inline=[]
+                  self._in=False
+                  self._buf=[]
+                  self.src=None
               def handle_starttag(self, tag, attrs):
-                  a=dict(attrs)
-                  if tag=="script" and a.get("src"): self.scripts.append(a["src"])
-                  if tag=="link" and a.get("href"): self.links.append(a["href"])
-
-          headers={"User-Agent":"Mozilla/5.0 SparklesD360Probe/1","Accept":"text/html,*/*"}
-          for viewer in viewers:
-              print("VIEWER", viewer)
-              req=Request(viewer,headers=headers)
-              with urlopen(req,timeout=30) as r:
-                  data=r.read()
-                  print("STATUS",r.status,"FINAL",r.geturl(),"BYTES",len(data),"TYPE",r.headers.get("Content-Type"))
-              html=data.decode("utf-8","replace")
-              print("HTML_BEGIN")
-              print(html[:30000])
-              print("HTML_END")
-              p=P(); p.feed(html)
-              for src in p.scripts:
-                  u=urljoin(viewer,src)
-                  print("SCRIPT",u)
-                  try:
-                      with urlopen(Request(u,headers={"User-Agent":headers["User-Agent"]}),timeout=30) as rr:
-                          js=rr.read()
-                      txt=js.decode("utf-8","replace")
-                      print("SCRIPT_BYTES",len(js))
-                      for line in txt.splitlines():
-                          lo=line.lower()
-                          if any(k in lo for k in ("media.d360","jpg","jpeg","webp","png","frame","image","surl","api","json")):
-                              print("JS_MATCH",line[:2000])
-                  except Exception as exc:
-                      print("SCRIPT_ERROR",repr(exc))
+                  if tag=="script":
+                      a=dict(attrs)
+                      self.src=a.get("src")
+                      self._in=self.src is None
+                      self._buf=[]
+              def handle_data(self,data):
+                  if self._in:self._buf.append(data)
+              def handle_endtag(self,tag):
+                  if tag=="script" and self._in:
+                      self.inline.append("".join(self._buf))
+                      self._in=False
+          p=P();p.feed(html)
+          print("INLINE_COUNT",len(p.inline),[len(x) for x in p.inline])
+          for i,s in enumerate(p.inline):
+              Path(f"/tmp/inline-{i}.js").write_text(s)
           PY
+
+          cat >/tmp/decode.js <<'JS'
+          const fs=require("fs"), vm=require("vm");
+          function makeDocument(){
+            return {
+              readyState:"loading",
+              head:{appendChild:(e)=>console.log("APPEND_HEAD",JSON.stringify(e))},
+              createElement:(tag)=>({tagName:tag,style:{setProperty(){}}}),
+              getElementById:()=>null,
+              querySelector:()=>null,
+              querySelectorAll:()=>[],
+              addEventListener(){},
+              body:{appendChild(){}},
+            };
+          }
+          global.window={location:{search:"?d=79-BB-5159600"},innerWidth:1000,innerHeight:1000,devicePixelRatio:1};
+          global.document=makeDocument();
+          global.navigator={userAgent:"node"};
+          global.addEventListener=()=>{};
+          global.getComputedStyle=()=>({display:"none"});
+          global.Image=class {set src(v){this._src=v;} get src(){return this._src;}};
+          for(const idx of [0]){
+            const src=fs.readFileSync("/tmp/inline-"+idx+".js","utf8");
+            try{vm.runInThisContext(src);}catch(e){console.log("INLINE_ERROR",idx,String(e));}
+          }
+          if(typeof _0x1f54==="function"){
+            console.log("PRELOAD_STRINGS_BEGIN");
+            for(let i=0x1e3;i<=0x1fb;i++){try{console.log(i.toString(16),JSON.stringify(_0x1f54(i)));}catch(e){}}
+            console.log("PRELOAD_STRINGS_END");
+          }
+          const files=fs.readdirSync("/tmp").filter(x=>x.startsWith("inline-"));
+          for(const file of files){
+            const src=fs.readFileSync("/tmp/"+file,"utf8");
+            if(src.includes("function _0x3654")){
+              try{vm.runInThisContext("try{"+src+"}catch(e){console.log('CORE_ERROR',String(e))}");}catch(e){console.log("CORE_PARSE_ERROR",String(e));}
+              if(typeof _0x3654==="function"){
+                console.log("CORE_STRINGS_BEGIN");
+                for(let i=0x1d6;i<=0x2cc;i++){try{console.log(i.toString(16),JSON.stringify(_0x3654(i)));}catch(e){}}
+                console.log("CORE_STRINGS_END");
+              }
+            }
+          }
+          JS
+          node /tmp/decode.js
