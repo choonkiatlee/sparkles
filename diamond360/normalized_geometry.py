@@ -14,7 +14,7 @@ import numpy as np
 from scipy import ndimage as ndi
 
 SCHEMA = "diamond360-normalized-geometry/1"
-DEFAULT_TARGET_DIAMETER = 256
+DEFAULT_TARGET_DIAMETER = 160
 DEFAULT_MARGIN_FRACTION = 0.12
 DEFAULT_LOWPASS_SIGMA_PX = 1.0
 
@@ -39,6 +39,10 @@ def specification(
         "canvas_size_px": int(canvas_size),
         "centering": "silhouette centroid",
         "effective_diameter": "2*sqrt(mask_area/pi)",
+        "anti_aliasing": (
+            "support-weighted Gaussian before downsampling; "
+            "sigma_source_px=max(0,0.5*(1/scale-1))"
+        ),
         "resampling": "scipy.ndimage.map_coordinates order=1",
         "mask_resampling": "scipy.ndimage.map_coordinates order=0",
         "post_resample_lowpass": "gaussian",
@@ -92,6 +96,31 @@ def normalize_frame(
     source_diameter = effective_diameter(mask)
     scale = float(target_diameter / source_diameter)
     cy, cx = _centroid(mask)
+    anti_alias_sigma = (
+        max(0.0, 0.5 * (1.0 / scale - 1.0))
+        if scale < 1.0
+        else 0.0
+    )
+    source = brightness
+    source_valid = valid_mask.copy()
+    if anti_alias_sigma > 0:
+        weights = source_valid.astype(float)
+        numerator = ndi.gaussian_filter(
+            source * weights,
+            anti_alias_sigma,
+            mode="nearest",
+        )
+        denominator = ndi.gaussian_filter(
+            weights,
+            anti_alias_sigma,
+            mode="nearest",
+        )
+        good = denominator > 0.25
+        filtered = np.zeros_like(source)
+        filtered[good] = numerator[good] / denominator[good]
+        source = filtered
+        source_valid &= good
+
     n = spec["canvas_size_px"]
     oc = (n - 1) / 2.0
     oy, ox = np.indices((n, n), dtype=float)
@@ -99,7 +128,7 @@ def normalize_frame(
     ix = cx + (ox - oc) / scale
 
     sampled = ndi.map_coordinates(
-        brightness,
+        source,
         [iy, ix],
         order=1,
         mode="constant",
@@ -118,7 +147,7 @@ def normalize_frame(
     )
     out_valid = (
         ndi.map_coordinates(
-            valid_mask.astype(np.uint8),
+            source_valid.astype(np.uint8),
             [iy, ix],
             order=0,
             mode="constant",
@@ -151,6 +180,16 @@ def normalize_frame(
             **spec,
             "source_effective_diameter_px": float(source_diameter),
             "isotropic_scale": scale,
+            "sampling_direction": (
+                "downsample"
+                if scale < 1.0
+                else "upsample"
+                if scale > 1.0
+                else "native"
+            ),
+            "anti_alias_sigma_source_px": float(
+                anti_alias_sigma
+            ),
             "source_centroid_yx": [cy, cx],
             "valid_fraction_of_mask": float(
                 out_valid.sum() / max(1, out_mask.sum())
