@@ -1,44 +1,60 @@
 # PriceScope external benchmark archive
 
-This directory contains the source/provenance archive for the PriceScope
-examples tracked by #64.
+This directory contains source/provenance material for the PriceScope examples
+tracked by #64.
 
-## Scope of this slice
+## Scope
 
 Archive first, analysis later.
 
 - preserve source URLs and source-provided interpretations;
+- distinguish expert review from community/purchaser preference;
 - prefer exact original public media;
-- record SHA-256, byte count and content type only when exact bytes are recovered;
-- keep downloaded third-party media out of Git;
-- do **not** run Sparkles descriptors or tune any metric in this slice.
+- record SHA-256 and byte counts only after exact bytes are recovered;
+- keep raw third-party media out of Git;
+- do **not** tune Sparkles metrics to these examples.
 
-`source-catalog.json` records the intended benchmark examples and their source
-semantics. `archive-manifest.json` records what was actually recoverable.
+`source-catalog.json` records benchmark semantics and reviewer provenance.
+`archive-manifest.json` records what is actually recoverable.
 
-## Current retrieval status — 2026-10-06
+## Current archive status — 2026-10-06
 
-The PriceScope article and forum text are publicly accessible and the article's
-original GIF/MP4 URLs are preserved in the catalog. However PriceScope returns
-HTTP 403 to direct media and forum-page requests from GitHub-hosted archive
-jobs.
+### PriceScope-hosted P3/article media
 
-Two independent Actions probes confirmed the block. The expanded probe found:
+The article/media locators remain known, but PriceScope returns HTTP 403 to
+GitHub-hosted archival fetches. The durable manifest therefore records the
+URLs and blocked state without inventing hashes.
 
-- 14 explicit article media URLs catalogued;
-- 14/14 direct byte requests blocked with HTTP 403;
-- 10 target forum-post examples catalogued;
-- 0 original forum attachment URLs recoverable through the blocked runner
-  request/current text rendering.
+### Old corner/windmill forum thread
 
-Accordingly the durable manifest deliberately contains **no invented hashes or
-byte counts**. Forum post text/labels and article media locators are archived;
-the media-byte archive remains incomplete.
+Post text and labels are preserved. The migrated forum rendering does not expose
+the old inline-media URLs to the archive tooling, and GitHub runner page fetches
+are blocked by PriceScope.
 
-Do not replace the missing originals with screenshots, thumbnails or
-recompressed copies while calling them originals.
+### 2023–24 Asscher evaluation thread
 
-## Reproduce the probe
+This source is materially more useful for Sparkles:
+
+- Karl_K / strmrdr supplies direct technical labels on individual real stones;
+- two primary candidates still have live `d360.tech` viewers;
+- exact Whiteflash/GIA identities survive for several later comparison stones;
+- two Kashi sources are direct original MP4s and **are downloadable**.
+
+Verified raw-video records:
+
+| sample | bytes | SHA-256 |
+|---|---:|---|
+| `asscher-eval-messy-arrows` | 5,886,312 | `ec4a17f8c89ce710dd5a9b8e4e8d08b8e398d99692e583e4f63f970bfd4f487a` |
+| `asscher-eval-nice-dance` | 4,840,046 | `f69e6e8e429665246becc6121621fe4d92955383cb7e2163cd6b91aa010a5b27` |
+
+Those bytes were retrieved in Actions run `37533954460`. They are not committed
+to Git; the manifest preserves exact source URLs, sizes and hashes.
+
+The d360 cases are **viewer-live but not yet frame-archived**. They need a small
+d360-specific extraction adapter rather than weakening the existing Sparkles
+source contracts.
+
+## Reproduce the byte probe
 
 ```bash
 python tools/archive_pricescope_external.py \
@@ -46,12 +62,16 @@ python tools/archive_pricescope_external.py \
   --out /tmp/pricescope-archive
 ```
 
-The workflow is manual-only because the source currently blocks GitHub runner
-traffic. If PriceScope access changes, rerun it and update
-`archive-manifest.json` only from successfully recovered exact bytes.
+The workflow is manual-only. Re-run it when testing source availability or after
+adding a direct-media candidate.
 
 ## Interpretation boundary
 
-PriceScope descriptions are external expert/forum evidence, not objective ground
-truth. The six corner/windmill cases are a controlled geometry/character sweep,
-not a monotonic quality scale.
+PriceScope commentary is external evidence, not objective ground truth.
+Reviewer type matters:
+
+- Karl_K / strmrdr: expert technical label;
+- experienced forum member: informed perceptual/preference label;
+- purchaser/thread author: useful observation or preference, not expert ground truth.
+
+Keep these layers separate during downstream calibration.
