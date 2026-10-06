@@ -1242,7 +1242,30 @@ def _write_boundary_local_csv(result, output):
 
 
 def _profile_row(name, candidate):
-    return {
+    rows = candidate.get("frame_trace") or []
+    q25_key = (
+        "q25_joint_separation"
+        if name == "joint_weakest_link" else "q25_separation"
+    )
+    median_key = (
+        "median_joint_separation"
+        if name == "joint_weakest_link" else "median_separation"
+    )
+    coverage_events = [
+        row for row in rows
+        if row.get(q25_key) is not None and row.get(median_key) is not None
+    ]
+    strongest_coverage = (
+        max(
+            coverage_events,
+            key=lambda row: (
+                float(row[median_key]) - float(row[q25_key]),
+                -int(row.get("position", 0)),
+            ),
+        )
+        if coverage_events else None
+    )
+    result = {
         "profile": name,
         "status": (candidate.get("validity") or {}).get(
             "status", candidate.get("status")
@@ -1254,7 +1277,26 @@ def _profile_row(name, candidate):
         "iqr_frame_q50": (candidate.get("iqr_summary") or {}).get("q50"),
         "mad_frame_q50": (candidate.get("mad_summary") or {}).get("q50"),
         "scale_spread_q50": (candidate.get("scale_spread_summary") or {}).get("q50"),
+        "max_coverage_gap": (
+            float(strongest_coverage[median_key] - strongest_coverage[q25_key])
+            if strongest_coverage else None
+        ),
+        "max_coverage_gap_source_index": (
+            strongest_coverage.get("source_index")
+            if strongest_coverage else None
+        ),
     }
+    if name == "joint_weakest_link":
+        event = (candidate.get("evidence") or {}).get(
+            "strongest_joint_median_penalty"
+        )
+        result["max_joint_median_penalty"] = (
+            event.get("joint_median_penalty") if event else None
+        )
+        result["max_joint_median_penalty_source_index"] = (
+            event.get("source_index") if event else None
+        )
+    return result
 
 
 def _write_tier_readability_profile_csv(result, output):
