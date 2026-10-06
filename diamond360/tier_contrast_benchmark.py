@@ -12,6 +12,7 @@ from . import activation_benchmark as ab
 from . import tier_contrast as tc
 
 SCHEMA = "diamond360-tier-contrast/1"
+REGION_TRACE_SCHEMA = "diamond360-region-traces/1"
 PAIRS = (("centre", "inner"), ("inner", "middle"))
 
 
@@ -109,6 +110,62 @@ def measure_from_activation(activation, spread_traces=None):
         },
         "pairs": pairs,
         "frame_rgb_paths": list(activation.get("frame_rgb_paths", [])),
+    }
+
+
+def _log_brightness_trace(values):
+    result = []
+    for value in values:
+        if value is None:
+            result.append(None)
+            continue
+        value = float(value)
+        result.append(float(np.log(value)) if np.isfinite(value) and value > 0 else None)
+    return result
+
+
+def measure_primary_from_region_trace(trace):
+    """Reconstruct the simple candidate from committed fixed-support trace artifacts.
+
+    The older benchmark trace stores the exact per-frame coarse fixed-support
+    regional medians. The #26 whole-stone normalization cancels in an
+    adjacent-band difference, so this is mathematically identical to computing
+    the simple candidate from #26 relative traces.
+    """
+    if trace.get("schema_version") != REGION_TRACE_SCHEMA:
+        raise ValueError(f"expected region trace schema {REGION_TRACE_SCHEMA}")
+    indices = list(trace.get("requested_indices") or [])
+    regions = trace.get("regions") or {}
+    pairs = {}
+    for left, right in PAIRS:
+        try:
+            left_values = regions[left]["median_brightness"]
+            right_values = regions[right]["median_brightness"]
+        except (KeyError, TypeError) as exc:
+            raise ValueError(f"missing committed regional medians for {left}/{right}") from exc
+        simple = tc.contrast_trace(
+            _log_brightness_trace(left_values),
+            _log_brightness_trace(right_values),
+            indices,
+        )
+        pairs[_pair_id(left, right)] = {
+            "left_band": left,
+            "right_band": right,
+            "simple": simple,
+            "evidence": tc.select_evidence(simple["frame_trace"]),
+        }
+    return {
+        "schema_version": SCHEMA,
+        "reconstruction_source_schema": REGION_TRACE_SCHEMA,
+        "requested_indices": indices,
+        "accepted_indices": list(trace.get("accepted_indices", [])),
+        "excluded": list(trace.get("excluded", [])),
+        "wrap_explicit": bool(trace.get("wrap_explicit")),
+        "identity": (
+            "abs((log(B_i)-log(B_whole))-(log(B_j)-log(B_whole))) "
+            "= abs(log(B_i)-log(B_j))"
+        ),
+        "pairs": pairs,
     }
 
 
