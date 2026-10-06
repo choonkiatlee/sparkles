@@ -55,9 +55,9 @@
     16
   ],
   "thresholds": [
-    0.75,
+    0.9,
     1.0,
-    1.25
+    1.1
   ],
   "baseline_threshold": 1.0,
   "connectivity": 8,
@@ -166,52 +166,52 @@
             }
           },
           "fixed_threshold_sensitivity": {
-            "position": 15,
-            "source_index": 7,
-            "largest_component_fraction_range": 0.169918920628148,
+            "position": 16,
+            "source_index": 8,
+            "largest_component_fraction_range": 0.06653186564640684,
             "threshold_values": [
               {
-                "threshold": "0.75",
-                "largest_component_fraction": 0.2776678063703437,
-                "effective_component_count": 9.716921120193382
+                "threshold": "0.90",
+                "largest_component_fraction": 0.29046898638426627,
+                "effective_component_count": 9.321987854362071
               },
               {
                 "threshold": "1.00",
-                "largest_component_fraction": 0.34354543074103167,
-                "effective_component_count": 7.351860729229834
+                "largest_component_fraction": 0.32113311606919026,
+                "effective_component_count": 8.162133977599439
               },
               {
-                "threshold": "1.25",
-                "largest_component_fraction": 0.4475867269984917,
-                "effective_component_count": 4.6859494220770035
+                "threshold": "1.10",
+                "largest_component_fraction": 0.3570008520306731,
+                "effective_component_count": 6.762108991697798
               }
             ]
           },
           "dynamic_threshold_sensitivity": {
-            "position": 15,
-            "source_index": 7,
-            "largest_component_fraction_range": 0.1516306305996428,
+            "position": 2,
+            "source_index": 250,
+            "largest_component_fraction_range": 0.06010969621415346,
             "threshold_values": [
               {
-                "threshold": "0.75",
-                "largest_component_fraction": 0.24695902688860435,
-                "effective_component_count": 11.555396632381095
+                "threshold": "0.90",
+                "largest_component_fraction": 0.25679574791192106,
+                "effective_component_count": 11.199971743218695
               },
               {
                 "threshold": "1.00",
-                "largest_component_fraction": 0.3024435223605348,
-                "effective_component_count": 9.299508691058497
+                "largest_component_fraction": 0.283833952075599,
+                "effective_component_count": 9.877894597089641
               },
               {
-                "threshold": "1.25",
-                "largest_component_fraction": 0.39858965748824715,
-                "effective_component_count": 5.857426862114927
+                "threshold": "1.10",
+                "largest_component_fraction": 0.3169054441260745,
+                "effective_component_count": 8.505622106428497
               }
             ]
           },
           "supports": {
             "fixed": {
-              "0.75": {
+              "0.90": {
                 "validity": {
                   "status": "ok",
                   "reasons": []
@@ -222,13 +222,13 @@
                   "observed_frames": 17,
                   "active_frames": 17,
                   "active_frame_fraction": 1.0,
-                  "median_active_fraction": 0.20917714371753368,
-                  "median_largest_component_fraction": 0.27770968306776395,
-                  "q10_largest_component_fraction": 0.2234020919917471,
-                  "q90_largest_component_fraction": 0.3081768899128335,
-                  "median_effective_component_count": 9.716921120193382,
-                  "q90_effective_component_count": 13.538892727219874,
-                  "median_boundary_active_fraction": 0.024893435635123615,
+                  "median_active_fraction": 0.17416999171873823,
+                  "median_largest_component_fraction": 0.3147607279263087,
+                  "q10_largest_component_fraction": 0.24679985599063645,
+                  "q90_largest_component_fraction": 0.34077458583891096,
+                  "median_effective_component_count": 8.274253521738528,
+                  "q90_effective_component_count": 11.757008000095269,
+                  "median_boundary_active_fraction": 0.021367521367521368,
                   "median_reference_scale": 0.1286001305222511
                 }
               },
@@ -253,7 +253,7 @@
                   "median_reference_scale": 0.1286001305222511
                 }
               },
-              "1.25": {
+              "1.10": {
                 "validity": {
                   "status": "ok",
                   "reasons": []
@@ -264,19 +264,19 @@
                   "observed_frames": 17,
                   "active_frames": 17,
                   "active_frame_fraction": 1.0,
-                  "median_active_fraction": 0.12741850485583076,
-                  "median_largest_component_fraction": 0.4276094276094276,
-                  "q10_largest_component_fraction": 0.3437129344248756,
-                  "q90_largest_component_fraction": 0.4480915290583198,
-                  "median_effective_component_count": 5.1193110463757225,
-                  "q90_effective_component_count": 7.178294326921586,
-                  "median_boundary_active_fraction": 0.01634472511144131,
+                  "median_active_fraction": 0.14706768049386434,
+                  "median_largest_component_fraction": 0.3735523835173714,
+                  "q10_largest_component_fraction": 0.2927640245287304,
+                  "q90_largest_component_fraction": 0.3935005803895442,
+                  "median_effective_component_count": 6.521402598557533,
+                  "q90_effective_component_count": 9.254113427377948,
+                  "median_boundary_active_fraction": 0.019724889696340515,
                   "median_reference_scale": 0.1286001305222511
                 }
               }
             },
             "dynamic": {
-              "0.75": {
+              "0.90": {
                 "validity": {
                   "status": "ok",
                   "reasons": []
@@ -287,13 +287,13 @@
                   "observed_frames": 17,
                   "active_frames": 17,
                   "active_frame_fraction": 1.0,
-                  "median_active_fraction": 0.21047951925435368,
-                  "median_largest_component_fraction": 0.24169685990338163,
-                  "q10_largest_component_fraction": 0.2113811708855417,
-                  "q90_largest_component_fraction": 0.25309929065540254,
-                  "median_effective_component_count": 12.569009762392858,
-                  "q90_effective_component_count": 14.800387850119849,
-                  "median_boundary_active_fraction": 0.010999083409715857,
+                  "median_active_fraction": 0.17117365710080942,
+                  "median_largest_component_fraction": 0.2677556818181818,
+                  "q10_largest_component_fraction": 0.23262980217070295,
+                  "q90_largest_component_fraction": 0.28663707360056767,
+                  "median_effective_component_count": 10.794075184793359,
+                  "q90_effective_component_count": 13.001357344602338,
+                  "median_boundary_active_fraction": 0.010078797874289903,
                   "median_reference_scale": 0.1286001305222511
                 }
               },
@@ -318,7 +318,7 @@
                   "median_reference_scale": 0.1286001305222511
                 }
               },
-              "1.25": {
+              "1.10": {
                 "validity": {
                   "status": "ok",
                   "reasons": []
@@ -329,13 +329,13 @@
                   "observed_frames": 17,
                   "active_frames": 17,
                   "active_frame_fraction": 1.0,
-                  "median_active_fraction": 0.1210621342298593,
-                  "median_largest_component_fraction": 0.3698184773774045,
-                  "q10_largest_component_fraction": 0.3234705675363193,
-                  "q90_largest_component_fraction": 0.38684496846063304,
-                  "median_effective_component_count": 6.7085859284708675,
-                  "q90_effective_component_count": 7.929011261509983,
-                  "median_boundary_active_fraction": 0.007456929802005657,
+                  "median_active_fraction": 0.14120578874677236,
+                  "median_largest_component_fraction": 0.3209088588205259,
+                  "q10_largest_component_fraction": 0.27603310947993126,
+                  "q90_largest_component_fraction": 0.3322274933788102,
+                  "median_effective_component_count": 8.296627752621983,
+                  "q90_effective_component_count": 10.251432397551486,
+                  "median_boundary_active_fraction": 0.008335262792313036,
                   "median_reference_scale": 0.1286001305222511
                 }
               }
@@ -443,52 +443,52 @@
             }
           },
           "fixed_threshold_sensitivity": {
-            "position": 23,
-            "source_index": 7,
-            "largest_component_fraction_range": 0.20549472828715193,
+            "position": 27,
+            "source_index": 11,
+            "largest_component_fraction_range": 0.08422824499228443,
             "threshold_values": [
               {
-                "threshold": "0.75",
-                "largest_component_fraction": 0.2957862281603289,
-                "effective_component_count": 8.611546814562061
+                "threshold": "0.90",
+                "largest_component_fraction": 0.2535240900483905,
+                "effective_component_count": 10.210094842527962
               },
               {
                 "threshold": "1.00",
-                "largest_component_fraction": 0.38308605341246293,
-                "effective_component_count": 6.001644561268891
+                "largest_component_fraction": 0.27828962910465393,
+                "effective_component_count": 9.123332554313706
               },
               {
-                "threshold": "1.25",
-                "largest_component_fraction": 0.5012809564474808,
-                "effective_component_count": 3.7688073999661933
+                "threshold": "1.10",
+                "largest_component_fraction": 0.3377523350406749,
+                "effective_component_count": 7.348450594673057
               }
             ]
           },
           "dynamic_threshold_sensitivity": {
-            "position": 23,
-            "source_index": 7,
-            "largest_component_fraction_range": 0.16744986612123036,
+            "position": 27,
+            "source_index": 11,
+            "largest_component_fraction_range": 0.06942035430230575,
             "threshold_values": [
               {
-                "threshold": "0.75",
-                "largest_component_fraction": 0.2505713352921972,
-                "effective_component_count": 11.291911067782381
+                "threshold": "0.90",
+                "largest_component_fraction": 0.21905108162152337,
+                "effective_component_count": 13.160968190739872
               },
               {
                 "threshold": "1.00",
-                "largest_component_fraction": 0.3092979127134725,
-                "effective_component_count": 8.950230217971903
+                "largest_component_fraction": 0.24080130825838103,
+                "effective_component_count": 11.993633241854617
               },
               {
-                "threshold": "1.25",
-                "largest_component_fraction": 0.4180212014134276,
-                "effective_component_count": 5.353056139281458
+                "threshold": "1.10",
+                "largest_component_fraction": 0.2884714359238291,
+                "effective_component_count": 9.926102086184434
               }
             ]
           },
           "supports": {
             "fixed": {
-              "0.75": {
+              "0.90": {
                 "validity": {
                   "status": "ok",
                   "reasons": []
@@ -499,13 +499,13 @@
                   "observed_frames": 33,
                   "active_frames": 33,
                   "active_frame_fraction": 1.0,
-                  "median_active_fraction": 0.23905694340782369,
-                  "median_largest_component_fraction": 0.2648934232100565,
-                  "q10_largest_component_fraction": 0.2083806554544894,
-                  "q90_largest_component_fraction": 0.3482718751437682,
-                  "median_effective_component_count": 8.963948205549435,
-                  "q90_effective_component_count": 12.125887323827639,
-                  "median_boundary_active_fraction": 0.02717391304347826,
+                  "median_active_fraction": 0.2008605171883918,
+                  "median_largest_component_fraction": 0.28619302949061665,
+                  "q10_largest_component_fraction": 0.23226715239829995,
+                  "q90_largest_component_fraction": 0.3826555713547861,
+                  "median_effective_component_count": 8.796526101799177,
+                  "q90_effective_component_count": 11.369958005034784,
+                  "median_boundary_active_fraction": 0.02559366754617414,
                   "median_reference_scale": 0.12803730297088622
                 }
               },
@@ -530,7 +530,7 @@
                   "median_reference_scale": 0.12803730297088622
                 }
               },
-              "1.25": {
+              "1.10": {
                 "validity": {
                   "status": "ok",
                   "reasons": []
@@ -541,19 +541,19 @@
                   "observed_frames": 33,
                   "active_frames": 33,
                   "active_frame_fraction": 1.0,
-                  "median_active_fraction": 0.13434605084076043,
-                  "median_largest_component_fraction": 0.3848537005163511,
-                  "q10_largest_component_fraction": 0.28081151393353915,
-                  "q90_largest_component_fraction": 0.49298057932850564,
-                  "median_effective_component_count": 5.66125426141953,
-                  "q90_effective_component_count": 8.601847538618014,
-                  "median_boundary_active_fraction": 0.022375215146299483,
+                  "median_active_fraction": 0.15392720727049217,
+                  "median_largest_component_fraction": 0.33653566229985443,
+                  "q10_largest_component_fraction": 0.2493443230330244,
+                  "q90_largest_component_fraction": 0.43616371778069024,
+                  "median_effective_component_count": 7.028796625296238,
+                  "q90_effective_component_count": 10.173908536162417,
+                  "median_boundary_active_fraction": 0.024761904761904763,
                   "median_reference_scale": 0.12803730297088622
                 }
               }
             },
             "dynamic": {
-              "0.75": {
+              "0.90": {
                 "validity": {
                   "status": "ok",
                   "reasons": []
@@ -564,13 +564,13 @@
                   "observed_frames": 33,
                   "active_frames": 33,
                   "active_frame_fraction": 1.0,
-                  "median_active_fraction": 0.22912515848578155,
-                  "median_largest_component_fraction": 0.22251524641503215,
-                  "q10_largest_component_fraction": 0.18109013084526607,
-                  "q90_largest_component_fraction": 0.2603841249157743,
-                  "median_effective_component_count": 13.40169883086014,
-                  "q90_effective_component_count": 15.829626201994431,
-                  "median_boundary_active_fraction": 0.011420525657071339,
+                  "median_active_fraction": 0.19352523149809778,
+                  "median_largest_component_fraction": 0.24426078971533516,
+                  "q10_largest_component_fraction": 0.199550837664569,
+                  "q90_largest_component_fraction": 0.28138963914369003,
+                  "median_effective_component_count": 11.690534874462399,
+                  "q90_effective_component_count": 15.145374386239899,
+                  "median_boundary_active_fraction": 0.010302197802197802,
                   "median_reference_scale": 0.12803730297088622
                 }
               },
@@ -595,7 +595,7 @@
                   "median_reference_scale": 0.12803730297088622
                 }
               },
-              "1.25": {
+              "1.10": {
                 "validity": {
                   "status": "ok",
                   "reasons": []
@@ -606,13 +606,13 @@
                   "observed_frames": 33,
                   "active_frames": 33,
                   "active_frame_fraction": 1.0,
-                  "median_active_fraction": 0.12515333123050504,
-                  "median_largest_component_fraction": 0.329891584925142,
-                  "q10_largest_component_fraction": 0.25167508022559265,
-                  "q90_largest_component_fraction": 0.38783960419661234,
-                  "median_effective_component_count": 7.811192260401142,
-                  "q90_effective_component_count": 10.574330211502087,
-                  "median_boundary_active_fraction": 0.00737230121116377,
+                  "median_active_fraction": 0.14906529017857142,
+                  "median_largest_component_fraction": 0.2884714359238291,
+                  "q10_largest_component_fraction": 0.22260189537659167,
+                  "q90_largest_component_fraction": 0.33333074198477586,
+                  "median_effective_component_count": 9.926102086184434,
+                  "q90_effective_component_count": 12.52740087012002,
+                  "median_boundary_active_fraction": 0.008423022929340197,
                   "median_reference_scale": 0.12803730297088622
                 }
               }
@@ -725,52 +725,42 @@
             }
           },
           "fixed_threshold_sensitivity": {
-            "position": 4,
-            "source_index": 252,
-            "largest_component_fraction_range": 0.23621491400617994,
+            "position": 12,
+            "source_index": 4,
+            "largest_component_fraction_range": 0.07994127517530902,
             "threshold_values": [
               {
-                "threshold": "0.75",
-                "largest_component_fraction": 0.1026732504682445,
-                "effective_component_count": 26.080078061498003
+                "threshold": "0.90",
+                "largest_component_fraction": 0.25188716726261423,
+                "effective_component_count": 11.799734029178563
               },
               {
                 "threshold": "1.00",
-                "largest_component_fraction": 0.1013531440700451,
-                "effective_component_count": 27.005311575013167
-              },
-              {
-                "threshold": "1.25",
-                "largest_component_fraction": 0.33756805807622503,
-                "effective_component_count": 6.962846593124327
+                "largest_component_fraction": 0.33182844243792325,
+                "effective_component_count": 4.515311874467939
               }
             ]
           },
           "dynamic_threshold_sensitivity": {
-            "position": 4,
-            "source_index": 252,
-            "largest_component_fraction_range": 0.2372792683676401,
+            "position": 12,
+            "source_index": 4,
+            "largest_component_fraction_range": 0.08024114085062167,
             "threshold_values": [
               {
-                "threshold": "0.75",
-                "largest_component_fraction": 0.10151515151515152,
-                "effective_component_count": 26.52587136265015
+                "threshold": "0.90",
+                "largest_component_fraction": 0.2515873015873016,
+                "effective_component_count": 11.827724675363374
               },
               {
                 "threshold": "1.00",
-                "largest_component_fraction": 0.10028878970858493,
-                "effective_component_count": 27.54543003658553
-              },
-              {
-                "threshold": "1.25",
-                "largest_component_fraction": 0.33756805807622503,
-                "effective_component_count": 6.962846593124327
+                "largest_component_fraction": 0.33182844243792325,
+                "effective_component_count": 4.515311874467939
               }
             ]
           },
           "supports": {
             "fixed": {
-              "0.75": {
+              "0.90": {
                 "validity": {
                   "status": "review",
                   "reasons": [
@@ -782,16 +772,16 @@
                 "summary": {
                   "status": "ok",
                   "observed_frames": 17,
-                  "active_frames": 17,
-                  "active_frame_fraction": 1.0,
-                  "median_active_fraction": 0.1735661732115947,
-                  "median_largest_component_fraction": 0.143132344442304,
-                  "q10_largest_component_fraction": 0.09329596029261794,
-                  "q90_largest_component_fraction": 0.1790809034287902,
-                  "median_effective_component_count": 21.51087308159648,
-                  "q90_effective_component_count": 25.960907874431616,
-                  "median_boundary_active_fraction": 0.028433568843701535,
-                  "median_reference_scale": 0.1038610804080963
+                  "active_frames": 16,
+                  "active_frame_fraction": 0.9411764705882353,
+                  "median_active_fraction": 0.13366131844103657,
+                  "median_largest_component_fraction": 0.12472186683725145,
+                  "q10_largest_component_fraction": 0.09058222297019802,
+                  "q90_largest_component_fraction": 0.19318641668358366,
+                  "median_effective_component_count": 21.09228028160589,
+                  "q90_effective_component_count": 31.372039223137456,
+                  "median_boundary_active_fraction": 0.025823214763151255,
+                  "median_reference_scale": 0.11793353658914565
                 }
               },
               "1.00": {
@@ -818,7 +808,7 @@
                   "median_reference_scale": 0.13622008563280105
                 }
               },
-              "1.25": {
+              "1.10": {
                 "validity": {
                   "status": "review",
                   "reasons": [
@@ -830,21 +820,21 @@
                 "summary": {
                   "status": "ok",
                   "observed_frames": 17,
-                  "active_frames": 7,
-                  "active_frame_fraction": 0.4117647058823529,
-                  "median_active_fraction": 0.054959666696214875,
-                  "median_largest_component_fraction": 0.1774600504625736,
-                  "q10_largest_component_fraction": 0.156509526340822,
-                  "q90_largest_component_fraction": 0.2613249984729316,
-                  "median_effective_component_count": 15.144325474299821,
-                  "q90_effective_component_count": 15.780414791584718,
-                  "median_boundary_active_fraction": 0.017204301075268817,
-                  "median_reference_scale": 0.1038610804080963
+                  "active_frames": 11,
+                  "active_frame_fraction": 0.6470588235294118,
+                  "median_active_fraction": 0.08704902047690807,
+                  "median_largest_component_fraction": 0.12974551522736755,
+                  "q10_largest_component_fraction": 0.12065921130076515,
+                  "q90_largest_component_fraction": 0.18229623137598597,
+                  "median_effective_component_count": 21.344465977393682,
+                  "q90_effective_component_count": 23.864001315564323,
+                  "median_boundary_active_fraction": 0.02523524379811805,
+                  "median_reference_scale": 0.13622008563280105
                 }
               }
             },
             "dynamic": {
-              "0.75": {
+              "0.90": {
                 "validity": {
                   "status": "review",
                   "reasons": [
@@ -856,16 +846,16 @@
                 "summary": {
                   "status": "ok",
                   "observed_frames": 17,
-                  "active_frames": 17,
-                  "active_frame_fraction": 1.0,
-                  "median_active_fraction": 0.1729811584495763,
-                  "median_largest_component_fraction": 0.1426925292874976,
-                  "q10_largest_component_fraction": 0.09275362506465787,
-                  "q90_largest_component_fraction": 0.1791063838220669,
-                  "median_effective_component_count": 21.551544425001484,
-                  "q90_effective_component_count": 26.236408202103515,
-                  "median_boundary_active_fraction": 0.008514261387824606,
-                  "median_reference_scale": 0.1038610804080963
+                  "active_frames": 16,
+                  "active_frame_fraction": 0.9411764705882353,
+                  "median_active_fraction": 0.13249468971656247,
+                  "median_largest_component_fraction": 0.12461885952167309,
+                  "q10_largest_component_fraction": 0.0902402395741333,
+                  "q90_largest_component_fraction": 0.19303648384592736,
+                  "median_effective_component_count": 21.10539266375594,
+                  "q90_effective_component_count": 31.68656725071068,
+                  "median_boundary_active_fraction": 0.009393713023964672,
+                  "median_reference_scale": 0.11793353658914565
                 }
               },
               "1.00": {
@@ -892,7 +882,7 @@
                   "median_reference_scale": 0.13622008563280105
                 }
               },
-              "1.25": {
+              "1.10": {
                 "validity": {
                   "status": "review",
                   "reasons": [
@@ -904,16 +894,16 @@
                 "summary": {
                   "status": "ok",
                   "observed_frames": 17,
-                  "active_frames": 7,
-                  "active_frame_fraction": 0.4117647058823529,
-                  "median_active_fraction": 0.054252712635631785,
-                  "median_largest_component_fraction": 0.1770877045740663,
-                  "q10_largest_component_fraction": 0.156509526340822,
-                  "q90_largest_component_fraction": 0.2611810693843362,
-                  "median_effective_component_count": 15.144325474299821,
-                  "q90_effective_component_count": 15.867157498937924,
-                  "median_boundary_active_fraction": 0.004644681839294009,
-                  "median_reference_scale": 0.1038610804080963
+                  "active_frames": 11,
+                  "active_frame_fraction": 0.6470588235294118,
+                  "median_active_fraction": 0.08611200093188504,
+                  "median_largest_component_fraction": 0.12974551522736755,
+                  "q10_largest_component_fraction": 0.1203922894825837,
+                  "q90_largest_component_fraction": 0.18229623137598597,
+                  "median_effective_component_count": 21.489413626745243,
+                  "q90_effective_component_count": 23.92970062115113,
+                  "median_boundary_active_fraction": 0.007887817703768623,
+                  "median_reference_scale": 0.13622008563280105
                 }
               }
             }
@@ -1020,52 +1010,52 @@
             }
           },
           "fixed_threshold_sensitivity": {
-            "position": 12,
-            "source_index": 252,
-            "largest_component_fraction_range": 0.22592885136868796,
+            "position": 31,
+            "source_index": 15,
+            "largest_component_fraction_range": 0.27824423193861864,
             "threshold_values": [
               {
-                "threshold": "0.75",
-                "largest_component_fraction": 0.11050328227571116,
-                "effective_component_count": 23.48630146614375
+                "threshold": "0.90",
+                "largest_component_fraction": 0.37786970010341264,
+                "effective_component_count": 6.636440027196168
               },
               {
                 "threshold": "1.00",
-                "largest_component_fraction": 0.10858442296759523,
-                "effective_component_count": 25.009141757868697
+                "largest_component_fraction": 0.14811350171499843,
+                "effective_component_count": 18.179044565384544
               },
               {
-                "threshold": "1.25",
-                "largest_component_fraction": 0.3345132743362832,
-                "effective_component_count": 6.937713254949687
+                "threshold": "1.10",
+                "largest_component_fraction": 0.099625468164794,
+                "effective_component_count": 39.217185608977886
               }
             ]
           },
           "dynamic_threshold_sensitivity": {
-            "position": 12,
-            "source_index": 252,
-            "largest_component_fraction_range": 0.21939723064626088,
+            "position": 31,
+            "source_index": 15,
+            "largest_component_fraction_range": 0.27264420858329486,
             "threshold_values": [
               {
-                "threshold": "0.75",
-                "largest_component_fraction": 0.1007313829787234,
-                "effective_component_count": 26.725339122601035
+                "threshold": "0.90",
+                "largest_component_fraction": 0.3690909090909091,
+                "effective_component_count": 6.949415684677337
               },
               {
                 "threshold": "1.00",
-                "largest_component_fraction": 0.09878458753555729,
-                "effective_component_count": 27.983616312949945
+                "largest_component_fraction": 0.14411407766990292,
+                "effective_component_count": 19.138146930635855
               },
               {
-                "threshold": "1.25",
-                "largest_component_fraction": 0.3181818181818182,
-                "effective_component_count": 7.643429660759933
+                "threshold": "1.10",
+                "largest_component_fraction": 0.09644670050761421,
+                "effective_component_count": 41.45627956661072
               }
             ]
           },
           "supports": {
             "fixed": {
-              "0.75": {
+              "0.90": {
                 "validity": {
                   "status": "review",
                   "reasons": [
@@ -1077,16 +1067,16 @@
                 "summary": {
                   "status": "ok",
                   "observed_frames": 33,
-                  "active_frames": 33,
-                  "active_frame_fraction": 1.0,
-                  "median_active_fraction": 0.18197078023002797,
-                  "median_largest_component_fraction": 0.17626280466266336,
-                  "q10_largest_component_fraction": 0.10970788405141893,
-                  "q90_largest_component_fraction": 0.33493882819806325,
-                  "median_effective_component_count": 15.056562107232935,
-                  "q90_effective_component_count": 23.45042371140573,
-                  "median_boundary_active_fraction": 0.026697053556894026,
-                  "median_reference_scale": 0.0938921222269535
+                  "active_frames": 31,
+                  "active_frame_fraction": 0.9393939393939394,
+                  "median_active_fraction": 0.13633820329499532,
+                  "median_largest_component_fraction": 0.14237516869095818,
+                  "q10_largest_component_fraction": 0.10122006326253954,
+                  "q90_largest_component_fraction": 0.296875,
+                  "median_effective_component_count": 17.4262561292336,
+                  "q90_effective_component_count": 27.04839569312851,
+                  "median_boundary_active_fraction": 0.026196369636963698,
+                  "median_reference_scale": 0.09455732624530792
                 }
               },
               "1.00": {
@@ -1113,7 +1103,7 @@
                   "median_reference_scale": 0.1005226443529129
                 }
               },
-              "1.25": {
+              "1.10": {
                 "validity": {
                   "status": "review",
                   "reasons": [
@@ -1125,21 +1115,21 @@
                 "summary": {
                   "status": "ok",
                   "observed_frames": 33,
-                  "active_frames": 13,
-                  "active_frame_fraction": 0.3939393939393939,
-                  "median_active_fraction": 0.06223189306807585,
-                  "median_largest_component_fraction": 0.1938061938061938,
-                  "q10_largest_component_fraction": 0.16671061953970573,
-                  "q90_largest_component_fraction": 0.27238453673287355,
-                  "median_effective_component_count": 11.655950618233566,
-                  "q90_effective_component_count": 14.750723766414339,
-                  "median_boundary_active_fraction": 0.030415125359638306,
-                  "median_reference_scale": 0.09472005931735038
+                  "active_frames": 23,
+                  "active_frame_fraction": 0.696969696969697,
+                  "median_active_fraction": 0.08495492695057506,
+                  "median_largest_component_fraction": 0.15613382899628253,
+                  "q10_largest_component_fraction": 0.1281070589797574,
+                  "q90_largest_component_fraction": 0.19202633762664006,
+                  "median_effective_component_count": 20.127783725019277,
+                  "q90_effective_component_count": 23.459663435070436,
+                  "median_boundary_active_fraction": 0.030385900941962928,
+                  "median_reference_scale": 0.10044938575029373
                 }
               }
             },
             "dynamic": {
-              "0.75": {
+              "0.90": {
                 "validity": {
                   "status": "review",
                   "reasons": [
@@ -1151,16 +1141,16 @@
                 "summary": {
                   "status": "ok",
                   "observed_frames": 33,
-                  "active_frames": 33,
-                  "active_frame_fraction": 1.0,
-                  "median_active_fraction": 0.18463758725296733,
-                  "median_largest_component_fraction": 0.1741756447926869,
-                  "q10_largest_component_fraction": 0.10115771053178722,
-                  "q90_largest_component_fraction": 0.32267581504606235,
-                  "median_effective_component_count": 16.19464906565868,
-                  "q90_effective_component_count": 24.78837010741237,
-                  "median_boundary_active_fraction": 0.009211444521981856,
-                  "median_reference_scale": 0.0938921222269535
+                  "active_frames": 31,
+                  "active_frame_fraction": 0.9393939393939394,
+                  "median_active_fraction": 0.13905775075987842,
+                  "median_largest_component_fraction": 0.13253768844221106,
+                  "q10_largest_component_fraction": 0.09194659776055125,
+                  "q90_largest_component_fraction": 0.2842079450711133,
+                  "median_effective_component_count": 18.13866674123371,
+                  "q90_effective_component_count": 29.36817338719923,
+                  "median_boundary_active_fraction": 0.00904882154882155,
+                  "median_reference_scale": 0.09455732624530792
                 }
               },
               "1.00": {
@@ -1187,7 +1177,7 @@
                   "median_reference_scale": 0.1005226443529129
                 }
               },
-              "1.25": {
+              "1.10": {
                 "validity": {
                   "status": "review",
                   "reasons": [
@@ -1199,16 +1189,16 @@
                 "summary": {
                   "status": "ok",
                   "observed_frames": 33,
-                  "active_frames": 13,
-                  "active_frame_fraction": 0.3939393939393939,
-                  "median_active_fraction": 0.0652723311546841,
-                  "median_largest_component_fraction": 0.17516930022573363,
-                  "q10_largest_component_fraction": 0.15363874098389452,
-                  "q90_largest_component_fraction": 0.24085684641402777,
-                  "median_effective_component_count": 13.81492304535194,
-                  "q90_effective_component_count": 16.473389826069,
-                  "median_boundary_active_fraction": 0.005378568473314025,
-                  "median_reference_scale": 0.09472005931735038
+                  "active_frames": 23,
+                  "active_frame_fraction": 0.696969696969697,
+                  "median_active_fraction": 0.08651970063193454,
+                  "median_largest_component_fraction": 0.14512785072563925,
+                  "q10_largest_component_fraction": 0.11737699419382502,
+                  "q90_largest_component_fraction": 0.17813573937560948,
+                  "median_effective_component_count": 22.495962641564937,
+                  "q90_effective_component_count": 26.32029931480853,
+                  "median_boundary_active_fraction": 0.007032348804500703,
+                  "median_reference_scale": 0.10044938575029373
                 }
               }
             }
@@ -1320,42 +1310,52 @@
             }
           },
           "fixed_threshold_sensitivity": {
-            "position": 15,
-            "source_index": 7,
-            "largest_component_fraction_range": 0.2938732540738962,
+            "position": 11,
+            "source_index": 3,
+            "largest_component_fraction_range": 0.32246985416965146,
             "threshold_values": [
               {
-                "threshold": "0.75",
-                "largest_component_fraction": 0.2010350962316028,
-                "effective_component_count": 12.099727712924665
+                "threshold": "0.90",
+                "largest_component_fraction": 0.1406297768266585,
+                "effective_component_count": 18.176142820982818
               },
               {
                 "threshold": "1.00",
-                "largest_component_fraction": 0.49490835030549896,
-                "effective_component_count": 3.5500596386340546
+                "largest_component_fraction": 0.1753057658707047,
+                "effective_component_count": 21.805230730541933
+              },
+              {
+                "threshold": "1.10",
+                "largest_component_fraction": 0.46309963099630996,
+                "effective_component_count": 4.518472944288922
               }
             ]
           },
           "dynamic_threshold_sensitivity": {
-            "position": 15,
-            "source_index": 7,
-            "largest_component_fraction_range": 0.29406729994304115,
+            "position": 11,
+            "source_index": 3,
+            "largest_component_fraction_range": 0.32115315638450503,
             "threshold_values": [
               {
-                "threshold": "0.75",
-                "largest_component_fraction": 0.19916680019227687,
-                "effective_component_count": 12.288010491636129
+                "threshold": "0.90",
+                "largest_component_fraction": 0.1402439024390244,
+                "effective_component_count": 18.272483932769
               },
               {
                 "threshold": "1.00",
-                "largest_component_fraction": 0.493234100135318,
-                "effective_component_count": 3.574160487444124
+                "largest_component_fraction": 0.1748983149331784,
+                "effective_component_count": 21.9011143400105
+              },
+              {
+                "threshold": "1.10",
+                "largest_component_fraction": 0.46139705882352944,
+                "effective_component_count": 4.551601095081363
               }
             ]
           },
           "supports": {
             "fixed": {
-              "0.75": {
+              "0.90": {
                 "validity": {
                   "status": "review",
                   "reasons": [
@@ -1369,13 +1369,13 @@
                   "observed_frames": 17,
                   "active_frames": 17,
                   "active_frame_fraction": 1.0,
-                  "median_active_fraction": 0.1556643641980706,
-                  "median_largest_component_fraction": 0.15862349826919162,
-                  "q10_largest_component_fraction": 0.09012205162060329,
-                  "q90_largest_component_fraction": 0.22886847864884566,
-                  "median_effective_component_count": 18.653199916848795,
-                  "q90_effective_component_count": 28.914504810565465,
-                  "median_boundary_active_fraction": 0.030480419862737182,
+                  "median_active_fraction": 0.093381131415581,
+                  "median_largest_component_fraction": 0.1626283367556468,
+                  "q10_largest_component_fraction": 0.11292089768708688,
+                  "q90_largest_component_fraction": 0.2235411142139526,
+                  "median_effective_component_count": 17.988404978399657,
+                  "q90_effective_component_count": 29.03221639997715,
+                  "median_boundary_active_fraction": 0.027227722772277228,
                   "median_reference_scale": 0.19816018996238707
                 }
               },
@@ -1403,7 +1403,7 @@
                   "median_reference_scale": 0.19816018996238707
                 }
               },
-              "1.25": {
+              "1.10": {
                 "validity": {
                   "status": "review",
                   "reasons": [
@@ -1415,21 +1415,21 @@
                 "summary": {
                   "status": "ok",
                   "observed_frames": 17,
-                  "active_frames": 1,
-                  "active_frame_fraction": 0.058823529411764705,
-                  "median_active_fraction": 0.03375010929439538,
-                  "median_largest_component_fraction": 0.31001727115716754,
-                  "q10_largest_component_fraction": 0.31001727115716754,
-                  "q90_largest_component_fraction": 0.31001727115716754,
-                  "median_effective_component_count": 6.627346321501648,
-                  "q90_effective_component_count": 6.627346321501648,
-                  "median_boundary_active_fraction": 0.0017271157167530224,
-                  "median_reference_scale": 0.0822441369652748
+                  "active_frames": 8,
+                  "active_frame_fraction": 0.47058823529411764,
+                  "median_active_fraction": 0.0254291626592055,
+                  "median_largest_component_fraction": 0.27871113706028317,
+                  "q10_largest_component_fraction": 0.15902298112237956,
+                  "q90_largest_component_fraction": 0.46126665905834313,
+                  "median_effective_component_count": 7.499827187159,
+                  "q90_effective_component_count": 15.962807643960765,
+                  "median_boundary_active_fraction": 0.014753190518330524,
+                  "median_reference_scale": 0.19675378385782238
                 }
               }
             },
             "dynamic": {
-              "0.75": {
+              "0.90": {
                 "validity": {
                   "status": "review",
                   "reasons": [
@@ -1443,13 +1443,13 @@
                   "observed_frames": 17,
                   "active_frames": 17,
                   "active_frame_fraction": 1.0,
-                  "median_active_fraction": 0.15609472613685893,
-                  "median_largest_component_fraction": 0.157980125735145,
-                  "q10_largest_component_fraction": 0.08991094688911283,
-                  "q90_largest_component_fraction": 0.2267912830246656,
-                  "median_effective_component_count": 18.859443721424093,
-                  "q90_effective_component_count": 29.037881723693957,
-                  "median_boundary_active_fraction": 0.029970215934475054,
+                  "median_active_fraction": 0.09360279150915964,
+                  "median_largest_component_fraction": 0.16156670746634028,
+                  "q10_largest_component_fraction": 0.11253124900438602,
+                  "q90_largest_component_fraction": 0.22176369748853247,
+                  "median_effective_component_count": 18.20274079394239,
+                  "q90_effective_component_count": 29.15267648481466,
+                  "median_boundary_active_fraction": 0.028111181301326595,
                   "median_reference_scale": 0.19816018996238707
                 }
               },
@@ -1477,7 +1477,7 @@
                   "median_reference_scale": 0.19816018996238707
                 }
               },
-              "1.25": {
+              "1.10": {
                 "validity": {
                   "status": "review",
                   "reasons": [
@@ -1489,16 +1489,16 @@
                 "summary": {
                   "status": "ok",
                   "observed_frames": 17,
-                  "active_frames": 1,
-                  "active_frame_fraction": 0.058823529411764705,
-                  "median_active_fraction": 0.0333640393805055,
-                  "median_largest_component_fraction": 0.3097497842968076,
-                  "q10_largest_component_fraction": 0.3097497842968076,
-                  "q90_largest_component_fraction": 0.3097497842968076,
-                  "median_effective_component_count": 6.638764647448094,
-                  "q90_effective_component_count": 6.638764647448094,
-                  "median_boundary_active_fraction": 0.001725625539257981,
-                  "median_reference_scale": 0.0822441369652748
+                  "active_frames": 8,
+                  "active_frame_fraction": 0.47058823529411764,
+                  "median_active_fraction": 0.02540439590675108,
+                  "median_largest_component_fraction": 0.27808220838079545,
+                  "q10_largest_component_fraction": 0.15873825204799838,
+                  "q90_largest_component_fraction": 0.4603870810337865,
+                  "median_effective_component_count": 7.52381988212779,
+                  "q90_effective_component_count": 16.002066336100526,
+                  "median_boundary_active_fraction": 0.01578520683254519,
+                  "median_reference_scale": 0.19675378385782238
                 }
               }
             }
@@ -1605,42 +1605,52 @@
             }
           },
           "fixed_threshold_sensitivity": {
-            "position": 23,
-            "source_index": 7,
-            "largest_component_fraction_range": 0.3302719015888217,
+            "position": 19,
+            "source_index": 3,
+            "largest_component_fraction_range": 0.5043203598508339,
             "threshold_values": [
               {
-                "threshold": "0.75",
-                "largest_component_fraction": 0.19423368740515934,
-                "effective_component_count": 12.054973065723471
+                "threshold": "0.90",
+                "largest_component_fraction": 0.14769429216381813,
+                "effective_component_count": 16.656189214234367
               },
               {
                 "threshold": "1.00",
-                "largest_component_fraction": 0.524505588993981,
-                "effective_component_count": 3.174947712863222
+                "largest_component_fraction": 0.19245524296675193,
+                "effective_component_count": 18.819887054333943
+              },
+              {
+                "threshold": "1.10",
+                "largest_component_fraction": 0.652014652014652,
+                "effective_component_count": 2.312052117263844
               }
             ]
           },
           "dynamic_threshold_sensitivity": {
-            "position": 23,
-            "source_index": 7,
-            "largest_component_fraction_range": 0.3329733860330694,
+            "position": 19,
+            "source_index": 3,
+            "largest_component_fraction_range": 0.47617203634861627,
             "threshold_values": [
               {
-                "threshold": "0.75",
-                "largest_component_fraction": 0.18928688793953335,
-                "effective_component_count": 12.598374021348201
+                "threshold": "0.90",
+                "largest_component_fraction": 0.14188351920693928,
+                "effective_component_count": 17.92056465343776
               },
               {
                 "threshold": "1.00",
-                "largest_component_fraction": 0.5222602739726028,
-                "effective_component_count": 3.202268448750991
+                "largest_component_fraction": 0.18143459915611815,
+                "effective_component_count": 20.720794717941388
+              },
+              {
+                "threshold": "1.10",
+                "largest_component_fraction": 0.6180555555555556,
+                "effective_component_count": 2.5704722945332836
               }
             ]
           },
           "supports": {
             "fixed": {
-              "0.75": {
+              "0.90": {
                 "validity": {
                   "status": "review",
                   "reasons": [
@@ -1654,13 +1664,13 @@
                   "observed_frames": 33,
                   "active_frames": 33,
                   "active_frame_fraction": 1.0,
-                  "median_active_fraction": 0.17630380357735348,
-                  "median_largest_component_fraction": 0.18805848903330624,
-                  "q10_largest_component_fraction": 0.11520543462921357,
-                  "q90_largest_component_fraction": 0.28405129759678693,
-                  "median_effective_component_count": 13.2959659422434,
-                  "q90_effective_component_count": 25.1590859817977,
-                  "median_boundary_active_fraction": 0.025512934879571812,
+                  "median_active_fraction": 0.11160377643048895,
+                  "median_largest_component_fraction": 0.1880108991825613,
+                  "q10_largest_component_fraction": 0.11649217339479256,
+                  "q90_largest_component_fraction": 0.2605149792473986,
+                  "median_effective_component_count": 13.900759725091994,
+                  "q90_effective_component_count": 22.376173827591835,
+                  "median_boundary_active_fraction": 0.023067653640902047,
                   "median_reference_scale": 0.11655673438310622
                 }
               },
@@ -1688,7 +1698,7 @@
                   "median_reference_scale": 0.11655673438310622
                 }
               },
-              "1.25": {
+              "1.10": {
                 "validity": {
                   "status": "review",
                   "reasons": [
@@ -1700,21 +1710,21 @@
                 "summary": {
                   "status": "ok",
                   "observed_frames": 33,
-                  "active_frames": 5,
-                  "active_frame_fraction": 0.15151515151515152,
-                  "median_active_fraction": 0.0035592555726480257,
-                  "median_largest_component_fraction": 0.28,
-                  "q10_largest_component_fraction": 0.2016364699006429,
-                  "q90_largest_component_fraction": 0.3820915926179084,
-                  "median_effective_component_count": 6.188118811881188,
-                  "q90_effective_component_count": 14.052973726722907,
-                  "median_boundary_active_fraction": 0.03879310344827586,
-                  "median_reference_scale": 0.11231586545705795
+                  "active_frames": 23,
+                  "active_frame_fraction": 0.696969696969697,
+                  "median_active_fraction": 0.03845805809429011,
+                  "median_largest_component_fraction": 0.2934002869440459,
+                  "q10_largest_component_fraction": 0.16146896445246575,
+                  "q90_largest_component_fraction": 0.4875727682131429,
+                  "median_effective_component_count": 7.059841364245257,
+                  "q90_effective_component_count": 15.073049679143546,
+                  "median_boundary_active_fraction": 0.02877321475281193,
+                  "median_reference_scale": 0.11381019955873489
                 }
               }
             },
             "dynamic": {
-              "0.75": {
+              "0.90": {
                 "validity": {
                   "status": "review",
                   "reasons": [
@@ -1728,13 +1738,13 @@
                   "observed_frames": 33,
                   "active_frames": 33,
                   "active_frame_fraction": 1.0,
-                  "median_active_fraction": 0.1759264612360525,
-                  "median_largest_component_fraction": 0.1843693421846711,
-                  "q10_largest_component_fraction": 0.10784011461140648,
-                  "q90_largest_component_fraction": 0.277617573763302,
-                  "median_effective_component_count": 13.779466727724031,
-                  "q90_effective_component_count": 26.618814070175592,
-                  "median_boundary_active_fraction": 0.029878618113912233,
+                  "median_active_fraction": 0.11124250115366867,
+                  "median_largest_component_fraction": 0.1818416968442835,
+                  "q10_largest_component_fraction": 0.11013577301361163,
+                  "q90_largest_component_fraction": 0.25303911851819033,
+                  "median_effective_component_count": 14.912271765055936,
+                  "q90_effective_component_count": 25.44183107684292,
+                  "median_boundary_active_fraction": 0.029256146903205726,
                   "median_reference_scale": 0.11655673438310622
                 }
               },
@@ -1762,7 +1772,7 @@
                   "median_reference_scale": 0.11655673438310622
                 }
               },
-              "1.25": {
+              "1.10": {
                 "validity": {
                   "status": "review",
                   "reasons": [
@@ -1774,16 +1784,16 @@
                 "summary": {
                   "status": "ok",
                   "observed_frames": 33,
-                  "active_frames": 5,
-                  "active_frame_fraction": 0.15151515151515152,
-                  "median_active_fraction": 0.0059795889032629,
-                  "median_largest_component_fraction": 0.2692307692307692,
-                  "q10_largest_component_fraction": 0.18512537186570335,
-                  "q90_largest_component_fraction": 0.35967957276368495,
-                  "median_effective_component_count": 6.6274509803921555,
-                  "q90_effective_component_count": 15.661709043269969,
-                  "median_boundary_active_fraction": 0.02870493991989319,
-                  "median_reference_scale": 0.11231586545705795
+                  "active_frames": 23,
+                  "active_frame_fraction": 0.696969696969697,
+                  "median_active_fraction": 0.03942735763959612,
+                  "median_largest_component_fraction": 0.2663677130044843,
+                  "q10_largest_component_fraction": 0.14228801282113307,
+                  "q90_largest_component_fraction": 0.4554107072524088,
+                  "median_effective_component_count": 8.193072406271211,
+                  "q90_effective_component_count": 16.428560521536067,
+                  "median_boundary_active_fraction": 0.02837837837837838,
+                  "median_reference_scale": 0.11381019955873489
                 }
               }
             }
@@ -1895,52 +1905,52 @@
             }
           },
           "fixed_threshold_sensitivity": {
-            "position": 12,
-            "source_index": 4,
-            "largest_component_fraction_range": 0.12046912865532004,
+            "position": 16,
+            "source_index": 8,
+            "largest_component_fraction_range": 0.08330653317125575,
             "threshold_values": [
               {
-                "threshold": "0.75",
-                "largest_component_fraction": 0.21566803126163006,
-                "effective_component_count": 13.29476668228778
+                "threshold": "0.90",
+                "largest_component_fraction": 0.17267112712300567,
+                "effective_component_count": 16.97797955131621
               },
               {
                 "threshold": "1.00",
-                "largest_component_fraction": 0.09519890260631002,
-                "effective_component_count": 24.05306836265282
+                "largest_component_fraction": 0.09958992384299942,
+                "effective_component_count": 23.354230869417115
               },
               {
-                "threshold": "1.25",
-                "largest_component_fraction": 0.12740989103101424,
-                "effective_component_count": 21.442869195769426
+                "threshold": "1.10",
+                "largest_component_fraction": 0.08936459395174992,
+                "effective_component_count": 26.274633467114416
               }
             ]
           },
           "dynamic_threshold_sensitivity": {
-            "position": 10,
-            "source_index": 2,
-            "largest_component_fraction_range": 0.17664019922072455,
+            "position": 7,
+            "source_index": 255,
+            "largest_component_fraction_range": 0.07860582208498182,
             "threshold_values": [
               {
-                "threshold": "0.75",
-                "largest_component_fraction": 0.2804407713498623,
-                "effective_component_count": 8.876689738241092
+                "threshold": "0.90",
+                "largest_component_fraction": 0.1899810964083176,
+                "effective_component_count": 15.09991164230647
               },
               {
                 "threshold": "1.00",
-                "largest_component_fraction": 0.10380057212913772,
-                "effective_component_count": 21.77939475502855
+                "largest_component_fraction": 0.11137527432333577,
+                "effective_component_count": 21.167540534685457
               },
               {
-                "threshold": "1.25",
-                "largest_component_fraction": 0.14531088972861558,
-                "effective_component_count": 19.003018444805743
+                "threshold": "1.10",
+                "largest_component_fraction": 0.12309997859130807,
+                "effective_component_count": 23.080782905726117
               }
             ]
           },
           "supports": {
             "fixed": {
-              "0.75": {
+              "0.90": {
                 "validity": {
                   "status": "ok",
                   "reasons": []
@@ -1951,13 +1961,13 @@
                   "observed_frames": 17,
                   "active_frames": 17,
                   "active_frame_fraction": 1.0,
-                  "median_active_fraction": 0.19637523209816743,
-                  "median_largest_component_fraction": 0.1269971323228185,
-                  "q10_largest_component_fraction": 0.09857817309689725,
-                  "q90_largest_component_fraction": 0.19442754138440538,
-                  "median_effective_component_count": 19.204339951320858,
-                  "q90_effective_component_count": 27.26585091150353,
-                  "median_boundary_active_fraction": 0.04700328407224959,
+                  "median_active_fraction": 0.15685799628642932,
+                  "median_largest_component_fraction": 0.10066769388803287,
+                  "q10_largest_component_fraction": 0.07302657144859308,
+                  "q90_largest_component_fraction": 0.1412802426833658,
+                  "median_effective_component_count": 23.553663242069415,
+                  "q90_effective_component_count": 30.250067111677552,
+                  "median_boundary_active_fraction": 0.046224961479198766,
                   "median_reference_scale": 0.1839225705385208
                 }
               },
@@ -1982,7 +1992,7 @@
                   "median_reference_scale": 0.1839225705385208
                 }
               },
-              "1.25": {
+              "1.10": {
                 "validity": {
                   "status": "ok",
                   "reasons": []
@@ -1993,19 +2003,19 @@
                   "observed_frames": 17,
                   "active_frames": 17,
                   "active_frame_fraction": 1.0,
-                  "median_active_fraction": 0.08884314200371357,
-                  "median_largest_component_fraction": 0.11389802631578948,
-                  "q10_largest_component_fraction": 0.09322036705757636,
-                  "q90_largest_component_fraction": 0.1403749590566449,
-                  "median_effective_component_count": 21.818578032984938,
-                  "q90_effective_component_count": 25.630131652641253,
-                  "median_boundary_active_fraction": 0.04274937133277452,
+                  "median_active_fraction": 0.11576652942601114,
+                  "median_largest_component_fraction": 0.10035959463877084,
+                  "q10_largest_component_fraction": 0.07630495378142284,
+                  "q90_largest_component_fraction": 0.12230385776759684,
+                  "median_effective_component_count": 25.391641715514698,
+                  "q90_effective_component_count": 28.217762742844563,
+                  "median_boundary_active_fraction": 0.0438234360114322,
                   "median_reference_scale": 0.1839225705385208
                 }
               }
             },
             "dynamic": {
-              "0.75": {
+              "0.90": {
                 "validity": {
                   "status": "ok",
                   "reasons": []
@@ -2016,13 +2026,13 @@
                   "observed_frames": 17,
                   "active_frames": 17,
                   "active_frame_fraction": 1.0,
-                  "median_active_fraction": 0.21436976987447698,
-                  "median_largest_component_fraction": 0.18921541447186027,
-                  "q10_largest_component_fraction": 0.12904196207837296,
-                  "q90_largest_component_fraction": 0.2661656597692036,
-                  "median_effective_component_count": 14.610263569542333,
-                  "q90_effective_component_count": 17.679184807458533,
-                  "median_boundary_active_fraction": 0.01734620886981402,
+                  "median_active_fraction": 0.17501307531380753,
+                  "median_largest_component_fraction": 0.13057742782152232,
+                  "q10_largest_component_fraction": 0.098635418340206,
+                  "q90_largest_component_fraction": 0.19087258816403538,
+                  "median_effective_component_count": 18.498617321866895,
+                  "q90_effective_component_count": 23.041557891805233,
+                  "median_boundary_active_fraction": 0.017714044706874738,
                   "median_reference_scale": 0.1839225705385208
                 }
               },
@@ -2047,7 +2057,7 @@
                   "median_reference_scale": 0.1839225705385208
                 }
               },
-              "1.25": {
+              "1.10": {
                 "validity": {
                   "status": "ok",
                   "reasons": []
@@ -2058,13 +2068,13 @@
                   "observed_frames": 17,
                   "active_frames": 17,
                   "active_frame_fraction": 1.0,
-                  "median_active_fraction": 0.09756726276784276,
-                  "median_largest_component_fraction": 0.12154096581660337,
-                  "q10_largest_component_fraction": 0.10007630286090985,
-                  "q90_largest_component_fraction": 0.1497457755433305,
-                  "median_effective_component_count": 23.43430437429662,
-                  "q90_effective_component_count": 27.615638079641226,
-                  "median_boundary_active_fraction": 0.013780260707635009,
+                  "median_active_fraction": 0.13288222974061542,
+                  "median_largest_component_fraction": 0.11284807034684904,
+                  "q10_largest_component_fraction": 0.09414371105047496,
+                  "q90_largest_component_fraction": 0.16918004564171552,
+                  "median_effective_component_count": 23.14016219395349,
+                  "q90_effective_component_count": 27.77241653386881,
+                  "median_boundary_active_fraction": 0.01576834862385321,
                   "median_reference_scale": 0.1839225705385208
                 }
               }
@@ -2174,12 +2184,12 @@
           "fixed_threshold_sensitivity": {
             "position": 25,
             "source_index": 9,
-            "largest_component_fraction_range": 0.11598232247240244,
+            "largest_component_fraction_range": 0.10539502356084936,
             "threshold_values": [
               {
-                "threshold": "0.75",
-                "largest_component_fraction": 0.1931085770946951,
-                "effective_component_count": 13.554547514176626
+                "threshold": "0.90",
+                "largest_component_fraction": 0.1690051020408163,
+                "effective_component_count": 17.467711053089648
               },
               {
                 "threshold": "1.00",
@@ -2187,37 +2197,37 @@
                 "effective_component_count": 25.07104636541189
               },
               {
-                "threshold": "1.25",
-                "largest_component_fraction": 0.07712625462229265,
-                "effective_component_count": 28.347155751386325
+                "threshold": "1.10",
+                "largest_component_fraction": 0.06361007847996696,
+                "effective_component_count": 31.76600564729856
               }
             ]
           },
           "dynamic_threshold_sensitivity": {
-            "position": 17,
-            "source_index": 1,
-            "largest_component_fraction_range": 0.1852391335197381,
+            "position": 18,
+            "source_index": 2,
+            "largest_component_fraction_range": 0.17127035910785554,
             "threshold_values": [
               {
-                "threshold": "0.75",
-                "largest_component_fraction": 0.2807197191339965,
-                "effective_component_count": 9.135735700980765
+                "threshold": "0.90",
+                "largest_component_fraction": 0.27854205077294003,
+                "effective_component_count": 8.931000252391653
               },
               {
                 "threshold": "1.00",
-                "largest_component_fraction": 0.09548058561425843,
-                "effective_component_count": 23.317012465555703
+                "largest_component_fraction": 0.1163211582757486,
+                "effective_component_count": 17.8148670036544
               },
               {
-                "threshold": "1.25",
-                "largest_component_fraction": 0.13787319691378733,
-                "effective_component_count": 21.852656713775268
+                "threshold": "1.10",
+                "largest_component_fraction": 0.10727169166508449,
+                "effective_component_count": 21.90685753860174
               }
             ]
           },
           "supports": {
             "fixed": {
-              "0.75": {
+              "0.90": {
                 "validity": {
                   "status": "ok",
                   "reasons": []
@@ -2228,13 +2238,13 @@
                   "observed_frames": 33,
                   "active_frames": 33,
                   "active_frame_fraction": 1.0,
-                  "median_active_fraction": 0.20813420462303717,
-                  "median_largest_component_fraction": 0.12375690607734807,
-                  "q10_largest_component_fraction": 0.09080112016002422,
-                  "q90_largest_component_fraction": 0.19275273205841478,
-                  "median_effective_component_count": 18.975973594396663,
-                  "q90_effective_component_count": 24.016410937139646,
-                  "median_boundary_active_fraction": 0.047777040477770406,
+                  "median_active_fraction": 0.16697551936018726,
+                  "median_largest_component_fraction": 0.11239719768504416,
+                  "q10_largest_component_fraction": 0.08782775697237051,
+                  "q90_largest_component_fraction": 0.15011836005904874,
+                  "median_effective_component_count": 20.770717668139284,
+                  "q90_effective_component_count": 26.939257649560048,
+                  "median_boundary_active_fraction": 0.04565730779323012,
                   "median_reference_scale": 0.12330226986408233
                 }
               },
@@ -2259,7 +2269,7 @@
                   "median_reference_scale": 0.12330226986408233
                 }
               },
-              "1.25": {
+              "1.10": {
                 "validity": {
                   "status": "ok",
                   "reasons": []
@@ -2270,19 +2280,19 @@
                   "observed_frames": 33,
                   "active_frames": 33,
                   "active_frame_fraction": 1.0,
-                  "median_active_fraction": 0.11762411001658052,
-                  "median_largest_component_fraction": 0.10736639383726529,
-                  "q10_largest_component_fraction": 0.0869500733155453,
-                  "q90_largest_component_fraction": 0.13653004532092847,
-                  "median_effective_component_count": 23.540820374992006,
-                  "q90_effective_component_count": 28.333576708585674,
-                  "median_boundary_active_fraction": 0.04481579946828713,
+                  "median_active_fraction": 0.13503364868818882,
+                  "median_largest_component_fraction": 0.10874053682037164,
+                  "q10_largest_component_fraction": 0.08088323464549586,
+                  "q90_largest_component_fraction": 0.13271143563897747,
+                  "median_effective_component_count": 25.20391972891125,
+                  "q90_effective_component_count": 29.703206097454807,
+                  "median_boundary_active_fraction": 0.046501128668171555,
                   "median_reference_scale": 0.12330226986408233
                 }
               }
             },
             "dynamic": {
-              "0.75": {
+              "0.90": {
                 "validity": {
                   "status": "ok",
                   "reasons": []
@@ -2293,13 +2303,13 @@
                   "observed_frames": 33,
                   "active_frames": 33,
                   "active_frame_fraction": 1.0,
-                  "median_active_fraction": 0.2264550965647464,
-                  "median_largest_component_fraction": 0.15701906412478336,
-                  "q10_largest_component_fraction": 0.10858563707914241,
-                  "q90_largest_component_fraction": 0.2674723903147115,
-                  "median_effective_component_count": 14.808419551140805,
-                  "q90_effective_component_count": 21.967464351799308,
-                  "median_boundary_active_fraction": 0.019120161666407585,
+                  "median_active_fraction": 0.1909930995520762,
+                  "median_largest_component_fraction": 0.13924592973436162,
+                  "q10_largest_component_fraction": 0.10297499639137017,
+                  "q90_largest_component_fraction": 0.21972543032513048,
+                  "median_effective_component_count": 18.225756963354804,
+                  "q90_effective_component_count": 26.239843931411624,
+                  "median_boundary_active_fraction": 0.019138755980861243,
                   "median_reference_scale": 0.12330226986408233
                 }
               },
@@ -2324,7 +2334,7 @@
                   "median_reference_scale": 0.12330226986408233
                 }
               },
-              "1.25": {
+              "1.10": {
                 "validity": {
                   "status": "ok",
                   "reasons": []
@@ -2335,13 +2345,13 @@
                   "observed_frames": 33,
                   "active_frames": 33,
                   "active_frame_fraction": 1.0,
-                  "median_active_fraction": 0.131359714370723,
-                  "median_largest_component_fraction": 0.11105792245093346,
-                  "q10_largest_component_fraction": 0.0869910061046647,
-                  "q90_largest_component_fraction": 0.16135775073532554,
-                  "median_effective_component_count": 26.330564784053163,
-                  "q90_effective_component_count": 31.709148659345193,
-                  "median_boundary_active_fraction": 0.017548019919373964,
+                  "median_active_fraction": 0.1555264827148747,
+                  "median_largest_component_fraction": 0.1109750122488976,
+                  "q10_largest_component_fraction": 0.09019027566767462,
+                  "q90_largest_component_fraction": 0.1865302741614928,
+                  "median_effective_component_count": 23.105151624553734,
+                  "q90_effective_component_count": 30.227556916250467,
+                  "median_boundary_active_fraction": 0.017965726920950803,
                   "median_reference_scale": 0.12330226986408233
                 }
               }
@@ -2366,8 +2376,8 @@
         "IGI-LG836619414": 0.11206012982576016
       },
       "core_to_wide_spearman": 1.0,
-      "threshold_rank_spearman_0.75_vs_1.00": 1.0,
-      "threshold_rank_spearman_1.25_vs_1.00": 1.0,
+      "threshold_rank_spearman_0.90_vs_1.00": 1.0,
+      "threshold_rank_spearman_1.10_vs_1.00": 1.0,
       "fixed_vs_dynamic_core_spearman": 1.0,
       "redundancy": {
         "whole_stone_activation_total_excursion_spearman": -0.19999999999999998,
@@ -2388,8 +2398,8 @@
         "IGI-LG836619414": 23.469344533095953
       },
       "core_to_wide_spearman": 1.0,
-      "threshold_rank_spearman_0.75_vs_1.00": 0.7999999999999999,
-      "threshold_rank_spearman_1.25_vs_1.00": 1.0,
+      "threshold_rank_spearman_0.90_vs_1.00": 1.0,
+      "threshold_rank_spearman_1.10_vs_1.00": 1.0,
       "fixed_vs_dynamic_core_spearman": 0.7999999999999999,
       "redundancy": {
         "whole_stone_activation_total_excursion_spearman": 0.19999999999999998,
