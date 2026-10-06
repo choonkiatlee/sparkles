@@ -16,85 +16,49 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Decode d360 viewer protocol
+      - name: Probe d360 pack structure
         shell: bash
         run: |
           set -euxo pipefail
           python - <<'PY'
-          from html.parser import HTMLParser
+          import hashlib, json
           from urllib.request import Request, urlopen
-          from pathlib import Path
+          from urllib.error import HTTPError
 
-          viewer="https://d360.tech/view.html?d=79-BB-5159600"
-          req=Request(viewer,headers={"User-Agent":"Mozilla/5.0 SparklesD360Probe/2"})
-          with urlopen(req,timeout=30) as r:
-              html=r.read().decode("utf-8","replace")
+          IDS=["79-BB-5159600","79-BT-5165227"]
+          UA="Mozilla/5.0 SparklesD360Probe/3"
 
-          class P(HTMLParser):
-              def __init__(self):
-                  super().__init__()
-                  self.inline=[]
-                  self._in=False
-                  self._buf=[]
-                  self.src=None
-              def handle_starttag(self, tag, attrs):
-                  if tag=="script":
-                      a=dict(attrs)
-                      self.src=a.get("src")
-                      self._in=self.src is None
-                      self._buf=[]
-              def handle_data(self,data):
-                  if self._in:self._buf.append(data)
-              def handle_endtag(self,tag):
-                  if tag=="script" and self._in:
-                      self.inline.append("".join(self._buf))
-                      self._in=False
-          p=P();p.feed(html)
-          print("INLINE_COUNT",len(p.inline),[len(x) for x in p.inline])
-          for i,s in enumerate(p.inline):
-              Path(f"/tmp/inline-{i}.js").write_text(s)
+          def get(url):
+              req=Request(url,headers={"User-Agent":UA,"Accept":"*/*","Referer":"https://d360.tech/"})
+              with urlopen(req,timeout=30) as r:
+                  return r.read(),dict(r.headers),r.status
+
+          def summarize(v,depth=0):
+              if depth>3:return type(v).__name__
+              if isinstance(v,dict):
+                  return {k:summarize(x,depth+1) for k,x in list(v.items())[:30]}
+              if isinstance(v,list):
+                  return {"type":"list","len":len(v),"first":[summarize(x,depth+1) for x in v[:3]]}
+              if isinstance(v,str):
+                  return {"type":"str","len":len(v),"prefix":v[:80]}
+              return v
+
+          for item in IDS:
+              base=f"https://media.d360.us/imaged/{item}"
+              print("ITEM",item)
+              for name in ["metadata.json","0.json","1.json","2.json","3.json","4.json","5.json","6.json","7.json","8.json","still.jpg"]:
+                  url=f"{base}/{name}"
+                  try:
+                      data,h,status=get(url)
+                      print("RESOURCE",name,"status",status,"bytes",len(data),"sha256",hashlib.sha256(data).hexdigest(),"type",h.get("Content-Type"))
+                      if name.endswith(".json"):
+                          try:
+                              obj=json.loads(data)
+                              print("JSON_SUMMARY",name,json.dumps(summarize(obj),sort_keys=True))
+                          except Exception as exc:
+                              print("JSON_PARSE_ERROR",name,repr(exc),"prefix",data[:200])
+                  except HTTPError as exc:
+                      print("RESOURCE",name,"status",exc.code)
+                  except Exception as exc:
+                      print("RESOURCE",name,"error",repr(exc))
           PY
-
-          cat >/tmp/decode.js <<'JS'
-          const fs=require("fs"), vm=require("vm");
-          function makeDocument(){
-            return {
-              readyState:"loading",
-              head:{appendChild:(e)=>console.log("APPEND_HEAD",JSON.stringify(e))},
-              createElement:(tag)=>({tagName:tag,style:{setProperty(){}}}),
-              getElementById:()=>null,
-              querySelector:()=>null,
-              querySelectorAll:()=>[],
-              addEventListener(){},
-              body:{appendChild(){}},
-            };
-          }
-          global.window={location:{search:"?d=79-BB-5159600"},innerWidth:1000,innerHeight:1000,devicePixelRatio:1};
-          global.document=makeDocument();
-          global.navigator={userAgent:"node"};
-          global.addEventListener=()=>{};
-          global.getComputedStyle=()=>({display:"none"});
-          global.Image=class {set src(v){this._src=v;} get src(){return this._src;}};
-          for(const idx of [0]){
-            const src=fs.readFileSync("/tmp/inline-"+idx+".js","utf8");
-            try{vm.runInThisContext(src);}catch(e){console.log("INLINE_ERROR",idx,String(e));}
-          }
-          if(typeof _0x1f54==="function"){
-            console.log("PRELOAD_STRINGS_BEGIN");
-            for(let i=0x1e3;i<=0x1fb;i++){try{console.log(i.toString(16),JSON.stringify(_0x1f54(i)));}catch(e){}}
-            console.log("PRELOAD_STRINGS_END");
-          }
-          const files=fs.readdirSync("/tmp").filter(x=>x.startsWith("inline-"));
-          for(const file of files){
-            const src=fs.readFileSync("/tmp/"+file,"utf8");
-            if(src.includes("function _0x3654")){
-              try{vm.runInThisContext("try{"+src+"}catch(e){console.log('CORE_ERROR',String(e))}");}catch(e){console.log("CORE_PARSE_ERROR",String(e));}
-              if(typeof _0x3654==="function"){
-                console.log("CORE_STRINGS_BEGIN");
-                for(let i=0x1d6;i<=0x2cc;i++){try{console.log(i.toString(16),JSON.stringify(_0x3654(i)));}catch(e){}}
-                console.log("CORE_STRINGS_END");
-              }
-            }
-          }
-          JS
-          node /tmp/decode.js
