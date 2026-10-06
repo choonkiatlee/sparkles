@@ -12,8 +12,9 @@
     "hashed_samples": 26,
     "original_byte_archived_samples": 16,
     "forum_inline_preview_samples": 10,
-    "partial_d360_samples": 1,
-    "complete_d360_sequences": 0
+    "partial_d360_samples": 0,
+    "complete_d360_sequences": 1,
+    "d360_original_frames": 256
   },
   "verification": {
     "source_context": "PriceScope article and three forum threads/linked product pages were independently checked against currently accessible public pages on 2026-10-06.",
@@ -483,8 +484,9 @@
       "sample_id": "asscher-eval-glittery",
       "url": "https://d360.tech/view.html?d=79-BB-5159600",
       "source_kind": "d360_viewer",
-      "status": "partial_source_frame_recovered_sequence_blocked",
-      "archive_note": "Source 0.json and original embedded frame 0 recovered (758×597); no complete sequence. metadata.json returned explicit automated-scraping block; further source requests stopped."
+      "status": "complete_frame_sequence_archived",
+      "archive_note": "Imported saved verified source archive: 256 unique original JPEGs at 758×597; manifest and frame indices retained. Full original rotation is archived; visual inspection remains sampled.",
+      "manifest_path": "d360/asscher-eval-glittery/manifest.json"
     },
     {
       "sample_id": "asscher-eval-crispest",
@@ -511,43 +513,63 @@
     }
   ],
   "storage_bundle": {
-    "filename": "pricescope-media-recovery-2026-10-06.zip",
+    "filename": "pricescope-media-recovery-2026-10-06-v2.zip",
     "library_file_id": "libfile_a2fd6a1be6888191ab540158c3265490",
-    "download_url": "https://github.com/choonkiatlee/sparkles/releases/download/pricescope-research-2026-10-06-v1/pricescope-media-recovery-2026-10-06.zip",
-    "bytes": 11342416,
-    "sha256": "d5aa5bdacf7aa4cdfabf289eb0504d88389126b87c71b9bc8b6c3e684aff4063",
-    "current_version_number": 1,
+    "download_url": "https://github.com/choonkiatlee/sparkles/releases/download/pricescope-research-2026-10-06-v1/pricescope-media-recovery-2026-10-06-v2.zip",
+    "bytes": 27965043,
+    "sha256": "e6957362c756558a204400dd29e0abc0ceef2da541d6f12747dc17529aed89bf",
+    "current_version_number": 2,
     "github_release_url": "https://github.com/choonkiatlee/sparkles/releases/tag/pricescope-research-2026-10-06-v1",
-    "github_asset_id": 616739817
+    "github_asset_id": 616751835
   },
   "d360_recovery": {
-    "sample_id": "asscher-eval-glittery",
-    "viewer_url": "https://d360.tech/view.html?d=79-BB-5159600",
-    "source_url": "https://media.d360.us/imaged/79-BB-5159600/0.json",
-    "source_metadata_sha256": "19adfa45f5e47ec670bc0cb25c2b9057315585bde9518b0062db5f2f472eab9f",
-    "source_metadata_bytes": 76794,
-    "image_path": "d360/asscher-eval-glittery/metadata-frame-000.jpg",
-    "image_sha256": "0168b10051d7cdf52011c52ffbec20cfe8b2f26b2f3d91a9ac9480cb19c87a18",
-    "image_bytes": 56767,
-    "dimensions": [
-      758,
-      597
-    ],
-    "frame_index": 0,
-    "sequence_status": "incomplete",
-    "recovered_sequence_frames": 1,
-    "observed_client_sequence_slots": 256,
-    "inspection": "Single original embedded JPEG decoded; full motion uninspected.",
-    "blocker": {
-      "url": "https://media.d360.us/imaged/79-BB-5159600/metadata.json",
-      "response_text": "Forbidden: Automated scraping is blocked on this service. If you believe this is an error, please contact support@d360.tech.",
-      "disposition": "Stopped all further requests to source after explicit automated-scraping block."
+    "asscher-eval-glittery": {
+      "status": "complete_frame_sequence_archived",
+      "frames": 256,
+      "dimensions": [
+        758,
+        597
+      ],
+      "manifest_path": "d360/asscher-eval-glittery/manifest.json",
+      "imported_from_library_file_id": "libfile_d02e2c0a777081918348b073359af575",
+      "inspection": "Inspected ordered overview at indices 0,16,...,240, plus full-resolution originals 252,0,4. Derived GIF samples every fourth frame; not watched as motion. Not all 256 visually inspected."
     },
-    "other_sample": {
-      "sample_id": "asscher-eval-crispest",
-      "viewer_url": "https://d360.tech/view.html?d=79-BT-5165227",
-      "status": "not_attempted_after_source_block"
-    },
-    "retrieved_at": "2026-10-06T21:36:38.750021+00:00"
-  }
+    "asscher-eval-crispest": {
+      "status": "not_retrieved",
+      "viewer": "https://d360.tech/view.html?d=79-BT-5165227",
+      "reason": "No saved extract found; further live retrieval not attempted after earlier explicit source-service scraping block."
+    }
+  },
+  "d360_recovery_history": [
+    {
+      "sample_id": "asscher-eval-glittery",
+      "viewer_url": "https://d360.tech/view.html?d=79-BB-5159600",
+      "source_url": "https://media.d360.us/imaged/79-BB-5159600/0.json",
+      "source_metadata_sha256": "19adfa45f5e47ec670bc0cb25c2b9057315585bde9518b0062db5f2f472eab9f",
+      "source_metadata_bytes": 76794,
+      "image_path": "d360/asscher-eval-glittery/metadata-frame-000.jpg",
+      "image_sha256": "0168b10051d7cdf52011c52ffbec20cfe8b2f26b2f3d91a9ac9480cb19c87a18",
+      "image_bytes": 56767,
+      "dimensions": [
+        758,
+        597
+      ],
+      "frame_index": 0,
+      "sequence_status": "incomplete",
+      "recovered_sequence_frames": 1,
+      "observed_client_sequence_slots": 256,
+      "inspection": "Single original embedded JPEG decoded; full motion uninspected.",
+      "blocker": {
+        "url": "https://media.d360.us/imaged/79-BB-5159600/metadata.json",
+        "response_text": "Forbidden: Automated scraping is blocked on this service. If you believe this is an error, please contact support@d360.tech.",
+        "disposition": "Stopped all further requests to source after explicit automated-scraping block."
+      },
+      "other_sample": {
+        "sample_id": "asscher-eval-crispest",
+        "viewer_url": "https://d360.tech/view.html?d=79-BT-5165227",
+        "status": "not_attempted_after_source_block"
+      },
+      "retrieved_at": "2026-10-06T21:36:38.750021+00:00"
+    }
+  ]
 }
