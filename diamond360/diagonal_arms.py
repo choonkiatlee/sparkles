@@ -441,6 +441,20 @@ def summarize_frames(frames):
             row["median_angular_offset_deg"]
             for row in rows
         ]
+        visibility = [
+            row["median_confidence"]
+            for row in rows
+        ]
+        orientation = [
+            row["median_orientation_alignment"]
+            for row in rows
+        ]
+        straightness = [
+            row[
+                "trajectory_straightness_mad_radius"
+            ]
+            for row in rows
+        ]
         output["arms"][name] = {
             "median_visibility_confidence":
                 _median(
@@ -476,6 +490,12 @@ def summarize_frames(frames):
                         for row in rows
                     ]
                 ),
+            "visibility_frame_mad":
+                _mad(visibility),
+            "orientation_frame_mad":
+                _mad(orientation),
+            "straightness_frame_mad_radius":
+                _mad(straightness),
             "angular_offset_frame_mad_deg":
                 _mad(offsets),
         }
