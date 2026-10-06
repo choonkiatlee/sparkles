@@ -1,0 +1,43 @@
+{
+  "schema_version": "diamond360-inner-articulation-dispositions/1",
+  "issue": 51,
+  "decision": "REVISE",
+  "primary_candidate": "raw_spread",
+  "retained_role": "audit primitive only",
+  "reason": "Q90-Q10 measures real within-inner tonal range but does not reliably correspond to pale/quiet-inner observations, has unstable core-vs-wide median ranking, and is highly redundant with retained descriptors and #49 in the four-stone diagnostic sample.",
+  "evidence": {
+    "core_raw_q50": {
+      "IGI-LG756520111": 0.3587676703929902,
+      "IGI-LG756580087": 0.3267309069633484,
+      "IGI-LG818659722": 0.49440470337867737,
+      "IGI-LG836619414": 0.35883169174194335
+    },
+    "core_wide_spearman": {
+      "raw_q10": 0.8,
+      "raw_q50": -0.2,
+      "raw_q90": 0.8
+    },
+    "redundancy_spearman_raw_q50": {
+      "inner_activation": 0.8,
+      "inner_occupancy": 1,
+      "inner_mobility": 1,
+      "tier_contrast_centre_inner": 0.8,
+      "tier_contrast_inner_middle": 1
+    },
+    "counterexamples": [
+      {
+        "certificate": "IGI-LG756580087",
+        "source_index": 0,
+        "annotation": "pale_inner",
+        "raw_spread": 0.4596833854913712
+      },
+      {
+        "certificate": "IGI-LG836619414",
+        "source_index": 8,
+        "annotation": "pale_inner",
+        "raw_spread": 0.5235396921634674
+      }
+    ]
+  },
+  "next_direction": "Revise toward spatial organization/coverage of tonal contrast within the inner region; do not add another global spread statistic."
+}
