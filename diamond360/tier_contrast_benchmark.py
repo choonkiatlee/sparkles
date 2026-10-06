@@ -285,17 +285,44 @@ def _fixed_spread_inputs(processed, activation):
     }
 
 
-def _fixed_strip_trace(brightness, valid_masks, masks, observed):
-    common = activation._persistent_support(valid_masks, masks, observed)
-    values = [
-        float(np.median(frame[common])) if ok and common.any() else None
-        for frame, ok in zip(brightness, observed)
+def _strip_trace(brightness, valid_masks, masks, observed):
+    """Measure fixed-normalised geometry on each frame's valid strip support.
+
+    Boundary controls stay fixed for the sequence, but the silhouette-normalised
+    strip naturally maps to slightly different registered pixels as the outline
+    changes. Intersecting those pixels across the whole sequence can erase a
+    narrow strip entirely, so support is evaluated per frame and retained as QC.
+    """
+    values = []
+    support_pixels = []
+    support_fractions = []
+    for frame, valid, mask, ok in zip(
+        brightness, valid_masks, masks, observed
+    ):
+        nominal = int(mask.sum())
+        support = valid & mask
+        count = int(support.sum()) if ok else 0
+        support_pixels.append(count if ok else None)
+        support_fractions.append(
+            float(count / nominal) if ok and nominal else None
+        )
+        values.append(
+            float(np.median(frame[support]))
+            if ok and support.any() else None
+        )
+    finite_pixels = [
+        value for value in support_pixels if value is not None
     ]
-    union = np.any(masks[observed], axis=0) if observed.any() else np.zeros(masks.shape[1:], bool)
+    finite_fractions = [
+        value for value in support_fractions if value is not None
+    ]
     return values, {
-        "persistent_support_pixels": int(common.sum()),
-        "persistent_support_fraction": (
-            float(common.sum() / union.sum()) if union.any() else None
+        "support_mode": "per_frame_valid_with_fixed_normalised_geometry",
+        "per_frame_support_pixels": support_pixels,
+        "per_frame_support_fraction": support_fractions,
+        "min_support_pixels": min(finite_pixels) if finite_pixels else None,
+        "min_support_fraction": (
+            min(finite_fractions) if finite_fractions else None
         ),
     }
 
@@ -334,7 +361,7 @@ def _boundary_local_inputs(
     output = {
         "guard_u": float(guard),
         "widths_u": [float(width) for width in widths],
-        "support_mode": "fixed persistent pixel support within each strip/sector",
+        "support_mode": "fixed sequence-level boundary geometry; per-frame valid strip support",
         "semantic_geometry": "#19 sequence-level eight-sector boundary controls; no per-frame boundary motion",
         "coarse_geometry": "legacy coarse square-radius boundary control",
         "pairs": {},
@@ -394,10 +421,10 @@ def _boundary_local_inputs(
                         outside_masks.append(strips["outside"])
                     inside_masks = np.stack(inside_masks)
                     outside_masks = np.stack(outside_masks)
-                    inside_values[sector], support["inside"][sector] = _fixed_strip_trace(
+                    inside_values[sector], support["inside"][sector] = _strip_trace(
                         brightness, valid_masks, inside_masks, observed
                     )
-                    outside_values[sector], support["outside"][sector] = _fixed_strip_trace(
+                    outside_values[sector], support["outside"][sector] = _strip_trace(
                         brightness, valid_masks, outside_masks, observed
                     )
 
@@ -741,10 +768,10 @@ def _write_boundary_local_csv(result, output):
                 fractions = []
                 for side in ("inside", "outside"):
                     for cell in (support.get(side) or {}).values():
-                        value = cell.get("persistent_support_pixels")
+                        value = cell.get("min_support_pixels")
                         if value is not None:
                             pixels.append(int(value))
-                        fraction = cell.get("persistent_support_fraction")
+                        fraction = cell.get("min_support_fraction")
                         if fraction is not None:
                             fractions.append(float(fraction))
                 rows.append({
@@ -757,8 +784,8 @@ def _write_boundary_local_csv(result, output):
                     "q90": summary.get("q90"),
                     "q75_frame_median": q75.get("q50"),
                     "finite_frames": summary.get("finite_frames"),
-                    "min_persistent_support_pixels": min(pixels) if pixels else None,
-                    "min_persistent_support_fraction": min(fractions) if fractions else None,
+                    "min_frame_support_pixels": min(pixels) if pixels else None,
+                    "min_frame_support_fraction": min(fractions) if fractions else None,
                 })
     if not rows:
         return
