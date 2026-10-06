@@ -1,7 +1,7 @@
 # Within-inner tonal articulation research descriptor (#51)
 
 This is the targeted follow-up from #22 for the recurring **pale / flat /
-quiet inner-region** observation. It deliberately asks a different question from
+quiet inner-region** observation in the earlier AI-generated evaluations. It deliberately asks a different question from
 #49:
 
 - #49: are adjacent coarse tiers tonally separated?
@@ -80,8 +80,12 @@ The runner:
 5. compares core raw Q10/Q50/Q90 against retained inner activation, occupancy
    and mobility from the #45 profile;
 6. optionally compares the same summaries against both #49 adjacent-tier pairs;
-7. pulls the three #22 pale-inner observations and the LG818659722 grouped-dark
+7. pulls the three #22 pale-inner AI-evaluation annotations and the LG818659722 grouped-dark
    control into the benchmark summary.
+
+The #22 annotation file retains the legacy name `human-observations.json`, but those
+annotations were AI-generated from the earlier Sparkles evaluations. They are not
+independent human labels or perceptual ground truth.
 
 The canonical four-stone run has been completed. Compact results are committed
 as `summary.csv`; the reviewed interpretation is in `findings.md` and the
@@ -102,7 +106,7 @@ The unit tests require:
 ## Empirical disposition: REVISE
 
 The simple scalar is a useful tonal-range audit primitive, but it does **not**
-reliably explain the pale/flat/quiet-inner observation.
+reliably reproduce the pale/flat/quiet-inner annotations from the earlier AI evaluations.
 
 In particular, labelled pale-inner frames can have medium or high Q90-Q10
 spread, so the statistic confounds distributed articulation with cases such as a
@@ -110,8 +114,8 @@ mostly pale inner region plus a narrow dark band. The core median ranking is
 also window-sensitive, and the four-stone diagnostic shows strong redundancy
 with retained inner occupancy/mobility and #49 inner-middle contrast.
 
-The next research step should therefore add **spatial organization / coverage**
-inside the inner region rather than another global spread statistic.
+For reproducing that AI-evaluation concept, the next research step should test **spatial organization / coverage**
+inside the inner region rather than another global spread statistic. This is a hypothesis to test, not a human-perceptual conclusion.
 
 The benchmark writer itself continues to emit
 `PENDING_SOURCE_EVIDENCE_REVIEW` because automated measurement must not make a
