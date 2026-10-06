@@ -359,6 +359,38 @@ class AdapterTests(unittest.TestCase):
                 self.assertNotEqual(spec.get("support_policy"), "pair_local")
 
 
+class ProfileIntegrationTests(unittest.TestCase):
+    ROOT = Path(__file__).resolve().parents[1]
+
+    def test_real_45_profile_accepts_every_retained_evidence_mapping(self):
+        profile = json.loads(
+            (
+                self.ROOT
+                / "docs"
+                / "360"
+                / "profile"
+                / "per-stone"
+                / "IGI-LG818659722.json"
+            ).read_text()
+        )
+        candidates = ep.apply_profile_contract(
+            ep.collect_candidates(build_results()),
+            profile,
+        )
+        observed = {
+            field_id
+            for candidate in candidates
+            for field_id in candidate.profile_field_ids
+        }
+        self.assertEqual(observed, set(dp.PRODUCTION_FIELD_IDS))
+        self.assertTrue(
+            all(
+                candidate.provenance.get("profile_schema") == dp.PROFILE_SCHEMA
+                for candidate in candidates
+            )
+        )
+
+
 class ConsolidationTests(unittest.TestCase):
     def test_exact_duplicate_merge_preserves_all_supporting_claims(self):
         candidates = ep.collect_candidates(build_results())
