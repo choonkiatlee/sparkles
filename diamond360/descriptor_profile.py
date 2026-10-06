@@ -185,22 +185,22 @@ FIELD_SPECS = {
     },
     "directional.side_E_W_pearson": {
         "role": "descriptor", "family": "opposing", "statistic": "correlation",
-        "representation": "coarse_whole", "pair": "side_E_W", "support_policy": "fixed",
+        "representation": "coarse", "surface_id": "coarse_whole", "pair": "side_E_W", "support_policy": "fixed",
         "units": "correlation",
     },
     "directional.side_N_S_pearson": {
         "role": "descriptor", "family": "opposing", "statistic": "correlation",
-        "representation": "coarse_whole", "pair": "side_N_S", "support_policy": "fixed",
+        "representation": "coarse", "surface_id": "coarse_whole", "pair": "side_N_S", "support_policy": "fixed",
         "units": "correlation",
     },
     "directional.corner_NE_SW_pearson": {
         "role": "descriptor", "family": "opposing", "statistic": "correlation",
-        "representation": "coarse_whole", "pair": "corner_NE_SW", "support_policy": "fixed",
+        "representation": "coarse", "surface_id": "coarse_whole", "pair": "corner_NE_SW", "support_policy": "fixed",
         "units": "correlation",
     },
     "directional.corner_NW_SE_pearson": {
         "role": "descriptor", "family": "opposing", "statistic": "correlation",
-        "representation": "coarse_whole", "pair": "corner_NW_SE", "support_policy": "fixed",
+        "representation": "coarse", "surface_id": "coarse_whole", "pair": "corner_NW_SE", "support_policy": "fixed",
         "units": "correlation",
     },
     "flash_morphology.median_largest_component_fraction": {
@@ -356,8 +356,8 @@ def _row_cell(source, family, field_id, certificate, spec):
         criteria["state"] = spec["state"]
     if "pair" in spec:
         criteria["pair_id"] = spec["pair"]
-        if family == "opposing":
-            criteria["surface_id"] = "coarse_whole"
+    if "surface_id" in spec:
+        criteria["surface_id"] = spec["surface_id"]
     row_key = "baseline_rows" if family == "persistence" else "rows"
     row = _one_row(source.get(row_key, []), family, field_id, criteria)
     return _value_cell(
@@ -466,7 +466,7 @@ def _catalog_entry(field_id):
         "statistic": spec["statistic"],
         "units": spec["units"],
     }
-    for key in ("region", "pair", "trace_type", "threshold", "state", "connectivity", "redundancy_group"):
+    for key in ("region", "pair", "surface_id", "trace_type", "threshold", "state", "connectivity", "redundancy_group"):
         if key in spec:
             entry[key] = spec[key]
     return entry
