@@ -149,3 +149,37 @@ never interpolated. CSV and evidence PNGs are derived audit products.
 
 All activation quantities describe recorded-image behavior. They are not calibrated
 radiance, light return, fire, leakage, physical facet identity or a quality grade.
+
+
+## Relative-dark occupancy: `diamond360-relative-dark-occupancy/1`
+
+`occupancy.json` uses the same selected frames, registered photometry, whole-stone
+reference and coarse/semantic masks as `diamond360-activation/1`. The whole-stone
+reference is exactly `G_t`: median encoded brightness on the fixed common registered
+stone support over accepted frames.
+
+For supported region pixels `S_(r,t)`, occupancy is:
+
+`O_(r,t)(k) = count[p in S_(r,t) where Y_t(p) < k * G_t] / count(S_(r,t))`.
+
+The threshold comparison is strict `<`; a pixel exactly equal to `k * G_t` is not
+classified dark. The benchmark threshold set is fixed globally at `0.60, 0.65, 0.70`
+with `0.65` as the baseline. Per-stone, per-region and per-representation threshold
+tuning is not permitted.
+
+Every threshold cell records the full occupancy trace, dark-pixel numerator,
+supported-pixel denominator, mean, median, Q10/Q50/Q90, support diagnostics and
+monotone `ok`/`review`/`unavailable` validity with reasons. Missing/unobserved
+frames remain null and do not enter fixed-support intersections.
+
+Each coarse and semantic region is emitted with both `fixed` and `dynamic` support.
+Semantic QC is inherited only by semantic occupancy. Fixed↔dynamic disagreement is
+support/mask-motion evidence rather than an automatic measurement failure.
+
+Evidence metadata selects source frames nearest Q10/Q50/Q90 and the largest positive
+and negative observed-adjacent occupancy moves. Baseline evidence PNGs annotate the
+supported region and the pixels classified relatively dark, so the classification is
+auditable against source imagery. Gaps break adjacency and are never interpolated.
+
+Occupancy is a descriptive recorded-image state fraction. It is not leakage, calibrated
+light return, fire, physical facet identity, or a quality grade.
