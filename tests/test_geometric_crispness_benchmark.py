@@ -261,6 +261,7 @@ class GeometricCrispnessBenchmarkTests(
                 b.write_stone_outputs(
                     result,
                     root / "out",
+                    human_source_indices=[0],
                 )
             )
             payload = json.loads(
@@ -277,6 +278,22 @@ class GeometricCrispnessBenchmarkTests(
                 payload[
                     "evidence_files"
                 ]
+            )
+            self.assertEqual(
+                set(
+                    payload[
+                        "human_evidence_files"
+                    ]
+                ),
+                {"0"},
+            )
+            self.assertTrue(
+                (
+                    root
+                    / "out"
+                    / "evidence"
+                    / "human_static_0.jpg"
+                ).exists()
             )
             encoded = (
                 root
