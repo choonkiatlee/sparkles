@@ -29,10 +29,11 @@ from . import persistence_benchmark as persistence_b
 from . import pipeline
 from . import switching_benchmark as switching_b
 from . import tier_contrast_benchmark as tier_b
-from .external_media import adapt_archived_sequence, adapt_still, extract_video
+from .external_media import adapt_archived_sequence, adapt_still, build_source, extract_video
 
 SCHEMA = "sparkles-external-benchmark-run/1"
 MANIFEST_SCHEMA = "sparkles-external-benchmark/1"
+MAX_ORDERED_VIDEO_FRAMES = 99
 CORE_INDICES = [248,249,250,251,252,253,254,255,0,1,2,3,4,5,6,7,8]
 WIDE_INDICES = list(range(240,256)) + list(range(0,17))
 
@@ -259,9 +260,17 @@ def _run_dynamic(source, output, work, *, faceup):
     crispness = crispness_b.measure_stone(processed, indices, wrap=wrap)
     tier = tier_b.measure_stone(processed, steps, indices, wrap=wrap)
 
+    sampling = (manifest.get("provenance") or {}).get("ordered_video_sampling")
     return {
-        "analysis_mode": "production_faceup_core17" if faceup else "ordered_media_full_sequence",
+        "analysis_mode": (
+            "production_faceup_core17"
+            if faceup
+            else "ordered_media_uniform_sample"
+            if sampling and sampling.get("policy") != "all_frames"
+            else "ordered_media_full_sequence"
+        ),
         "source_frame_count": count,
+        "ordered_video_sampling": sampling,
         "requested_indices": indices,
         "retained_profile": _compact_retained(
             activation,
@@ -365,11 +374,43 @@ def _prepare_source(sample, archive_root, destination):
     if media_type is None:
         media_type = Path(asset["artifact_path"]).suffix.lower().lstrip(".")
     if media_type in {"mp4", "gif"}:
-        return extract_video(
+        decoded = destination.parent / "decoded-source"
+        decoded_manifest = extract_video(
             path,
-            destination,
+            decoded,
             provenance={**provenance, "archived_asset": asset["artifact_path"]},
-        ), False
+        )
+        total = decoded_manifest["source_frame_count"]
+        if total <= MAX_ORDERED_VIDEO_FRAMES:
+            selected_indices = list(range(total))
+        else:
+            selected_indices = []
+            for slot in range(MAX_ORDERED_VIDEO_FRAMES):
+                index = round(slot * (total - 1) / (MAX_ORDERED_VIDEO_FRAMES - 1))
+                if not selected_indices or index != selected_indices[-1]:
+                    selected_indices.append(index)
+        lookup = {row["source_index"]: row for row in decoded_manifest["frames"]}
+        selected_paths = [decoded / lookup[index]["path"] for index in selected_indices]
+        adapted = build_source(
+            selected_paths,
+            destination,
+            provenance={
+                **provenance,
+                "archived_asset": asset["artifact_path"],
+                "ordered_video_sampling": {
+                    "original_decoded_frame_count": total,
+                    "adapted_frame_count": len(selected_indices),
+                    "original_source_indices": selected_indices,
+                    "policy": (
+                        "all_frames" if total <= MAX_ORDERED_VIDEO_FRAMES
+                        else f"uniform_full_clip_max_{MAX_ORDERED_VIDEO_FRAMES}"
+                    ),
+                },
+            },
+            source_media_path=path,
+            copy_frames=True,
+        )
+        return adapted, False
     if media_type in {"jpg", "jpeg", "png"}:
         return adapt_still(
             path,
