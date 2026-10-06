@@ -20,15 +20,15 @@ jobs:
       - run: python -m pip install -e .
       - name: Run repository tests
         run: python -m unittest discover -s tests -v
-      - name: Regenerate four-stone switching benchmark
+      - name: Run four-stone benchmark from release assets
         shell: python
         run: |
-          import base64
           import csv
           import hashlib
           import json
           import shutil
           import urllib.request
+          import zipfile
           from pathlib import Path
 
           from diamond360.pipeline import run as preprocess
@@ -44,72 +44,94 @@ jobs:
 
           CORE = list(range(248, 256)) + list(range(0, 9))
           WIDE = list(range(240, 256)) + list(range(0, 17))
-          CERTS = [
-              "IGI-LG756580087",
-              "IGI-LG756520111",
-              "IGI-LG818659722",
-              "IGI-LG836619414",
-          ]
+          bundle_index = json.loads(
+              Path("docs/360/benchmark/source-bundles.json").read_text()
+          )
+          if bundle_index.get("release_tag") != "benchmark-sources-v1":
+              raise RuntimeError("unexpected benchmark source release")
+          bundles = bundle_index["bundles"]
 
-          def request_bytes(url, referer):
+          prior_summary_path = Path("docs/360/switching/summary.json")
+          prior_summary = (
+              json.loads(prior_summary_path.read_text())
+              if prior_summary_path.exists()
+              else None
+          )
+
+          def download_bundle(bundle):
+              certificate = bundle["certificate"]
+              archive = SOURCE_ROOT / bundle["filename"]
               request = urllib.request.Request(
-                  url,
+                  bundle["download_url"],
                   headers={
-                      "User-Agent": (
-                          "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-                          "(KHTML, like Gecko) Chrome/140.0 Safari/537.36"
-                      ),
-                      "Accept": "application/json,text/plain,*/*",
-                      "Referer": referer,
+                      "User-Agent": "sparkles-issue-28-benchmark/1",
+                      "Accept": "application/octet-stream",
                   },
               )
-              with urllib.request.urlopen(request, timeout=60) as response:
-                  return response.read()
+              with urllib.request.urlopen(request, timeout=120) as response:
+                  archive.write_bytes(response.read())
 
-          def regenerate_source(certificate):
-              manifest_path = Path(
-                  f"docs/360/benchmark/per-stone/{certificate}/source-manifest.json"
+              data = archive.read_bytes()
+              actual = hashlib.sha256(data).hexdigest()
+              if actual != bundle["sha256"]:
+                  raise RuntimeError(
+                      f"{certificate}: release ZIP sha mismatch "
+                      f"{actual} != {bundle['sha256']}"
+                  )
+              if len(data) != bundle["bytes"]:
+                  raise RuntimeError(
+                      f"{certificate}: release ZIP size mismatch "
+                      f"{len(data)} != {bundle['bytes']}"
+                  )
+
+              extracted = SOURCE_ROOT / certificate
+              extracted.mkdir()
+              with zipfile.ZipFile(archive) as handle:
+                  handle.extractall(extracted)
+              manifests = list(extracted.rglob("source-manifest.json"))
+              if len(manifests) != 1:
+                  raise RuntimeError(
+                      f"{certificate}: expected one source-manifest.json, "
+                      f"found {len(manifests)}"
+                  )
+              manifest_path = manifests[0]
+              release_manifest = json.loads(manifest_path.read_text())
+              committed_manifest = json.loads(
+                  Path(bundle["source_manifest"]).read_text()
               )
-              manifest = json.loads(manifest_path.read_text())
-              source = SOURCE_ROOT / certificate
-              frames = source / "frames"
-              frames.mkdir(parents=True, exist_ok=True)
-
-              batches = {}
-              for spec in manifest["batches"]:
-                  raw = request_bytes(spec["url"], manifest["viewer"])
-                  actual = hashlib.sha256(raw).hexdigest()
-                  if actual != spec["sha256"]:
+              for key in ("schema_version", "source_frame_count", "sequence_complete"):
+                  if release_manifest.get(key) != committed_manifest.get(key):
                       raise RuntimeError(
-                          f"{certificate}: batch {spec['batch']} sha mismatch "
-                          f"{actual} != {spec['sha256']}"
+                          f"{certificate}: release manifest disagrees on {key}"
                       )
-                  payload = json.loads(raw)
-                  if len(payload) != spec["count"]:
-                      raise RuntimeError(
-                          f"{certificate}: batch {spec['batch']} count "
-                          f"{len(payload)} != {spec['count']}"
-                      )
-                  batches[spec["batch"]] = payload
-
-              for frame in manifest["frames"]:
-                  payload = batches[frame["batch"]][frame["stored_position"]]
-                  data = base64.b64decode(payload)
-                  actual = hashlib.sha256(data).hexdigest()
-                  if actual != frame["sha256"] or len(data) != frame["bytes"]:
-                      raise RuntimeError(
-                          f"{certificate}: source frame {frame['source_index']} "
-                          "failed retained hash/size contract"
-                      )
-                  target = source / frame["path"]
-                  target.parent.mkdir(parents=True, exist_ok=True)
-                  target.write_bytes(data)
-              print(certificate, "regenerated", len(manifest["frames"]), "verified frames")
-              return source, manifest_path
+              release_frames = [
+                  (item["source_index"], item["path"], item["sha256"])
+                  for item in release_manifest["frames"]
+              ]
+              committed_frames = [
+                  (item["source_index"], item["path"], item["sha256"])
+                  for item in committed_manifest["frames"]
+              ]
+              if release_frames != committed_frames:
+                  raise RuntimeError(
+                      f"{certificate}: release manifest frame contract changed"
+                  )
+              if len(release_frames) != bundle["frame_count"]:
+                  raise RuntimeError(
+                      f"{certificate}: release frame count mismatch"
+                  )
+              print(
+                  certificate,
+                  "release ZIP verified",
+                  bundle["sha256"],
+                  f"({len(release_frames)} frames)",
+              )
+              return manifest_path.parent, manifest_path
 
           summary_rows = []
-          for certificate in CERTS:
-              source, manifest_path = regenerate_source(certificate)
+          for bundle in bundles:
+              certificate = bundle["certificate"]
+              source, manifest_path = download_bundle(bundle)
               stone_work = WORK_ROOT / certificate
               processed = stone_work / "processed"
               preprocess(
@@ -149,16 +171,33 @@ jobs:
                                       "eligible_pixel_pairs": cell["eligible_pixel_pairs"],
                                       "persistent_support_fraction": cell["persistent_support_fraction"],
                                   })
-              print(certificate, "measured")
+              print(certificate, "measured from release source")
+
+          if prior_summary is not None and prior_summary.get("rows") != summary_rows:
+              raise RuntimeError(
+                  "release-based benchmark does not reproduce the prior "
+                  "hash-verified live-vendor regeneration"
+              )
+          print("release results exactly reproduce prior live-vendor summary rows")
 
           summary = {
               "schema_version": "sparkles-bright-dark-switching-benchmark/1",
               "issue": 28,
               "core_indices": CORE,
               "wide_indices": WIDE,
-              "stones": CERTS,
+              "stones": [bundle["certificate"] for bundle in bundles],
               "thresholds": [0.60, 0.65, 0.70],
               "baseline_threshold": 0.65,
+              "source_release_tag": bundle_index["release_tag"],
+              "source_bundles": [
+                  {
+                      "certificate": bundle["certificate"],
+                      "filename": bundle["filename"],
+                      "sha256": bundle["sha256"],
+                      "bytes": bundle["bytes"],
+                  }
+                  for bundle in bundles
+              ],
               "rows": summary_rows,
           }
           (OUT_ROOT / "summary.json").write_text(
@@ -170,16 +209,24 @@ jobs:
               writer.writeheader()
               writer.writerows(summary_rows)
 
+          # Full pair traces remain a CI artifact; Git keeps only compact audit evidence.
+          artifact = ROOT / "artifact"
+          artifact.mkdir()
+          shutil.copy2(OUT_ROOT / "summary.json", artifact / "summary.json")
+          shutil.copy2(OUT_ROOT / "summary.csv", artifact / "summary.csv")
+          for bundle in bundles:
+              certificate = bundle["certificate"]
+              for window in ("core", "wide"):
+                  src = OUT_ROOT / "per-stone" / certificate / window / "switching.json"
+                  dst = artifact / "per-stone" / certificate / window / "switching.json"
+                  dst.parent.mkdir(parents=True, exist_ok=True)
+                  shutil.copy2(src, dst)
+          shutil.make_archive("issue28-switching-benchmark", "zip", artifact)
+
           compact = ROOT / "compact"
           compact.mkdir()
           shutil.copy2(OUT_ROOT / "summary.json", compact / "summary.json")
           shutil.copy2(OUT_ROOT / "summary.csv", compact / "summary.csv")
-          for certificate in CERTS:
-              for window in ("core", "wide"):
-                  src = OUT_ROOT / "per-stone" / certificate / window / "switching.json"
-                  dst = compact / "per-stone" / certificate / window / "switching.json"
-                  dst.parent.mkdir(parents=True, exist_ok=True)
-                  shutil.copy2(src, dst)
           selected_evidence = [
               "per-stone/IGI-LG836619414/core/evidence/coarse-middle-fixed.png",
               "per-stone/IGI-LG836619414/wide/evidence/coarse-outer-fixed.png",
@@ -197,15 +244,13 @@ jobs:
           if publish.exists():
               shutil.rmtree(publish)
           shutil.copytree(compact, publish)
-
-          shutil.make_archive("issue28-switching-benchmark", "zip", compact)
           print("benchmark rows", len(summary_rows))
-      - name: Commit compact benchmark evidence
+      - name: Commit compact release-based benchmark evidence
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/360/switching
-          git diff --cached --quiet || git commit -m "docs: add switching benchmark evidence [skip ci]"
+          git add -A docs/360/switching
+          git diff --cached --quiet || git commit -m "docs: use release sources for switching benchmark [skip ci]"
           git push origin HEAD:issue-28-bright-dark-switching
       - uses: actions/upload-artifact@v4
         with:
