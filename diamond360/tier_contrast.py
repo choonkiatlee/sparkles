@@ -15,6 +15,50 @@ def _finite(value):
     return value if math.isfinite(value) else None
 
 
+
+def _sector_distribution(values):
+    """Descriptive cross-sector coverage statistics without fitted thresholds."""
+    finite = [_finite(value) for value in values]
+    data = np.asarray([value for value in finite if value is not None], float)
+    result = {
+        "finite_sectors": int(data.size),
+        "q25": None,
+        "q50": None,
+        "q75": None,
+        "q90": None,
+        "iqr": None,
+        "mad": None,
+    }
+    if not data.size:
+        return result
+    q25, q50, q75, q90 = np.quantile(data, [.25, .50, .75, .90])
+    result.update(
+        q25=float(q25),
+        q50=float(q50),
+        q75=float(q75),
+        q90=float(q90),
+        iqr=float(q75 - q25),
+        mad=float(np.median(np.abs(data - q50))),
+    )
+    return result
+
+
+def _ordering_state(centre_inner_signed, inner_middle_signed):
+    """Classify instantaneous centre/inner/middle tonal ordering exactly."""
+    first = _finite(centre_inner_signed)
+    second = _finite(inner_middle_signed)
+    if first is None or second is None:
+        return None
+    if first == 0 or second == 0:
+        return "tied"
+    if first > 0 and second > 0:
+        return "monotonic_light_to_dark_outward"
+    if first < 0 and second < 0:
+        return "monotonic_dark_to_light_outward"
+    if first > 0 and second < 0:
+        return "inner_local_minimum"
+    return "inner_local_maximum"
+
 def summarise(values):
     finite = [_finite(value) for value in values]
     finite = [value for value in finite if value is not None]
@@ -289,12 +333,7 @@ def compose_validity(component_validities, local_summary):
 
 
 def sectorized_contrast_trace(left_sector_values, right_sector_values, source_indices):
-    """Preserve matched directional-sector contrast, then summarize typical local separation.
-
-    Inputs map sector name -> positive brightness-median trace. The calculation
-    uses log ratios directly, so common multiplicative scene brightness cancels.
-    Sector labels are image-axis locations only, not facet identities.
-    """
+    """Preserve matched directional-sector contrast and spatial coverage."""
     if set(left_sector_values) != set(right_sector_values) or not left_sector_values:
         raise ValueError("left/right sector sets must match and be non-empty")
     sectors = tuple(sorted(left_sector_values))
@@ -309,8 +348,9 @@ def sectorized_contrast_trace(left_sector_values, right_sector_values, source_in
         )
 
     frame_trace = []
-    median_values = []
-    q75_values = []
+    metric_values = {
+        "q25": [], "q50": [], "q75": [], "q90": [], "iqr": [], "mad": []
+    }
     for position, source_index in enumerate(source_indices):
         values = {
             sector: per_sector[sector]["frame_trace"][position]["separation"]
@@ -320,6 +360,7 @@ def sectorized_contrast_trace(left_sector_values, right_sector_values, source_in
             sector: per_sector[sector]["frame_trace"][position]["signed_log_contrast"]
             for sector in sectors
         }
+        coverage = _sector_distribution(values.values())
         finite = {
             sector: float(value)
             for sector, value in values.items()
@@ -331,39 +372,38 @@ def sectorized_contrast_trace(left_sector_values, right_sector_values, source_in
             "status": "ok" if finite else "gap",
             "sector_separations": values,
             "sector_signed_log_contrasts": signed_values,
-            "finite_sectors": len(finite),
-            "median_separation": None,
-            "q75_separation": None,
+            "finite_sectors": coverage["finite_sectors"],
+            "q25_separation": coverage["q25"],
+            "median_separation": coverage["q50"],
+            "q75_separation": coverage["q75"],
+            "q90_separation": coverage["q90"],
+            "iqr_separation": coverage["iqr"],
+            "mad_separation": coverage["mad"],
             "strongest_sector": None,
             "strongest_sector_separation": None,
         }
         if finite:
-            data = np.asarray(list(finite.values()), float)
-            row["median_separation"] = float(np.median(data))
-            row["q75_separation"] = float(np.quantile(data, .75))
             strongest = max(finite, key=lambda sector: (finite[sector], sector))
             row["strongest_sector"] = strongest
             row["strongest_sector_separation"] = finite[strongest]
         frame_trace.append(row)
-        median_values.append(row["median_separation"])
-        q75_values.append(row["q75_separation"])
+        for metric in metric_values:
+            metric_values[metric].append(coverage[metric])
 
     return {
         "sectors": list(sectors),
         "per_sector": per_sector,
         "frame_trace": frame_trace,
-        "median_summary": summarise(median_values),
-        "q75_summary": summarise(q75_values),
+        "q25_summary": summarise(metric_values["q25"]),
+        "median_summary": summarise(metric_values["q50"]),
+        "q75_summary": summarise(metric_values["q75"]),
+        "q90_summary": summarise(metric_values["q90"]),
+        "iqr_summary": summarise(metric_values["iqr"]),
+        "mad_summary": summarise(metric_values["mad"]),
     }
 
-
 def multiscale_sector_consensus(scale_results):
-    """Median a small declared scale family while preserving sector/frame detail.
-
-    ``scale_results`` maps a scale label to a sectorized_contrast_trace result.
-    This aggregates only over measurement scale; it does not collapse the eight
-    spatial sectors into a production descriptor.
-    """
+    """Median declared scales while preserving sectors and scale sensitivity."""
     if not scale_results:
         raise ValueError("at least one scale result is required")
     labels = tuple(sorted(scale_results))
@@ -380,8 +420,9 @@ def multiscale_sector_consensus(scale_results):
             raise ValueError("scale results must share frame alignment")
 
     frame_trace = []
-    median_values = []
-    q75_values = []
+    metric_values = {
+        "q25": [], "q50": [], "q75": [], "q90": [], "iqr": [], "mad": []
+    }
     scale_spread_values = []
     for position in range(frame_count):
         source_index = first["frame_trace"][position]["source_index"]
@@ -410,6 +451,7 @@ def multiscale_sector_consensus(scale_results):
                 if len(separations) >= 2 else None
             )
 
+        coverage = _sector_distribution(sector_sep.values())
         finite = {k: v for k, v in sector_sep.items() if v is not None}
         finite_spread = [v for v in sector_scale_spread.values() if v is not None]
         row = {
@@ -419,9 +461,13 @@ def multiscale_sector_consensus(scale_results):
             "sector_separations": sector_sep,
             "sector_signed_log_contrasts": sector_signed,
             "sector_scale_spread": sector_scale_spread,
-            "finite_sectors": len(finite),
-            "median_separation": None,
-            "q75_separation": None,
+            "finite_sectors": coverage["finite_sectors"],
+            "q25_separation": coverage["q25"],
+            "median_separation": coverage["q50"],
+            "q75_separation": coverage["q75"],
+            "q90_separation": coverage["q90"],
+            "iqr_separation": coverage["iqr"],
+            "mad_separation": coverage["mad"],
             "median_scale_spread": (
                 float(np.median(finite_spread)) if finite_spread else None
             ),
@@ -429,24 +475,188 @@ def multiscale_sector_consensus(scale_results):
             "strongest_sector_separation": None,
         }
         if finite:
-            data = np.asarray(list(finite.values()), float)
-            row["median_separation"] = float(np.median(data))
-            row["q75_separation"] = float(np.quantile(data, .75))
             strongest = max(finite, key=lambda sector: (finite[sector], sector))
             row["strongest_sector"] = strongest
             row["strongest_sector_separation"] = finite[strongest]
         frame_trace.append(row)
-        median_values.append(row["median_separation"])
-        q75_values.append(row["q75_separation"])
+        for metric in metric_values:
+            metric_values[metric].append(coverage[metric])
         scale_spread_values.append(row["median_scale_spread"])
 
     return {
         "scale_labels": list(labels),
         "sectors": list(sectors),
         "frame_trace": frame_trace,
-        "median_summary": summarise(median_values),
-        "q75_summary": summarise(q75_values),
+        "q25_summary": summarise(metric_values["q25"]),
+        "median_summary": summarise(metric_values["q50"]),
+        "q75_summary": summarise(metric_values["q75"]),
+        "q90_summary": summarise(metric_values["q90"]),
+        "iqr_summary": summarise(metric_values["iqr"]),
+        "mad_summary": summarise(metric_values["mad"]),
         "scale_spread_summary": summarise(scale_spread_values),
+    }
+
+
+def joint_nested_tier_readability(centre_inner_trace, inner_middle_trace):
+    """Combine aligned boundary-local fields without collapsing diagnostics.
+
+    The joint separation is the weakest link in each sector/frame:
+    min(|C-I|, |I-M|). Signed pair components are also classified into an
+    instantaneous tonal ordering state. No quality direction or fitted
+    threshold is implied.
+    """
+    if len(centre_inner_trace) != len(inner_middle_trace):
+        raise ValueError("nested pair traces must have equal length")
+    states = (
+        "monotonic_light_to_dark_outward",
+        "monotonic_dark_to_light_outward",
+        "inner_local_minimum",
+        "inner_local_maximum",
+        "tied",
+    )
+    frame_trace = []
+    metric_values = {
+        "q25": [], "q50": [], "q75": [], "q90": [], "iqr": [], "mad": []
+    }
+    scale_spread_values = []
+    total_counts = {state: 0 for state in states}
+
+    for position, (first, second) in enumerate(
+        zip(centre_inner_trace, inner_middle_trace)
+    ):
+        if first.get("source_index") != second.get("source_index"):
+            raise ValueError("nested pair traces must share source-index alignment")
+        first_sep = first.get("sector_separations") or {}
+        second_sep = second.get("sector_separations") or {}
+        first_signed = first.get("sector_signed_log_contrasts") or {}
+        second_signed = second.get("sector_signed_log_contrasts") or {}
+        if set(first_sep) != set(second_sep) or not first_sep:
+            raise ValueError("nested pair traces must share a non-empty sector set")
+        if set(first_signed) != set(first_sep) or set(second_signed) != set(first_sep):
+            raise ValueError("signed nested pair traces must share sector labels")
+
+        first_spread = first.get("sector_scale_spread") or {}
+        second_spread = second.get("sector_scale_spread") or {}
+        joint = {}
+        components = {}
+        ordering = {}
+        max_scale_spread = {}
+        counts = {state: 0 for state in states}
+        for sector in sorted(first_sep):
+            left = _finite(first_sep.get(sector))
+            right = _finite(second_sep.get(sector))
+            joint[sector] = (
+                float(min(left, right))
+                if left is not None and right is not None else None
+            )
+            components[sector] = {
+                "centre_inner": left,
+                "inner_middle": right,
+            }
+            state = _ordering_state(
+                first_signed.get(sector), second_signed.get(sector)
+            )
+            ordering[sector] = state
+            if state is not None:
+                counts[state] += 1
+                total_counts[state] += 1
+            if joint[sector] is None:
+                max_scale_spread[sector] = None
+            else:
+                spreads = [
+                    _finite(first_spread.get(sector)),
+                    _finite(second_spread.get(sector)),
+                ]
+                spreads = [value for value in spreads if value is not None]
+                max_scale_spread[sector] = max(spreads) if spreads else None
+
+        coverage = _sector_distribution(joint.values())
+        first_coverage = _sector_distribution(first_sep.values())
+        second_coverage = _sector_distribution(second_sep.values())
+        pairwise_median_weakest = (
+            min(first_coverage["q50"], second_coverage["q50"])
+            if first_coverage["q50"] is not None
+            and second_coverage["q50"] is not None
+            else None
+        )
+        joint_median_penalty = (
+            float(pairwise_median_weakest - coverage["q50"])
+            if pairwise_median_weakest is not None
+            and coverage["q50"] is not None
+            else None
+        )
+        finite_spread = [
+            value for value in max_scale_spread.values()
+            if value is not None
+        ]
+        ordering_n = sum(counts.values())
+        row = {
+            "position": position,
+            "source_index": first["source_index"],
+            "status": "ok" if coverage["finite_sectors"] else "gap",
+            "sector_joint_separations": joint,
+            "sector_pair_components": components,
+            "sector_ordering": ordering,
+            "sector_max_component_scale_spread": max_scale_spread,
+            "finite_sectors": coverage["finite_sectors"],
+            "q25_joint_separation": coverage["q25"],
+            "median_joint_separation": coverage["q50"],
+            "q75_joint_separation": coverage["q75"],
+            "q90_joint_separation": coverage["q90"],
+            "iqr_joint_separation": coverage["iqr"],
+            "mad_joint_separation": coverage["mad"],
+            "centre_inner_median_separation": first_coverage["q50"],
+            "inner_middle_median_separation": second_coverage["q50"],
+            "pairwise_median_weakest": pairwise_median_weakest,
+            "joint_median_penalty": joint_median_penalty,
+            "joint_coverage_gap": (
+                float(coverage["q50"] - coverage["q25"])
+                if coverage["q50"] is not None and coverage["q25"] is not None
+                else None
+            ),
+            "median_max_component_scale_spread": (
+                float(np.median(finite_spread)) if finite_spread else None
+            ),
+            "ordering_counts": counts,
+            "ordering_fractions": {
+                state: (float(count / ordering_n) if ordering_n else None)
+                for state, count in counts.items()
+            },
+        }
+        frame_trace.append(row)
+        for metric in metric_values:
+            metric_values[metric].append(coverage[metric])
+        scale_spread_values.append(row["median_max_component_scale_spread"])
+
+    total_n = sum(total_counts.values())
+    evidence = {
+        "strongest_joint_median_penalty": _extreme_event(
+            frame_trace, "joint_median_penalty", True
+        ),
+        "strongest_joint_coverage_gap": _extreme_event(
+            frame_trace, "joint_coverage_gap", True
+        ),
+    }
+    return {
+        "sectors": (
+            sorted((centre_inner_trace[0].get("sector_separations") or {}).keys())
+            if centre_inner_trace else []
+        ),
+        "frame_trace": frame_trace,
+        "q25_summary": summarise(metric_values["q25"]),
+        "median_summary": summarise(metric_values["q50"]),
+        "q75_summary": summarise(metric_values["q75"]),
+        "q90_summary": summarise(metric_values["q90"]),
+        "iqr_summary": summarise(metric_values["iqr"]),
+        "mad_summary": summarise(metric_values["mad"]),
+        "scale_spread_summary": summarise(scale_spread_values),
+        "ordering_counts": total_counts,
+        "ordering_fractions": {
+            state: (float(count / total_n) if total_n else None)
+            for state, count in total_counts.items()
+        },
+        "ordering_observations": total_n,
+        "evidence": evidence,
     }
 
 def select_sectorized_evidence(frame_trace):

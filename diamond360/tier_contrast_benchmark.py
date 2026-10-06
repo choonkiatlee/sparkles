@@ -724,6 +724,46 @@ def measure_stone(processed, step_output, indices, wrap=False):
                     "median_separation",
                 )
             )
+
+    semantic_pairs = {
+        pair_id: (
+            ((pair.get("boundary_local") or {}).get("multi_scale") or {})
+            .get("semantic", {})
+        )
+        for pair_id, pair in result["pairs"].items()
+    }
+    centre_inner = semantic_pairs.get("centre__inner") or {}
+    inner_middle = semantic_pairs.get("inner__middle") or {}
+    if centre_inner.get("frame_trace") and inner_middle.get("frame_trace"):
+        joint = tc.joint_nested_tier_readability(
+            centre_inner["frame_trace"],
+            inner_middle["frame_trace"],
+        )
+        joint_validity = tc.compose_validity(
+            [
+                centre_inner.get("validity") or {"status": "unavailable"},
+                inner_middle.get("validity") or {"status": "unavailable"},
+            ],
+            joint["median_summary"],
+        )
+        result["tier_readability_profile"] = {
+            **joint,
+            "validity": joint_validity,
+            "research_only": True,
+            "definition": (
+                "per-sector weakest-link min(boundary-local centre-inner, "
+                "boundary-local inner-middle), plus exact signed tonal ordering"
+            ),
+            "quality_direction": None,
+        }
+    else:
+        result["tier_readability_profile"] = {
+            "status": "unavailable",
+            "reason": "semantic_multiscale_pair_unavailable",
+            "research_only": True,
+            "quality_direction": None,
+        }
+
     result["boundary_local_definition"] = {
         key: value
         for key, value in boundary_local.items()
@@ -1200,6 +1240,97 @@ def _write_boundary_local_csv(result, output):
         writer.writerows(rows)
 
 
+
+def _profile_row(name, candidate):
+    rows = candidate.get("frame_trace") or []
+    q25_key = (
+        "q25_joint_separation"
+        if name == "joint_weakest_link" else "q25_separation"
+    )
+    median_key = (
+        "median_joint_separation"
+        if name == "joint_weakest_link" else "median_separation"
+    )
+    coverage_events = [
+        row for row in rows
+        if row.get(q25_key) is not None and row.get(median_key) is not None
+    ]
+    strongest_coverage = (
+        max(
+            coverage_events,
+            key=lambda row: (
+                float(row[median_key]) - float(row[q25_key]),
+                -int(row.get("position", 0)),
+            ),
+        )
+        if coverage_events else None
+    )
+    result = {
+        "profile": name,
+        "status": (candidate.get("validity") or {}).get(
+            "status", candidate.get("status")
+        ),
+        "q25_frame_q50": (candidate.get("q25_summary") or {}).get("q50"),
+        "median_frame_q50": (candidate.get("median_summary") or {}).get("q50"),
+        "q75_frame_q50": (candidate.get("q75_summary") or {}).get("q50"),
+        "q90_frame_q50": (candidate.get("q90_summary") or {}).get("q50"),
+        "iqr_frame_q50": (candidate.get("iqr_summary") or {}).get("q50"),
+        "mad_frame_q50": (candidate.get("mad_summary") or {}).get("q50"),
+        "scale_spread_q50": (candidate.get("scale_spread_summary") or {}).get("q50"),
+        "max_coverage_gap": (
+            float(strongest_coverage[median_key] - strongest_coverage[q25_key])
+            if strongest_coverage else None
+        ),
+        "max_coverage_gap_source_index": (
+            strongest_coverage.get("source_index")
+            if strongest_coverage else None
+        ),
+    }
+    if name == "joint_weakest_link":
+        event = (candidate.get("evidence") or {}).get(
+            "strongest_joint_median_penalty"
+        )
+        result["max_joint_median_penalty"] = (
+            event.get("joint_median_penalty") if event else None
+        )
+        result["max_joint_median_penalty_source_index"] = (
+            event.get("source_index") if event else None
+        )
+    return result
+
+
+def _write_tier_readability_profile_csv(result, output):
+    rows = []
+    for pair_id in ("centre__inner", "inner__middle"):
+        candidate = (
+            (((result.get("pairs") or {}).get(pair_id) or {})
+             .get("boundary_local") or {})
+            .get("multi_scale", {})
+            .get("semantic", {})
+        )
+        if candidate.get("frame_trace"):
+            rows.append(_profile_row(pair_id, candidate))
+    joint = result.get("tier_readability_profile") or {}
+    if joint.get("frame_trace"):
+        row = _profile_row("joint_weakest_link", joint)
+        for state, value in (joint.get("ordering_fractions") or {}).items():
+            row[f"ordering_{state}_fraction"] = value
+        rows.append(row)
+    if not rows:
+        return
+    fields = []
+    for row in rows:
+        for key in row:
+            if key not in fields:
+                fields.append(key)
+    with (Path(output) / "tier-readability-profile.csv").open(
+        "w", newline=""
+    ) as handle:
+        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer.writeheader()
+        writer.writerows(rows)
+
+
 def write_stone_outputs(result, output, processed=None):
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
@@ -1297,6 +1428,7 @@ def write_stone_outputs(result, output, processed=None):
         writer.writeheader()
         writer.writerows(rows)
     _write_boundary_local_csv(result, output)
+    _write_tier_readability_profile_csv(result, output)
 
 
 def _comparison_rows(certificate, pipeline_name, window, result):
@@ -1354,6 +1486,32 @@ def _comparison_rows(certificate, pipeline_name, window, result):
     return rows
 
 
+
+def _profile_comparison_rows(certificate, pipeline_name, window, result):
+    base = {
+        "certificate": certificate,
+        "pipeline": pipeline_name,
+        "window": window,
+    }
+    rows = []
+    for pair_id in ("centre__inner", "inner__middle"):
+        candidate = (
+            (((result.get("pairs") or {}).get(pair_id) or {})
+             .get("boundary_local") or {})
+            .get("multi_scale", {})
+            .get("semantic", {})
+        )
+        if candidate.get("frame_trace"):
+            rows.append({**base, **_profile_row(pair_id, candidate)})
+    joint = result.get("tier_readability_profile") or {}
+    if joint.get("frame_trace"):
+        row = {**base, **_profile_row("joint_weakest_link", joint)}
+        for state, value in (joint.get("ordering_fractions") or {}).items():
+            row[f"ordering_{state}_fraction"] = value
+        rows.append(row)
+    return rows
+
+
 def _diagnostic_control(payload, name):
     control, source = _boundary_control(payload, name)
     if control is None:
@@ -1398,6 +1556,7 @@ def run_source_benchmark(source_root, output, bundle_manifest):
     manifest = json.loads(Path(bundle_manifest).read_text())
     output.mkdir(parents=True, exist_ok=True)
     rows = []
+    profile_rows = []
     stones = []
 
     with tempfile.TemporaryDirectory(
@@ -1501,6 +1660,14 @@ def run_source_benchmark(source_root, output, bundle_manifest):
                         measured,
                     )
                 )
+                profile_rows.extend(
+                    _profile_comparison_rows(
+                        certificate,
+                        pipeline_name,
+                        window,
+                        measured,
+                    )
+                )
                 stone_summary["windows"][window] = {
                     "measurement_geometry": "canonical_wide",
                     "tier_contrast_json": str(
@@ -1519,7 +1686,7 @@ def run_source_benchmark(source_root, output, bundle_manifest):
 
     summary = {
         "schema_version": (
-            "diamond360-tier-readability-pr-a-benchmark/2"
+            "diamond360-tier-readability-pr-b-benchmark/1"
         ),
         "descriptor_schema": SCHEMA,
         "core_indices": CORE_INDICES,
@@ -1529,15 +1696,14 @@ def run_source_benchmark(source_root, output, bundle_manifest):
         "boundary_guard_u": BOUNDARY_GUARD,
         "stones": stones,
         "interpretation": (
-            "Research comparison only: one canonical wide #19 geometry is "
-            "reused for both core and wide measurements; tier-relative "
-            "multiscale strips are compared with #49 broad matched sectors "
-            "and a legacy coarse-geometry control."
+            "Research comparison only: PR B derives spatial coverage, "
+            "joint weakest-link nested readability and signed instantaneous "
+            "tonal ordering from the canonical PR-A multiscale semantic field."
         ),
         "non_goals": [
-            "no Q25/spatial-coverage production choice in PR A",
-            "no joint nested-tier score",
-            "no aesthetic threshold or higher-is-better claim",
+            "no production-profile field or master tier-readability score",
+            "no fitted threshold or assumed quality direction",
+            "no replacement for PR-C human frame-level calibration",
         ],
     }
     (output / "summary.json").write_text(
@@ -1551,6 +1717,18 @@ def run_source_benchmark(source_root, output, bundle_manifest):
             writer = csv.DictWriter(handle, fieldnames=fields)
             writer.writeheader()
             writer.writerows(rows)
+    if profile_rows:
+        fields = []
+        for row in profile_rows:
+            for key in row:
+                if key not in fields:
+                    fields.append(key)
+        with (output / "readability-profile.csv").open(
+            "w", newline=""
+        ) as handle:
+            writer = csv.DictWriter(handle, fieldnames=fields)
+            writer.writeheader()
+            writer.writerows(profile_rows)
     return summary
 
 
@@ -1565,7 +1743,7 @@ def main():
     )
     args = parser.parse_args()
     run_source_benchmark(args.source_root, args.output, args.bundle_manifest)
-    print(f"wrote tier readability PR-A benchmark -> {args.output}")
+    print(f"wrote tier readability PR-B benchmark -> {args.output}")
 
 
 if __name__ == "__main__":

@@ -310,6 +310,61 @@ class TierContrastBenchmarkTests(unittest.TestCase):
                 second["median_summary"]["q50"],
                 places=10,
             )
+
+    def test_profile_csv_keeps_pairwise_coverage_joint_and_ordering(self):
+        summary = {
+            "q25": {"finite_frames": 3, "q10": .1, "q50": .2, "q90": .3, "status": "ok", "reasons": []},
+            "median": {"finite_frames": 3, "q10": .2, "q50": .3, "q90": .4, "status": "ok", "reasons": []},
+            "q75": {"finite_frames": 3, "q10": .3, "q50": .4, "q90": .5, "status": "ok", "reasons": []},
+            "q90": {"finite_frames": 3, "q10": .4, "q50": .5, "q90": .6, "status": "ok", "reasons": []},
+            "iqr": {"finite_frames": 3, "q10": .1, "q50": .2, "q90": .3, "status": "ok", "reasons": []},
+            "mad": {"finite_frames": 3, "q10": .05, "q50": .1, "q90": .15, "status": "ok", "reasons": []},
+            "spread": {"finite_frames": 3, "q10": .01, "q50": .02, "q90": .03, "status": "ok", "reasons": []},
+        }
+
+        def candidate():
+            return {
+                "frame_trace": [{"source_index": 0}],
+                "validity": {"status": "ok", "reasons": []},
+                "q25_summary": summary["q25"],
+                "median_summary": summary["median"],
+                "q75_summary": summary["q75"],
+                "q90_summary": summary["q90"],
+                "iqr_summary": summary["iqr"],
+                "mad_summary": summary["mad"],
+                "scale_spread_summary": summary["spread"],
+            }
+
+        joint = candidate()
+        joint["ordering_fractions"] = {
+            "monotonic_light_to_dark_outward": .5,
+            "monotonic_dark_to_light_outward": .25,
+            "inner_local_minimum": .125,
+            "inner_local_maximum": .125,
+            "tied": 0.0,
+        }
+        result = {
+            "pairs": {
+                pair_id: {
+                    "boundary_local": {
+                        "multi_scale": {"semantic": candidate()}
+                    }
+                }
+                for pair_id in ("centre__inner", "inner__middle")
+            },
+            "tier_readability_profile": joint,
+        }
+        with tempfile.TemporaryDirectory() as td:
+            out = Path(td)
+            tb._write_tier_readability_profile_csv(result, out)
+            rows = (out / "tier-readability-profile.csv").read_text().splitlines()
+            self.assertEqual(len(rows), 4)
+            self.assertIn("q25_frame_q50", rows[0])
+            self.assertIn("max_coverage_gap_source_index", rows[0])
+            self.assertIn("ordering_inner_local_minimum_fraction", rows[0])
+            self.assertIn("max_joint_median_penalty", rows[0])
+            self.assertIn("joint_weakest_link", rows[-1])
+
     def test_consumes_only_retained_coarse_fixed_pairs(self):
         result = tb.measure_from_activation(activation_fixture())
         self.assertEqual(
