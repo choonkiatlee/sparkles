@@ -1,0 +1,36 @@
+name: activation final check temp
+on:
+  push:
+    branches: [issue-26-activation-descriptor]
+    paths:
+      - .github/workflows/activation-final-check-temp.yml
+permissions:
+  contents: write
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: issue-26-activation-descriptor
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e .
+      - name: Full test suite
+        run: python -m unittest discover -s tests -v
+      - name: Verify activation artifact structure
+        run: |
+          test -f docs/360/activation/README.md
+          test -f docs/360/activation/summary.json
+          test -f docs/360/activation/summary.csv
+          test -f docs/360/activation/dispositions.json
+          test "$(find docs/360/activation/per-stone -name activation.json | wc -l)" -eq 8
+      - name: Remove temporary workflow
+        run: |
+          rm .github/workflows/activation-final-check-temp.yml
+          git config user.name "chatgpt-benchmark"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A .github/workflows/activation-final-check-temp.yml
+          git commit -m "chore: remove activation final check"
+          git push origin HEAD:issue-26-activation-descriptor
