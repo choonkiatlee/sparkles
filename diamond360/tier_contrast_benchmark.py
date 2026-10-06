@@ -337,14 +337,122 @@ def _strip_trace(brightness, valid_masks, masks, observed):
     }
 
 
+
+def _boundary_control(payload, name):
+    if name is None:
+        return None, "endpoint"
+    boundaries = payload.get("boundaries") or {}
+    partial = payload.get("partial_boundaries") or {}
+    reason = str(payload.get("template_reason") or "")
+    if name in boundaries:
+        return boundaries[name], "full_template"
+    if reason.startswith("no_supported_") and name in partial:
+        return partial[name], "partial_boundary"
+    return None, "unavailable"
+
+
+def _semantic_geometry(payload, spec):
+    """Resolve one pair's boundary plus adjacent tier references.
+
+    A missing neighbouring boundary may be mirrored from the observed opposite
+    span, but only as review. Ambiguous/non-separable templates are never
+    rescued.
+    """
+    template_status = payload.get("template_status", "unavailable")
+    template_reason = str(payload.get("template_reason") or "")
+    if template_status == "unavailable" and not template_reason.startswith("no_supported_"):
+        return {
+            "status": "unavailable",
+            "reason": template_reason or "semantic_template_unavailable",
+        }
+
+    boundary, boundary_source = _boundary_control(payload, spec["semantic"])
+    if boundary is None:
+        return {
+            "status": "unavailable",
+            "reason": f"boundary_unavailable:{spec['semantic']}",
+        }
+
+    b = np.asarray(boundary["sector_u"], float)
+    if spec["semantic_inner"] is None:
+        inner = np.zeros(8, float)
+        inner_source = "centre_endpoint"
+    else:
+        inner_control, inner_source = _boundary_control(
+            payload, spec["semantic_inner"]
+        )
+        inner = (
+            np.asarray(inner_control["sector_u"], float)
+            if inner_control is not None else None
+        )
+
+    outer_control, outer_source = _boundary_control(
+        payload, spec["semantic_outer"]
+    )
+    outer = (
+        np.asarray(outer_control["sector_u"], float)
+        if outer_control is not None else None
+    )
+
+    reasons = []
+    if inner is None and outer is None:
+        return {
+            "status": "unavailable",
+            "reason": "adjacent_tier_references_unavailable",
+        }
+    if inner is None:
+        inner = np.maximum(.001, b - (outer - b))
+        inner_source = "mirrored_outer_span"
+        reasons.append(f"mirrored_inner_reference:{spec['semantic_inner']}")
+    if outer is None:
+        outer = np.minimum(.999, b + (b - inner))
+        outer_source = "mirrored_inner_span"
+        reasons.append(f"mirrored_outer_reference:{spec['semantic_outer']}")
+
+    if (
+        np.any(~np.isfinite(inner))
+        or np.any(~np.isfinite(b))
+        or np.any(~np.isfinite(outer))
+        or np.any(inner >= b)
+        or np.any(b >= outer)
+    ):
+        return {
+            "status": "unavailable",
+            "reason": "semantic_reference_order_invalid",
+        }
+
+    sources = [boundary_source, inner_source, outer_source]
+    if template_status == "review":
+        reasons.append(payload.get("template_reason") or "semantic_template_review")
+    if any(source in {"partial_boundary", "mirrored_inner_span", "mirrored_outer_span"}
+           for source in sources):
+        reasons.append("semantic_geometry_partial")
+    status = "review" if reasons else "ok"
+    return {
+        "status": status,
+        "reasons": reasons,
+        "boundary_name": spec["semantic"],
+        "inner_reference_name": spec["semantic_inner"] or "centre_endpoint",
+        "outer_reference_name": spec["semantic_outer"],
+        "boundary_source": boundary_source,
+        "inner_reference_source": inner_source,
+        "outer_reference_source": outer_source,
+        "inner_sector_u": [float(value) for value in inner],
+        "boundary_sector_u": [float(value) for value in b],
+        "outer_sector_u": [float(value) for value in outer],
+        "template_status": template_status,
+        "template_reason": payload.get("template_reason"),
+    }
+
+
 def _boundary_local_inputs(
     processed,
     step_output,
     activation_result,
-    widths=BOUNDARY_WIDTHS,
+    fractions=BOUNDARY_FRACTIONS,
     guard=BOUNDARY_GUARD,
 ):
-    """Measure guarded local strips using fixed #19 and legacy coarse geometry."""
+    """Measure guarded tier-relative strips with one fixed sequence geometry."""
     processed = Path(processed)
     step_output = Path(step_output)
     metadata = json.loads((processed / "sequence.json").read_text())
@@ -353,7 +461,9 @@ def _boundary_local_inputs(
         metadata, indices, bool(activation_result.get("wrap_explicit"))
     )
     observed = np.asarray([record is not None for record in selected], bool)
-    brightness, valid_masks, stone_masks, _ = ab._load_frame_arrays(processed, selected)
+    brightness, valid_masks, stone_masks, _ = ab._load_frame_arrays(
+        processed, selected
+    )
     region_paths = [
         processed / record["regions_path"] if record is not None else None
         for record in selected
@@ -363,62 +473,52 @@ def _boundary_local_inputs(
         return {"status": "unavailable", "reason": "sector_masks_unavailable"}
 
     step_payload = json.loads((step_output / "steps.json").read_text())
-    _, step_qc = activation.load_semantic_masks(step_output, selected)
-    boundaries = step_payload.get("boundaries") or {}
-    partial_boundaries = step_payload.get("partial_boundaries") or {}
     shape = brightness.shape[1:]
     zero = np.zeros(shape, bool)
-
     output = {
         "guard_u": float(guard),
-        "widths_u": [float(width) for width in widths],
-        "support_mode": "fixed sequence-level boundary geometry; per-frame valid strip support",
-        "semantic_geometry": "#19 sequence-level eight-sector boundary controls; no per-frame boundary motion",
-        "coarse_geometry": "legacy coarse square-radius boundary control",
+        "scale_fractions": [float(value) for value in fractions],
+        "support_mode": (
+            "one fixed sequence-level boundary geometry; per-frame valid strip support"
+        ),
+        "semantic_geometry": (
+            "#19 canonical eight-sector boundary controls with adjacent-tier-relative "
+            "strip widths; no per-frame boundary motion"
+        ),
+        "coarse_geometry": (
+            "legacy coarse square-radius boundaries with adjacent-ring-relative widths"
+        ),
         "pairs": {},
     }
 
     for left, right in PAIRS:
         pair_id = _pair_id(left, right)
         spec = BOUNDARY_SPECS[pair_id]
-        full_semantic_control = boundaries.get(spec["semantic"])
-        partial_semantic_control = partial_boundaries.get(spec["semantic"])
-        semantic_control = full_semantic_control or partial_semantic_control
-        template_reason = str(step_qc.get("template_reason") or "")
-        partial_semantic = (
-            full_semantic_control is None
-            and partial_semantic_control is not None
-            and template_reason.startswith("no_supported_")
-        )
-        if full_semantic_control is None and not partial_semantic:
-            semantic_control = None
+        semantic_geometry = _semantic_geometry(step_payload, spec)
         pair_out = {
-            "widths": {},
-            "semantic_boundary_source": (
-                "partial_boundary" if partial_semantic
-                else "full_template" if full_semantic_control is not None
-                else "unavailable"
-            ),
+            "scales": {},
+            "semantic_geometry_status": semantic_geometry.get("status"),
+            "semantic_geometry_reason": semantic_geometry.get("reason"),
         }
-        for width in widths:
-            width_key = f"{float(width):.3f}"
+        scale_results = {"coarse": {}, "semantic": {}}
+
+        for fraction in fractions:
+            scale_key = f"{float(fraction):.3f}"
             by_geometry = {}
             for geometry in ("coarse", "semantic"):
-                if geometry == "semantic" and (
-                    semantic_control is None
-                    or (
-                        step_qc.get("template_status") == "unavailable"
-                        and not partial_semantic
-                    )
-                ):
+                if geometry == "semantic" and semantic_geometry.get("status") == "unavailable":
                     by_geometry[geometry] = {
                         "status": "unavailable",
-                        "reason": step_qc.get("template_reason") or "semantic_boundary_unavailable",
+                        "reason": semantic_geometry.get("reason"),
                     }
                     continue
 
-                inside_values = {sector: [] for sector in coarse_regions.SECTORS}
-                outside_values = {sector: [] for sector in coarse_regions.SECTORS}
+                inside_values = {
+                    sector: [] for sector in coarse_regions.SECTORS
+                }
+                outside_values = {
+                    sector: [] for sector in coarse_regions.SECTORS
+                }
                 support = {
                     "inside": {sector: {} for sector in coarse_regions.SECTORS},
                     "outside": {sector: {} for sector in coarse_regions.SECTORS},
@@ -433,18 +533,25 @@ def _boundary_local_inputs(
                             continue
                         sector_mask = sector_masks[sector][position]
                         if geometry == "semantic":
-                            strips = steps.boundary_strip_masks(
+                            strips = steps.relative_boundary_strip_masks(
                                 stone_masks[position],
-                                semantic_control["sector_u"],
-                                width=float(width),
+                                semantic_geometry["inner_sector_u"],
+                                semantic_geometry["boundary_sector_u"],
+                                semantic_geometry["outer_sector_u"],
+                                fraction=float(fraction),
                                 guard=float(guard),
                                 sector_mask=sector_mask,
                             )
                         else:
-                            strips = coarse_regions.boundary_strip_masks(
+                            inner_radius, boundary_radius, outer_radius = (
+                                spec["coarse_triplet"]
+                            )
+                            strips = coarse_regions.relative_boundary_strip_masks(
                                 stone_masks[position],
-                                spec["coarse_radius"],
-                                width=float(width),
+                                inner_radius,
+                                boundary_radius,
+                                outer_radius,
+                                fraction=float(fraction),
                                 guard=float(guard),
                                 sector_mask=sector_mask,
                             )
@@ -462,64 +569,78 @@ def _boundary_local_inputs(
                 measured = tc.sectorized_contrast_trace(
                     inside_values, outside_values, indices
                 )
-                if geometry == "semantic" and partial_semantic:
+                if geometry == "semantic":
+                    geometry_validity = {
+                        "status": semantic_geometry["status"],
+                        "reasons": list(semantic_geometry.get("reasons") or []),
+                    }
                     validity = tc.compose_validity(
                         [
                             activation_result["upstream_validity"],
-                            {
-                                "status": "review",
-                                "reason": (
-                                    "partial_step_boundary:"
-                                    + str(step_qc.get("template_reason") or "full_template_unavailable")
-                                ),
-                            },
+                            geometry_validity,
                         ],
                         measured["median_summary"],
                     )
-                elif geometry == "semantic":
-                    validity = activation.activation_validity(
-                        "semantic",
-                        activation_result["upstream_validity"],
-                        step_qc,
-                        measured["median_summary"]["status"],
-                        measured["median_summary"].get("reasons", []),
-                    )
+                    geometry_meta = {
+                        "type": "semantic_relative",
+                        **semantic_geometry,
+                    }
                 else:
-                    validity = activation.activation_validity(
-                        "coarse",
-                        activation_result["upstream_validity"],
-                        None,
-                        measured["median_summary"]["status"],
-                        measured["median_summary"].get("reasons", []),
+                    validity = tc.compose_validity(
+                        [activation_result["upstream_validity"]],
+                        measured["median_summary"],
                     )
-                geometry_meta = (
-                    {
-                        "type": "semantic",
-                        "boundary_name": spec["semantic"],
-                        "boundary_source": (
-                            "partial_boundary" if partial_semantic else "full_template"
-                        ),
-                        "template_status": step_qc.get("template_status"),
-                        "template_reason": step_qc.get("template_reason"),
-                        "sector_u": [float(value) for value in semantic_control["sector_u"]],
-                    }
-                    if geometry == "semantic"
-                    else {
-                        "type": "coarse",
+                    geometry_meta = {
+                        "type": "coarse_relative",
                         "boundary_name": pair_id,
-                        "radius": float(spec["coarse_radius"]),
+                        "inner_radius": float(spec["coarse_triplet"][0]),
+                        "boundary_radius": float(spec["coarse_triplet"][1]),
+                        "outer_radius": float(spec["coarse_triplet"][2]),
                     }
-                )
-                by_geometry[geometry] = {
+
+                candidate = {
                     **measured,
                     "validity": validity,
-                    "evidence": tc.select_sectorized_evidence(measured["frame_trace"]),
+                    "evidence": tc.select_sectorized_evidence(
+                        measured["frame_trace"]
+                    ),
                     "strip_support": support,
                     "geometry": geometry_meta,
+                    "scale_fraction": float(fraction),
                 }
-            pair_out["widths"][width_key] = by_geometry
+                by_geometry[geometry] = candidate
+                scale_results[geometry][scale_key] = candidate
+            pair_out["scales"][scale_key] = by_geometry
+
+        pair_out["multi_scale"] = {}
+        for geometry in ("coarse", "semantic"):
+            available = {
+                key: value
+                for key, value in scale_results[geometry].items()
+                if value.get("frame_trace")
+            }
+            if not available:
+                pair_out["multi_scale"][geometry] = {
+                    "status": "unavailable",
+                    "reason": "no_available_scales",
+                }
+                continue
+            consensus = tc.multiscale_sector_consensus(available)
+            validity = tc.compose_validity(
+                [value["validity"] for value in available.values()],
+                consensus["median_summary"],
+            )
+            pair_out["multi_scale"][geometry] = {
+                **consensus,
+                "validity": validity,
+                "evidence": tc.select_sectorized_evidence(
+                    consensus["frame_trace"]
+                ),
+                "geometry": next(iter(available.values()))["geometry"],
+            }
         output["pairs"][pair_id] = pair_out
     return output
+
 
 def measure_stone(processed, step_output, indices, wrap=False):
     activation_result = ab.measure_stone(processed, step_output, indices, wrap=wrap)
