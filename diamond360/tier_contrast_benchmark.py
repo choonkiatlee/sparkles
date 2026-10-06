@@ -618,6 +618,148 @@ def _draw_localized_panel(destination, pair_id, pair_result, result, processed):
         )
     canvas.save(destination)
 
+def _overlay_boundary_strips(
+    image, mask_path, region_path, geometry, width, guard, sector, processed
+):
+    image = image.convert("RGB")
+    if not mask_path or not region_path or not sector:
+        return image
+    processed = Path(processed)
+    mask = np.asarray(Image.open(processed / mask_path).convert("L")) > 0
+    with np.load(processed / region_path) as data:
+        sector_mask = np.asarray(data[sector], bool)
+    if geometry.get("type") == "semantic":
+        strips = steps.boundary_strip_masks(
+            mask,
+            geometry["sector_u"],
+            width=float(width),
+            guard=float(guard),
+            sector_mask=sector_mask,
+        )
+    else:
+        strips = coarse_regions.boundary_strip_masks(
+            mask,
+            geometry["radius"],
+            width=float(width),
+            guard=float(guard),
+            sector_mask=sector_mask,
+        )
+    array = np.asarray(image).copy()
+    inside = strips["inside"]
+    outside = strips["outside"]
+    if inside.any():
+        array[inside] = (
+            .65 * array[inside] + .35 * np.array([255, 70, 70])
+        ).astype(np.uint8)
+    if outside.any():
+        array[outside] = (
+            .65 * array[outside] + .35 * np.array([70, 130, 255])
+        ).astype(np.uint8)
+    return Image.fromarray(array)
+
+
+def _draw_boundary_local_panel(
+    destination, pair_id, pair_result, result, processed, geometry_name, width_key="0.040"
+):
+    boundary = pair_result.get("boundary_local") or {}
+    candidate = (boundary.get("widths") or {}).get(width_key, {}).get(geometry_name, {})
+    evidence = candidate.get("evidence") or {}
+    if not candidate.get("frame_trace") or not evidence:
+        return False
+    ordered = [
+        ("weakest boundary-local separation", evidence.get("weakest")),
+        ("median boundary-local separation", evidence.get("median")),
+        ("strongest boundary-local separation", evidence.get("strongest")),
+    ]
+    rows = [(label, event) for label, event in ordered if event is not None]
+    if not rows:
+        return False
+    canvas = Image.new("RGB", (1020, 65 + 235 * len(rows)), "white")
+    draw = ImageDraw.Draw(canvas)
+    draw.text(
+        (10, 10),
+        f"{pair_id}: {geometry_name} guarded boundary strips; source (left), strip overlay (right)",
+        fill="black",
+    )
+    draw.text(
+        (10, 30),
+        f"width={width_key}; guard={result.get('boundary_local_definition', {}).get('guard_u')}; red=inside blue=outside",
+        fill="black",
+    )
+    geometry = candidate.get("geometry") or {}
+    guard = result.get("boundary_local_definition", {}).get("guard_u", BOUNDARY_GUARD)
+    for index, (label, event) in enumerate(rows):
+        position = event["position"]
+        source_index = event["source_index"]
+        value = event.get("median_separation")
+        strongest = event.get("strongest_sector")
+        strongest_value = event.get("strongest_sector_separation")
+        detail = f"{label}: source {source_index}; median={value:.5f}"
+        if strongest is not None and strongest_value is not None:
+            detail += f"; strongest={strongest} {strongest_value:.5f}"
+        y = 60 + index * 235
+        draw.text((10, y), detail, fill="black")
+        camera_path = result.get("frame_camera_paths", [])[position]
+        registered_path = result.get("frame_rgb_paths", [])[position]
+        mask_path = result.get("frame_mask_paths", [])[position]
+        region_path = result.get("frame_region_paths", [])[position]
+        if camera_path:
+            with Image.open(Path(processed) / camera_path) as source:
+                source = source.convert("RGB")
+            source.thumbnail((480, 190))
+            canvas.paste(source, (10, y + 25))
+        if registered_path:
+            with Image.open(Path(processed) / registered_path) as registered:
+                registered = registered.convert("RGB")
+            registered = _overlay_boundary_strips(
+                registered, mask_path, region_path, geometry, float(width_key), guard, strongest, processed
+            )
+            registered.thumbnail((480, 190))
+            canvas.paste(registered, (520, y + 25))
+    canvas.save(destination)
+    return True
+
+
+def _write_boundary_local_csv(result, output):
+    rows = []
+    for pair_id, pair in result.get("pairs", {}).items():
+        boundary = pair.get("boundary_local") or {}
+        for width_key, geometries in (boundary.get("widths") or {}).items():
+            for geometry_name, candidate in geometries.items():
+                summary = candidate.get("median_summary") or {}
+                q75 = candidate.get("q75_summary") or {}
+                support = candidate.get("strip_support") or {}
+                pixels = []
+                fractions = []
+                for side in ("inside", "outside"):
+                    for cell in (support.get(side) or {}).values():
+                        value = cell.get("persistent_support_pixels")
+                        if value is not None:
+                            pixels.append(int(value))
+                        fraction = cell.get("persistent_support_fraction")
+                        if fraction is not None:
+                            fractions.append(float(fraction))
+                rows.append({
+                    "pair": pair_id,
+                    "width_u": width_key,
+                    "geometry": geometry_name,
+                    "status": (candidate.get("validity") or {}).get("status", candidate.get("status")),
+                    "q10": summary.get("q10"),
+                    "q50": summary.get("q50"),
+                    "q90": summary.get("q90"),
+                    "q75_frame_median": q75.get("q50"),
+                    "finite_frames": summary.get("finite_frames"),
+                    "min_persistent_support_pixels": min(pixels) if pixels else None,
+                    "min_persistent_support_fraction": min(fractions) if fractions else None,
+                })
+    if not rows:
+        return
+    fields = list(rows[0])
+    with (Path(output) / "boundary-local.csv").open("w", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer.writeheader()
+        writer.writerows(rows)
+
 def write_stone_outputs(result, output, processed=None):
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
@@ -693,7 +835,20 @@ def write_stone_outputs(result, output, processed=None):
                     result,
                     processed,
                 )
+            boundary = pair.get("boundary_local") or {}
+            widths = boundary.get("widths") or {}
+            if "0.040" in widths:
+                for geometry_name in ("semantic", "coarse"):
+                    _draw_boundary_local_panel(
+                        evidence_dir / f"{pair_id}-boundary-{geometry_name}.png",
+                        pair_id,
+                        pair,
+                        result,
+                        processed,
+                        geometry_name,
+                    )
     with (output / "tier-contrast.csv").open("w", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()
         writer.writerows(rows)
+    _write_boundary_local_csv(result, output)
