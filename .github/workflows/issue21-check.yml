@@ -1,0 +1,21 @@
+name: issue21 validation
+
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - "diamond360/evidence_packet.py"
+      - "diamond360/evidence_benchmark.py"
+      - "tests/test_evidence_packet.py"
+      - ".github/workflows/issue21-check.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -e .
+      - run: python -m unittest tests.test_evidence_packet tests.test_descriptor_profile
