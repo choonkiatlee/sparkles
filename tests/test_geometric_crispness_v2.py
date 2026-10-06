@@ -270,6 +270,34 @@ class DiagonalArmTests(unittest.TestCase):
             ],
         )
 
+    def test_frame_summary_exposes_structure_stability(self):
+        first = da.measure_frame(
+            *self._scene(),
+            include_trace=False,
+        )
+        second = da.measure_frame(
+            *self._scene(curve=.03),
+            include_trace=False,
+        )
+        summary = da.summarize_frames(
+            [first, second]
+        )
+        for row in summary["arms"].values():
+            self.assertIn(
+                "visibility_frame_mad", row
+            )
+            self.assertIn(
+                "orientation_frame_mad", row
+            )
+            self.assertIn(
+                "straightness_frame_mad_radius",
+                row,
+            )
+            self.assertIn(
+                "angular_offset_frame_mad_deg",
+                row,
+            )
+
     def test_curvature_reduces_straightness(self):
         straight = da.measure_frame(
             *self._scene(),
