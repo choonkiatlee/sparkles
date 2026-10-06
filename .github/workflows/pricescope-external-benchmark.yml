@@ -11,6 +11,10 @@ on:
       - "docs/360/external-benchmark/pricescope/**"
   workflow_dispatch:
 
+concurrency:
+  group: pricescope-external-benchmark-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
