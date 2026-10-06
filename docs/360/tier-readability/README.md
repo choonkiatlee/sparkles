@@ -1,123 +1,155 @@
-# Tier readability — PR A boundary-local contrast
+# Tier readability — PR A / A2 boundary-local contrast
 
 Issue: #57  
 Predecessor: #49
 
-This slice tests whether **tonal contrast immediately across an inferred Asscher
-tier boundary** is a better primitive for visible tier separation than #49's
-broader matched-sector band comparison.
+This slice tests whether **tonal contrast local to an Asscher tier boundary** is
+a better primitive for visible tier separation than #49's broad matched-sector
+band comparison.
 
-## Measurement
+## Revised measurement contract
 
-For each of the eight existing image-axis sectors, each source frame and each
-adjacent boundary:
+For each of the existing eight image-axis sectors, each source frame and each
+adjacent tier boundary, use one fixed sequence-level boundary geometry and
+measure guarded strips on both sides.
+
+The strip widths are no longer absolute constants. For scale fraction
+`alpha`:
 
 ```
-inside  = [b - g - w, b - g]
-outside = [b + g,     b + g + w]
+inside_width  = alpha * (boundary - inner_reference)
+outside_width = alpha * (outer_reference - boundary)
+
+inside  = [boundary - guard - inside_width, boundary - guard]
+outside = [boundary + guard, boundary + guard + outside_width]
 
 signed = log(B_inside) - log(B_outside)
 L      = abs(signed)
 ```
 
-where `b` is fixed sequence-level boundary geometry, `g = 0.010`, and PR A
-tests `w = 0.025 / 0.040 / 0.055` in the declared radial coordinate.
+PR A2 tests the small declared family:
 
-The guard deliberately removes pixels immediately on the boundary. The
-measurement is intended to capture **tonal separation across the boundary**,
-not edge-gradient strength or sharpening.
+- `alpha = 0.25`
+- `alpha = 0.40`
+- `alpha = 0.55`
+
+with guard `g = 0.010`.
+
+This makes support relative to the local tier spacing rather than to an
+arbitrary absolute radial width. The three scale results remain available.
+A per-frame/per-sector **multi-scale consensus** is the median across scale;
+scale spread is retained as a sensitivity diagnostic. The eight spatial
+sectors are not collapsed by this step.
+
+## One canonical ruler
+
+The original PR A benchmark rediscovered #19 geometry independently in the
+17-frame core and 33-frame wide windows. That made core/wide sensitivity partly
+a moving-ruler test.
+
+PR A2 instead:
+
+1. discovers one canonical #19 template from the 33-frame wide window;
+2. reuses that exact geometry for both core and wide contrast measurements;
+3. separately discovers a core-only #19 template for **geometry diagnostics
+   only**;
+4. never lets the diagnostic template move the contrast strips.
+
+This separates measurement sensitivity from boundary-correspondence
+sensitivity.
+
+## Pair-specific geometry validity
+
+#19 remains the source of semantic boundary controls.
+
+A local pair can remain usable when another boundary is missing:
+
+- individually supported partial controls are retained as `review`;
+- if a neighbouring reference required only for tier-relative width is missing,
+  its span may be mirrored from the observed opposite side, also as `review`;
+- ambiguous/non-separable geometry is never rescued and remains
+  `unavailable`.
+
+Every fallback is explicit in the output provenance.
 
 ## Geometry A/B
 
-Two geometries are measured on the same source pixels:
+Two geometries are still measured on the same source pixels:
 
-- **semantic / #19** — the ordered sequence-level Asscher boundary with its
-  eight sector control radii; per-frame #19 edge matches do not move the strip;
-- **coarse control** — the legacy coarse fixed radial boundary used by the
-  original measurement layer.
+- **semantic / #19** — canonical wide-window sequence geometry;
+- **coarse control** — legacy fixed radial boundaries, using the same
+  adjacent-tier-relative scale fractions.
 
-A full #19 four-band partition remains all-or-nothing. For #57 only, #19 now
-also preserves any individually supported boundary controls when another boundary
-fails. A partial boundary is usable only for this local two-strip measurement,
-is explicitly marked **review**, and does not make the full semantic step
-representation available. This matters when, for example, the outer boundary is
-missing but centre-inner and inner-middle are still well supported.
+The coarse control separates the value of boundary locality from the value of
+#19 semantic localization.
 
-This separates two questions:
+## Support and sharpening guard
 
-1. is measuring locally across a boundary useful?
-2. does #19 localisation improve on the old coarse boundary?
+The geometry is fixed for the sequence, but the normalized strip maps onto
+each frame's registered silhouette. Pixel support is therefore evaluated on
+that frame's valid pixels.
 
-## Support
+No arbitrary support-count threshold is fitted. Counts/fractions remain QC.
+Empty support remains unavailable.
 
-The boundary definition is fixed for the sequence. Its normalised strip maps
-onto each frame's registered silhouette, so pixel support is evaluated on that
-frame's valid pixels rather than intersecting identical pixels across the whole
-sequence.
-
-No arbitrary support threshold is used. Per-frame support counts/fractions are
-retained as QC. Empty support remains unavailable.
+The guard excludes the immediate edge so this is intended to measure broad
+tonal separation across a tier transition rather than the edge-gradient /
+sharpening behaviour studied in #50.
 
 ## Controls retained from #49
 
-PR A keeps:
+PR A/A2 keeps:
 
 - coarse whole-band adjacent-tier contrast;
 - standardized coarse contrast as the falsified normalization control;
 - broad eight-sector matched-band contrast.
 
-The new primitive therefore has direct baselines rather than replacing #49's
-evidence.
+The revised local primitive therefore remains directly comparable with #49.
 
-## Synthetic falsification tests
+## Falsification tests
 
 Tests cover:
 
-- exact known log ratios;
-- equal tones -> zero;
+- exact known log ratios and zero contrast;
 - common multiplicative brightness invariance;
 - signed reversal;
 - gaps/non-positive brightness;
-- local sector cancellation hidden by whole-band aggregation;
-- disjoint inside/outside strip geometry;
-- semantic and coarse boundary geometry;
-- a narrow high-intensity edge spike excluded by the guard;
-- support motion across frames without requiring persistent identical pixels.
-
-## Interpretation caveat
-
-The #19 semantic boundary is itself inferred from persistent radial edge evidence.
-That makes a direct magnitude comparison such as `semantic L > coarse L`
-partly selection-driven: the semantic geometry is intentionally placed where
-persistent edge evidence exists.
-
-PR A therefore does **not** treat a larger semantic-strip number as evidence of
-superiority by itself. The useful tests are:
-
-- whether the strip is supported and auditable on the original source frame;
-- whether width 0.025 / 0.040 / 0.055 tells the same qualitative story;
-- whether core and wide windows remain reasonably stable;
-- whether boundary-local measurements repair concrete broad-band cancellation
-  cases rather than merely amplifying the selected edge.
-
-Formal human calibration and held-out discrimination remain PR C.
+- sector cancellation hidden by whole-band aggregation;
+- relative strip geometry and asymmetric neighbouring tier spans;
+- disjoint guarded inside/outside support;
+- narrow edge spikes excluded by the guard;
+- moving registered support without requiring identical persistent pixels;
+- multi-scale consensus without collapsing the spatial sectors;
+- partial-boundary review handling;
+- rejection of ambiguous/non-separable geometry;
+- explicit detection of core-only vs canonical boundary movement.
 
 ## Benchmark
 
-The PR workflow downloads the canonical four full-sequence source bundles and
-runs exact-core and wide windows. Outputs are uploaded as a CI artifact and
-include:
+The CI workflow downloads the canonical four full-sequence source bundles and
+runs both the exact 17-frame core and 33-frame wide windows using the **same
+canonical wide #19 geometry**.
+
+Outputs include:
 
 - compact comparison CSV/JSON;
-- per-stone full auditable JSON;
-- width sensitivity;
+- all three scale fractions;
+- per-sector multi-scale consensus and scale spread;
+- core-only vs canonical geometry diagnostics;
+- auditable per-stone JSON;
 - original-source + strip-overlay evidence panels.
 
-Generated bulk images/traces are not committed.
+Bulk generated evidence remains in CI artifacts rather than the repository.
 
-## Non-goals for PR A
+## Non-goals
 
-PR A does **not** choose Q25/median as a production summary, construct the joint
-weakest-link nested-readability statistic, interpret tonal ordering, fit human
-thresholds, or add a field to the retained production profile. Those decisions
-belong to later #57 slices.
+PR A/A2 still does **not**:
+
+- choose Q25/median spatial coverage as a production descriptor;
+- construct the joint centre→inner→middle weakest-link statistic;
+- interpret tonal ordering as quality;
+- fit thresholds on four stones;
+- add a retained #45 production-profile field.
+
+Those decisions belong to later #57 slices after this measurement primitive is
+stable enough to calibrate.
