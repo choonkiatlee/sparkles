@@ -122,6 +122,96 @@ class ActivationBenchmarkTests(unittest.TestCase):
             self.assertNotIn("Infinity", encoded)
 
 
+class CommittedActivationArtifactTests(unittest.TestCase):
+    ROOT = Path(__file__).resolve().parents[1] / "docs" / "360" / "activation"
+    CORE = [248, 249, 250, 251, 252, 253, 254, 255, 0, 1, 2, 3, 4, 5, 6, 7, 8]
+    WIDE = list(range(240, 256)) + list(range(0, 17))
+    STONES = (
+        "IGI-LG756580087",
+        "IGI-LG756520111",
+        "IGI-LG818659722",
+        "IGI-LG836619414",
+    )
+
+    def _activation(self, certificate, window):
+        path = self.ROOT / "per-stone" / certificate / window / "activation.json"
+        encoded = path.read_text()
+        self.assertNotIn("NaN", encoded)
+        self.assertNotIn("Infinity", encoded)
+        return json.loads(encoded)
+
+    def test_committed_windows_and_ab_indices_are_exact(self):
+        summary = json.loads((self.ROOT / "summary.json").read_text())
+        self.assertEqual(summary["core_indices"], self.CORE)
+        self.assertEqual(summary["wide_indices"], self.WIDE)
+        self.assertEqual(summary["stones"], list(self.STONES))
+
+        for certificate in self.STONES:
+            for window, indices in (("core", self.CORE), ("wide", self.WIDE)):
+                result = self._activation(certificate, window)
+                self.assertEqual(result["requested_indices"], indices)
+                self.assertEqual(result["accepted_indices"], indices)
+                self.assertEqual(result["excluded"], [])
+                self.assertEqual(result["representations"]["coarse"]["source_indices"], indices)
+                self.assertEqual(result["representations"]["semantic"]["source_indices"], indices)
+
+    def test_committed_validity_is_machine_readable_and_semantic_scoped(self):
+        for certificate in self.STONES:
+            for window in ("core", "wide"):
+                result = self._activation(certificate, window)
+                self.assertIn(result["whole_stone"]["validity"]["status"], {"ok", "review", "unavailable"})
+                self.assertIsInstance(result["whole_stone"]["validity"]["reasons"], list)
+                for representation in ("coarse", "semantic"):
+                    rep = result["representations"][representation]
+                    for modes in rep.get("regions", {}).values():
+                        self.assertEqual(set(modes), {"fixed", "dynamic"})
+                        for cell in modes.values():
+                            for key in ("raw_validity", "relative_validity"):
+                                self.assertIn(cell[key]["status"], {"ok", "review", "unavailable"})
+                                self.assertIsInstance(cell[key]["reasons"], list)
+
+        review = self._activation("IGI-LG818659722", "core")
+        semantic_reasons = review["representations"]["semantic"]["regions"]["inner_step"]["fixed"]["relative_validity"]["reasons"]
+        coarse_reasons = review["representations"]["coarse"]["regions"]["inner"]["fixed"]["relative_validity"]["reasons"]
+        self.assertIn("semantic_window_edge", semantic_reasons)
+        self.assertNotIn("semantic_window_edge", coarse_reasons)
+
+        unavailable = self._activation("IGI-LG756580087", "wide")
+        semantic = unavailable["representations"]["semantic"]
+        self.assertEqual(semantic["qc"]["template_status"], "unavailable")
+        self.assertEqual(semantic["validity"]["status"], "unavailable")
+        self.assertIn("no_supported_middle_outer_edge", semantic["validity"]["reasons"])
+        self.assertEqual(unavailable["whole_stone"]["validity"]["status"], "ok")
+        self.assertEqual(
+            unavailable["representations"]["coarse"]["regions"]["centre"]["fixed"]["raw_validity"]["status"],
+            "ok",
+        )
+
+    def test_committed_dispositions_cover_candidate_axes(self):
+        payload = json.loads((self.ROOT / "dispositions.json").read_text())
+        decisions = payload["decisions"]
+        allowed = {"KEEP", "REVISE", "REJECT"}
+        self.assertTrue(decisions)
+        self.assertTrue(all(item["disposition"] in allowed and item["reason"] for item in decisions))
+
+        keys = {
+            (item["representation"], item["region"], item["support_mode"], item["trace_type"])
+            for item in decisions
+        }
+        self.assertIn(("whole_stone", "whole_stone", "fixed", "raw"), keys)
+        for representation, regions in (
+            ("coarse", ("centre", "inner", "middle", "outer")),
+            ("semantic", ("centre", "inner", "middle", "outer")),
+        ):
+            for region in regions:
+                for support_mode in ("fixed", "dynamic"):
+                    for trace_type in ("raw", "relative"):
+                        self.assertIn((representation, region, support_mode, trace_type), keys)
+
+        summaries = {item["candidate"]: item["disposition"] for item in payload["summary_candidates"]}
+        self.assertEqual(summaries["Q10/Q50/Q90 directional excursions"], "KEEP")
+        self.assertEqual(summaries["MAD_scale"], "REJECT")
+
 
 if __name__ == "__main__":
     unittest.main()
