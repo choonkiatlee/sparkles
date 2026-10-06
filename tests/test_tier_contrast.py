@@ -312,6 +312,16 @@ class TierContrastTests(unittest.TestCase):
         self.assertAlmostEqual(
             joint["scale_spread_summary"]["q50"], .02
         )
+        self.assertAlmostEqual(
+            joint["frame_trace"][0]["pairwise_median_weakest"], .45
+        )
+        self.assertAlmostEqual(
+            joint["frame_trace"][0]["joint_median_penalty"], .35
+        )
+        self.assertEqual(
+            joint["evidence"]["strongest_joint_median_penalty"]["source_index"],
+            0,
+        )
 
     def test_joint_signed_ordering_keeps_all_exact_states(self):
         sectors = list("abcde")
