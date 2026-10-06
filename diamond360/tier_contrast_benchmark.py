@@ -643,7 +643,9 @@ def _boundary_local_inputs(
 
 
 def measure_stone(processed, step_output, indices, wrap=False):
-    activation_result = ab.measure_stone(processed, step_output, indices, wrap=wrap)
+    activation_result = ab.measure_stone(
+        processed, step_output, indices, wrap=wrap
+    )
     spread_inputs = _fixed_spread_inputs(processed, activation_result)
     result = measure_from_activation(
         activation_result,
@@ -660,11 +662,16 @@ def measure_stone(processed, step_output, indices, wrap=False):
         pair["boundary_local"] = (
             boundary_local.get("pairs", {}).get(
                 pair_id,
-                {"status": "unavailable", "reason": boundary_local.get("reason")},
+                {
+                    "status": "unavailable",
+                    "reason": boundary_local.get("reason"),
+                },
             )
         )
         broad_trace = (pair.get("localized") or {}).get("frame_trace") or []
-        for geometries in (pair["boundary_local"].get("widths") or {}).values():
+        for geometries in (
+            pair["boundary_local"].get("scales") or {}
+        ).values():
             coarse = geometries.get("coarse") or {}
             semantic = geometries.get("semantic") or {}
             for candidate in (coarse, semantic):
@@ -686,14 +693,41 @@ def measure_stone(processed, step_output, indices, wrap=False):
                         "median_separation",
                     )
                 )
+
+        multi = pair["boundary_local"].get("multi_scale") or {}
+        coarse_multi = multi.get("coarse") or {}
+        semantic_multi = multi.get("semantic") or {}
+        for candidate in (coarse_multi, semantic_multi):
+            if broad_trace and candidate.get("frame_trace"):
+                candidate["strongest_disagreement_vs_broad"] = (
+                    tc.strongest_rank_disagreement(
+                        broad_trace,
+                        "median_separation",
+                        candidate["frame_trace"],
+                        "median_separation",
+                    )
+                )
+        if (
+            coarse_multi.get("frame_trace")
+            and semantic_multi.get("frame_trace")
+        ):
+            semantic_multi["strongest_disagreement_vs_coarse_boundary"] = (
+                tc.strongest_rank_disagreement(
+                    coarse_multi["frame_trace"],
+                    "median_separation",
+                    semantic_multi["frame_trace"],
+                    "median_separation",
+                )
+            )
     result["boundary_local_definition"] = {
-        key: value for key, value in boundary_local.items() if key != "pairs"
+        key: value
+        for key, value in boundary_local.items()
+        if key != "pairs"
     }
     result["frame_camera_paths"] = spread_inputs["camera_paths"]
     result["frame_region_paths"] = spread_inputs["region_paths"]
     result["frame_mask_paths"] = spread_inputs["mask_paths"]
     return result
-
 
 def _boundary(mask):
     mask = np.asarray(mask, bool)
