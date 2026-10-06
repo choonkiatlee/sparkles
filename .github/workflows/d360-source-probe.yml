@@ -16,80 +16,35 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Deobfuscate ordering code
+      - name: Confirm d360 scramble key
         shell: bash
         run: |
           set -euxo pipefail
           python - <<'PY'
-          from html.parser import HTMLParser
+          import json
           from urllib.request import Request, urlopen
           from pathlib import Path
-
-          url="https://d360.tech/view.html?d=79-BB-5159600"
-          with urlopen(Request(url,headers={"User-Agent":"Mozilla/5.0 SparklesD360Probe/4"}),timeout=30) as r:
-              html=r.read().decode("utf-8","replace")
-
-          class P(HTMLParser):
-              def __init__(self):
-                  super().__init__(); self.inline=[]; self._in=False; self._buf=[]
-              def handle_starttag(self,tag,attrs):
-                  if tag=="script" and not dict(attrs).get("src"):
-                      self._in=True; self._buf=[]
-              def handle_data(self,data):
-                  if self._in:self._buf.append(data)
-              def handle_endtag(self,tag):
-                  if tag=="script" and self._in:
-                      self.inline.append("".join(self._buf)); self._in=False
-
-          p=P();p.feed(html)
-          core=next(x for x in p.inline if "function _0x3654" in x)
-          Path("/tmp/core.js").write_text(core)
+          ids=["79-BB-5159600","79-BT-5165227"]
+          for item in ids:
+              url=f"https://media.d360.us/imaged/{item}/0.json"
+              with urlopen(Request(url,headers={"User-Agent":"Mozilla/5.0 SparklesD360Probe/5","Referer":"https://d360.tech/"}),timeout=30) as r:
+                  data=json.load(r)
+              Path(f"/tmp/{item}.scramble").write_text(data["scramble"])
           PY
-
-          cat >/tmp/deob.js <<'JS'
-          const fs=require("fs"),vm=require("vm");
-          let src=fs.readFileSync("/tmp/core.js","utf8");
-
-          global.window={location:{search:"?d=79-BB-5159600"}};
-          global.document={readyState:"loading",getElementById:()=>null,querySelector:()=>null,querySelectorAll:()=>[],addEventListener(){}};
-          global.addEventListener=()=>{};
-          global.navigator={userAgent:"node"};
-          global.getComputedStyle=()=>({display:"none"});
-
-          try{vm.runInThisContext("try{"+src+"}catch(e){}");}catch(e){}
-          if(typeof _0x3654!=="function") throw new Error("decoder unavailable");
-
-          const decode=(n)=>{try{return _0x3654(Number(n));}catch(e){return null;}};
-
-          const maps={};
-          const mapRe=/(_0x[0-9a-f]+)\s*=\s*\{([^{}]+)\}/g;
-          let m;
-          while((m=mapRe.exec(src))){
-            const obj={};
-            for(const pair of m[2].split(",")){
-              const mm=pair.match(/(_0x[0-9a-f]+)\s*:\s*(0x[0-9a-f]+)/);
-              if(mm)obj[mm[1]]=parseInt(mm[2],16);
-            }
-            if(Object.keys(obj).length)maps[m[1]]=obj;
-          }
-
-          src=src.replace(/_0x557351\((0x[0-9a-f]+)\)/g,(all,n)=>{
-            const v=decode(parseInt(n,16)); return v===null?all:JSON.stringify(v);
-          });
-          src=src.replace(/_0x557351\((_0x[0-9a-f]+)\.(_0x[0-9a-f]+)\)/g,(all,obj,key)=>{
-            const n=maps[obj]?.[key]; if(n===undefined)return all;
-            const v=decode(n); return v===null?all:JSON.stringify(v);
-          });
-
-          fs.writeFileSync("/tmp/core-deob.js",src);
-          for(const needle of ["scramble","reversePostition","sparseIdx","AES-CBC","/metadata.json","imaged/",".json","previous","minus1"]){
-            console.log("\n=== CONTEXT",needle,"===");
-            let pos=0,count=0;
-            while((pos=src.indexOf(needle,pos))>=0 && count<12){
-              console.log(src.slice(Math.max(0,pos-1400),Math.min(src.length,pos+2400)));
-              pos+=needle.length; count++;
-            }
+          node - <<'JS'
+          const fs=require("fs"),crypto=require("crypto");
+          const key=Buffer.from("2606198511121984","utf8");
+          for(const id of ["79-BB-5159600","79-BT-5165227"]){
+            const enc=Buffer.from(fs.readFileSync("/tmp/"+id+".scramble","utf8").replace(/[^A-Za-z0-9+/=]/g,""),"base64");
+            const decipher=crypto.createDecipheriv("aes-128-cbc",key,key);
+            decipher.setAutoPadding(false);
+            const raw=Buffer.concat([decipher.update(enc),decipher.final()]);
+            let end=raw.length;
+            const pad=raw[raw.length-1];
+            if(pad>0 && pad<=16 && raw.slice(-pad).every(x=>x===pad)) end-=pad;
+            const txt=raw.slice(0,end).toString("utf8").replace(/\r/g,"");
+            console.log("SCRAMBLE",id,txt);
+            const obj=JSON.parse(txt);
+            console.log("LEVELS",id,obj.map(x=>x.length),"TOTAL",obj.reduce((a,x)=>a+x.length,0));
           }
           JS
-          node /tmp/deob.js
