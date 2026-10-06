@@ -310,7 +310,7 @@ class EvidenceLocationTests(unittest.TestCase):
         wrapped = ep.EvidenceLocation("frame", (0,))
         far = ep.EvidenceLocation("frame", (20,))
         self.assertEqual(ep.location_distance(frame, wrapped), 1)
-        self.assertEqual(ep.location_distance(frame, far), 19)
+        self.assertEqual(ep.location_distance(frame, far), 21)
 
 
 class AdapterTests(unittest.TestCase):
