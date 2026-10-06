@@ -207,6 +207,28 @@ class TierContrastTests(unittest.TestCase):
         evidence = tc.select_sectorized_evidence(result["frame_trace"])
         self.assertIsNotNone(evidence["strongest"])
 
+    def test_strongest_rank_disagreement_uses_aligned_frame_ranks(self):
+        left = [
+            {"position": 0, "source_index": 10, "median_separation": .1},
+            {"position": 1, "source_index": 11, "median_separation": .2},
+            {"position": 2, "source_index": 12, "median_separation": .3},
+        ]
+        right = [
+            {"position": 0, "source_index": 10, "median_separation": .3},
+            {"position": 1, "source_index": 11, "median_separation": .2},
+            {"position": 2, "source_index": 12, "median_separation": .1},
+        ]
+        event = tc.strongest_rank_disagreement(
+            left, "median_separation", right, "median_separation"
+        )
+        self.assertIn(event["source_index"], {10, 12})
+        self.assertEqual(event["rank_disagreement"], 1.0)
+
+    def test_rank_disagreement_rejects_misaligned_sources(self):
+        left = [{"source_index": 1, "x": 1.0}, {"source_index": 2, "x": 2.0}]
+        right = [{"source_index": 1, "x": 1.0}, {"source_index": 3, "x": 2.0}]
+        with self.assertRaises(ValueError):
+            tc.strongest_rank_disagreement(left, "x", right, "x")
     def test_validity_is_monotone(self):
         result = tc.compose_validity(
             [{"status": "review", "reasons": ["upstream_review"]}],
