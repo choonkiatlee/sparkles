@@ -2,17 +2,17 @@
   "schema_version": "sparkles-external-archive/1",
   "benchmark_id": "pricescope-asscher-external-v0",
   "archive_date": "2026-10-06",
-  "disposition": "provenance_archived_media_bytes_blocked",
+  "disposition": "mixed_archive_success",
   "purpose": "Durable provenance record for external falsification. No descriptor analysis or metric tuning is included.",
   "completeness": {
-    "catalogued_samples": 24,
-    "explicit_original_media_urls": 14,
+    "catalogued_samples": 32,
+    "explicit_original_media_urls": 16,
     "forum_post_samples": 10,
-    "byte_archived_samples": 0,
-    "hashed_samples": 0
+    "byte_archived_samples": 2,
+    "hashed_samples": 2
   },
   "verification": {
-    "source_context": "PriceScope article/thread text and labels independently verified against currently accessible public pages on 2026-10-06.",
+    "source_context": "PriceScope article and three forum threads/linked product pages were independently checked against currently accessible public pages on 2026-10-06.",
     "github_actions_attempts": [
       {
         "run_id": 37532743775,
@@ -21,6 +21,10 @@
       {
         "run_id": 37533145747,
         "result": "14/14 direct original-media fetches returned HTTP 403; 0/10 target forum posts yielded downloadable media because forum page retrieval was blocked."
+      },
+      {
+        "run_id": 37533954460,
+        "result": "16 direct media URLs probed: 14 PriceScope-hosted assets remained HTTP 403; both Kashi MP4s downloaded successfully and were hashed."
       }
     ],
     "integrity_rule": "Do not invent SHA-256 or byte counts. Populate them only after exact original bytes are successfully recovered."
@@ -198,6 +202,34 @@
       "sha256": null,
       "bytes": null,
       "note": "Direct original-media URL is preserved, but PriceScope returned HTTP 403 to GitHub-hosted archival fetches on 2026-10-06."
+    },
+    {
+      "sample_id": "asscher-eval-messy-arrows",
+      "source_group": "explicit-negative-controls",
+      "media_url": "https://www.kashiimports.com/video/22957.mp4",
+      "media_type": "mp4",
+      "source_context_verified": true,
+      "byte_archive_status": "retrieved_to_ci_artifact",
+      "retrieval_http_status": 200,
+      "sha256": "ec4a17f8c89ce710dd5a9b8e4e8d08b8e398d99692e583e4f63f970bfd4f487a",
+      "bytes": 5886312,
+      "content_type": "video/mp4",
+      "last_modified": "Fri, 17 May 2024 15:01:04 GMT",
+      "note": "Exact original MP4 downloaded successfully in Actions run 37533954460; raw bytes kept out of Git."
+    },
+    {
+      "sample_id": "asscher-eval-nice-dance",
+      "source_group": "later-community-comparison-cases",
+      "media_url": "https://www.kashiimports.com/video/27196.mp4",
+      "media_type": "mp4",
+      "source_context_verified": true,
+      "byte_archive_status": "retrieved_to_ci_artifact",
+      "retrieval_http_status": 200,
+      "sha256": "f69e6e8e429665246becc6121621fe4d92955383cb7e2163cd6b91aa010a5b27",
+      "bytes": 4840046,
+      "content_type": "video/mp4",
+      "last_modified": "Fri, 17 May 2024 14:46:47 GMT",
+      "note": "Exact original MP4 downloaded successfully in Actions run 37533954460; raw bytes kept out of Git."
     }
   ],
   "forum_samples": [
@@ -320,6 +352,45 @@
       "sha256": null,
       "bytes": null,
       "note": "Post text/label is preserved and currently indexable; the migrated forum rendering does not expose the original inline-media URL to the archive tooling, and direct page fetches from GitHub Actions are HTTP 403."
+    }
+  ],
+  "viewer_and_product_sources": [
+    {
+      "sample_id": "asscher-eval-target-centre",
+      "url": "http://dasny.dyndns.org:81/Vision360/38125.html",
+      "source_kind": "legacy_vision360_viewer",
+      "status": "historical_locator_preserved",
+      "archive_note": "Lower-confidence legacy endpoint; requires separate compatibility/recovery test."
+    },
+    {
+      "sample_id": "asscher-eval-glittery",
+      "url": "https://d360.tech/view.html?d=79-BB-5159600",
+      "source_kind": "d360_viewer",
+      "status": "viewer_live_2026-10-06",
+      "archive_note": "Viewer is publicly reachable; raw-frame endpoint still needs a d360-specific extraction adapter."
+    },
+    {
+      "sample_id": "asscher-eval-crispest",
+      "url": "https://d360.tech/view.html?d=79-BT-5165227",
+      "source_kind": "d360_viewer",
+      "status": "viewer_live_2026-10-06",
+      "archive_note": "Viewer is publicly reachable; raw-frame endpoint still needs a d360-specific extraction adapter."
+    },
+    {
+      "sample_id": "asscher-eval-small-positive",
+      "url": "https://www.whiteflash.com/loose-diamonds/2.05-carat-d-color-vs1-clarity-asscher-sku-4256451?a_aid=PS",
+      "source_kind": "whiteflash_product",
+      "certificate": "GIA2135242286",
+      "status": "product_page_live_2026-10-06",
+      "archive_note": "Exact GIA identity survives; product page still exposes historical stone details."
+    },
+    {
+      "sample_id": "asscher-eval-large-dark",
+      "url": "https://www.whiteflash.com/loose-diamonds/3.19-carat-i-color-if-clarity-emerald-sku-4646906?a_aid=PS",
+      "source_kind": "whiteflash_product",
+      "certificate": "GIA13534682",
+      "status": "product_page_live_2026-10-06",
+      "archive_note": "Exact GIA identity and stone details survive; historical video endpoint still needs extraction/recovery."
     }
   ]
 }
