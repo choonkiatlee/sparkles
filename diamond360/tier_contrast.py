@@ -75,6 +75,34 @@ def contrast_trace(values_a, values_b, source_indices):
     }
 
 
+def brightness_contrast_trace(inside_values, outside_values, source_indices):
+    """Signed/absolute log contrast from positive brightness medians.
+
+    This is the boundary-local primitive used by issue #57. Invalid,
+    non-positive, or missing brightness values remain explicit gaps rather
+    than being epsilon-adjusted.
+    """
+    if len(inside_values) != len(outside_values) or len(inside_values) != len(source_indices):
+        raise ValueError("paired brightness traces and source indices must have equal length")
+
+    def _logs(values):
+        result = []
+        for value in values:
+            value = _finite(value)
+            result.append(
+                float(math.log(value))
+                if value is not None and value > 0 else None
+            )
+        return result
+
+    result = contrast_trace(_logs(inside_values), _logs(outside_values), source_indices)
+    for row, inside, outside in zip(result["frame_trace"], inside_values, outside_values):
+        inside = _finite(inside)
+        outside = _finite(outside)
+        row["inside_brightness"] = inside if inside is not None and inside > 0 else None
+        row["outside_brightness"] = outside if outside is not None and outside > 0 else None
+    return result
+
 def robust_fractional_spread(values):
     """1.4826*MAD/median on finite positive encoded-brightness samples."""
     data = np.asarray(values, float).ravel()
@@ -243,16 +271,9 @@ def sectorized_contrast_trace(left_sector_values, right_sector_values, source_in
         right = right_sector_values[sector]
         if len(left) != len(source_indices) or len(right) != len(source_indices):
             raise ValueError("sector traces must align with source indices")
-        left_log = []
-        right_log = []
-        for values, target in ((left, left_log), (right, right_log)):
-            for value in values:
-                value = _finite(value)
-                target.append(
-                    float(math.log(value))
-                    if value is not None and value > 0 else None
-                )
-        per_sector[sector] = contrast_trace(left_log, right_log, source_indices)
+        per_sector[sector] = brightness_contrast_trace(
+            left, right, source_indices
+        )
 
     frame_trace = []
     median_values = []
@@ -260,6 +281,10 @@ def sectorized_contrast_trace(left_sector_values, right_sector_values, source_in
     for position, source_index in enumerate(source_indices):
         values = {
             sector: per_sector[sector]["frame_trace"][position]["separation"]
+            for sector in sectors
+        }
+        signed_values = {
+            sector: per_sector[sector]["frame_trace"][position]["signed_log_contrast"]
             for sector in sectors
         }
         finite = {
@@ -272,6 +297,7 @@ def sectorized_contrast_trace(left_sector_values, right_sector_values, source_in
             "source_index": source_index,
             "status": "ok" if finite else "gap",
             "sector_separations": values,
+            "sector_signed_log_contrasts": signed_values,
             "finite_sectors": len(finite),
             "median_separation": None,
             "q75_separation": None,
