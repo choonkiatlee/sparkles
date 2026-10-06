@@ -1,0 +1,53 @@
+{
+  "schema_version": "diamond360-concentric-coordination-summary/1",
+  "scope": "Four complete #18 benchmark stones; exact 17-frame core primary, 33-frame window sensitivity only.",
+  "upstream_activation_schema": "diamond360-activation/1",
+  "upstream_activation_commit": "eccbb4fef10cb33bd91701121b68f9b958b25c4a",
+  "core_indices": [248,249,250,251,252,253,254,255,0,1,2,3,4,5,6,7,8],
+  "wide_indices": [240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],
+  "stones": ["IGI-LG756520111","IGI-LG756580087","IGI-LG818659722","IGI-LG836619414"],
+  "primary_pairs": {
+    "centre__inner": {
+      "core_pearson_r": [0.4860299445,0.4343388164,0.5314286406,-0.1021545538],
+      "wide_pearson_r": [0.2812501260,0.3996589967,0.3067081929,-0.0270440836],
+      "core_same_direction_fraction": [0.4375,0.5625,0.625,0.3125],
+      "wide_same_direction_fraction": [0.46875,0.53125,0.59375,0.5625],
+      "core_wide_rank_spearman_pearson": 0.4
+    },
+    "inner__middle": {
+      "core_pearson_r": [0.4905907300,-0.6237114584,0.3822326486,-0.2189669955],
+      "wide_pearson_r": [0.2067739904,-0.8180726289,0.3217423990,-0.7081172838],
+      "core_same_direction_fraction": [0.5,0.5,0.5,0.4375],
+      "wide_same_direction_fraction": [0.5,0.40625,0.53125,0.3125],
+      "core_wide_rank_spearman_pearson": 0.8
+    }
+  },
+  "redundancy_diagnostics_core_primary_cells": {
+    "spearman_signed_pearson_vs_mean_component_excursion": 0.6904761905,
+    "spearman_abs_pearson_vs_mean_component_excursion": -0.0238095238,
+    "spearman_signed_pearson_vs_min_component_excursion": 0.4523809524,
+    "spearman_pearson_vs_same_direction_fraction": 0.4910286161
+  },
+  "outer_support_sensitivity": [
+    {"stone":"IGI-LG756520111","window":"core","fixed_r":-0.7137178449,"dynamic_r":-0.6934521593,"outer_fixed_support":0.9156244597},
+    {"stone":"IGI-LG756520111","window":"wide","fixed_r":-0.4890140069,"dynamic_r":-0.4577897169,"outer_fixed_support":0.8164742375},
+    {"stone":"IGI-LG756580087","window":"core","fixed_r":-0.4056771631,"dynamic_r":-0.3965215493,"outer_fixed_support":0.5234997264},
+    {"stone":"IGI-LG756580087","window":"wide","fixed_r":0.0579143149,"dynamic_r":0.2478981683,"outer_fixed_support":0.2951931227},
+    {"stone":"IGI-LG818659722","window":"core","fixed_r":-0.6104940525,"dynamic_r":-0.6100741901,"outer_fixed_support":0.9448841643},
+    {"stone":"IGI-LG818659722","window":"wide","fixed_r":-0.5750533514,"dynamic_r":-0.5678897195,"outer_fixed_support":0.8595588235},
+    {"stone":"IGI-LG836619414","window":"core","fixed_r":-0.2342145429,"dynamic_r":-0.0814539105,"outer_fixed_support":0.4266408059},
+    {"stone":"IGI-LG836619414","window":"wide","fixed_r":-0.2888926637,"dynamic_r":0.5371816038,"outer_fixed_support":0.1988424197}
+  ],
+  "geometry_disagreement_examples": [
+    {"stone":"IGI-LG756520111","window":"core","pair":"centre__inner","coarse_r":0.4860299445,"semantic_r":-0.5138464504},
+    {"stone":"IGI-LG756580087","window":"core","pair":"centre__inner","coarse_r":0.4343388164,"semantic_r":-0.4031174827},
+    {"stone":"IGI-LG818659722","window":"core","pair":"centre__inner","coarse_r":0.5314286406,"semantic_r":-0.6679403745},
+    {"stone":"IGI-LG836619414","window":"wide","pair":"inner__middle","coarse_r":-0.7081172838,"semantic_r":0.3043932670}
+  ],
+  "automatic_core_event_examples": [
+    {"stone":"IGI-LG756520111","pair":"centre__inner","strongest_coordinated":"255->0","strongest_divergent":"254->255"},
+    {"stone":"IGI-LG756580087","pair":"inner__middle","strongest_coordinated":"2->3","strongest_divergent":"254->255"},
+    {"stone":"IGI-LG818659722","pair":"centre__inner","strongest_coordinated":"6->7","strongest_divergent":"254->255"},
+    {"stone":"IGI-LG836619414","pair":"inner__middle","strongest_coordinated":"6->7","strongest_divergent":"249->250"}
+  ]
+}

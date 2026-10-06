@@ -198,3 +198,15 @@ persistence**, retained as a secondary temporal-structure measure. Centre/middle
 remain revised, outer/semantic remain QC-sensitive, and non-dark Q90 is rejected
 because it saturates at the full window. Aggregate results and representative
 evidence live under [persistence/](persistence/).
+
+## Concentric-band coordination descriptor validation
+
+Issue #32's four-stone benchmark is documented in
+[coordination/README.md](coordination/README.md). It consumes #26's retained
+coarse-fixed relative activation traces and measures pairwise concentric
+coordination without rebuilding photometry or masks. Pearson level correlation
+survives for centre↔inner and inner↔middle; adjacent-change sign agreement remains
+event/evidence audit only. Middle↔outer stays support-sensitive and semantic
+variants remain localisation/QC candidates. The descriptor is descriptive and
+does not define a hall-of-mirrors or cut-quality score.
+

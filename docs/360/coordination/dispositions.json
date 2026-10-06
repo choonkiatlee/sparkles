@@ -1,0 +1,47 @@
+{
+  "schema_version": "diamond360-concentric-coordination-dispositions/1",
+  "decisions": [
+    {
+      "candidate": "coarse-fixed centre__inner Pearson level correlation",
+      "disposition": "KEEP",
+      "role": "primary adjacent-band coordination descriptor",
+      "reason": "Uses two #26 KEEP traces; three stones remain positively coordinated and LG836619414 remains near-zero/slightly negative from core to wide. The value captures pair structure not represented by activation amplitude alone."
+    },
+    {
+      "candidate": "coarse-fixed inner__middle Pearson level correlation",
+      "disposition": "KEEP",
+      "role": "primary adjacent-band coordination descriptor",
+      "reason": "All four stones preserve correlation sign from the 17-frame core to 33-frame sensitivity window; cross-stone core-to-wide rank Spearman is about 0.8 and the pair clearly separates coordinated from alternating behaviour."
+    },
+    {
+      "candidate": "coarse-fixed middle__outer Pearson level correlation",
+      "disposition": "REVISE",
+      "role": "support-sensitive candidate/QC",
+      "reason": "Outer activation inherits #26 support sensitivity. At low outer support fixed and dynamic correlation can diverge materially, including LG836619414 wide (-0.289 fixed vs +0.537 dynamic at 0.199 persistent support)."
+    },
+    {
+      "candidate": "semantic fixed adjacent-pair Pearson correlations",
+      "disposition": "REVISE",
+      "role": "localisation/QC sensitivity",
+      "reason": "Semantic geometry often changes the sign of the relationship relative to coarse geometry, and LG756580087 wide semantic activation is unavailable. #32 does not upgrade #26's unresolved semantic representation."
+    },
+    {
+      "candidate": "adjacent-change same-direction fraction",
+      "disposition": "REJECT",
+      "role": "event/evidence audit only",
+      "reason": "The scalar is coarse and often near 0.5 even when level correlation shows strong coordination or alternation; pooled rank agreement with Pearson is only about 0.49. Retain same/opposite event labels for evidence selection, not as a primary descriptor."
+    },
+    {
+      "candidate": "non-adjacent pair correlations",
+      "disposition": "REJECT",
+      "role": "matrix diagnostic only",
+      "reason": "The compact full matrix is useful for audit but the issue is intended to retain a small interpretable adjacent-band vocabulary rather than emit every pair as a descriptor."
+    },
+    {
+      "candidate": "dynamic-support pair correlations",
+      "disposition": "REJECT",
+      "role": "support-motion QC only",
+      "reason": "#26 already rejected dynamic-support activation as a primary trace. #32 uses middle__outer dynamic correlation only to expose support-driven instability."
+    }
+  ]
+}

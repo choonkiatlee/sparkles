@@ -332,3 +332,51 @@ outer cells retained primarily as support/localisation falsification.
 Persistence is descriptive recorded-image run structure. It is not duration in
 seconds/degrees, physical-facet tracking, calibrated light return, fire, leakage
 or a quality grade.
+
+## Concentric-band coordination: `diamond360-concentric-coordination/1`
+
+`coordination.json` is derived directly from an existing
+`diamond360-activation/1` result. It does not recompute photometry, masks,
+regional support or activation normalization.
+
+The primary inputs inherited from #26 are coarse-fixed centre/inner/middle
+`relative_values`, where activation is
+`log(regional median) - log(fixed-support whole-stone median)`. The retained
+adjacent-pair candidates are centre↔inner and inner↔middle. Middle↔outer is
+emitted but inherits outer-band REVISE/support sensitivity. Semantic fixed
+correlations remain localisation/QC sensitivity. Dynamic support is not promoted;
+middle↔outer dynamic correlation is retained only to expose support-motion
+disagreement.
+
+For aligned component traces `a_t` and `b_t`, level coordination is ordinary
+Pearson correlation over aligned finite observations:
+
+`r = corr(a_t, b_t)`.
+
+At least three aligned finite observations are required. A constant component
+trace makes the correlation unavailable rather than emitting NaN. Positive
+correlation describes coordinated relative activation states; negative
+correlation describes alternating/opposed states. Neither direction is a quality
+grade.
+
+The output also preserves an adjacent-event audit trace with `delta_a`,
+`delta_b`, `same`/`opposite`/`tie` relationship and
+`joint_move_strength = min(abs(delta_a), abs(delta_b))`. Same/opposite fractions
+are audit candidates rather than retained primary summaries. Missing/rejected
+observations break adjacency, and wrapped adjacency such as `255 -> 0` is only
+valid when the upstream activation interval explicitly declared wrapping.
+
+A symmetric four-band correlation matrix is retained for compact diagnostic
+inspection, but non-adjacent correlations are not promoted as separate primary
+descriptors. Pair validity composes monotonically from both component activation
+validities plus local mathematical availability; upstream KEEP/REVISE/REJECT
+disposition remains separate provenance.
+
+Evidence metadata selects the strongest coordinated event, strongest divergent
+event and a typical directional event. The writer can render both band traces and
+the corresponding source-frame pair.
+
+Concentric coordination describes recorded-image relationships. It is not
+physical-facet tracking, calibrated light return, fire, leakage, a
+hall-of-mirrors score or a quality grade.
+
