@@ -17,14 +17,24 @@ from . import regions as coarse_regions
 from . import tier_contrast as tc
 from . import pipeline
 
-SCHEMA = "diamond360-tier-contrast/2"
+SCHEMA = "diamond360-tier-contrast/3"
 REGION_TRACE_SCHEMA = "diamond360-region-traces/1"
 PAIRS = (("centre", "inner"), ("inner", "middle"))
-BOUNDARY_WIDTHS = (.025, .040, .055)
+BOUNDARY_FRACTIONS = (.25, .40, .55)
 BOUNDARY_GUARD = .010
 BOUNDARY_SPECS = {
-    "centre__inner": {"semantic": "centre_inner", "coarse_radius": .20},
-    "inner__middle": {"semantic": "inner_middle", "coarse_radius": .45},
+    "centre__inner": {
+        "semantic": "centre_inner",
+        "semantic_inner": None,
+        "semantic_outer": "inner_middle",
+        "coarse_triplet": (0.0, .20, .45),
+    },
+    "inner__middle": {
+        "semantic": "inner_middle",
+        "semantic_inner": "centre_inner",
+        "semantic_outer": "middle_outer",
+        "coarse_triplet": (.20, .45, .70),
+    },
 }
 CORE_INDICES = [248,249,250,251,252,253,254,255,0,1,2,3,4,5,6,7,8]
 WIDE_INDICES = list(range(240,256)) + list(range(0,17))
