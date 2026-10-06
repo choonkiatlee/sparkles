@@ -217,6 +217,218 @@
           ]
         }
       ]
+    },
+    {
+      "source_id": "pricescope-asscher-evaluation-thread",
+      "source_url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/",
+      "source_type": "forum_thread",
+      "author_display": "briggysmalls; expert review by Karl_K / strmrdr and other experienced members",
+      "groups": [
+        {
+          "group_id": "karl-initial-three-stone-ranking",
+          "interpretation_type": "expert_per_stone_technical_review",
+          "source_posts": [
+            1,
+            8,
+            9,
+            10,
+            11
+          ],
+          "samples": [
+            {
+              "sample_id": "asscher-eval-target-centre",
+              "alias": "1 / Target in the centre",
+              "viewer_url": "http://dasny.dyndns.org:81/Vision360/38125.html",
+              "original_listing_url": "http://www.adiamor.com/video-player.html?id=76710570",
+              "source_attributes": {
+                "carat": 3.03,
+                "color": "I",
+                "clarity": "VVS2",
+                "table_percent": 61
+              },
+              "expert_labels": [
+                {
+                  "reviewer": "Karl_K / strmrdr",
+                  "post_number": 9,
+                  "label": "very close; slightly over-dark in the centre; ASET needed to determine whether it is a real-world issue",
+                  "polarity": "mixed_positive"
+                },
+                {
+                  "reviewer": "Karl_K / strmrdr",
+                  "post_number": 10,
+                  "label": "very nice crown height",
+                  "polarity": "positive"
+                },
+                {
+                  "reviewer": "lovedogs",
+                  "post_number": 11,
+                  "label": "best of the first three, with concern about excessive centre darkness when static",
+                  "polarity": "mixed_positive"
+                }
+              ]
+            },
+            {
+              "sample_id": "asscher-eval-glittery",
+              "alias": "2 / Glittery",
+              "viewer_url": "https://d360.tech/view.html?d=79-BB-5159600",
+              "original_listing_url": "https://www.whiteflash.com/",
+              "expert_labels": [
+                {
+                  "reviewer": "Karl_K / strmrdr",
+                  "post_number": 9,
+                  "label": "tiny windmills; overall not horrible but off",
+                  "polarity": "mixed_negative"
+                }
+              ]
+            },
+            {
+              "sample_id": "asscher-eval-crispest",
+              "alias": "3 / Crispest",
+              "viewer_url": "https://d360.tech/view.html?d=79-BT-5165227",
+              "original_listing_url": "https://www.whiteflash.com/",
+              "expert_labels": [
+                {
+                  "reviewer": "Karl_K / strmrdr",
+                  "post_number": 9,
+                  "label": "p3 leakage at the top and bottom V in the centre between windmills when face-up; worst of the first three",
+                  "polarity": "negative"
+                },
+                {
+                  "reviewer": "Karl_K / strmrdr",
+                  "post_number": 10,
+                  "label": "crown height is on the low side",
+                  "polarity": "negative"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "group_id": "explicit-negative-controls",
+          "interpretation_type": "expert_or_thread_negative_examples",
+          "samples": [
+            {
+              "sample_id": "asscher-eval-royal-asscher-clone",
+              "original_listing_url": "https://www.jamesallen.com/",
+              "source_post": 1,
+              "expert_labels": [
+                {
+                  "reviewer": "Karl_K / strmrdr",
+                  "post_number": 12,
+                  "label": "facet arrangement resembles a Royal Asscher but light performance is well below the better Royal Asschers",
+                  "polarity": "negative"
+                }
+              ],
+              "archive_note": "Original 360 was already unavailable to the thread author."
+            },
+            {
+              "sample_id": "asscher-eval-messy-arrows",
+              "media_url": "https://www.kashiimports.com/video/22957.mp4",
+              "media_type": "mp4",
+              "source_post": 1,
+              "source_labels": [
+                {
+                  "reviewer": "thread author",
+                  "label": "many adjacent black facets and messy arrows; bright only off-centre",
+                  "polarity": "negative"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "group_id": "later-community-comparison-cases",
+          "interpretation_type": "community_consensus_and_real_world_followup",
+          "samples": [
+            {
+              "sample_id": "asscher-eval-small-positive",
+              "alias": "2.05 ct D VS1 / smaller contender",
+              "product_url": "https://www.whiteflash.com/loose-diamonds/2.05-carat-d-color-vs1-clarity-asscher-sku-4256451?a_aid=PS",
+              "certificate": "GIA2135242286",
+              "source_attributes": {
+                "carat": 2.05,
+                "color": "D",
+                "clarity": "VS1",
+                "table_percent": 58
+              },
+              "source_labels": [
+                {
+                  "reviewer": "multiple experienced PriceScope members",
+                  "label": "strongly favoured over the larger comparison stone; praised for small table, shape, windmills and attractive contrast framing the table",
+                  "polarity": "positive"
+                }
+              ],
+              "corroborating_thread_url": "https://www.pricescope.com/community/threads/is-this-a-good-asscher.281732/"
+            },
+            {
+              "sample_id": "asscher-eval-large-dark",
+              "alias": "3.19 ct I IF",
+              "product_url": "https://www.whiteflash.com/loose-diamonds/3.19-carat-i-color-if-clarity-emerald-sku-4646906?a_aid=PS",
+              "certificate": "GIA13534682",
+              "source_attributes": {
+                "carat": 3.19,
+                "color": "I",
+                "clarity": "IF",
+                "table_percent": 63,
+                "dimensions_mm": [
+                  8.64,
+                  8.48,
+                  5.53
+                ]
+              },
+              "source_labels": [
+                {
+                  "reviewer": "lovedogs",
+                  "post_number": 55,
+                  "label": "not a fan; large table looks flat and face-up becomes very dark because facets turn off together",
+                  "polarity": "negative"
+                },
+                {
+                  "reviewer": "thread author",
+                  "post_number": 59,
+                  "label": "large adjacent contrast/leakage area under table; pattern less defined face-up",
+                  "polarity": "negative_mixed"
+                }
+              ]
+            },
+            {
+              "sample_id": "asscher-eval-nice-dance",
+              "alias": "Nice dance",
+              "media_url": "https://www.kashiimports.com/video/27196.mp4",
+              "media_type": "mp4",
+              "source_post": 22,
+              "source_labels": [
+                {
+                  "reviewer": "thread author / community discussion",
+                  "label": "nice contrast and table dance; small windmills and possible darkness under table remain concerns",
+                  "polarity": "mixed_positive"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "group_id": "expert-general-360-rules",
+          "interpretation_type": "expert_principles",
+          "source_posts": [
+            18
+          ],
+          "principles": [
+            {
+              "reviewer": "Karl_K / strmrdr",
+              "label": "The most important information in 360 video is the dance once the diamond moves."
+            },
+            {
+              "reviewer": "Karl_K / strmrdr",
+              "label": "Avoid very large areas going dark together or areas remaining dark through substantial movement."
+            },
+            {
+              "reviewer": "Karl_K / strmrdr",
+              "label": "Grey in vendor video is ambiguous: leakage, lower-angle/dimmer source return, or inefficient light return."
+            }
+          ]
+        }
+      ]
     }
   ]
 }
