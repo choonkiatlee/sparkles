@@ -65,9 +65,27 @@
     "source_step_semantics": "ordinal samples; not seconds or calibrated degrees"
   },
   "machine_evidence": {
-    "status": "pending_issue_21_compact_packet",
+    "status": "integrated_issue_21",
     "issue": 21,
-    "contract_note": "#22 does not duplicate descriptor-native evidence selection. Compact machine-selected source evidence is attached only after #21 publishes its final packet contract."
+    "summary_schema": "diamond360-evidence-packet-benchmark/1",
+    "packet_schema": "diamond360-evidence-packet/1",
+    "summary_path": "docs/360/evidence-packet/summary.json",
+    "selected_counts": {
+      "IGI-LG756520111": 4,
+      "IGI-LG756580087": 4,
+      "IGI-LG818659722": 5,
+      "IGI-LG836619414": 4
+    },
+    "audit": {
+      "linked_descriptor_count": 21,
+      "exact_field_links": 16,
+      "family_representative_links": 5,
+      "missing_links": 0,
+      "evidence_item_references": 24,
+      "item_refs_with_human_frame_overlap": 12,
+      "item_refs_without_exact_human_frame_overlap": 12
+    },
+    "contract_note": "#22 consumes #21 compact packets as-is. Exact selected evidence is linked when the retained field is present; otherwise the packet's coverage representative for that descriptor family is referenced. #22 never re-selects descriptor-native evidence."
   },
   "redundancy_groups": {
     "activity_motion": {
@@ -1094,6 +1112,19 @@
         4
       ],
       "source_frames_outside_profile_window": [],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/contact-sheet.jpg",
+        "selected_count": 4,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
       "descriptor_links": [
         {
           "field_id": "nested_step.centre_inner_pearson",
@@ -1109,6 +1140,61 @@
             "rank_descending": 2,
             "rank_ascending": 3,
             "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "family_representative",
+            "coverage_family": "nested_step",
+            "items": [
+              {
+                "resolution": "family_representative",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/contact-sheet.jpg",
+                "packet_item_rank": 1,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    3,
+                    4
+                  ]
+                },
+                "render_source_indices": [
+                  3,
+                  4
+                ],
+                "selected_for": "activity_motion",
+                "coverage_families": [
+                  "activity_motion",
+                  "relative_dark_state",
+                  "nested_step",
+                  "directional"
+                ],
+                "event_types": [
+                  "highest",
+                  "largest",
+                  "largest_negative_move",
+                  "largest_positive_move",
+                  "strongest_coordinated",
+                  "strongest_divergent"
+                ],
+                "profile_field_ids": [
+                  "activity.activation.centre_relative_total_excursion",
+                  "activity.activation.middle_relative_total_excursion",
+                  "activity.activation.whole_stone_total_excursion",
+                  "activity.mobility.centre_median",
+                  "activity.mobility.middle_median",
+                  "dark_state.occupancy.inner_mean",
+                  "dark_state.occupancy.middle_mean",
+                  "directional.corner_NW_SE_pearson",
+                  "directional.side_N_S_pearson",
+                  "nested_step.inner_middle_pearson",
+                  "temporal_reconfiguration.switching.middle_rate"
+                ],
+                "human_frame_overlap": [
+                  4
+                ],
+                "nearest_human_frame_distance": 0
+              }
+            ]
           },
           "metadata": {
             "representation": "coarse",
@@ -1132,6 +1218,45 @@
             "rank_descending": 1,
             "rank_ascending": 4,
             "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "exact_field",
+            "items": [
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/contact-sheet.jpg",
+                "packet_item_rank": 1,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    3,
+                    4
+                  ]
+                },
+                "render_source_indices": [
+                  3,
+                  4
+                ],
+                "selected_for": "activity_motion",
+                "coverage_families": [
+                  "activity_motion",
+                  "relative_dark_state",
+                  "nested_step",
+                  "directional"
+                ],
+                "event_types": [
+                  "strongest_coordinated"
+                ],
+                "profile_field_ids": [
+                  "nested_step.inner_middle_pearson"
+                ],
+                "human_frame_overlap": [
+                  4
+                ],
+                "nearest_human_frame_distance": 0
+              }
+            ]
           },
           "metadata": {
             "representation": "coarse",
@@ -1166,6 +1291,19 @@
         4
       ],
       "source_frames_outside_profile_window": [],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/contact-sheet.jpg",
+        "selected_count": 4,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
       "descriptor_links": [
         {
           "field_id": "directional.side_N_S_pearson",
@@ -1181,6 +1319,45 @@
             "rank_descending": 4,
             "rank_ascending": 1,
             "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "exact_field",
+            "items": [
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/contact-sheet.jpg",
+                "packet_item_rank": 1,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    3,
+                    4
+                  ]
+                },
+                "render_source_indices": [
+                  3,
+                  4
+                ],
+                "selected_for": "activity_motion",
+                "coverage_families": [
+                  "activity_motion",
+                  "relative_dark_state",
+                  "nested_step",
+                  "directional"
+                ],
+                "event_types": [
+                  "strongest_divergent"
+                ],
+                "profile_field_ids": [
+                  "directional.side_N_S_pearson"
+                ],
+                "human_frame_overlap": [
+                  4
+                ],
+                "nearest_human_frame_distance": 0
+              }
+            ]
           },
           "metadata": {
             "representation": "coarse",
@@ -1205,6 +1382,61 @@
             "rank_descending": 4,
             "rank_ascending": 1,
             "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "family_representative",
+            "coverage_family": "directional",
+            "items": [
+              {
+                "resolution": "family_representative",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/contact-sheet.jpg",
+                "packet_item_rank": 1,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    3,
+                    4
+                  ]
+                },
+                "render_source_indices": [
+                  3,
+                  4
+                ],
+                "selected_for": "activity_motion",
+                "coverage_families": [
+                  "activity_motion",
+                  "relative_dark_state",
+                  "nested_step",
+                  "directional"
+                ],
+                "event_types": [
+                  "highest",
+                  "largest",
+                  "largest_negative_move",
+                  "largest_positive_move",
+                  "strongest_coordinated",
+                  "strongest_divergent"
+                ],
+                "profile_field_ids": [
+                  "activity.activation.centre_relative_total_excursion",
+                  "activity.activation.middle_relative_total_excursion",
+                  "activity.activation.whole_stone_total_excursion",
+                  "activity.mobility.centre_median",
+                  "activity.mobility.middle_median",
+                  "dark_state.occupancy.inner_mean",
+                  "dark_state.occupancy.middle_mean",
+                  "directional.corner_NW_SE_pearson",
+                  "directional.side_N_S_pearson",
+                  "nested_step.inner_middle_pearson",
+                  "temporal_reconfiguration.switching.middle_rate"
+                ],
+                "human_frame_overlap": [
+                  4
+                ],
+                "nearest_human_frame_distance": 0
+              }
+            ]
           },
           "metadata": {
             "representation": "coarse",
@@ -1240,6 +1472,19 @@
         4
       ],
       "source_frames_outside_profile_window": [],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/contact-sheet.jpg",
+        "selected_count": 4,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
       "descriptor_links": []
     },
     {
@@ -1265,6 +1510,19 @@
         4
       ],
       "source_frames_outside_profile_window": [],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/contact-sheet.jpg",
+        "selected_count": 4,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
       "descriptor_links": [
         {
           "field_id": "flash_morphology.median_largest_component_fraction",
@@ -1281,12 +1539,46 @@
             "rank_ascending": 2,
             "sample_size": 4
           },
+          "machine_evidence": {
+            "resolution": "exact_field",
+            "items": [
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/contact-sheet.jpg",
+                "packet_item_rank": 3,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    252,
+                    2
+                  ]
+                },
+                "render_source_indices": [
+                  252,
+                  2
+                ],
+                "selected_for": "flash_morphology",
+                "coverage_families": [
+                  "flash_morphology"
+                ],
+                "event_types": [
+                  "matched_active_area_pair"
+                ],
+                "profile_field_ids": [
+                  "flash_morphology.median_largest_component_fraction"
+                ],
+                "human_frame_overlap": [],
+                "nearest_human_frame_distance": 2
+              }
+            ]
+          },
           "metadata": {
             "representation": "whole_stone",
             "support_policy": "fixed",
             "statistic": "median_largest_component_fraction",
             "units": "fraction_of_active_area",
-            "threshold": 1
+            "threshold": 1.0
           }
         }
       ]
@@ -1314,6 +1606,19 @@
         4
       ],
       "source_frames_outside_profile_window": [],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756580087/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756580087/contact-sheet.jpg",
+        "selected_count": 4,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
       "descriptor_links": [
         {
           "field_id": "flash_morphology.median_largest_component_fraction",
@@ -1327,12 +1632,46 @@
             "rank_ascending": 4,
             "sample_size": 4
           },
+          "machine_evidence": {
+            "resolution": "exact_field",
+            "items": [
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756580087/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756580087/contact-sheet.jpg",
+                "packet_item_rank": 4,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    251,
+                    3
+                  ]
+                },
+                "render_source_indices": [
+                  251,
+                  3
+                ],
+                "selected_for": "flash_morphology",
+                "coverage_families": [
+                  "flash_morphology"
+                ],
+                "event_types": [
+                  "matched_active_area_pair"
+                ],
+                "profile_field_ids": [
+                  "flash_morphology.median_largest_component_fraction"
+                ],
+                "human_frame_overlap": [],
+                "nearest_human_frame_distance": 1
+              }
+            ]
+          },
           "metadata": {
             "representation": "whole_stone",
             "support_policy": "fixed",
             "statistic": "median_largest_component_fraction",
             "units": "fraction_of_active_area",
-            "threshold": 1
+            "threshold": 1.0
           }
         }
       ]
@@ -1360,6 +1699,19 @@
         8
       ],
       "source_frames_outside_profile_window": [],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756580087/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756580087/contact-sheet.jpg",
+        "selected_count": 4,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
       "descriptor_links": [
         {
           "field_id": "nested_step.inner_middle_pearson",
@@ -1372,6 +1724,44 @@
             "rank_descending": 4,
             "rank_ascending": 1,
             "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "exact_field",
+            "items": [
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756580087/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756580087/contact-sheet.jpg",
+                "packet_item_rank": 1,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    254,
+                    255
+                  ]
+                },
+                "render_source_indices": [
+                  254,
+                  255
+                ],
+                "selected_for": "activity_motion",
+                "coverage_families": [
+                  "activity_motion",
+                  "nested_step",
+                  "directional"
+                ],
+                "event_types": [
+                  "strongest_divergent"
+                ],
+                "profile_field_ids": [
+                  "nested_step.inner_middle_pearson"
+                ],
+                "human_frame_overlap": [
+                  254
+                ],
+                "nearest_human_frame_distance": 0
+              }
+            ]
           },
           "metadata": {
             "representation": "coarse",
@@ -1406,6 +1796,19 @@
         8
       ],
       "source_frames_outside_profile_window": [],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756580087/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756580087/contact-sheet.jpg",
+        "selected_count": 4,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
       "descriptor_links": [
         {
           "field_id": "dark_state.occupancy.centre_mean",
@@ -1418,6 +1821,41 @@
             "rank_descending": 2,
             "rank_ascending": 3,
             "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "exact_field",
+            "items": [
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756580087/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756580087/contact-sheet.jpg",
+                "packet_item_rank": 2,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    5,
+                    6
+                  ]
+                },
+                "render_source_indices": [
+                  5,
+                  6
+                ],
+                "selected_for": "relative_dark_state",
+                "coverage_families": [
+                  "activity_motion",
+                  "relative_dark_state"
+                ],
+                "event_types": [
+                  "largest_positive_move"
+                ],
+                "profile_field_ids": [
+                  "dark_state.occupancy.centre_mean"
+                ],
+                "human_frame_overlap": [],
+                "nearest_human_frame_distance": 2
+              }
+            ]
           },
           "metadata": {
             "representation": "coarse",
@@ -1440,6 +1878,53 @@
             "rank_descending": 2,
             "rank_ascending": 3,
             "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "exact_field",
+            "items": [
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756580087/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756580087/contact-sheet.jpg",
+                "packet_item_rank": 3,
+                "location": {
+                  "kind": "run",
+                  "source_indices": [
+                    253,
+                    254,
+                    255,
+                    0,
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ]
+                },
+                "render_source_indices": [
+                  253,
+                  3,
+                  8
+                ],
+                "selected_for": "dark_persistence",
+                "coverage_families": [
+                  "dark_persistence"
+                ],
+                "event_types": [
+                  "dark_q90_run"
+                ],
+                "profile_field_ids": [
+                  "dark_state.persistence.inner_dark_q90_window_fraction"
+                ],
+                "human_frame_overlap": [
+                  8
+                ],
+                "nearest_human_frame_distance": 0
+              }
+            ]
           },
           "metadata": {
             "representation": "coarse",
@@ -1473,6 +1958,19 @@
         8
       ],
       "source_frames_outside_profile_window": [],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756580087/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756580087/contact-sheet.jpg",
+        "selected_count": 4,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
       "descriptor_links": []
     },
     {
@@ -1496,6 +1994,19 @@
         6
       ],
       "source_frames_outside_profile_window": [],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/contact-sheet.jpg",
+        "selected_count": 5,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
       "descriptor_links": [
         {
           "field_id": "dark_state.occupancy.inner_mean",
@@ -1511,6 +2022,47 @@
             "rank_descending": 1,
             "rank_ascending": 4,
             "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "family_representative",
+            "coverage_family": "relative_dark_state",
+            "items": [
+              {
+                "resolution": "family_representative",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/contact-sheet.jpg",
+                "packet_item_rank": 2,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    5,
+                    6
+                  ]
+                },
+                "render_source_indices": [
+                  5,
+                  6
+                ],
+                "selected_for": "relative_dark_state",
+                "coverage_families": [
+                  "relative_dark_state"
+                ],
+                "event_types": [
+                  "highest",
+                  "largest_negative_move",
+                  "q90"
+                ],
+                "profile_field_ids": [
+                  "activity.mobility.centre_median",
+                  "dark_state.occupancy.middle_mean",
+                  "temporal_reconfiguration.switching.inner_rate"
+                ],
+                "human_frame_overlap": [
+                  6
+                ],
+                "nearest_human_frame_distance": 0
+              }
+            ]
           },
           "metadata": {
             "representation": "coarse",
@@ -1537,6 +2089,55 @@
             "rank_ascending": 4,
             "sample_size": 4
           },
+          "machine_evidence": {
+            "resolution": "exact_field",
+            "items": [
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/contact-sheet.jpg",
+                "packet_item_rank": 3,
+                "location": {
+                  "kind": "run",
+                  "source_indices": [
+                    250,
+                    251,
+                    252,
+                    253,
+                    254,
+                    255,
+                    0,
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6
+                  ]
+                },
+                "render_source_indices": [
+                  250,
+                  0,
+                  6
+                ],
+                "selected_for": "dark_persistence",
+                "coverage_families": [
+                  "dark_persistence"
+                ],
+                "event_types": [
+                  "dark_q90_run"
+                ],
+                "profile_field_ids": [
+                  "dark_state.persistence.inner_dark_q90_window_fraction"
+                ],
+                "human_frame_overlap": [
+                  0,
+                  6
+                ],
+                "nearest_human_frame_distance": 0
+              }
+            ]
+          },
           "metadata": {
             "representation": "coarse",
             "support_policy": "fixed",
@@ -1561,6 +2162,74 @@
             "rank_ascending": 4,
             "sample_size": 4
           },
+          "machine_evidence": {
+            "resolution": "exact_field",
+            "items": [
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/contact-sheet.jpg",
+                "packet_item_rank": 1,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    6,
+                    7
+                  ]
+                },
+                "render_source_indices": [
+                  6,
+                  7
+                ],
+                "selected_for": "activity_motion",
+                "coverage_families": [
+                  "activity_motion",
+                  "nested_step"
+                ],
+                "event_types": [
+                  "strongest_divergent"
+                ],
+                "profile_field_ids": [
+                  "directional.side_N_S_pearson"
+                ],
+                "human_frame_overlap": [
+                  6
+                ],
+                "nearest_human_frame_distance": 0
+              },
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/contact-sheet.jpg",
+                "packet_item_rank": 4,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    250,
+                    251
+                  ]
+                },
+                "render_source_indices": [
+                  250,
+                  251
+                ],
+                "selected_for": "directional",
+                "coverage_families": [
+                  "relative_dark_state",
+                  "nested_step",
+                  "directional"
+                ],
+                "event_types": [
+                  "strongest_coordinated"
+                ],
+                "profile_field_ids": [
+                  "directional.side_N_S_pearson"
+                ],
+                "human_frame_overlap": [],
+                "nearest_human_frame_distance": 1
+              }
+            ]
+          },
           "metadata": {
             "representation": "coarse",
             "support_policy": "fixed",
@@ -1584,6 +2253,42 @@
             "rank_descending": 1,
             "rank_ascending": 4,
             "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "exact_field",
+            "items": [
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/contact-sheet.jpg",
+                "packet_item_rank": 2,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    5,
+                    6
+                  ]
+                },
+                "render_source_indices": [
+                  5,
+                  6
+                ],
+                "selected_for": "relative_dark_state",
+                "coverage_families": [
+                  "relative_dark_state"
+                ],
+                "event_types": [
+                  "highest"
+                ],
+                "profile_field_ids": [
+                  "temporal_reconfiguration.switching.inner_rate"
+                ],
+                "human_frame_overlap": [
+                  6
+                ],
+                "nearest_human_frame_distance": 0
+              }
+            ]
           },
           "metadata": {
             "representation": "coarse",
@@ -1623,6 +2328,19 @@
       "source_frames_outside_profile_window": [
         10
       ],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/contact-sheet.jpg",
+        "selected_count": 5,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
       "descriptor_links": [
         {
           "field_id": "activity.activation.inner_relative_total_excursion",
@@ -1638,6 +2356,74 @@
             "rank_descending": 1,
             "rank_ascending": 4,
             "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "exact_field",
+            "items": [
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/contact-sheet.jpg",
+                "packet_item_rank": 1,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    6,
+                    7
+                  ]
+                },
+                "render_source_indices": [
+                  6,
+                  7
+                ],
+                "selected_for": "activity_motion",
+                "coverage_families": [
+                  "activity_motion",
+                  "nested_step"
+                ],
+                "event_types": [
+                  "largest_positive_move"
+                ],
+                "profile_field_ids": [
+                  "activity.activation.inner_relative_total_excursion"
+                ],
+                "human_frame_overlap": [
+                  6
+                ],
+                "nearest_human_frame_distance": 0
+              },
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/contact-sheet.jpg",
+                "packet_item_rank": 4,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    250,
+                    251
+                  ]
+                },
+                "render_source_indices": [
+                  250,
+                  251
+                ],
+                "selected_for": "directional",
+                "coverage_families": [
+                  "relative_dark_state",
+                  "nested_step",
+                  "directional"
+                ],
+                "event_types": [
+                  "largest_negative_move"
+                ],
+                "profile_field_ids": [
+                  "activity.activation.inner_relative_total_excursion"
+                ],
+                "human_frame_overlap": [],
+                "nearest_human_frame_distance": 1
+              }
+            ]
           },
           "metadata": {
             "representation": "coarse",
@@ -1662,6 +2448,74 @@
             "rank_descending": 1,
             "rank_ascending": 4,
             "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "exact_field",
+            "items": [
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/contact-sheet.jpg",
+                "packet_item_rank": 1,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    6,
+                    7
+                  ]
+                },
+                "render_source_indices": [
+                  6,
+                  7
+                ],
+                "selected_for": "activity_motion",
+                "coverage_families": [
+                  "activity_motion",
+                  "nested_step"
+                ],
+                "event_types": [
+                  "largest"
+                ],
+                "profile_field_ids": [
+                  "activity.mobility.inner_median"
+                ],
+                "human_frame_overlap": [
+                  6
+                ],
+                "nearest_human_frame_distance": 0
+              },
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/contact-sheet.jpg",
+                "packet_item_rank": 4,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    250,
+                    251
+                  ]
+                },
+                "render_source_indices": [
+                  250,
+                  251
+                ],
+                "selected_for": "directional",
+                "coverage_families": [
+                  "relative_dark_state",
+                  "nested_step",
+                  "directional"
+                ],
+                "event_types": [
+                  "q90"
+                ],
+                "profile_field_ids": [
+                  "activity.mobility.inner_median"
+                ],
+                "human_frame_overlap": [],
+                "nearest_human_frame_distance": 1
+              }
+            ]
           },
           "metadata": {
             "representation": "coarse",
@@ -1693,6 +2547,19 @@
         0
       ],
       "source_frames_outside_profile_window": [],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/contact-sheet.jpg",
+        "selected_count": 5,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
       "descriptor_links": []
     },
     {
@@ -1716,6 +2583,19 @@
         6
       ],
       "source_frames_outside_profile_window": [],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/contact-sheet.jpg",
+        "selected_count": 5,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
       "descriptor_links": [
         {
           "field_id": "flash_morphology.median_largest_component_fraction",
@@ -1732,12 +2612,46 @@
             "rank_ascending": 3,
             "sample_size": 4
           },
+          "machine_evidence": {
+            "resolution": "exact_field",
+            "items": [
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/contact-sheet.jpg",
+                "packet_item_rank": 5,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    5,
+                    7
+                  ]
+                },
+                "render_source_indices": [
+                  5,
+                  7
+                ],
+                "selected_for": "flash_morphology",
+                "coverage_families": [
+                  "flash_morphology"
+                ],
+                "event_types": [
+                  "matched_active_area_pair"
+                ],
+                "profile_field_ids": [
+                  "flash_morphology.median_largest_component_fraction"
+                ],
+                "human_frame_overlap": [],
+                "nearest_human_frame_distance": 1
+              }
+            ]
+          },
           "metadata": {
             "representation": "whole_stone",
             "support_policy": "fixed",
             "statistic": "median_largest_component_fraction",
             "units": "fraction_of_active_area",
-            "threshold": 1
+            "threshold": 1.0
           }
         }
       ]
@@ -1765,6 +2679,19 @@
         8
       ],
       "source_frames_outside_profile_window": [],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/contact-sheet.jpg",
+        "selected_count": 4,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
       "descriptor_links": [
         {
           "field_id": "activity.activation.middle_relative_total_excursion",
@@ -1777,6 +2704,54 @@
             "rank_descending": 2,
             "rank_ascending": 3,
             "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "family_representative",
+            "coverage_family": "activity_motion",
+            "items": [
+              {
+                "resolution": "family_representative",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/contact-sheet.jpg",
+                "packet_item_rank": 1,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    6,
+                    7
+                  ]
+                },
+                "render_source_indices": [
+                  6,
+                  7
+                ],
+                "selected_for": "activity_motion",
+                "coverage_families": [
+                  "activity_motion",
+                  "relative_dark_state",
+                  "nested_step"
+                ],
+                "event_types": [
+                  "highest",
+                  "largest",
+                  "largest_negative_move",
+                  "strongest_coordinated",
+                  "strongest_divergent"
+                ],
+                "profile_field_ids": [
+                  "activity.activation.centre_relative_total_excursion",
+                  "activity.mobility.centre_median",
+                  "dark_state.occupancy.middle_mean",
+                  "directional.corner_NE_SW_pearson",
+                  "directional.side_N_S_pearson",
+                  "nested_step.centre_inner_pearson",
+                  "nested_step.inner_middle_pearson",
+                  "temporal_reconfiguration.switching.inner_rate"
+                ],
+                "human_frame_overlap": [],
+                "nearest_human_frame_distance": 1
+              }
+            ]
           },
           "metadata": {
             "representation": "coarse",
@@ -1798,6 +2773,54 @@
             "rank_descending": 1,
             "rank_ascending": 4,
             "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "family_representative",
+            "coverage_family": "relative_dark_state",
+            "items": [
+              {
+                "resolution": "family_representative",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/contact-sheet.jpg",
+                "packet_item_rank": 1,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    6,
+                    7
+                  ]
+                },
+                "render_source_indices": [
+                  6,
+                  7
+                ],
+                "selected_for": "activity_motion",
+                "coverage_families": [
+                  "activity_motion",
+                  "relative_dark_state",
+                  "nested_step"
+                ],
+                "event_types": [
+                  "highest",
+                  "largest",
+                  "largest_negative_move",
+                  "strongest_coordinated",
+                  "strongest_divergent"
+                ],
+                "profile_field_ids": [
+                  "activity.activation.centre_relative_total_excursion",
+                  "activity.mobility.centre_median",
+                  "dark_state.occupancy.middle_mean",
+                  "directional.corner_NE_SW_pearson",
+                  "directional.side_N_S_pearson",
+                  "nested_step.centre_inner_pearson",
+                  "nested_step.inner_middle_pearson",
+                  "temporal_reconfiguration.switching.inner_rate"
+                ],
+                "human_frame_overlap": [],
+                "nearest_human_frame_distance": 1
+              }
+            ]
           },
           "metadata": {
             "representation": "coarse",
@@ -1834,6 +2857,19 @@
         8
       ],
       "source_frames_outside_profile_window": [],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/contact-sheet.jpg",
+        "selected_count": 4,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
       "descriptor_links": [
         {
           "field_id": "nested_step.inner_middle_pearson",
@@ -1846,6 +2882,42 @@
             "rank_descending": 3,
             "rank_ascending": 2,
             "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "exact_field",
+            "items": [
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/contact-sheet.jpg",
+                "packet_item_rank": 1,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    6,
+                    7
+                  ]
+                },
+                "render_source_indices": [
+                  6,
+                  7
+                ],
+                "selected_for": "activity_motion",
+                "coverage_families": [
+                  "activity_motion",
+                  "relative_dark_state",
+                  "nested_step"
+                ],
+                "event_types": [
+                  "strongest_coordinated"
+                ],
+                "profile_field_ids": [
+                  "nested_step.inner_middle_pearson"
+                ],
+                "human_frame_overlap": [],
+                "nearest_human_frame_distance": 1
+              }
+            ]
           },
           "metadata": {
             "representation": "coarse",
@@ -1866,6 +2938,42 @@
             "rank_descending": 4,
             "rank_ascending": 1,
             "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "exact_field",
+            "items": [
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/contact-sheet.jpg",
+                "packet_item_rank": 1,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    6,
+                    7
+                  ]
+                },
+                "render_source_indices": [
+                  6,
+                  7
+                ],
+                "selected_for": "activity_motion",
+                "coverage_families": [
+                  "activity_motion",
+                  "relative_dark_state",
+                  "nested_step"
+                ],
+                "event_types": [
+                  "strongest_divergent"
+                ],
+                "profile_field_ids": [
+                  "nested_step.centre_inner_pearson"
+                ],
+                "human_frame_overlap": [],
+                "nearest_human_frame_distance": 1
+              }
+            ]
           },
           "metadata": {
             "representation": "coarse",
@@ -1898,6 +3006,19 @@
         8
       ],
       "source_frames_outside_profile_window": [],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/contact-sheet.jpg",
+        "selected_count": 4,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
       "descriptor_links": [
         {
           "field_id": "flash_morphology.median_largest_component_fraction",
@@ -1911,12 +3032,46 @@
             "rank_ascending": 1,
             "sample_size": 4
           },
+          "machine_evidence": {
+            "resolution": "exact_field",
+            "items": [
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/contact-sheet.jpg",
+                "packet_item_rank": 4,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    249,
+                    0
+                  ]
+                },
+                "render_source_indices": [
+                  249,
+                  0
+                ],
+                "selected_for": "flash_morphology",
+                "coverage_families": [
+                  "flash_morphology"
+                ],
+                "event_types": [
+                  "matched_active_area_pair"
+                ],
+                "profile_field_ids": [
+                  "flash_morphology.median_largest_component_fraction"
+                ],
+                "human_frame_overlap": [],
+                "nearest_human_frame_distance": 1
+              }
+            ]
+          },
           "metadata": {
             "representation": "whole_stone",
             "support_policy": "fixed",
             "statistic": "median_largest_component_fraction",
             "units": "fraction_of_active_area",
-            "threshold": 1
+            "threshold": 1.0
           }
         }
       ]
@@ -1940,6 +3095,19 @@
         8
       ],
       "source_frames_outside_profile_window": [],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/contact-sheet.jpg",
+        "selected_count": 4,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
       "descriptor_links": []
     },
     {
@@ -1963,6 +3131,19 @@
         8
       ],
       "source_frames_outside_profile_window": [],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/contact-sheet.jpg",
+        "selected_count": 4,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
       "descriptor_links": []
     }
   ]
