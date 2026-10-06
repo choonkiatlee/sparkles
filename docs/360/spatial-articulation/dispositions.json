@@ -7,7 +7,7 @@
     "spatial_participation": {
       "decision": "KEEP",
       "primary_measure": "distributed_contrast",
-      "retained_role": "descriptive spatial-organization research primitive",
+      "retained_role": "descriptive coarse spatial-distribution primitive only; not human-validated articulation",
       "quality_direction": null,
       "reason": "Source evidence tracks spatially distributed inner contrast; core/wide rank stability is 0.8 for Q10/Q50/Q90 and core-Q50 redundancy is materially lower than #51 spread or balanced coverage. The measure also separates high global tonal range from broad spatial participation in LG836619414 source 8.",
       "core_q50": {
@@ -91,5 +91,15 @@
       }
     ]
   },
-  "next_direction": "Do not add another metric automatically. Test the fixed-sector candidate with a small human-labelled pair set first; pursue Asscher-specific panel partitioning only if that reveals a repeatable miss. Hold temporal spatial participation."
+  "next_direction": "Initial blinded human review (#62) does not support distributed_contrast as a perceptual articulation proxy. Test Asscher-specific panel-aware articulation next; do not tune the eight-sector score to the four review pairs. Hold temporal spatial participation.",
+  "human_validation_followup": {
+    "issue": 62,
+    "reviewed_at": "2026-10-06T20:59:21Z",
+    "rater_count": 1,
+    "decisive_pairs": 3,
+    "distributed_contrast_agreements": 1,
+    "agreement_rate": 0.3333333333333333,
+    "status": "does_not_support_perceptual_proxy",
+    "record": "human-review-2026-10-06.json"
+  }
 }
