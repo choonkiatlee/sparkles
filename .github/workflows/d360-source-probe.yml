@@ -1,0 +1,70 @@
+name: d360 source probe
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/d360-source-probe.yml"
+      - "diamond360/d360_source.py"
+      - "tests/test_d360_source.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probe d360 viewer
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python - <<'PY'
+          from urllib.request import Request, urlopen
+          from urllib.parse import urljoin
+          from html.parser import HTMLParser
+          import re
+
+          viewers = [
+              "https://d360.tech/view.html?d=79-BB-5159600",
+              "https://d360.tech/view.html?d=79-BT-5165227",
+          ]
+
+          class P(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.scripts=[]
+                  self.links=[]
+              def handle_starttag(self, tag, attrs):
+                  a=dict(attrs)
+                  if tag=="script" and a.get("src"): self.scripts.append(a["src"])
+                  if tag=="link" and a.get("href"): self.links.append(a["href"])
+
+          headers={"User-Agent":"Mozilla/5.0 SparklesD360Probe/1","Accept":"text/html,*/*"}
+          for viewer in viewers:
+              print("VIEWER", viewer)
+              req=Request(viewer,headers=headers)
+              with urlopen(req,timeout=30) as r:
+                  data=r.read()
+                  print("STATUS",r.status,"FINAL",r.geturl(),"BYTES",len(data),"TYPE",r.headers.get("Content-Type"))
+              html=data.decode("utf-8","replace")
+              print("HTML_BEGIN")
+              print(html[:30000])
+              print("HTML_END")
+              p=P(); p.feed(html)
+              for src in p.scripts:
+                  u=urljoin(viewer,src)
+                  print("SCRIPT",u)
+                  try:
+                      with urlopen(Request(u,headers={"User-Agent":headers["User-Agent"]}),timeout=30) as rr:
+                          js=rr.read()
+                      txt=js.decode("utf-8","replace")
+                      print("SCRIPT_BYTES",len(js))
+                      for line in txt.splitlines():
+                          lo=line.lower()
+                          if any(k in lo for k in ("media.d360","jpg","jpeg","webp","png","frame","image","surl","api","json")):
+                              print("JS_MATCH",line[:2000])
+                  except Exception as exc:
+                      print("SCRIPT_ERROR",repr(exc))
+          PY
