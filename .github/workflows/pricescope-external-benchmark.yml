@@ -1,0 +1,84 @@
+name: PriceScope external benchmark
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/pricescope-external-benchmark.yml"
+      - "diamond360/external_media.py"
+      - "diamond360/external_benchmark.py"
+      - "tests/test_external_media.py"
+      - "tests/test_external_benchmark.py"
+      - "docs/360/external-benchmark/pricescope/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install project and tests
+        run: python -m pip install -e . pytest
+
+      - name: Adapter and disposition tests
+        run: python -m pytest -q tests/test_external_media.py tests/test_external_benchmark.py
+
+      - name: Check video decoder
+        run: ffmpeg -version | head -1
+
+      - name: Download pinned PriceScope recovery bundle
+        run: |
+          mkdir -p /tmp/pricescope-archive
+          gh release download pricescope-research-2026-10-06-v1 \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern pricescope-media-recovery-2026-10-06-v3.zip \
+            --dir /tmp
+          unzip -q /tmp/pricescope-media-recovery-2026-10-06-v3.zip \
+            -d /tmp/pricescope-archive
+          python - <<'PY' >> "$GITHUB_ENV"
+          from pathlib import Path
+          base = Path("/tmp/pricescope-archive")
+          candidates = [base] + [p for p in base.iterdir() if p.is_dir()]
+          for candidate in candidates:
+              if (candidate / "media").is_dir() and (candidate / "d360").is_dir():
+                  print(f"ARCHIVE_ROOT={candidate}")
+                  break
+          else:
+              raise SystemExit("could not locate media/ + d360/ in v3 archive")
+          PY
+
+      - name: Run blind external benchmark
+        run: |
+          python -m diamond360.external_benchmark \
+            --archive-root "$ARCHIVE_ROOT" \
+            --output /tmp/external-results
+
+      - name: Validate compact outputs
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path("/tmp/external-results")
+          payload = json.loads((root / "summary.json").read_text())
+          assert payload["schema_version"] == "sparkles-external-benchmark-run/1"
+          assert len(payload["samples"]) == 13
+          assert len(payload["dispositions"]) >= 1
+          print(json.dumps({
+              "measured": sum(x["status"] == "measured" for x in payload["samples"]),
+              "pipeline_source_mismatch": sum(x["status"] == "pipeline_source_mismatch" for x in payload["samples"]),
+              "dispositions": payload["dispositions"],
+          }, indent=2))
+          PY
+
+      - name: Upload benchmark evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: pricescope-external-benchmark
+          path: /tmp/external-results
+          if-no-files-found: error
+          retention-days: 14
