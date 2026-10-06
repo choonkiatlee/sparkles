@@ -5,13 +5,15 @@ on:
     branches: [master]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: issue-28-bright-dark-switching
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -178,8 +180,33 @@ jobs:
                   dst = compact / "per-stone" / certificate / window / "switching.json"
                   dst.parent.mkdir(parents=True, exist_ok=True)
                   shutil.copy2(src, dst)
+          selected_evidence = [
+              "per-stone/IGI-LG836619414/core/evidence/coarse-middle-fixed.png",
+              "per-stone/IGI-LG836619414/wide/evidence/coarse-outer-fixed.png",
+              "per-stone/IGI-LG836619414/wide/evidence/coarse-outer-pair_local.png",
+              "per-stone/IGI-LG818659722/core/evidence/coarse-inner-fixed.png",
+              "per-stone/IGI-LG818659722/core/evidence/semantic-inner_step-fixed.png",
+          ]
+          for relative in selected_evidence:
+              src = OUT_ROOT / relative
+              dst = compact / relative
+              dst.parent.mkdir(parents=True, exist_ok=True)
+              shutil.copy2(src, dst)
+
+          publish = Path("docs/360/switching")
+          if publish.exists():
+              shutil.rmtree(publish)
+          shutil.copytree(compact, publish)
+
           shutil.make_archive("issue28-switching-benchmark", "zip", compact)
           print("benchmark rows", len(summary_rows))
+      - name: Commit compact benchmark evidence
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/360/switching
+          git diff --cached --quiet || git commit -m "docs: add switching benchmark evidence [skip ci]"
+          git push origin HEAD:issue-28-bright-dark-switching
       - uses: actions/upload-artifact@v4
         with:
           name: issue28-switching-benchmark
