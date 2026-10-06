@@ -41,11 +41,20 @@ FORMULATIONS = (
 )
 
 _SELECTION_REASONS = (
-    "lowest_boundary_q25",
-    "highest_boundary_median",
-    "largest_coverage_gap",
+    "consensus_low",
+    "consensus_high",
+    "max_formulation_disagreement",
     "largest_joint_penalty",
-    "typical_joint",
+    "phase_anchor",
+)
+
+SELECTION_FORMULATIONS = (
+    "coarse_whole_weakest",
+    "broad_sector_median_weakest",
+    "boundary_median_weakest",
+    "boundary_q25_weakest",
+    "joint_median",
+    "joint_q25",
 )
 
 
@@ -185,73 +194,138 @@ def load_benchmark_features(benchmark_root):
     return result
 
 
-def _rank_candidates(rows, key, reverse):
-    finite = [row for row in rows if _finite(row.get(key)) is not None]
+def _normalized_ranks(rows, key):
+    finite = [
+        (index, float(row[key]))
+        for index, row in enumerate(rows)
+        if _finite(row.get(key)) is not None
+    ]
+    if not finite:
+        return {}
+    values = [value for _, value in finite]
+    raw = _average_ranks(values)
+    denom = max(1.0, len(raw) - 1.0)
+    return {
+        row_index: float(rank / denom)
+        for (row_index, _), rank in zip(finite, raw)
+    }
+
+
+def _selection_diagnostics(rows):
+    """Add formulation-balanced sampling diagnostics to frame rows.
+
+    These fields are used only to choose the human-review challenge set. They
+    are not candidate descriptors and are never exposed on the blinded sheet.
+    """
+    ranks = {
+        key: _normalized_ranks(rows, key)
+        for key in SELECTION_FORMULATIONS
+    }
+    result = []
+    for index, row in enumerate(rows):
+        available = [
+            ranks[key][index]
+            for key in SELECTION_FORMULATIONS
+            if index in ranks[key]
+        ]
+        item = dict(row)
+        item["selection_consensus_rank"] = (
+            float(np.median(available)) if available else None
+        )
+        item["selection_rank_spread"] = (
+            float(max(available) - min(available))
+            if len(available) >= 2 else None
+        )
+        result.append(item)
+    return result
+
+
+def _choose_unique(rows, key, used, reverse=False):
+    finite = [
+        row for row in rows
+        if row["source_index"] not in used
+        and _finite(row.get(key)) is not None
+    ]
+    if not finite:
+        return None
     return sorted(
         finite,
         key=lambda row: (
             -float(row[key]) if reverse else float(row[key]),
             int(row["source_index"]),
         ),
-    )
+    )[0]
 
 
-def _nearest_typical(rows, key, excluded):
-    finite = [
-        row for row in rows
-        if _finite(row.get(key)) is not None
-        and row["source_index"] not in excluded
+def _circular_source_distance(source_index, anchor=0, frame_count=256):
+    delta = abs(int(source_index) - int(anchor))
+    return min(delta, frame_count - delta)
+
+
+def _phase_anchor(rows, used):
+    candidates = [
+        row for row in rows if row["source_index"] not in used
     ]
-    if not finite:
+    if not candidates:
         return None
-    target = float(np.median([row[key] for row in finite]))
     return min(
-        finite,
+        candidates,
         key=lambda row: (
-            abs(float(row[key]) - target),
+            _circular_source_distance(row["source_index"], anchor=0),
             int(row["source_index"]),
         ),
     )
 
 
 def select_informative_frames(features_by_stone, per_stone=5):
-    """Select fixed descriptor-informed frames before any human labels exist."""
+    """Select a formulation-balanced challenge set before human labels exist.
+
+    Two rows are chosen from consensus rank across all six separation
+    formulations, one from maximal cross-formulation rank disagreement, one
+    stress-tests complementary nested-tier collapse, and one is a fixed phase
+    anchor independent of descriptor magnitude. This prevents PR-B candidates
+    from defining the whole evaluation set they are later compared on.
+    """
     if per_stone != len(_SELECTION_REASONS):
         raise ValueError(
             f"current packet contract requires {len(_SELECTION_REASONS)} frames per stone"
         )
     selected = []
-    for certificate, rows in sorted(features_by_stone.items()):
-        if not rows:
+    for certificate, raw_rows in sorted(features_by_stone.items()):
+        if not raw_rows:
             raise ValueError(f"{certificate}: no frame features")
+        rows = _selection_diagnostics(raw_rows)
         used = set()
         specs = (
-            ("lowest_boundary_q25", "boundary_q25_weakest", False),
-            ("highest_boundary_median", "boundary_median_weakest", True),
-            ("largest_coverage_gap", "coverage_gap", True),
+            ("consensus_low", "selection_consensus_rank", False),
+            ("consensus_high", "selection_consensus_rank", True),
+            (
+                "max_formulation_disagreement",
+                "selection_rank_spread",
+                True,
+            ),
             ("largest_joint_penalty", "joint_median_penalty", True),
         )
         for reason, key, reverse in specs:
-            candidates = _rank_candidates(rows, key, reverse)
-            choice = next(
-                (row for row in candidates if row["source_index"] not in used),
-                None,
-            )
+            choice = _choose_unique(rows, key, used, reverse=reverse)
             if choice is None:
-                raise ValueError(f"{certificate}: cannot select unique frame for {reason}")
+                raise ValueError(
+                    f"{certificate}: cannot select unique frame for {reason}"
+                )
             used.add(choice["source_index"])
             selected.append({
                 "certificate": certificate,
                 "source_index": choice["source_index"],
                 "selection_reason": reason,
             })
-        typical = _nearest_typical(rows, "joint_median", used)
-        if typical is None:
-            raise ValueError(f"{certificate}: cannot select typical joint frame")
+
+        anchor = _phase_anchor(rows, used)
+        if anchor is None:
+            raise ValueError(f"{certificate}: cannot select phase anchor")
         selected.append({
             "certificate": certificate,
-            "source_index": typical["source_index"],
-            "selection_reason": "typical_joint",
+            "source_index": anchor["source_index"],
+            "selection_reason": "phase_anchor",
         })
 
     # Blind the labelling order: stable hash rather than certificate grouping.
@@ -263,7 +337,6 @@ def select_informative_frames(features_by_stone, per_stone=5):
     for number, row in enumerate(selected, start=1):
         row["item_id"] = f"T{number:02d}"
     return selected
-
 
 def _source_frame(source_root, certificate, source_index):
     root = Path(source_root) / certificate
@@ -347,7 +420,9 @@ def build_label_packet(benchmark_root, source_root, output, per_stone=5):
         "selection_contract": {
             "per_stone": per_stone,
             "reasons": list(_SELECTION_REASONS),
+            "selection_formulations": list(SELECTION_FORMULATIONS),
             "selection_uses_human_labels": False,
+            "selection_is_candidate_balanced": True,
             "label_sheet_exposes_descriptor_values": False,
             "ordering": "stable sha256(certificate:source_index) blind order",
         },
