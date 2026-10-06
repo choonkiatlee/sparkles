@@ -55,11 +55,11 @@
     16
   ],
   "thresholds": [
-    1.2,
-    1.25,
-    1.3
+    0.75,
+    1.0,
+    1.25
   ],
-  "baseline_threshold": 1.25,
+  "baseline_threshold": 1.0,
   "connectivity": 8,
   "stones": [
     {
@@ -70,140 +70,148 @@
             "strongest": {
               "position": 6,
               "source_index": 254,
-              "absolute_difference": 0.07490254970966759,
-              "fixed_largest_component_fraction": 0.5802368313597387,
-              "dynamic_largest_component_fraction": 0.5053342816500711
+              "absolute_difference": 0.06819231245084262,
+              "fixed_largest_component_fraction": 0.35600095442615126,
+              "dynamic_largest_component_fraction": 0.28780864197530864
             },
             "control": {
               "position": 0,
               "source_index": 248,
-              "absolute_difference": 0.0007293287919457603,
-              "fixed_largest_component_fraction": 0.7526673132880698,
-              "dynamic_largest_component_fraction": 0.751937984496124
+              "absolute_difference": 0.00683006821142898,
+              "fixed_largest_component_fraction": 0.21943146417445483,
+              "dynamic_largest_component_fraction": 0.21260139596302585
             }
           },
           "fixed_evidence": {
             "broadest": {
-              "position": 9,
-              "source_index": 1,
+              "position": 2,
+              "source_index": 250,
               "status": "ok",
               "reason": null,
               "support_pixels": 26566,
-              "active_pixels": 2684,
-              "active_fraction": 0.10103139351050215,
-              "component_count": 109,
-              "largest_component_pixels": 1481,
-              "largest_component_fraction": 0.5517883755588674,
-              "largest_component_support_fraction": 0.05574794850560867,
-              "effective_component_count": 3.1763985869064877,
-              "boundary_active_pixels": 38,
-              "boundary_active_fraction": 0.014157973174366617,
-              "components_touching_support_boundary": 10
+              "active_pixels": 5345,
+              "active_fraction": 0.20119701874576526,
+              "component_count": 249,
+              "largest_component_pixels": 1672,
+              "largest_component_fraction": 0.3128157156220767,
+              "largest_component_support_fraction": 0.06293758939998495,
+              "effective_component_count": 8.261205564142195,
+              "boundary_active_pixels": 115,
+              "boundary_active_fraction": 0.021515434985968196,
+              "components_touching_support_boundary": 25,
+              "reference_scale": 0.12008242614269256,
+              "active_threshold_value": 0.9099977195978165
             },
             "most_fragmented": {
-              "position": 16,
-              "source_index": 8,
+              "position": 0,
+              "source_index": 248,
               "status": "ok",
               "reason": null,
               "support_pixels": 26566,
-              "active_pixels": 2521,
-              "active_fraction": 0.09489573138598208,
-              "component_count": 172,
-              "largest_component_pixels": 1130,
-              "largest_component_fraction": 0.44823482744942483,
-              "largest_component_support_fraction": 0.04253557178348265,
-              "effective_component_count": 4.627405738167442,
-              "boundary_active_pixels": 36,
-              "boundary_active_fraction": 0.014280047600158666,
-              "components_touching_support_boundary": 13
+              "active_pixels": 5136,
+              "active_fraction": 0.19332982007076716,
+              "component_count": 301,
+              "largest_component_pixels": 1127,
+              "largest_component_fraction": 0.21943146417445483,
+              "largest_component_support_fraction": 0.04242264548671234,
+              "effective_component_count": 13.395185583155431,
+              "boundary_active_pixels": 85,
+              "boundary_active_fraction": 0.016549844236760123,
+              "components_touching_support_boundary": 25,
+              "reference_scale": 0.11092633799314498,
+              "active_threshold_value": 0.908401616370678
             },
             "matched_active_area_pair": {
-              "area_difference": 0.0027102311224873887,
-              "largest_component_fraction_difference": 0.13200200391031386,
+              "area_difference": 0.018143491681096136,
+              "largest_component_fraction_difference": 0.09781766547345933,
               "within_tolerance": true,
               "left": {
-                "position": 6,
-                "source_index": 254,
+                "position": 3,
+                "source_index": 251,
                 "status": "ok",
                 "reason": null,
                 "support_pixels": 26566,
-                "active_pixels": 2449,
-                "active_fraction": 0.09218550026349469,
-                "component_count": 118,
-                "largest_component_pixels": 1421,
-                "largest_component_fraction": 0.5802368313597387,
-                "largest_component_support_fraction": 0.05348942257020251,
-                "effective_component_count": 2.8409986504595515,
-                "boundary_active_pixels": 43,
-                "boundary_active_fraction": 0.017558187015108206,
-                "components_touching_support_boundary": 15
+                "active_pixels": 4678,
+                "active_fraction": 0.17608973876383346,
+                "component_count": 245,
+                "largest_component_pixels": 1266,
+                "largest_component_fraction": 0.2706284737067123,
+                "largest_component_support_fraction": 0.04765489723706994,
+                "effective_component_count": 10.527054979690243,
+                "boundary_active_pixels": 113,
+                "boundary_active_fraction": 0.024155622060709706,
+                "components_touching_support_boundary": 33,
+                "reference_scale": 0.13044440921545028,
+                "active_threshold_value": 0.9160977321505547
               },
               "right": {
-                "position": 16,
-                "source_index": 8,
+                "position": 11,
+                "source_index": 3,
                 "status": "ok",
                 "reason": null,
                 "support_pixels": 26566,
-                "active_pixels": 2521,
-                "active_fraction": 0.09489573138598208,
-                "component_count": 172,
-                "largest_component_pixels": 1130,
-                "largest_component_fraction": 0.44823482744942483,
-                "largest_component_support_fraction": 0.04253557178348265,
-                "effective_component_count": 4.627405738167442,
-                "boundary_active_pixels": 36,
-                "boundary_active_fraction": 0.014280047600158666,
-                "components_touching_support_boundary": 13
+                "active_pixels": 4196,
+                "active_fraction": 0.15794624708273733,
+                "component_count": 217,
+                "largest_component_pixels": 1546,
+                "largest_component_fraction": 0.3684461391801716,
+                "largest_component_support_fraction": 0.05819468493563201,
+                "effective_component_count": 6.746177154426561,
+                "boundary_active_pixels": 90,
+                "boundary_active_fraction": 0.021448999046711152,
+                "components_touching_support_boundary": 28,
+                "reference_scale": 0.12807340205311774,
+                "active_threshold_value": 0.900456942921877
               }
             }
           },
           "fixed_threshold_sensitivity": {
             "position": 15,
             "source_index": 7,
-            "largest_component_fraction_range": 0.5147914445357245,
+            "largest_component_fraction_range": 0.169918920628148,
             "threshold_values": [
               {
-                "threshold": "1.20",
-                "largest_component_fraction": 0.35100942126514134,
-                "effective_component_count": 7.079079637193465
+                "threshold": "0.75",
+                "largest_component_fraction": 0.2776678063703437,
+                "effective_component_count": 9.716921120193382
+              },
+              {
+                "threshold": "1.00",
+                "largest_component_fraction": 0.34354543074103167,
+                "effective_component_count": 7.351860729229834
               },
               {
                 "threshold": "1.25",
-                "largest_component_fraction": 0.4628616106333073,
-                "effective_component_count": 4.39353046159383
-              },
-              {
-                "threshold": "1.30",
-                "largest_component_fraction": 0.8658008658008658,
-                "effective_component_count": 1.331453630176721
+                "largest_component_fraction": 0.4475867269984917,
+                "effective_component_count": 4.6859494220770035
               }
             ]
           },
           "dynamic_threshold_sensitivity": {
             "position": 15,
             "source_index": 7,
-            "largest_component_fraction_range": 0.5328806959300076,
+            "largest_component_fraction_range": 0.1516306305996428,
             "threshold_values": [
               {
-                "threshold": "1.20",
-                "largest_component_fraction": 0.3092245672278871,
-                "effective_component_count": 8.953525278742095
+                "threshold": "0.75",
+                "largest_component_fraction": 0.24695902688860435,
+                "effective_component_count": 11.555396632381095
+              },
+              {
+                "threshold": "1.00",
+                "largest_component_fraction": 0.3024435223605348,
+                "effective_component_count": 9.299508691058497
               },
               {
                 "threshold": "1.25",
-                "largest_component_fraction": 0.413696715583508,
-                "effective_component_count": 5.456519943403316
-              },
-              {
-                "threshold": "1.30",
-                "largest_component_fraction": 0.8421052631578947,
-                "effective_component_count": 1.4070168436675665
+                "largest_component_fraction": 0.39858965748824715,
+                "effective_component_count": 5.857426862114927
               }
             ]
           },
           "supports": {
             "fixed": {
-              "1.20": {
+              "0.75": {
                 "validity": {
                   "status": "ok",
                   "reasons": []
@@ -214,13 +222,35 @@
                   "observed_frames": 17,
                   "active_frames": 17,
                   "active_frame_fraction": 1.0,
-                  "median_active_fraction": 0.13189791462771963,
-                  "median_largest_component_fraction": 0.39371428571428574,
-                  "q10_largest_component_fraction": 0.3492229509945491,
-                  "q90_largest_component_fraction": 0.44349939417352974,
-                  "median_effective_component_count": 5.688079786820053,
-                  "q90_effective_component_count": 7.131228923396864,
-                  "median_boundary_active_fraction": 0.017408675799086757
+                  "median_active_fraction": 0.20917714371753368,
+                  "median_largest_component_fraction": 0.27770968306776395,
+                  "q10_largest_component_fraction": 0.2234020919917471,
+                  "q90_largest_component_fraction": 0.3081768899128335,
+                  "median_effective_component_count": 9.716921120193382,
+                  "q90_effective_component_count": 13.538892727219874,
+                  "median_boundary_active_fraction": 0.024893435635123615,
+                  "median_reference_scale": 0.1286001305222511
+                }
+              },
+              "1.00": {
+                "validity": {
+                  "status": "ok",
+                  "reasons": []
+                },
+                "persistent_support_fraction": 0.7722000988285905,
+                "summary": {
+                  "status": "ok",
+                  "observed_frames": 17,
+                  "active_frames": 17,
+                  "active_frame_fraction": 1.0,
+                  "median_active_fraction": 0.15794624708273733,
+                  "median_largest_component_fraction": 0.34354543074103167,
+                  "q10_largest_component_fraction": 0.26490331819215795,
+                  "q90_largest_component_fraction": 0.3662479365524297,
+                  "median_effective_component_count": 7.351860729229834,
+                  "q90_effective_component_count": 10.597948078735437,
+                  "median_boundary_active_fraction": 0.020942408376963352,
+                  "median_reference_scale": 0.1286001305222511
                 }
               },
               "1.25": {
@@ -232,40 +262,21 @@
                 "summary": {
                   "status": "ok",
                   "observed_frames": 17,
-                  "active_frames": 16,
-                  "active_frame_fraction": 0.9411764705882353,
-                  "median_active_fraction": 0.09429345780320711,
-                  "median_largest_component_fraction": 0.5420112303561335,
-                  "q10_largest_component_fraction": 0.46305439174637897,
-                  "q90_largest_component_fraction": 0.5764585192242739,
-                  "median_effective_component_count": 3.2912718438359265,
-                  "q90_effective_component_count": 4.40298611717534,
-                  "median_boundary_active_fraction": 0.014208080999514715
-                }
-              },
-              "1.30": {
-                "validity": {
-                  "status": "ok",
-                  "reasons": []
-                },
-                "persistent_support_fraction": 0.7722000988285905,
-                "summary": {
-                  "status": "ok",
-                  "observed_frames": 17,
-                  "active_frames": 1,
-                  "active_frame_fraction": 0.058823529411764705,
-                  "median_active_fraction": 0.03478129940525484,
-                  "median_largest_component_fraction": 0.8658008658008658,
-                  "q10_largest_component_fraction": 0.8658008658008658,
-                  "q90_largest_component_fraction": 0.8658008658008658,
-                  "median_effective_component_count": 1.331453630176721,
-                  "q90_effective_component_count": 1.331453630176721,
-                  "median_boundary_active_fraction": 0.0010822510822510823
+                  "active_frames": 17,
+                  "active_frame_fraction": 1.0,
+                  "median_active_fraction": 0.12741850485583076,
+                  "median_largest_component_fraction": 0.4276094276094276,
+                  "q10_largest_component_fraction": 0.3437129344248756,
+                  "q90_largest_component_fraction": 0.4480915290583198,
+                  "median_effective_component_count": 5.1193110463757225,
+                  "q90_effective_component_count": 7.178294326921586,
+                  "median_boundary_active_fraction": 0.01634472511144131,
+                  "median_reference_scale": 0.1286001305222511
                 }
               }
             },
             "dynamic": {
-              "1.20": {
+              "0.75": {
                 "validity": {
                   "status": "ok",
                   "reasons": []
@@ -276,13 +287,35 @@
                   "observed_frames": 17,
                   "active_frames": 17,
                   "active_frame_fraction": 1.0,
-                  "median_active_fraction": 0.12635412775494956,
-                  "median_largest_component_fraction": 0.33899138991389915,
-                  "q10_largest_component_fraction": 0.31923877063270645,
-                  "q90_largest_component_fraction": 0.3939883669757849,
-                  "median_effective_component_count": 7.541256448787553,
-                  "q90_effective_component_count": 8.325692062235547,
-                  "median_boundary_active_fraction": 0.007637349100763735
+                  "median_active_fraction": 0.21047951925435368,
+                  "median_largest_component_fraction": 0.24169685990338163,
+                  "q10_largest_component_fraction": 0.2113811708855417,
+                  "q90_largest_component_fraction": 0.25309929065540254,
+                  "median_effective_component_count": 12.569009762392858,
+                  "q90_effective_component_count": 14.800387850119849,
+                  "median_boundary_active_fraction": 0.010999083409715857,
+                  "median_reference_scale": 0.1286001305222511
+                }
+              },
+              "1.00": {
+                "validity": {
+                  "status": "ok",
+                  "reasons": []
+                },
+                "persistent_support_fraction": 0.7722000988285905,
+                "summary": {
+                  "status": "ok",
+                  "observed_frames": 17,
+                  "active_frames": 17,
+                  "active_frame_fraction": 1.0,
+                  "median_active_fraction": 0.1551999018886436,
+                  "median_largest_component_fraction": 0.28845360824742267,
+                  "q10_largest_component_fraction": 0.24995084835296622,
+                  "q90_largest_component_fraction": 0.3072764481688832,
+                  "median_effective_component_count": 9.564858987281095,
+                  "q90_effective_component_count": 11.600403932689483,
+                  "median_boundary_active_fraction": 0.00939334637964775,
+                  "median_reference_scale": 0.1286001305222511
                 }
               },
               "1.25": {
@@ -294,35 +327,16 @@
                 "summary": {
                   "status": "ok",
                   "observed_frames": 17,
-                  "active_frames": 16,
-                  "active_frame_fraction": 0.9411764705882353,
-                  "median_active_fraction": 0.08859180177005783,
-                  "median_largest_component_fraction": 0.47812671065141604,
-                  "q10_largest_component_fraction": 0.42285589074843954,
-                  "q90_largest_component_fraction": 0.5108913046203428,
-                  "median_effective_component_count": 4.200440753448396,
-                  "q90_effective_component_count": 5.252933563258268,
-                  "median_boundary_active_fraction": 0.005340211840645651
-                }
-              },
-              "1.30": {
-                "validity": {
-                  "status": "ok",
-                  "reasons": []
-                },
-                "persistent_support_fraction": 0.7722000988285905,
-                "summary": {
-                  "status": "ok",
-                  "observed_frames": 17,
-                  "active_frames": 1,
-                  "active_frame_fraction": 0.058823529411764705,
-                  "median_active_fraction": 0.03200485126166493,
-                  "median_largest_component_fraction": 0.8421052631578947,
-                  "q10_largest_component_fraction": 0.8421052631578947,
-                  "q90_largest_component_fraction": 0.8421052631578947,
-                  "median_effective_component_count": 1.4070168436675665,
-                  "q90_effective_component_count": 1.4070168436675665,
-                  "median_boundary_active_fraction": 0.0
+                  "active_frames": 17,
+                  "active_frame_fraction": 1.0,
+                  "median_active_fraction": 0.1210621342298593,
+                  "median_largest_component_fraction": 0.3698184773774045,
+                  "q10_largest_component_fraction": 0.3234705675363193,
+                  "q90_largest_component_fraction": 0.38684496846063304,
+                  "median_effective_component_count": 6.7085859284708675,
+                  "q90_effective_component_count": 7.929011261509983,
+                  "median_boundary_active_fraction": 0.007456929802005657,
+                  "median_reference_scale": 0.1286001305222511
                 }
               }
             }
@@ -333,140 +347,148 @@
             "strongest": {
               "position": 14,
               "source_index": 254,
-              "absolute_difference": 0.12960256014625493,
-              "fixed_largest_component_fraction": 0.6067463706233988,
-              "dynamic_largest_component_fraction": 0.4771438104771438
+              "absolute_difference": 0.1241169327666688,
+              "fixed_largest_component_fraction": 0.41292839230983563,
+              "dynamic_largest_component_fraction": 0.28881145954316684
             },
             "control": {
-              "position": 30,
-              "source_index": 14,
-              "absolute_difference": 0.026561927050753886,
-              "fixed_largest_component_fraction": 0.33833798882681565,
-              "dynamic_largest_component_fraction": 0.31177606177606176
+              "position": 10,
+              "source_index": 250,
+              "absolute_difference": 0.0140243856404062,
+              "fixed_largest_component_fraction": 0.29910913140311807,
+              "dynamic_largest_component_fraction": 0.28508474576271187
             }
           },
           "fixed_evidence": {
             "broadest": {
-              "position": 16,
-              "source_index": 0,
+              "position": 19,
+              "source_index": 3,
               "status": "ok",
               "reason": null,
               "support_pixels": 22777,
-              "active_pixels": 2426,
-              "active_fraction": 0.10651095403257672,
-              "component_count": 83,
-              "largest_component_pixels": 1461,
-              "largest_component_fraction": 0.6022258862324814,
-              "largest_component_support_fraction": 0.06414365368573562,
-              "effective_component_count": 2.6869779991508276,
-              "boundary_active_pixels": 80,
-              "boundary_active_fraction": 0.03297609233305853,
-              "components_touching_support_boundary": 12
+              "active_pixels": 3655,
+              "active_fraction": 0.16046889405979717,
+              "component_count": 156,
+              "largest_component_pixels": 1535,
+              "largest_component_fraction": 0.41997264021887826,
+              "largest_component_support_fraction": 0.06739254511129648,
+              "effective_component_count": 5.266925669029203,
+              "boundary_active_pixels": 108,
+              "boundary_active_fraction": 0.029548563611491108,
+              "components_touching_support_boundary": 25,
+              "reference_scale": 0.13319545090198517,
+              "active_threshold_value": 0.9019123822450638
             },
             "most_fragmented": {
-              "position": 31,
-              "source_index": 15,
+              "position": 29,
+              "source_index": 13,
               "status": "ok",
               "reason": null,
               "support_pixels": 22777,
-              "active_pixels": 2793,
-              "active_fraction": 0.12262369934583132,
-              "component_count": 196,
-              "largest_component_pixels": 935,
-              "largest_component_fraction": 0.334765485141425,
-              "largest_component_support_fraction": 0.04105018220134346,
-              "effective_component_count": 6.052692262630321,
-              "boundary_active_pixels": 26,
-              "boundary_active_fraction": 0.009308986752595776,
-              "components_touching_support_boundary": 12
+              "active_pixels": 4775,
+              "active_fraction": 0.2096413048250428,
+              "component_count": 271,
+              "largest_component_pixels": 1076,
+              "largest_component_fraction": 0.22534031413612565,
+              "largest_component_support_fraction": 0.047240637485182424,
+              "effective_component_count": 12.090838418328364,
+              "boundary_active_pixels": 65,
+              "boundary_active_fraction": 0.013612565445026177,
+              "components_touching_support_boundary": 24,
+              "reference_scale": 0.12218942838907242,
+              "active_threshold_value": 0.9124584456086159
             },
             "matched_active_area_pair": {
-              "area_difference": 0.019800676120648023,
-              "largest_component_fraction_difference": 0.27198088548197374,
+              "area_difference": 0.00904421126575053,
+              "largest_component_fraction_difference": 0.14828136852760654,
               "within_tolerance": true,
               "left": {
-                "position": 14,
-                "source_index": 254,
+                "position": 5,
+                "source_index": 245,
                 "status": "ok",
                 "reason": null,
                 "support_pixels": 22777,
-                "active_pixels": 2342,
-                "active_fraction": 0.1028230232251833,
-                "component_count": 104,
-                "largest_component_pixels": 1421,
-                "largest_component_fraction": 0.6067463706233988,
-                "largest_component_support_fraction": 0.06238749615840541,
-                "effective_component_count": 2.6307993077858747,
-                "boundary_active_pixels": 67,
-                "boundary_active_fraction": 0.02860802732707088,
-                "components_touching_support_boundary": 9
+                "active_pixels": 3861,
+                "active_fraction": 0.1695131053255477,
+                "component_count": 256,
+                "largest_component_pixels": 1049,
+                "largest_component_fraction": 0.2716912716912717,
+                "largest_component_support_fraction": 0.04605523115423454,
+                "effective_component_count": 9.6314024640405,
+                "boundary_active_pixels": 66,
+                "boundary_active_fraction": 0.017094017094017096,
+                "components_touching_support_boundary": 24,
+                "reference_scale": 0.1259675044298172,
+                "active_threshold_value": 0.9083463567972183
               },
               "right": {
-                "position": 31,
-                "source_index": 15,
+                "position": 19,
+                "source_index": 3,
                 "status": "ok",
                 "reason": null,
                 "support_pixels": 22777,
-                "active_pixels": 2793,
-                "active_fraction": 0.12262369934583132,
-                "component_count": 196,
-                "largest_component_pixels": 935,
-                "largest_component_fraction": 0.334765485141425,
-                "largest_component_support_fraction": 0.04105018220134346,
-                "effective_component_count": 6.052692262630321,
-                "boundary_active_pixels": 26,
-                "boundary_active_fraction": 0.009308986752595776,
-                "components_touching_support_boundary": 12
+                "active_pixels": 3655,
+                "active_fraction": 0.16046889405979717,
+                "component_count": 156,
+                "largest_component_pixels": 1535,
+                "largest_component_fraction": 0.41997264021887826,
+                "largest_component_support_fraction": 0.06739254511129648,
+                "effective_component_count": 5.266925669029203,
+                "boundary_active_pixels": 108,
+                "boundary_active_fraction": 0.029548563611491108,
+                "components_touching_support_boundary": 25,
+                "reference_scale": 0.13319545090198517,
+                "active_threshold_value": 0.9019123822450638
               }
             }
           },
           "fixed_threshold_sensitivity": {
-            "position": 24,
-            "source_index": 8,
-            "largest_component_fraction_range": 0.517306167482259,
+            "position": 23,
+            "source_index": 7,
+            "largest_component_fraction_range": 0.20549472828715193,
             "threshold_values": [
               {
-                "threshold": "1.20",
-                "largest_component_fraction": 0.3620222690340054,
-                "effective_component_count": 6.464976759680638
+                "threshold": "0.75",
+                "largest_component_fraction": 0.2957862281603289,
+                "effective_component_count": 8.611546814562061
+              },
+              {
+                "threshold": "1.00",
+                "largest_component_fraction": 0.38308605341246293,
+                "effective_component_count": 6.001644561268891
               },
               {
                 "threshold": "1.25",
-                "largest_component_fraction": 0.46494464944649444,
-                "effective_component_count": 4.2675435544444005
-              },
-              {
-                "threshold": "1.30",
-                "largest_component_fraction": 0.8793284365162645,
-                "effective_component_count": 1.2913187330357914
+                "largest_component_fraction": 0.5012809564474808,
+                "effective_component_count": 3.7688073999661933
               }
             ]
           },
           "dynamic_threshold_sensitivity": {
-            "position": 22,
-            "source_index": 6,
-            "largest_component_fraction_range": 0.5493800278118365,
+            "position": 23,
+            "source_index": 7,
+            "largest_component_fraction_range": 0.16744986612123036,
             "threshold_values": [
               {
-                "threshold": "1.20",
-                "largest_component_fraction": 0.31538865546218486,
-                "effective_component_count": 8.490951527167672
+                "threshold": "0.75",
+                "largest_component_fraction": 0.2505713352921972,
+                "effective_component_count": 11.291911067782381
+              },
+              {
+                "threshold": "1.00",
+                "largest_component_fraction": 0.3092979127134725,
+                "effective_component_count": 8.950230217971903
               },
               {
                 "threshold": "1.25",
-                "largest_component_fraction": 0.42472324723247235,
-                "effective_component_count": 5.21446169794307
-              },
-              {
-                "threshold": "1.30",
-                "largest_component_fraction": 0.8647686832740213,
-                "effective_component_count": 1.3345546188819135
+                "largest_component_fraction": 0.4180212014134276,
+                "effective_component_count": 5.353056139281458
               }
             ]
           },
           "supports": {
             "fixed": {
-              "1.20": {
+              "0.75": {
                 "validity": {
                   "status": "ok",
                   "reasons": []
@@ -477,13 +499,35 @@
                   "observed_frames": 33,
                   "active_frames": 33,
                   "active_frame_fraction": 1.0,
-                  "median_active_fraction": 0.1412828730737147,
-                  "median_largest_component_fraction": 0.3726937269372694,
-                  "q10_largest_component_fraction": 0.2919133269156069,
-                  "q90_largest_component_fraction": 0.4658681476943153,
-                  "median_effective_component_count": 6.060370059369388,
-                  "q90_effective_component_count": 8.215589932523137,
-                  "median_boundary_active_fraction": 0.023619427811044577
+                  "median_active_fraction": 0.23905694340782369,
+                  "median_largest_component_fraction": 0.2648934232100565,
+                  "q10_largest_component_fraction": 0.2083806554544894,
+                  "q90_largest_component_fraction": 0.3482718751437682,
+                  "median_effective_component_count": 8.963948205549435,
+                  "q90_effective_component_count": 12.125887323827639,
+                  "median_boundary_active_fraction": 0.02717391304347826,
+                  "median_reference_scale": 0.12803730297088622
+                }
+              },
+              "1.00": {
+                "validity": {
+                  "status": "ok",
+                  "reasons": []
+                },
+                "persistent_support_fraction": 0.660700818007774,
+                "summary": {
+                  "status": "ok",
+                  "observed_frames": 33,
+                  "active_frames": 33,
+                  "active_frame_fraction": 1.0,
+                  "median_active_fraction": 0.17728410238398384,
+                  "median_largest_component_fraction": 0.31105651105651105,
+                  "q10_largest_component_fraction": 0.24097016574159733,
+                  "q90_largest_component_fraction": 0.4107635970242627,
+                  "median_effective_component_count": 7.848950213664214,
+                  "q90_effective_component_count": 10.860133829345806,
+                  "median_boundary_active_fraction": 0.025602857993450433,
+                  "median_reference_scale": 0.12803730297088622
                 }
               },
               "1.25": {
@@ -495,40 +539,21 @@
                 "summary": {
                   "status": "ok",
                   "observed_frames": 33,
-                  "active_frames": 31,
-                  "active_frame_fraction": 0.9393939393939394,
-                  "median_active_fraction": 0.10466698862888,
-                  "median_largest_component_fraction": 0.48951686417502277,
-                  "q10_largest_component_fraction": 0.3812108559498956,
-                  "q90_largest_component_fraction": 0.6022258862324814,
-                  "median_effective_component_count": 3.8144159861349447,
-                  "q90_effective_component_count": 5.377930077057579,
-                  "median_boundary_active_fraction": 0.01971830985915493
-                }
-              },
-              "1.30": {
-                "validity": {
-                  "status": "ok",
-                  "reasons": []
-                },
-                "persistent_support_fraction": 0.660700818007774,
-                "summary": {
-                  "status": "ok",
-                  "observed_frames": 33,
-                  "active_frames": 9,
-                  "active_frame_fraction": 0.2727272727272727,
-                  "median_active_fraction": 0.04587961540150152,
-                  "median_largest_component_fraction": 0.8730538922155688,
-                  "q10_largest_component_fraction": 0.6228868362250023,
-                  "q90_largest_component_fraction": 0.9053536254606727,
-                  "median_effective_component_count": 1.3094828930045095,
-                  "q90_effective_component_count": 2.27824484466416,
-                  "median_boundary_active_fraction": 0.003499562554680665
+                  "active_frames": 33,
+                  "active_frame_fraction": 1.0,
+                  "median_active_fraction": 0.13434605084076043,
+                  "median_largest_component_fraction": 0.3848537005163511,
+                  "q10_largest_component_fraction": 0.28081151393353915,
+                  "q90_largest_component_fraction": 0.49298057932850564,
+                  "median_effective_component_count": 5.66125426141953,
+                  "q90_effective_component_count": 8.601847538618014,
+                  "median_boundary_active_fraction": 0.022375215146299483,
+                  "median_reference_scale": 0.12803730297088622
                 }
               }
             },
             "dynamic": {
-              "1.20": {
+              "0.75": {
                 "validity": {
                   "status": "ok",
                   "reasons": []
@@ -539,13 +564,35 @@
                   "observed_frames": 33,
                   "active_frames": 33,
                   "active_frame_fraction": 1.0,
-                  "median_active_fraction": 0.13286782385296927,
-                  "median_largest_component_fraction": 0.31538865546218486,
-                  "q10_largest_component_fraction": 0.2562649350747704,
-                  "q90_largest_component_fraction": 0.35677391129024366,
-                  "median_effective_component_count": 8.38407360388151,
-                  "q90_effective_component_count": 10.244688265300848,
-                  "median_boundary_active_fraction": 0.007367526211391329
+                  "median_active_fraction": 0.22912515848578155,
+                  "median_largest_component_fraction": 0.22251524641503215,
+                  "q10_largest_component_fraction": 0.18109013084526607,
+                  "q90_largest_component_fraction": 0.2603841249157743,
+                  "median_effective_component_count": 13.40169883086014,
+                  "q90_effective_component_count": 15.829626201994431,
+                  "median_boundary_active_fraction": 0.011420525657071339,
+                  "median_reference_scale": 0.12803730297088622
+                }
+              },
+              "1.00": {
+                "validity": {
+                  "status": "ok",
+                  "reasons": []
+                },
+                "persistent_support_fraction": 0.660700818007774,
+                "summary": {
+                  "status": "ok",
+                  "observed_frames": 33,
+                  "active_frames": 33,
+                  "active_frame_fraction": 1.0,
+                  "median_active_fraction": 0.16958187572880226,
+                  "median_largest_component_fraction": 0.26255753452071245,
+                  "q10_largest_component_fraction": 0.2095743485496981,
+                  "q90_largest_component_fraction": 0.30496622401360535,
+                  "median_effective_component_count": 9.971560877414266,
+                  "q90_effective_component_count": 13.891915174858507,
+                  "median_boundary_active_fraction": 0.009163346613545816,
+                  "median_reference_scale": 0.12803730297088622
                 }
               },
               "1.25": {
@@ -557,35 +604,16 @@
                 "summary": {
                   "status": "ok",
                   "observed_frames": 33,
-                  "active_frames": 31,
-                  "active_frame_fraction": 0.9393939393939394,
-                  "median_active_fraction": 0.09329064683810114,
-                  "median_largest_component_fraction": 0.4233346472211273,
-                  "q10_largest_component_fraction": 0.3447885196374622,
-                  "q90_largest_component_fraction": 0.4774299835255354,
-                  "median_effective_component_count": 4.998659541370547,
-                  "q90_effective_component_count": 6.587047184908589,
-                  "median_boundary_active_fraction": 0.0051660516605166054
-                }
-              },
-              "1.30": {
-                "validity": {
-                  "status": "ok",
-                  "reasons": []
-                },
-                "persistent_support_fraction": 0.660700818007774,
-                "summary": {
-                  "status": "ok",
-                  "observed_frames": 33,
-                  "active_frames": 9,
-                  "active_frame_fraction": 0.2727272727272727,
-                  "median_active_fraction": 0.033993276055285765,
-                  "median_largest_component_fraction": 0.8490374873353597,
-                  "q10_largest_component_fraction": 0.6134029385860024,
-                  "q90_largest_component_fraction": 0.8673805574789456,
-                  "median_effective_component_count": 1.3847009976930396,
-                  "q90_effective_component_count": 2.361877085811387,
-                  "median_boundary_active_fraction": 0.0
+                  "active_frames": 33,
+                  "active_frame_fraction": 1.0,
+                  "median_active_fraction": 0.12515333123050504,
+                  "median_largest_component_fraction": 0.329891584925142,
+                  "q10_largest_component_fraction": 0.25167508022559265,
+                  "q90_largest_component_fraction": 0.38783960419661234,
+                  "median_effective_component_count": 7.811192260401142,
+                  "q90_effective_component_count": 10.574330211502087,
+                  "median_boundary_active_fraction": 0.00737230121116377,
+                  "median_reference_scale": 0.12803730297088622
                 }
               }
             }
@@ -598,19 +626,151 @@
       "windows": {
         "core": {
           "support_disagreement": {
-            "strongest": null,
-            "control": null
+            "strongest": {
+              "position": 4,
+              "source_index": 252,
+              "absolute_difference": 0.0010643543614601708,
+              "fixed_largest_component_fraction": 0.1013531440700451,
+              "dynamic_largest_component_fraction": 0.10028878970858493
+            },
+            "control": {
+              "position": 9,
+              "source_index": 1,
+              "absolute_difference": 0.0,
+              "fixed_largest_component_fraction": 0.16073512252042008,
+              "dynamic_largest_component_fraction": 0.16073512252042008
+            }
           },
           "fixed_evidence": {
-            "broadest": null,
-            "most_fragmented": null,
-            "matched_active_area_pair": null
+            "broadest": {
+              "position": 10,
+              "source_index": 2,
+              "status": "ok",
+              "reason": null,
+              "support_pixels": 33843,
+              "active_pixels": 3501,
+              "active_fraction": 0.10344827586206896,
+              "component_count": 216,
+              "largest_component_pixels": 622,
+              "largest_component_fraction": 0.17766352470722652,
+              "largest_component_support_fraction": 0.018378985314540672,
+              "effective_component_count": 15.816199441265086,
+              "boundary_active_pixels": 50,
+              "boundary_active_fraction": 0.014281633818908884,
+              "components_touching_support_boundary": 14,
+              "reference_scale": 0.1448866048336029,
+              "active_threshold_value": 0.979342273759842
+            },
+            "most_fragmented": {
+              "position": 7,
+              "source_index": 255,
+              "status": "ok",
+              "reason": null,
+              "support_pixels": 33843,
+              "active_pixels": 3623,
+              "active_fraction": 0.10705315722601424,
+              "component_count": 244,
+              "largest_component_pixels": 376,
+              "largest_component_fraction": 0.1037813966326249,
+              "largest_component_support_fraction": 0.011110126170847738,
+              "effective_component_count": 29.886790605539684,
+              "boundary_active_pixels": 138,
+              "boundary_active_fraction": 0.03808998067899531,
+              "components_touching_support_boundary": 25,
+              "reference_scale": 0.13670037574768065,
+              "active_threshold_value": 0.9597215492248535
+            },
+            "matched_active_area_pair": {
+              "area_difference": 0.007918919717519138,
+              "largest_component_fraction_difference": 0.07631038063718142,
+              "within_tolerance": true,
+              "left": {
+                "position": 4,
+                "source_index": 252,
+                "status": "ok",
+                "reason": null,
+                "support_pixels": 33843,
+                "active_pixels": 3769,
+                "active_fraction": 0.1113671955795881,
+                "component_count": 245,
+                "largest_component_pixels": 382,
+                "largest_component_fraction": 0.1013531440700451,
+                "largest_component_support_fraction": 0.011287415418254882,
+                "effective_component_count": 27.005311575013167,
+                "boundary_active_pixels": 130,
+                "boundary_active_fraction": 0.034491907667816395,
+                "components_touching_support_boundary": 30,
+                "reference_scale": 0.132005992770195,
+                "active_threshold_value": 0.9645378025770187
+              },
+              "right": {
+                "position": 10,
+                "source_index": 2,
+                "status": "ok",
+                "reason": null,
+                "support_pixels": 33843,
+                "active_pixels": 3501,
+                "active_fraction": 0.10344827586206896,
+                "component_count": 216,
+                "largest_component_pixels": 622,
+                "largest_component_fraction": 0.17766352470722652,
+                "largest_component_support_fraction": 0.018378985314540672,
+                "effective_component_count": 15.816199441265086,
+                "boundary_active_pixels": 50,
+                "boundary_active_fraction": 0.014281633818908884,
+                "components_touching_support_boundary": 14,
+                "reference_scale": 0.1448866048336029,
+                "active_threshold_value": 0.979342273759842
+              }
+            }
           },
-          "fixed_threshold_sensitivity": null,
-          "dynamic_threshold_sensitivity": null,
+          "fixed_threshold_sensitivity": {
+            "position": 4,
+            "source_index": 252,
+            "largest_component_fraction_range": 0.23621491400617994,
+            "threshold_values": [
+              {
+                "threshold": "0.75",
+                "largest_component_fraction": 0.1026732504682445,
+                "effective_component_count": 26.080078061498003
+              },
+              {
+                "threshold": "1.00",
+                "largest_component_fraction": 0.1013531440700451,
+                "effective_component_count": 27.005311575013167
+              },
+              {
+                "threshold": "1.25",
+                "largest_component_fraction": 0.33756805807622503,
+                "effective_component_count": 6.962846593124327
+              }
+            ]
+          },
+          "dynamic_threshold_sensitivity": {
+            "position": 4,
+            "source_index": 252,
+            "largest_component_fraction_range": 0.2372792683676401,
+            "threshold_values": [
+              {
+                "threshold": "0.75",
+                "largest_component_fraction": 0.10151515151515152,
+                "effective_component_count": 26.52587136265015
+              },
+              {
+                "threshold": "1.00",
+                "largest_component_fraction": 0.10028878970858493,
+                "effective_component_count": 27.54543003658553
+              },
+              {
+                "threshold": "1.25",
+                "largest_component_fraction": 0.33756805807622503,
+                "effective_component_count": 6.962846593124327
+              }
+            ]
+          },
           "supports": {
             "fixed": {
-              "1.20": {
+              "0.75": {
                 "validity": {
                   "status": "review",
                   "reasons": [
@@ -622,68 +782,69 @@
                 "summary": {
                   "status": "ok",
                   "observed_frames": 17,
-                  "active_frames": 5,
-                  "active_frame_fraction": 0.29411764705882354,
-                  "median_active_fraction": 0.05114794787696126,
-                  "median_largest_component_fraction": 0.14691151919866444,
-                  "q10_largest_component_fraction": 0.12659598425112412,
-                  "q90_largest_component_fraction": 0.37660332186143947,
-                  "median_effective_component_count": 18.119432380567623,
-                  "q90_effective_component_count": 19.614224651210314,
-                  "median_boundary_active_fraction": 0.020868113522537562
+                  "active_frames": 17,
+                  "active_frame_fraction": 1.0,
+                  "median_active_fraction": 0.1735661732115947,
+                  "median_largest_component_fraction": 0.143132344442304,
+                  "q10_largest_component_fraction": 0.09329596029261794,
+                  "q90_largest_component_fraction": 0.1790809034287902,
+                  "median_effective_component_count": 21.51087308159648,
+                  "q90_effective_component_count": 25.960907874431616,
+                  "median_boundary_active_fraction": 0.028433568843701535,
+                  "median_reference_scale": 0.1038610804080963
+                }
+              },
+              "1.00": {
+                "validity": {
+                  "status": "review",
+                  "reasons": [
+                    "foreground_or_nonuniformity_on_border",
+                    "outline_near_image_edge"
+                  ]
+                },
+                "persistent_support_fraction": 0.9585351346758433,
+                "summary": {
+                  "status": "ok",
+                  "observed_frames": 17,
+                  "active_frames": 13,
+                  "active_frame_fraction": 0.7647058823529411,
+                  "median_active_fraction": 0.10959430310551665,
+                  "median_largest_component_fraction": 0.12614789753504108,
+                  "q10_largest_component_fraction": 0.1019955220115508,
+                  "q90_largest_component_fraction": 0.17427784426986523,
+                  "median_effective_component_count": 22.2913303290034,
+                  "q90_effective_component_count": 28.458249914764842,
+                  "median_boundary_active_fraction": 0.026961445133459154,
+                  "median_reference_scale": 0.13622008563280105
                 }
               },
               "1.25": {
                 "validity": {
-                  "status": "unavailable",
+                  "status": "review",
                   "reasons": [
                     "foreground_or_nonuniformity_on_border",
-                    "outline_near_image_edge",
-                    "no_active_frames_at_threshold"
+                    "outline_near_image_edge"
                   ]
                 },
                 "persistent_support_fraction": 0.9585351346758433,
                 "summary": {
-                  "status": "unavailable",
+                  "status": "ok",
                   "observed_frames": 17,
-                  "active_frames": 0,
-                  "active_frame_fraction": 0.0,
-                  "median_active_fraction": null,
-                  "median_largest_component_fraction": null,
-                  "q10_largest_component_fraction": null,
-                  "q90_largest_component_fraction": null,
-                  "median_effective_component_count": null,
-                  "q90_effective_component_count": null,
-                  "median_boundary_active_fraction": null
-                }
-              },
-              "1.30": {
-                "validity": {
-                  "status": "unavailable",
-                  "reasons": [
-                    "foreground_or_nonuniformity_on_border",
-                    "outline_near_image_edge",
-                    "no_active_frames_at_threshold"
-                  ]
-                },
-                "persistent_support_fraction": 0.9585351346758433,
-                "summary": {
-                  "status": "unavailable",
-                  "observed_frames": 17,
-                  "active_frames": 0,
-                  "active_frame_fraction": 0.0,
-                  "median_active_fraction": null,
-                  "median_largest_component_fraction": null,
-                  "q10_largest_component_fraction": null,
-                  "q90_largest_component_fraction": null,
-                  "median_effective_component_count": null,
-                  "q90_effective_component_count": null,
-                  "median_boundary_active_fraction": null
+                  "active_frames": 7,
+                  "active_frame_fraction": 0.4117647058823529,
+                  "median_active_fraction": 0.054959666696214875,
+                  "median_largest_component_fraction": 0.1774600504625736,
+                  "q10_largest_component_fraction": 0.156509526340822,
+                  "q90_largest_component_fraction": 0.2613249984729316,
+                  "median_effective_component_count": 15.144325474299821,
+                  "q90_effective_component_count": 15.780414791584718,
+                  "median_boundary_active_fraction": 0.017204301075268817,
+                  "median_reference_scale": 0.1038610804080963
                 }
               }
             },
             "dynamic": {
-              "1.20": {
+              "0.75": {
                 "validity": {
                   "status": "review",
                   "reasons": [
@@ -695,63 +856,64 @@
                 "summary": {
                   "status": "ok",
                   "observed_frames": 17,
-                  "active_frames": 5,
-                  "active_frame_fraction": 0.29411764705882354,
-                  "median_active_fraction": 0.05064881926584054,
-                  "median_largest_component_fraction": 0.14678899082568808,
-                  "q10_largest_component_fraction": 0.12651557950724424,
-                  "q90_largest_component_fraction": 0.37660332186143947,
-                  "median_effective_component_count": 18.149465338534764,
-                  "q90_effective_component_count": 19.63189394130304,
-                  "median_boundary_active_fraction": 0.00475963826749167
+                  "active_frames": 17,
+                  "active_frame_fraction": 1.0,
+                  "median_active_fraction": 0.1729811584495763,
+                  "median_largest_component_fraction": 0.1426925292874976,
+                  "q10_largest_component_fraction": 0.09275362506465787,
+                  "q90_largest_component_fraction": 0.1791063838220669,
+                  "median_effective_component_count": 21.551544425001484,
+                  "q90_effective_component_count": 26.236408202103515,
+                  "median_boundary_active_fraction": 0.008514261387824606,
+                  "median_reference_scale": 0.1038610804080963
+                }
+              },
+              "1.00": {
+                "validity": {
+                  "status": "review",
+                  "reasons": [
+                    "foreground_or_nonuniformity_on_border",
+                    "outline_near_image_edge"
+                  ]
+                },
+                "persistent_support_fraction": 0.9585351346758433,
+                "summary": {
+                  "status": "ok",
+                  "observed_frames": 17,
+                  "active_frames": 13,
+                  "active_frame_fraction": 0.7647058823529411,
+                  "median_active_fraction": 0.10849497546155644,
+                  "median_largest_component_fraction": 0.12608695652173912,
+                  "q10_largest_component_fraction": 0.1018742353248662,
+                  "q90_largest_component_fraction": 0.17427784426986523,
+                  "median_effective_component_count": 22.350669473965837,
+                  "q90_effective_component_count": 28.81070221626484,
+                  "median_boundary_active_fraction": 0.009458297506448839,
+                  "median_reference_scale": 0.13622008563280105
                 }
               },
               "1.25": {
                 "validity": {
-                  "status": "unavailable",
+                  "status": "review",
                   "reasons": [
                     "foreground_or_nonuniformity_on_border",
-                    "outline_near_image_edge",
-                    "no_active_frames_at_threshold"
+                    "outline_near_image_edge"
                   ]
                 },
                 "persistent_support_fraction": 0.9585351346758433,
                 "summary": {
-                  "status": "unavailable",
+                  "status": "ok",
                   "observed_frames": 17,
-                  "active_frames": 0,
-                  "active_frame_fraction": 0.0,
-                  "median_active_fraction": null,
-                  "median_largest_component_fraction": null,
-                  "q10_largest_component_fraction": null,
-                  "q90_largest_component_fraction": null,
-                  "median_effective_component_count": null,
-                  "q90_effective_component_count": null,
-                  "median_boundary_active_fraction": null
-                }
-              },
-              "1.30": {
-                "validity": {
-                  "status": "unavailable",
-                  "reasons": [
-                    "foreground_or_nonuniformity_on_border",
-                    "outline_near_image_edge",
-                    "no_active_frames_at_threshold"
-                  ]
-                },
-                "persistent_support_fraction": 0.9585351346758433,
-                "summary": {
-                  "status": "unavailable",
-                  "observed_frames": 17,
-                  "active_frames": 0,
-                  "active_frame_fraction": 0.0,
-                  "median_active_fraction": null,
-                  "median_largest_component_fraction": null,
-                  "q10_largest_component_fraction": null,
-                  "q90_largest_component_fraction": null,
-                  "median_effective_component_count": null,
-                  "q90_effective_component_count": null,
-                  "median_boundary_active_fraction": null
+                  "active_frames": 7,
+                  "active_frame_fraction": 0.4117647058823529,
+                  "median_active_fraction": 0.054252712635631785,
+                  "median_largest_component_fraction": 0.1770877045740663,
+                  "q10_largest_component_fraction": 0.156509526340822,
+                  "q90_largest_component_fraction": 0.2611810693843362,
+                  "median_effective_component_count": 15.144325474299821,
+                  "q90_effective_component_count": 15.867157498937924,
+                  "median_boundary_active_fraction": 0.004644681839294009,
+                  "median_reference_scale": 0.1038610804080963
                 }
               }
             }
@@ -759,19 +921,151 @@
         },
         "wide": {
           "support_disagreement": {
-            "strongest": null,
-            "control": null
+            "strongest": {
+              "position": 6,
+              "source_index": 246,
+              "absolute_difference": 0.023897803108687582,
+              "fixed_largest_component_fraction": 0.23340522405942968,
+              "dynamic_largest_component_fraction": 0.2095074209507421
+            },
+            "control": {
+              "position": 32,
+              "source_index": 16,
+              "absolute_difference": 0.0018717467941619659,
+              "fixed_largest_component_fraction": 0.17139852786540483,
+              "dynamic_largest_component_fraction": 0.16952678107124286
+            }
           },
           "fixed_evidence": {
-            "broadest": null,
-            "most_fragmented": null,
-            "matched_active_area_pair": null
+            "broadest": {
+              "position": 6,
+              "source_index": 246,
+              "status": "ok",
+              "reason": null,
+              "support_pixels": 32170,
+              "active_pixels": 4173,
+              "active_fraction": 0.12971712775878147,
+              "component_count": 245,
+              "largest_component_pixels": 974,
+              "largest_component_fraction": 0.23340522405942968,
+              "largest_component_support_fraction": 0.030276655268884053,
+              "effective_component_count": 11.727333337374008,
+              "boundary_active_pixels": 112,
+              "boundary_active_fraction": 0.02683920440929787,
+              "components_touching_support_boundary": 24,
+              "reference_scale": 0.10044938575029373,
+              "active_threshold_value": 0.9573646808743477
+            },
+            "most_fragmented": {
+              "position": 8,
+              "source_index": 248,
+              "status": "ok",
+              "reason": null,
+              "support_pixels": 32170,
+              "active_pixels": 3522,
+              "active_fraction": 0.1094808828100715,
+              "component_count": 256,
+              "largest_component_pixels": 399,
+              "largest_component_fraction": 0.11328790459965929,
+              "largest_component_support_fraction": 0.012402859807273858,
+              "effective_component_count": 27.543607530009464,
+              "boundary_active_pixels": 131,
+              "boundary_active_fraction": 0.037194775695627486,
+              "components_touching_support_boundary": 26,
+              "reference_scale": 0.07917081044912337,
+              "active_threshold_value": 0.9643394224524497
+            },
+            "matched_active_area_pair": {
+              "area_difference": 0.008175318619832145,
+              "largest_component_fraction_difference": 0.12010599132285679,
+              "within_tolerance": true,
+              "left": {
+                "position": 6,
+                "source_index": 246,
+                "status": "ok",
+                "reason": null,
+                "support_pixels": 32170,
+                "active_pixels": 4173,
+                "active_fraction": 0.12971712775878147,
+                "component_count": 245,
+                "largest_component_pixels": 974,
+                "largest_component_fraction": 0.23340522405942968,
+                "largest_component_support_fraction": 0.030276655268884053,
+                "effective_component_count": 11.727333337374008,
+                "boundary_active_pixels": 112,
+                "boundary_active_fraction": 0.02683920440929787,
+                "components_touching_support_boundary": 24,
+                "reference_scale": 0.10044938575029373,
+                "active_threshold_value": 0.9573646808743477
+              },
+              "right": {
+                "position": 10,
+                "source_index": 250,
+                "status": "ok",
+                "reason": null,
+                "support_pixels": 32170,
+                "active_pixels": 3910,
+                "active_fraction": 0.12154180913894932,
+                "component_count": 241,
+                "largest_component_pixels": 443,
+                "largest_component_fraction": 0.11329923273657289,
+                "largest_component_support_fraction": 0.013770593720857942,
+                "effective_component_count": 21.875956923763763,
+                "boundary_active_pixels": 115,
+                "boundary_active_fraction": 0.029411764705882353,
+                "components_touching_support_boundary": 23,
+                "reference_scale": 0.07631849691867829,
+                "active_threshold_value": 0.9626769070386887
+              }
+            }
           },
-          "fixed_threshold_sensitivity": null,
-          "dynamic_threshold_sensitivity": null,
+          "fixed_threshold_sensitivity": {
+            "position": 12,
+            "source_index": 252,
+            "largest_component_fraction_range": 0.22592885136868796,
+            "threshold_values": [
+              {
+                "threshold": "0.75",
+                "largest_component_fraction": 0.11050328227571116,
+                "effective_component_count": 23.48630146614375
+              },
+              {
+                "threshold": "1.00",
+                "largest_component_fraction": 0.10858442296759523,
+                "effective_component_count": 25.009141757868697
+              },
+              {
+                "threshold": "1.25",
+                "largest_component_fraction": 0.3345132743362832,
+                "effective_component_count": 6.937713254949687
+              }
+            ]
+          },
+          "dynamic_threshold_sensitivity": {
+            "position": 12,
+            "source_index": 252,
+            "largest_component_fraction_range": 0.21939723064626088,
+            "threshold_values": [
+              {
+                "threshold": "0.75",
+                "largest_component_fraction": 0.1007313829787234,
+                "effective_component_count": 26.725339122601035
+              },
+              {
+                "threshold": "1.00",
+                "largest_component_fraction": 0.09878458753555729,
+                "effective_component_count": 27.983616312949945
+              },
+              {
+                "threshold": "1.25",
+                "largest_component_fraction": 0.3181818181818182,
+                "effective_component_count": 7.643429660759933
+              }
+            ]
+          },
           "supports": {
             "fixed": {
-              "1.20": {
+              "0.75": {
                 "validity": {
                   "status": "review",
                   "reasons": [
@@ -783,68 +1077,69 @@
                 "summary": {
                   "status": "ok",
                   "observed_frames": 33,
-                  "active_frames": 5,
-                  "active_frame_fraction": 0.15151515151515152,
-                  "median_active_fraction": 0.05710289089213553,
-                  "median_largest_component_fraction": 0.15644820295983086,
-                  "q10_largest_component_fraction": 0.13125932864871465,
-                  "q90_largest_component_fraction": 0.24294700319313983,
-                  "median_effective_component_count": 16.959188005033273,
-                  "q90_effective_component_count": 19.807566781395906,
-                  "median_boundary_active_fraction": 0.032036613272311214
+                  "active_frames": 33,
+                  "active_frame_fraction": 1.0,
+                  "median_active_fraction": 0.18197078023002797,
+                  "median_largest_component_fraction": 0.17626280466266336,
+                  "q10_largest_component_fraction": 0.10970788405141893,
+                  "q90_largest_component_fraction": 0.33493882819806325,
+                  "median_effective_component_count": 15.056562107232935,
+                  "q90_effective_component_count": 23.45042371140573,
+                  "median_boundary_active_fraction": 0.026697053556894026,
+                  "median_reference_scale": 0.0938921222269535
+                }
+              },
+              "1.00": {
+                "validity": {
+                  "status": "review",
+                  "reasons": [
+                    "foreground_or_nonuniformity_on_border",
+                    "outline_near_image_edge"
+                  ]
+                },
+                "persistent_support_fraction": 0.909656439983034,
+                "summary": {
+                  "status": "ok",
+                  "observed_frames": 33,
+                  "active_frames": 26,
+                  "active_frame_fraction": 0.7878787878787878,
+                  "median_active_fraction": 0.10960522225676096,
+                  "median_largest_component_fraction": 0.1499015568650086,
+                  "q10_largest_component_fraction": 0.11216737624430623,
+                  "q90_largest_component_fraction": 0.17965200673176385,
+                  "median_effective_component_count": 20.178979225218768,
+                  "q90_effective_component_count": 25.660978238482638,
+                  "median_boundary_active_fraction": 0.027043197710266913,
+                  "median_reference_scale": 0.1005226443529129
                 }
               },
               "1.25": {
                 "validity": {
-                  "status": "unavailable",
+                  "status": "review",
                   "reasons": [
                     "foreground_or_nonuniformity_on_border",
-                    "outline_near_image_edge",
-                    "no_active_frames_at_threshold"
+                    "outline_near_image_edge"
                   ]
                 },
                 "persistent_support_fraction": 0.909656439983034,
                 "summary": {
-                  "status": "unavailable",
+                  "status": "ok",
                   "observed_frames": 33,
-                  "active_frames": 0,
-                  "active_frame_fraction": 0.0,
-                  "median_active_fraction": null,
-                  "median_largest_component_fraction": null,
-                  "q10_largest_component_fraction": null,
-                  "q90_largest_component_fraction": null,
-                  "median_effective_component_count": null,
-                  "q90_effective_component_count": null,
-                  "median_boundary_active_fraction": null
-                }
-              },
-              "1.30": {
-                "validity": {
-                  "status": "unavailable",
-                  "reasons": [
-                    "foreground_or_nonuniformity_on_border",
-                    "outline_near_image_edge",
-                    "no_active_frames_at_threshold"
-                  ]
-                },
-                "persistent_support_fraction": 0.909656439983034,
-                "summary": {
-                  "status": "unavailable",
-                  "observed_frames": 33,
-                  "active_frames": 0,
-                  "active_frame_fraction": 0.0,
-                  "median_active_fraction": null,
-                  "median_largest_component_fraction": null,
-                  "q10_largest_component_fraction": null,
-                  "q90_largest_component_fraction": null,
-                  "median_effective_component_count": null,
-                  "q90_effective_component_count": null,
-                  "median_boundary_active_fraction": null
+                  "active_frames": 13,
+                  "active_frame_fraction": 0.3939393939393939,
+                  "median_active_fraction": 0.06223189306807585,
+                  "median_largest_component_fraction": 0.1938061938061938,
+                  "q10_largest_component_fraction": 0.16671061953970573,
+                  "q90_largest_component_fraction": 0.27238453673287355,
+                  "median_effective_component_count": 11.655950618233566,
+                  "q90_effective_component_count": 14.750723766414339,
+                  "median_boundary_active_fraction": 0.030415125359638306,
+                  "median_reference_scale": 0.09472005931735038
                 }
               }
             },
             "dynamic": {
-              "1.20": {
+              "0.75": {
                 "validity": {
                   "status": "review",
                   "reasons": [
@@ -856,63 +1151,64 @@
                 "summary": {
                   "status": "ok",
                   "observed_frames": 33,
-                  "active_frames": 5,
-                  "active_frame_fraction": 0.15151515151515152,
-                  "median_active_fraction": 0.0603518821603928,
-                  "median_largest_component_fraction": 0.14453125,
-                  "q10_largest_component_fraction": 0.11774064883003628,
-                  "q90_largest_component_fraction": 0.22902050767245088,
-                  "median_effective_component_count": 18.849842093455365,
-                  "q90_effective_component_count": 22.785445703268646,
-                  "median_boundary_active_fraction": 0.005859375
+                  "active_frames": 33,
+                  "active_frame_fraction": 1.0,
+                  "median_active_fraction": 0.18463758725296733,
+                  "median_largest_component_fraction": 0.1741756447926869,
+                  "q10_largest_component_fraction": 0.10115771053178722,
+                  "q90_largest_component_fraction": 0.32267581504606235,
+                  "median_effective_component_count": 16.19464906565868,
+                  "q90_effective_component_count": 24.78837010741237,
+                  "median_boundary_active_fraction": 0.009211444521981856,
+                  "median_reference_scale": 0.0938921222269535
+                }
+              },
+              "1.00": {
+                "validity": {
+                  "status": "review",
+                  "reasons": [
+                    "foreground_or_nonuniformity_on_border",
+                    "outline_near_image_edge"
+                  ]
+                },
+                "persistent_support_fraction": 0.909656439983034,
+                "summary": {
+                  "status": "ok",
+                  "observed_frames": 33,
+                  "active_frames": 26,
+                  "active_frame_fraction": 0.7878787878787878,
+                  "median_active_fraction": 0.11124848587322604,
+                  "median_largest_component_fraction": 0.14419020776220176,
+                  "q10_largest_component_fraction": 0.10187254822632678,
+                  "q90_largest_component_fraction": 0.1713098537811138,
+                  "median_effective_component_count": 21.406166586021175,
+                  "q90_effective_component_count": 28.638999098692775,
+                  "median_boundary_active_fraction": 0.0076313201354480005,
+                  "median_reference_scale": 0.1005226443529129
                 }
               },
               "1.25": {
                 "validity": {
-                  "status": "unavailable",
+                  "status": "review",
                   "reasons": [
                     "foreground_or_nonuniformity_on_border",
-                    "outline_near_image_edge",
-                    "no_active_frames_at_threshold"
+                    "outline_near_image_edge"
                   ]
                 },
                 "persistent_support_fraction": 0.909656439983034,
                 "summary": {
-                  "status": "unavailable",
+                  "status": "ok",
                   "observed_frames": 33,
-                  "active_frames": 0,
-                  "active_frame_fraction": 0.0,
-                  "median_active_fraction": null,
-                  "median_largest_component_fraction": null,
-                  "q10_largest_component_fraction": null,
-                  "q90_largest_component_fraction": null,
-                  "median_effective_component_count": null,
-                  "q90_effective_component_count": null,
-                  "median_boundary_active_fraction": null
-                }
-              },
-              "1.30": {
-                "validity": {
-                  "status": "unavailable",
-                  "reasons": [
-                    "foreground_or_nonuniformity_on_border",
-                    "outline_near_image_edge",
-                    "no_active_frames_at_threshold"
-                  ]
-                },
-                "persistent_support_fraction": 0.909656439983034,
-                "summary": {
-                  "status": "unavailable",
-                  "observed_frames": 33,
-                  "active_frames": 0,
-                  "active_frame_fraction": 0.0,
-                  "median_active_fraction": null,
-                  "median_largest_component_fraction": null,
-                  "q10_largest_component_fraction": null,
-                  "q90_largest_component_fraction": null,
-                  "median_effective_component_count": null,
-                  "q90_effective_component_count": null,
-                  "median_boundary_active_fraction": null
+                  "active_frames": 13,
+                  "active_frame_fraction": 0.3939393939393939,
+                  "median_active_fraction": 0.0652723311546841,
+                  "median_largest_component_fraction": 0.17516930022573363,
+                  "q10_largest_component_fraction": 0.15363874098389452,
+                  "q90_largest_component_fraction": 0.24085684641402777,
+                  "median_effective_component_count": 13.81492304535194,
+                  "q90_effective_component_count": 16.473389826069,
+                  "median_boundary_active_fraction": 0.005378568473314025,
+                  "median_reference_scale": 0.09472005931735038
                 }
               }
             }
@@ -926,37 +1222,39 @@
         "core": {
           "support_disagreement": {
             "strongest": {
-              "position": 7,
-              "source_index": 255,
-              "absolute_difference": 0.002024423413048565,
-              "fixed_largest_component_fraction": 0.2235147486497715,
-              "dynamic_largest_component_fraction": 0.22149032523672293
+              "position": 9,
+              "source_index": 1,
+              "absolute_difference": 0.0031372239470960905,
+              "fixed_largest_component_fraction": 0.277868406742795,
+              "dynamic_largest_component_fraction": 0.2747311827956989
             },
             "control": {
-              "position": 5,
-              "source_index": 253,
-              "absolute_difference": 0.00021480023578072938,
-              "fixed_largest_component_fraction": 0.09071729957805907,
-              "dynamic_largest_component_fraction": 0.09050249934227834
+              "position": 1,
+              "source_index": 249,
+              "absolute_difference": 0.0002075449202276758,
+              "fixed_largest_component_fraction": 0.39516552811350497,
+              "dynamic_largest_component_fraction": 0.3949579831932773
             }
           },
           "fixed_evidence": {
             "broadest": {
-              "position": 9,
-              "source_index": 1,
+              "position": 0,
+              "source_index": 248,
               "status": "ok",
               "reason": null,
               "support_pixels": 34311,
-              "active_pixels": 4170,
-              "active_fraction": 0.12153536766634607,
-              "component_count": 285,
-              "largest_component_pixels": 781,
-              "largest_component_fraction": 0.18729016786570743,
-              "largest_component_support_fraction": 0.022762379411850428,
-              "effective_component_count": 16.136572853950607,
-              "boundary_active_pixels": 104,
-              "boundary_active_fraction": 0.024940047961630695,
-              "components_touching_support_boundary": 39
+              "active_pixels": 5371,
+              "active_fraction": 0.15653871936113783,
+              "component_count": 171,
+              "largest_component_pixels": 1161,
+              "largest_component_fraction": 0.21616086389871533,
+              "largest_component_support_fraction": 0.03383754481070211,
+              "effective_component_count": 10.708166897736996,
+              "boundary_active_pixels": 37,
+              "boundary_active_fraction": 0.006888847514429343,
+              "components_touching_support_boundary": 12,
+              "reference_scale": 0.0822441369652748,
+              "active_threshold_value": 0.9781076699852943
             },
             "most_fragmented": {
               "position": 5,
@@ -964,104 +1262,100 @@
               "status": "ok",
               "reason": null,
               "support_pixels": 34311,
-              "active_pixels": 3792,
-              "active_fraction": 0.11051849261169887,
-              "component_count": 267,
-              "largest_component_pixels": 344,
-              "largest_component_fraction": 0.09071729957805907,
-              "largest_component_support_fraction": 0.010025939203170995,
-              "effective_component_count": 36.707641094239825,
-              "boundary_active_pixels": 140,
-              "boundary_active_fraction": 0.03691983122362869,
-              "components_touching_support_boundary": 30
+              "active_pixels": 2458,
+              "active_fraction": 0.07163883302730903,
+              "component_count": 234,
+              "largest_component_pixels": 294,
+              "largest_component_fraction": 0.11960943856794141,
+              "largest_component_support_fraction": 0.008568680598058931,
+              "effective_component_count": 27.326428338821145,
+              "boundary_active_pixels": 99,
+              "boundary_active_fraction": 0.0402766476810415,
+              "components_touching_support_boundary": 22,
+              "reference_scale": 0.2135432593345642,
+              "active_threshold_value": 0.9632436863899231
             },
             "matched_active_area_pair": {
-              "area_difference": 0.017487103261344755,
-              "largest_component_fraction_difference": 0.10146619527431423,
+              "area_difference": 0.0006120486141470635,
+              "largest_component_fraction_difference": 0.3503300370524869,
               "within_tolerance": true,
               "left": {
-                "position": 4,
-                "source_index": 252,
+                "position": 13,
+                "source_index": 5,
                 "status": "ok",
                 "reason": null,
                 "support_pixels": 34311,
-                "active_pixels": 3007,
-                "active_fraction": 0.08763953251143948,
-                "component_count": 218,
-                "largest_component_pixels": 367,
-                "largest_component_fraction": 0.12204855337545727,
-                "largest_component_support_fraction": 0.010696278161522544,
-                "effective_component_count": 21.32372646726583,
-                "boundary_active_pixels": 79,
-                "boundary_active_fraction": 0.02627203192550715,
-                "components_touching_support_boundary": 18
+                "active_pixels": 1494,
+                "active_fraction": 0.04354288712074845,
+                "component_count": 158,
+                "largest_component_pixels": 216,
+                "largest_component_fraction": 0.14457831325301204,
+                "largest_component_support_fraction": 0.006295357174084113,
+                "effective_component_count": 19.568620574775125,
+                "boundary_active_pixels": 47,
+                "boundary_active_fraction": 0.03145917001338688,
+                "components_touching_support_boundary": 16,
+                "reference_scale": 0.19816018996238707,
+                "active_threshold_value": 0.9837006515026092
               },
               "right": {
-                "position": 7,
-                "source_index": 255,
+                "position": 15,
+                "source_index": 7,
                 "status": "ok",
                 "reason": null,
                 "support_pixels": 34311,
-                "active_pixels": 2407,
-                "active_fraction": 0.07015242925009472,
-                "component_count": 223,
-                "largest_component_pixels": 538,
-                "largest_component_fraction": 0.2235147486497715,
-                "largest_component_support_fraction": 0.0156801025910058,
-                "effective_component_count": 12.349746659248694,
-                "boundary_active_pixels": 55,
-                "boundary_active_fraction": 0.022850020772746157,
-                "components_touching_support_boundary": 18
+                "active_pixels": 1473,
+                "active_fraction": 0.042930838506601385,
+                "component_count": 90,
+                "largest_component_pixels": 729,
+                "largest_component_fraction": 0.49490835030549896,
+                "largest_component_support_fraction": 0.02124683046253388,
+                "effective_component_count": 3.5500596386340546,
+                "boundary_active_pixels": 4,
+                "boundary_active_fraction": 0.0027155465037338763,
+                "components_touching_support_boundary": 4,
+                "reference_scale": 0.10509481183290481,
+                "active_threshold_value": 0.9967850064396858
               }
             }
           },
           "fixed_threshold_sensitivity": {
-            "position": 8,
-            "source_index": 0,
-            "largest_component_fraction_range": 0.7718812352958695,
+            "position": 15,
+            "source_index": 7,
+            "largest_component_fraction_range": 0.2938732540738962,
             "threshold_values": [
               {
-                "threshold": "1.20",
-                "largest_component_fraction": 0.1621846987700646,
-                "effective_component_count": 18.561692808427743
+                "threshold": "0.75",
+                "largest_component_fraction": 0.2010350962316028,
+                "effective_component_count": 12.099727712924665
               },
               {
-                "threshold": "1.25",
-                "largest_component_fraction": 0.17322050771528125,
-                "effective_component_count": 19.57846509078385
-              },
-              {
-                "threshold": "1.30",
-                "largest_component_fraction": 0.9340659340659341,
-                "effective_component_count": 1.145489756082566
+                "threshold": "1.00",
+                "largest_component_fraction": 0.49490835030549896,
+                "effective_component_count": 3.5500596386340546
               }
             ]
           },
           "dynamic_threshold_sensitivity": {
-            "position": 8,
-            "source_index": 0,
-            "largest_component_fraction_range": 0.7725546199700237,
+            "position": 15,
+            "source_index": 7,
+            "largest_component_fraction_range": 0.29406729994304115,
             "threshold_values": [
               {
-                "threshold": "1.20",
-                "largest_component_fraction": 0.16151131409591032,
-                "effective_component_count": 18.7006524095633
+                "threshold": "0.75",
+                "largest_component_fraction": 0.19916680019227687,
+                "effective_component_count": 12.288010491636129
               },
               {
-                "threshold": "1.25",
-                "largest_component_fraction": 0.17202174987642116,
-                "effective_component_count": 19.841699028890858
-              },
-              {
-                "threshold": "1.30",
-                "largest_component_fraction": 0.9340659340659341,
-                "effective_component_count": 1.145489756082566
+                "threshold": "1.00",
+                "largest_component_fraction": 0.493234100135318,
+                "effective_component_count": 3.574160487444124
               }
             ]
           },
           "supports": {
             "fixed": {
-              "1.20": {
+              "0.75": {
                 "validity": {
                   "status": "review",
                   "reasons": [
@@ -1073,15 +1367,40 @@
                 "summary": {
                   "status": "ok",
                   "observed_frames": 17,
-                  "active_frames": 12,
-                  "active_frame_fraction": 0.7058823529411765,
-                  "median_active_fraction": 0.14451633586896329,
-                  "median_largest_component_fraction": 0.14565338023892538,
-                  "q10_largest_component_fraction": 0.0898817318682159,
-                  "q90_largest_component_fraction": 0.2040448243458564,
-                  "median_effective_component_count": 19.96269410411054,
-                  "q90_effective_component_count": 30.61213956595852,
-                  "median_boundary_active_fraction": 0.031025084591290865
+                  "active_frames": 17,
+                  "active_frame_fraction": 1.0,
+                  "median_active_fraction": 0.1556643641980706,
+                  "median_largest_component_fraction": 0.15862349826919162,
+                  "q10_largest_component_fraction": 0.09012205162060329,
+                  "q90_largest_component_fraction": 0.22886847864884566,
+                  "median_effective_component_count": 18.653199916848795,
+                  "q90_effective_component_count": 28.914504810565465,
+                  "median_boundary_active_fraction": 0.030480419862737182,
+                  "median_reference_scale": 0.19816018996238707
+                }
+              },
+              "1.00": {
+                "validity": {
+                  "status": "review",
+                  "reasons": [
+                    "foreground_or_nonuniformity_on_border",
+                    "outline_near_image_edge"
+                  ]
+                },
+                "persistent_support_fraction": 0.9729476818375159,
+                "summary": {
+                  "status": "ok",
+                  "observed_frames": 17,
+                  "active_frames": 17,
+                  "active_frame_fraction": 1.0,
+                  "median_active_fraction": 0.05359797149602168,
+                  "median_largest_component_fraction": 0.19230769230769232,
+                  "q10_largest_component_fraction": 0.12127448999488284,
+                  "q90_largest_component_fraction": 0.32478725529107905,
+                  "median_effective_component_count": 16.087577344121847,
+                  "q90_effective_component_count": 24.622067372231818,
+                  "median_boundary_active_fraction": 0.021315192743764172,
+                  "median_reference_scale": 0.19816018996238707
                 }
               },
               "1.25": {
@@ -1096,43 +1415,21 @@
                 "summary": {
                   "status": "ok",
                   "observed_frames": 17,
-                  "active_frames": 11,
-                  "active_frame_fraction": 0.6470588235294118,
-                  "median_active_fraction": 0.07015242925009472,
-                  "median_largest_component_fraction": 0.16217105263157894,
-                  "q10_largest_component_fraction": 0.09071729957805907,
-                  "q90_largest_component_fraction": 0.2071269487750557,
-                  "median_effective_component_count": 19.57846509078385,
-                  "q90_effective_component_count": 30.122451193058563,
-                  "median_boundary_active_fraction": 0.031578947368421054
-                }
-              },
-              "1.30": {
-                "validity": {
-                  "status": "review",
-                  "reasons": [
-                    "foreground_or_nonuniformity_on_border",
-                    "outline_near_image_edge"
-                  ]
-                },
-                "persistent_support_fraction": 0.9729476818375159,
-                "summary": {
-                  "status": "ok",
-                  "observed_frames": 17,
-                  "active_frames": 5,
-                  "active_frame_fraction": 0.29411764705882354,
-                  "median_active_fraction": 0.03179738276354522,
-                  "median_largest_component_fraction": 0.2756202804746494,
-                  "q10_largest_component_fraction": 0.09541517586360804,
-                  "q90_largest_component_fraction": 0.6765017366053636,
-                  "median_effective_component_count": 11.167440984021987,
-                  "q90_effective_component_count": 27.347222083696973,
-                  "median_boundary_active_fraction": 0.032080659945004586
+                  "active_frames": 1,
+                  "active_frame_fraction": 0.058823529411764705,
+                  "median_active_fraction": 0.03375010929439538,
+                  "median_largest_component_fraction": 0.31001727115716754,
+                  "q10_largest_component_fraction": 0.31001727115716754,
+                  "q90_largest_component_fraction": 0.31001727115716754,
+                  "median_effective_component_count": 6.627346321501648,
+                  "q90_effective_component_count": 6.627346321501648,
+                  "median_boundary_active_fraction": 0.0017271157167530224,
+                  "median_reference_scale": 0.0822441369652748
                 }
               }
             },
             "dynamic": {
-              "1.20": {
+              "0.75": {
                 "validity": {
                   "status": "review",
                   "reasons": [
@@ -1144,15 +1441,40 @@
                 "summary": {
                   "status": "ok",
                   "observed_frames": 17,
-                  "active_frames": 12,
-                  "active_frame_fraction": 0.7058823529411765,
-                  "median_active_fraction": 0.14489708485424763,
-                  "median_largest_component_fraction": 0.14519342645707056,
-                  "q10_largest_component_fraction": 0.08960478394058971,
-                  "q90_largest_component_fraction": 0.2030664547828946,
-                  "median_effective_component_count": 20.08266400446165,
-                  "q90_effective_component_count": 30.791033808167555,
-                  "median_boundary_active_fraction": 0.03051198506234051
+                  "active_frames": 17,
+                  "active_frame_fraction": 1.0,
+                  "median_active_fraction": 0.15609472613685893,
+                  "median_largest_component_fraction": 0.157980125735145,
+                  "q10_largest_component_fraction": 0.08991094688911283,
+                  "q90_largest_component_fraction": 0.2267912830246656,
+                  "median_effective_component_count": 18.859443721424093,
+                  "q90_effective_component_count": 29.037881723693957,
+                  "median_boundary_active_fraction": 0.029970215934475054,
+                  "median_reference_scale": 0.19816018996238707
+                }
+              },
+              "1.00": {
+                "validity": {
+                  "status": "review",
+                  "reasons": [
+                    "foreground_or_nonuniformity_on_border",
+                    "outline_near_image_edge"
+                  ]
+                },
+                "persistent_support_fraction": 0.9729476818375159,
+                "summary": {
+                  "status": "ok",
+                  "observed_frames": 17,
+                  "active_frames": 17,
+                  "active_frame_fraction": 1.0,
+                  "median_active_fraction": 0.05404306011564053,
+                  "median_largest_component_fraction": 0.19146608315098468,
+                  "q10_largest_component_fraction": 0.1208024241890745,
+                  "q90_largest_component_fraction": 0.3228219029547303,
+                  "median_effective_component_count": 16.211523160815823,
+                  "q90_effective_component_count": 24.885624667534373,
+                  "median_boundary_active_fraction": 0.025167785234899327,
+                  "median_reference_scale": 0.19816018996238707
                 }
               },
               "1.25": {
@@ -1167,38 +1489,16 @@
                 "summary": {
                   "status": "ok",
                   "observed_frames": 17,
-                  "active_frames": 11,
-                  "active_frame_fraction": 0.6470588235294118,
-                  "median_active_fraction": 0.07057968908906,
-                  "median_largest_component_fraction": 0.16169235815021318,
-                  "q10_largest_component_fraction": 0.09050249934227834,
-                  "q90_largest_component_fraction": 0.20593445527015058,
-                  "median_effective_component_count": 19.841699028890858,
-                  "q90_effective_component_count": 30.54501137471564,
-                  "median_boundary_active_fraction": 0.03277236492471213
-                }
-              },
-              "1.30": {
-                "validity": {
-                  "status": "review",
-                  "reasons": [
-                    "foreground_or_nonuniformity_on_border",
-                    "outline_near_image_edge"
-                  ]
-                },
-                "persistent_support_fraction": 0.9729476818375159,
-                "summary": {
-                  "status": "ok",
-                  "observed_frames": 17,
-                  "active_frames": 5,
-                  "active_frame_fraction": 0.29411764705882354,
-                  "median_active_fraction": 0.03188237006842335,
-                  "median_largest_component_fraction": 0.27253333333333335,
-                  "q10_largest_component_fraction": 0.09519616065604324,
-                  "q90_largest_component_fraction": 0.6762018343413693,
-                  "median_effective_component_count": 11.416405526960986,
-                  "q90_effective_component_count": 27.445511483392842,
-                  "median_boundary_active_fraction": 0.0319634703196347
+                  "active_frames": 1,
+                  "active_frame_fraction": 0.058823529411764705,
+                  "median_active_fraction": 0.0333640393805055,
+                  "median_largest_component_fraction": 0.3097497842968076,
+                  "q10_largest_component_fraction": 0.3097497842968076,
+                  "q90_largest_component_fraction": 0.3097497842968076,
+                  "median_effective_component_count": 6.638764647448094,
+                  "q90_effective_component_count": 6.638764647448094,
+                  "median_boundary_active_fraction": 0.001725625539257981,
+                  "median_reference_scale": 0.0822441369652748
                 }
               }
             }
@@ -1207,37 +1507,39 @@
         "wide": {
           "support_disagreement": {
             "strongest": {
-              "position": 15,
-              "source_index": 255,
-              "absolute_difference": 0.01601245219616787,
-              "fixed_largest_component_fraction": 0.21834415584415584,
-              "dynamic_largest_component_fraction": 0.20233170364798797
+              "position": 16,
+              "source_index": 0,
+              "absolute_difference": 0.02556008192076531,
+              "fixed_largest_component_fraction": 0.2369165487977369,
+              "dynamic_largest_component_fraction": 0.2113564668769716
             },
             "control": {
-              "position": 13,
-              "source_index": 253,
-              "absolute_difference": 0.004589607482035171,
-              "fixed_largest_component_fraction": 0.0856353591160221,
-              "dynamic_largest_component_fraction": 0.08104575163398693
+              "position": 9,
+              "source_index": 249,
+              "absolute_difference": 0.0006896685099416766,
+              "fixed_largest_component_fraction": 0.41196198993851313,
+              "dynamic_largest_component_fraction": 0.41127232142857145
             }
           },
           "fixed_evidence": {
             "broadest": {
-              "position": 17,
-              "source_index": 1,
+              "position": 32,
+              "source_index": 16,
               "status": "ok",
               "reason": null,
               "support_pixels": 33153,
-              "active_pixels": 4973,
-              "active_fraction": 0.15000150815914096,
-              "component_count": 251,
-              "largest_component_pixels": 855,
-              "largest_component_fraction": 0.1719284134325357,
-              "largest_component_support_fraction": 0.025789521310288662,
-              "effective_component_count": 16.305025531480034,
-              "boundary_active_pixels": 166,
-              "boundary_active_fraction": 0.033380253368188215,
-              "components_touching_support_boundary": 36
+              "active_pixels": 4410,
+              "active_fraction": 0.1330196362320152,
+              "component_count": 147,
+              "largest_component_pixels": 2703,
+              "largest_component_fraction": 0.6129251700680272,
+              "largest_component_support_fraction": 0.08153108315989503,
+              "effective_component_count": 2.5968811414895034,
+              "boundary_active_pixels": 92,
+              "boundary_active_fraction": 0.020861678004535148,
+              "components_touching_support_boundary": 10,
+              "reference_scale": 0.12098362183570861,
+              "active_threshold_value": 0.9847083303928376
             },
             "most_fragmented": {
               "position": 13,
@@ -1245,104 +1547,100 @@
               "status": "ok",
               "reason": null,
               "support_pixels": 33153,
-              "active_pixels": 4344,
-              "active_fraction": 0.13102886616595782,
-              "component_count": 220,
-              "largest_component_pixels": 372,
-              "largest_component_fraction": 0.0856353591160221,
-              "largest_component_support_fraction": 0.011220704008686997,
-              "effective_component_count": 29.742544794280455,
-              "boundary_active_pixels": 140,
-              "boundary_active_fraction": 0.03222836095764273,
-              "components_touching_support_boundary": 20
+              "active_pixels": 2504,
+              "active_fraction": 0.07552860977890387,
+              "component_count": 230,
+              "largest_component_pixels": 308,
+              "largest_component_fraction": 0.12300319488817892,
+              "largest_component_support_fraction": 0.009290260308267729,
+              "effective_component_count": 26.199516960696645,
+              "boundary_active_pixels": 60,
+              "boundary_active_fraction": 0.023961661341853034,
+              "components_touching_support_boundary": 16,
+              "reference_scale": 0.21847120381593704,
+              "active_threshold_value": 0.9597151026844979
             },
             "matched_active_area_pair": {
-              "area_difference": 0.01897264199318313,
-              "largest_component_fraction_difference": 0.0862930543165136,
+              "area_difference": 0.0018399541519621143,
+              "largest_component_fraction_difference": 0.39927872873989756,
               "within_tolerance": true,
               "left": {
-                "position": 13,
-                "source_index": 253,
+                "position": 20,
+                "source_index": 4,
                 "status": "ok",
                 "reason": null,
                 "support_pixels": 33153,
-                "active_pixels": 4344,
-                "active_fraction": 0.13102886616595782,
-                "component_count": 220,
-                "largest_component_pixels": 372,
-                "largest_component_fraction": 0.0856353591160221,
-                "largest_component_support_fraction": 0.011220704008686997,
-                "effective_component_count": 29.742544794280455,
-                "boundary_active_pixels": 140,
-                "boundary_active_fraction": 0.03222836095764273,
-                "components_touching_support_boundary": 20
+                "active_pixels": 1102,
+                "active_fraction": 0.03323982746659428,
+                "component_count": 168,
+                "largest_component_pixels": 138,
+                "largest_component_fraction": 0.12522686025408347,
+                "largest_component_support_fraction": 0.004162519229029047,
+                "effective_component_count": 23.179187662238515,
+                "boundary_active_pixels": 67,
+                "boundary_active_fraction": 0.060798548094373864,
+                "components_touching_support_boundary": 8,
+                "reference_scale": 0.2116501121163368,
+                "active_threshold_value": 0.9841944365143775
               },
               "right": {
-                "position": 17,
-                "source_index": 1,
+                "position": 23,
+                "source_index": 7,
                 "status": "ok",
                 "reason": null,
                 "support_pixels": 33153,
-                "active_pixels": 4973,
-                "active_fraction": 0.15000150815914096,
-                "component_count": 251,
-                "largest_component_pixels": 855,
-                "largest_component_fraction": 0.1719284134325357,
-                "largest_component_support_fraction": 0.025789521310288662,
-                "effective_component_count": 16.305025531480034,
-                "boundary_active_pixels": 166,
-                "boundary_active_fraction": 0.033380253368188215,
-                "components_touching_support_boundary": 36
+                "active_pixels": 1163,
+                "active_fraction": 0.03507978161855639,
+                "component_count": 59,
+                "largest_component_pixels": 610,
+                "largest_component_fraction": 0.524505588993981,
+                "largest_component_support_fraction": 0.01839954151962115,
+                "effective_component_count": 3.174947712863222,
+                "boundary_active_pixels": 10,
+                "boundary_active_fraction": 0.008598452278589854,
+                "components_touching_support_boundary": 2,
+                "reference_scale": 0.10477729897499084,
+                "active_threshold_value": 0.9976047502040863
               }
             }
           },
           "fixed_threshold_sensitivity": {
-            "position": 15,
-            "source_index": 255,
-            "largest_component_fraction_range": 0.4459264118978872,
+            "position": 23,
+            "source_index": 7,
+            "largest_component_fraction_range": 0.3302719015888217,
             "threshold_values": [
               {
-                "threshold": "1.20",
-                "largest_component_fraction": 0.12769322000395336,
-                "effective_component_count": 20.676671823686476
+                "threshold": "0.75",
+                "largest_component_fraction": 0.19423368740515934,
+                "effective_component_count": 12.054973065723471
               },
               {
-                "threshold": "1.25",
-                "largest_component_fraction": 0.21834415584415584,
-                "effective_component_count": 12.93377700707691
-              },
-              {
-                "threshold": "1.30",
-                "largest_component_fraction": 0.5736196319018405,
-                "effective_component_count": 2.917265989569035
+                "threshold": "1.00",
+                "largest_component_fraction": 0.524505588993981,
+                "effective_component_count": 3.174947712863222
               }
             ]
           },
           "dynamic_threshold_sensitivity": {
-            "position": 15,
-            "source_index": 255,
-            "largest_component_fraction_range": 0.3815556012573367,
+            "position": 23,
+            "source_index": 7,
+            "largest_component_fraction_range": 0.3329733860330694,
             "threshold_values": [
               {
-                "threshold": "1.20",
-                "largest_component_fraction": 0.1211325707856741,
-                "effective_component_count": 22.45407204184348
+                "threshold": "0.75",
+                "largest_component_fraction": 0.18928688793953335,
+                "effective_component_count": 12.598374021348201
               },
               {
-                "threshold": "1.25",
-                "largest_component_fraction": 0.20233170364798797,
-                "effective_component_count": 14.357912072960476
-              },
-              {
-                "threshold": "1.30",
-                "largest_component_fraction": 0.5026881720430108,
-                "effective_component_count": 3.657469077069456
+                "threshold": "1.00",
+                "largest_component_fraction": 0.5222602739726028,
+                "effective_component_count": 3.202268448750991
               }
             ]
           },
           "supports": {
             "fixed": {
-              "1.20": {
+              "0.75": {
                 "validity": {
                   "status": "review",
                   "reasons": [
@@ -1354,15 +1652,40 @@
                 "summary": {
                   "status": "ok",
                   "observed_frames": 33,
-                  "active_frames": 12,
-                  "active_frame_fraction": 0.36363636363636365,
-                  "median_active_fraction": 0.16835580490453353,
-                  "median_largest_component_fraction": 0.15537099660986978,
-                  "q10_largest_component_fraction": 0.10966310732222051,
-                  "q90_largest_component_fraction": 0.212921360119187,
-                  "median_effective_component_count": 17.509828658937987,
-                  "q90_effective_component_count": 29.39778150761072,
-                  "median_boundary_active_fraction": 0.030448912695971053
+                  "active_frames": 33,
+                  "active_frame_fraction": 1.0,
+                  "median_active_fraction": 0.17630380357735348,
+                  "median_largest_component_fraction": 0.18805848903330624,
+                  "q10_largest_component_fraction": 0.11520543462921357,
+                  "q90_largest_component_fraction": 0.28405129759678693,
+                  "median_effective_component_count": 13.2959659422434,
+                  "q90_effective_component_count": 25.1590859817977,
+                  "median_boundary_active_fraction": 0.025512934879571812,
+                  "median_reference_scale": 0.11655673438310622
+                }
+              },
+              "1.00": {
+                "validity": {
+                  "status": "review",
+                  "reasons": [
+                    "foreground_or_nonuniformity_on_border",
+                    "outline_near_image_edge"
+                  ]
+                },
+                "persistent_support_fraction": 0.9303232686047817,
+                "summary": {
+                  "status": "ok",
+                  "observed_frames": 33,
+                  "active_frames": 33,
+                  "active_frame_fraction": 1.0,
+                  "median_active_fraction": 0.06958646276355081,
+                  "median_largest_component_fraction": 0.22276645768025077,
+                  "q10_largest_component_fraction": 0.1338485553373141,
+                  "q90_largest_component_fraction": 0.3922884001444791,
+                  "median_effective_component_count": 11.860079437269675,
+                  "q90_effective_component_count": 19.47065266889887,
+                  "median_boundary_active_fraction": 0.025495750708215296,
+                  "median_reference_scale": 0.11655673438310622
                 }
               },
               "1.25": {
@@ -1377,43 +1700,21 @@
                 "summary": {
                   "status": "ok",
                   "observed_frames": 33,
-                  "active_frames": 11,
-                  "active_frame_fraction": 0.3333333333333333,
-                  "median_active_fraction": 0.07887672307181853,
-                  "median_largest_component_fraction": 0.15766969535008016,
-                  "q10_largest_component_fraction": 0.1092511013215859,
-                  "q90_largest_component_fraction": 0.1812619502868069,
-                  "median_effective_component_count": 20.50503264668864,
-                  "q90_effective_component_count": 24.20239291259476,
-                  "median_boundary_active_fraction": 0.037093690248565965
-                }
-              },
-              "1.30": {
-                "validity": {
-                  "status": "review",
-                  "reasons": [
-                    "foreground_or_nonuniformity_on_border",
-                    "outline_near_image_edge"
-                  ]
-                },
-                "persistent_support_fraction": 0.9303232686047817,
-                "summary": {
-                  "status": "ok",
-                  "observed_frames": 33,
-                  "active_frames": 7,
-                  "active_frame_fraction": 0.21212121212121213,
-                  "median_active_fraction": 0.030706120109793986,
-                  "median_largest_component_fraction": 0.23879680785758134,
-                  "q10_largest_component_fraction": 0.14713577163905936,
-                  "q90_largest_component_fraction": 0.44866572985570835,
-                  "median_effective_component_count": 9.460361995144401,
-                  "q90_effective_component_count": 24.317259831366897,
-                  "median_boundary_active_fraction": 0.038502673796791446
+                  "active_frames": 5,
+                  "active_frame_fraction": 0.15151515151515152,
+                  "median_active_fraction": 0.0035592555726480257,
+                  "median_largest_component_fraction": 0.28,
+                  "q10_largest_component_fraction": 0.2016364699006429,
+                  "q90_largest_component_fraction": 0.3820915926179084,
+                  "median_effective_component_count": 6.188118811881188,
+                  "q90_effective_component_count": 14.052973726722907,
+                  "median_boundary_active_fraction": 0.03879310344827586,
+                  "median_reference_scale": 0.11231586545705795
                 }
               }
             },
             "dynamic": {
-              "1.20": {
+              "0.75": {
                 "validity": {
                   "status": "review",
                   "reasons": [
@@ -1425,15 +1726,40 @@
                 "summary": {
                   "status": "ok",
                   "observed_frames": 33,
-                  "active_frames": 12,
-                  "active_frame_fraction": 0.36363636363636365,
-                  "median_active_fraction": 0.1715858741289877,
-                  "median_largest_component_fraction": 0.1471984863966584,
-                  "q10_largest_component_fraction": 0.1045669215831995,
-                  "q90_largest_component_fraction": 0.20284422818088546,
-                  "median_effective_component_count": 18.678748112064458,
-                  "q90_effective_component_count": 31.438696340762885,
-                  "median_boundary_active_fraction": 0.03064268382049691
+                  "active_frames": 33,
+                  "active_frame_fraction": 1.0,
+                  "median_active_fraction": 0.1759264612360525,
+                  "median_largest_component_fraction": 0.1843693421846711,
+                  "q10_largest_component_fraction": 0.10784011461140648,
+                  "q90_largest_component_fraction": 0.277617573763302,
+                  "median_effective_component_count": 13.779466727724031,
+                  "q90_effective_component_count": 26.618814070175592,
+                  "median_boundary_active_fraction": 0.029878618113912233,
+                  "median_reference_scale": 0.11655673438310622
+                }
+              },
+              "1.00": {
+                "validity": {
+                  "status": "review",
+                  "reasons": [
+                    "foreground_or_nonuniformity_on_border",
+                    "outline_near_image_edge"
+                  ]
+                },
+                "persistent_support_fraction": 0.9303232686047817,
+                "summary": {
+                  "status": "ok",
+                  "observed_frames": 33,
+                  "active_frames": 33,
+                  "active_frame_fraction": 1.0,
+                  "median_active_fraction": 0.07164451542981005,
+                  "median_largest_component_fraction": 0.2113564668769716,
+                  "q10_largest_component_fraction": 0.12853861908801878,
+                  "q90_largest_component_fraction": 0.38946293969849255,
+                  "median_effective_component_count": 13.135822953849962,
+                  "q90_effective_component_count": 20.875142967667923,
+                  "median_boundary_active_fraction": 0.02958076186422643,
+                  "median_reference_scale": 0.11655673438310622
                 }
               },
               "1.25": {
@@ -1448,38 +1774,16 @@
                 "summary": {
                   "status": "ok",
                   "observed_frames": 33,
-                  "active_frames": 11,
-                  "active_frame_fraction": 0.3333333333333333,
-                  "median_active_fraction": 0.0794251134644478,
-                  "median_largest_component_fraction": 0.15120451050743208,
-                  "q10_largest_component_fraction": 0.10228210063238934,
-                  "q90_largest_component_fraction": 0.17362637362637362,
-                  "median_effective_component_count": 23.257062048499122,
-                  "q90_effective_component_count": 26.169747747927897,
-                  "median_boundary_active_fraction": 0.03263137924492506
-                }
-              },
-              "1.30": {
-                "validity": {
-                  "status": "review",
-                  "reasons": [
-                    "foreground_or_nonuniformity_on_border",
-                    "outline_near_image_edge"
-                  ]
-                },
-                "persistent_support_fraction": 0.9303232686047817,
-                "summary": {
-                  "status": "ok",
-                  "observed_frames": 33,
-                  "active_frames": 7,
-                  "active_frame_fraction": 0.21212121212121213,
-                  "median_active_fraction": 0.030708386646504594,
-                  "median_largest_component_fraction": 0.21940214326001128,
-                  "q10_largest_component_fraction": 0.1378974641258081,
-                  "q90_largest_component_fraction": 0.39156070571040824,
-                  "median_effective_component_count": 10.71885389281586,
-                  "q90_effective_component_count": 25.94301446948148,
-                  "median_boundary_active_fraction": 0.028239845261121856
+                  "active_frames": 5,
+                  "active_frame_fraction": 0.15151515151515152,
+                  "median_active_fraction": 0.0059795889032629,
+                  "median_largest_component_fraction": 0.2692307692307692,
+                  "q10_largest_component_fraction": 0.18512537186570335,
+                  "q90_largest_component_fraction": 0.35967957276368495,
+                  "median_effective_component_count": 6.6274509803921555,
+                  "q90_effective_component_count": 15.661709043269969,
+                  "median_boundary_active_fraction": 0.02870493991989319,
+                  "median_reference_scale": 0.11231586545705795
                 }
               }
             }
@@ -1495,140 +1799,148 @@
             "strongest": {
               "position": 8,
               "source_index": 0,
-              "absolute_difference": 0.09725008715294285,
-              "fixed_largest_component_fraction": 0.0711623178583531,
-              "dynamic_largest_component_fraction": 0.16841240501129595
+              "absolute_difference": 0.10891629260909268,
+              "fixed_largest_component_fraction": 0.06423982869379015,
+              "dynamic_largest_component_fraction": 0.17315612130288283
             },
             "control": {
-              "position": 11,
-              "source_index": 3,
-              "absolute_difference": 1.1168079357720684e-05,
-              "fixed_largest_component_fraction": 0.1011889035667107,
-              "dynamic_largest_component_fraction": 0.10120007164606842
+              "position": 5,
+              "source_index": 253,
+              "absolute_difference": 0.0014482919517692788,
+              "fixed_largest_component_fraction": 0.11137231854246253,
+              "dynamic_largest_component_fraction": 0.10992402659069325
             }
           },
           "fixed_evidence": {
             "broadest": {
-              "position": 10,
-              "source_index": 2,
+              "position": 3,
+              "source_index": 251,
               "status": "ok",
               "reason": null,
               "support_pixels": 24774,
-              "active_pixels": 3452,
-              "active_fraction": 0.13933963025752805,
-              "component_count": 176,
-              "largest_component_pixels": 426,
-              "largest_component_fraction": 0.12340672074159907,
-              "largest_component_support_fraction": 0.017195446839428433,
-              "effective_component_count": 23.65181353732072,
-              "boundary_active_pixels": 196,
-              "boundary_active_fraction": 0.056778679026651215,
-              "components_touching_support_boundary": 32
+              "active_pixels": 4323,
+              "active_fraction": 0.1744974570113829,
+              "component_count": 166,
+              "largest_component_pixels": 606,
+              "largest_component_fraction": 0.14018043025676613,
+              "largest_component_support_fraction": 0.024461128602567207,
+              "effective_component_count": 17.09736764822932,
+              "boundary_active_pixels": 148,
+              "boundary_active_fraction": 0.034235484617164004,
+              "components_touching_support_boundary": 15,
+              "reference_scale": 0.15076708788871765,
+              "active_threshold_value": 0.8967819809436798
             },
             "most_fragmented": {
-              "position": 7,
-              "source_index": 255,
+              "position": 8,
+              "source_index": 0,
               "status": "ok",
               "reason": null,
               "support_pixels": 24774,
-              "active_pixels": 3075,
-              "active_fraction": 0.12412206345362073,
-              "component_count": 147,
-              "largest_component_pixels": 201,
-              "largest_component_fraction": 0.06536585365853659,
-              "largest_component_support_fraction": 0.008113344635504964,
-              "effective_component_count": 30.65519320734898,
-              "boundary_active_pixels": 151,
-              "boundary_active_fraction": 0.049105691056910566,
-              "components_touching_support_boundary": 25
+              "active_pixels": 3269,
+              "active_fraction": 0.13195285379833696,
+              "component_count": 142,
+              "largest_component_pixels": 210,
+              "largest_component_fraction": 0.06423982869379015,
+              "largest_component_support_fraction": 0.008476628723661903,
+              "effective_component_count": 30.64286185370721,
+              "boundary_active_pixels": 184,
+              "boundary_active_fraction": 0.056286326093606606,
+              "components_touching_support_boundary": 24,
+              "reference_scale": 0.17182575482726095,
+              "active_threshold_value": 0.9026398839414119
             },
             "matched_active_area_pair": {
-              "area_difference": 0.015217566803907318,
-              "largest_component_fraction_difference": 0.05804086708306248,
+              "area_difference": 0.019334786469685977,
+              "largest_component_fraction_difference": 0.08330552883022264,
               "within_tolerance": true,
               "left": {
-                "position": 7,
-                "source_index": 255,
+                "position": 1,
+                "source_index": 249,
                 "status": "ok",
                 "reason": null,
                 "support_pixels": 24774,
-                "active_pixels": 3075,
-                "active_fraction": 0.12412206345362073,
-                "component_count": 147,
-                "largest_component_pixels": 201,
-                "largest_component_fraction": 0.06536585365853659,
-                "largest_component_support_fraction": 0.008113344635504964,
-                "effective_component_count": 30.65519320734898,
-                "boundary_active_pixels": 151,
-                "boundary_active_fraction": 0.049105691056910566,
-                "components_touching_support_boundary": 25
+                "active_pixels": 3748,
+                "active_fraction": 0.15128764026802294,
+                "component_count": 247,
+                "largest_component_pixels": 553,
+                "largest_component_fraction": 0.1475453575240128,
+                "largest_component_support_fraction": 0.02232178897230968,
+                "effective_component_count": 17.868186940804456,
+                "boundary_active_pixels": 128,
+                "boundary_active_fraction": 0.03415154749199573,
+                "components_touching_support_boundary": 17,
+                "reference_scale": 0.10676924368143081,
+                "active_threshold_value": 0.9165833987832069
               },
               "right": {
-                "position": 10,
-                "source_index": 2,
+                "position": 8,
+                "source_index": 0,
                 "status": "ok",
                 "reason": null,
                 "support_pixels": 24774,
-                "active_pixels": 3452,
-                "active_fraction": 0.13933963025752805,
-                "component_count": 176,
-                "largest_component_pixels": 426,
-                "largest_component_fraction": 0.12340672074159907,
-                "largest_component_support_fraction": 0.017195446839428433,
-                "effective_component_count": 23.65181353732072,
-                "boundary_active_pixels": 196,
-                "boundary_active_fraction": 0.056778679026651215,
-                "components_touching_support_boundary": 32
+                "active_pixels": 3269,
+                "active_fraction": 0.13195285379833696,
+                "component_count": 142,
+                "largest_component_pixels": 210,
+                "largest_component_fraction": 0.06423982869379015,
+                "largest_component_support_fraction": 0.008476628723661903,
+                "effective_component_count": 30.64286185370721,
+                "boundary_active_pixels": 184,
+                "boundary_active_fraction": 0.056286326093606606,
+                "components_touching_support_boundary": 24,
+                "reference_scale": 0.17182575482726095,
+                "active_threshold_value": 0.9026398839414119
               }
             }
           },
           "fixed_threshold_sensitivity": {
             "position": 12,
             "source_index": 4,
-            "largest_component_fraction_range": 0.12483136927022721,
+            "largest_component_fraction_range": 0.12046912865532004,
             "threshold_values": [
               {
-                "threshold": "1.20",
-                "largest_component_fraction": 0.21567164179104478,
-                "effective_component_count": 13.274817971202529
+                "threshold": "0.75",
+                "largest_component_fraction": 0.21566803126163006,
+                "effective_component_count": 13.29476668228778
+              },
+              {
+                "threshold": "1.00",
+                "largest_component_fraction": 0.09519890260631002,
+                "effective_component_count": 24.05306836265282
               },
               {
                 "threshold": "1.25",
-                "largest_component_fraction": 0.09084027252081757,
-                "effective_component_count": 24.88290653404545
-              },
-              {
-                "threshold": "1.30",
-                "largest_component_fraction": 0.10473980775604906,
-                "effective_component_count": 21.766281747464628
+                "largest_component_fraction": 0.12740989103101424,
+                "effective_component_count": 21.442869195769426
               }
             ]
           },
           "dynamic_threshold_sensitivity": {
             "position": 10,
             "source_index": 2,
-            "largest_component_fraction_range": 0.17094506892796524,
+            "largest_component_fraction_range": 0.17664019922072455,
             "threshold_values": [
               {
-                "threshold": "1.20",
-                "largest_component_fraction": 0.27745504840940527,
-                "effective_component_count": 9.005420524810997
+                "threshold": "0.75",
+                "largest_component_fraction": 0.2804407713498623,
+                "effective_component_count": 8.876689738241092
+              },
+              {
+                "threshold": "1.00",
+                "largest_component_fraction": 0.10380057212913772,
+                "effective_component_count": 21.77939475502855
               },
               {
                 "threshold": "1.25",
-                "largest_component_fraction": 0.10650997948144003,
-                "effective_component_count": 21.1483413748623
-              },
-              {
-                "threshold": "1.30",
-                "largest_component_fraction": 0.11863966770508827,
-                "effective_component_count": 22.477381590787214
+                "largest_component_fraction": 0.14531088972861558,
+                "effective_component_count": 19.003018444805743
               }
             ]
           },
           "supports": {
             "fixed": {
-              "1.20": {
+              "0.75": {
                 "validity": {
                   "status": "ok",
                   "reasons": []
@@ -1639,13 +1951,35 @@
                   "observed_frames": 17,
                   "active_frames": 17,
                   "active_frame_fraction": 1.0,
-                  "median_active_fraction": 0.1798659885363688,
-                  "median_largest_component_fraction": 0.1158357771260997,
-                  "q10_largest_component_fraction": 0.09464786187739248,
-                  "q90_largest_component_fraction": 0.17308282208588957,
-                  "median_effective_component_count": 23.54287200821257,
-                  "q90_effective_component_count": 28.383914455703714,
-                  "median_boundary_active_fraction": 0.04741471787170135
+                  "median_active_fraction": 0.19637523209816743,
+                  "median_largest_component_fraction": 0.1269971323228185,
+                  "q10_largest_component_fraction": 0.09857817309689725,
+                  "q90_largest_component_fraction": 0.19442754138440538,
+                  "median_effective_component_count": 19.204339951320858,
+                  "q90_effective_component_count": 27.26585091150353,
+                  "median_boundary_active_fraction": 0.04700328407224959,
+                  "median_reference_scale": 0.1839225705385208
+                }
+              },
+              "1.00": {
+                "validity": {
+                  "status": "ok",
+                  "reasons": []
+                },
+                "persistent_support_fraction": 0.7299566869972598,
+                "summary": {
+                  "status": "ok",
+                  "observed_frames": 17,
+                  "active_frames": 17,
+                  "active_frame_fraction": 1.0,
+                  "median_active_fraction": 0.13736175022200695,
+                  "median_largest_component_fraction": 0.11091954022988505,
+                  "q10_largest_component_fraction": 0.08105013266303589,
+                  "q90_largest_component_fraction": 0.14298271702851856,
+                  "median_effective_component_count": 23.771331660954665,
+                  "q90_effective_component_count": 28.927043472911894,
+                  "median_boundary_active_fraction": 0.045541838134430725,
+                  "median_reference_scale": 0.1839225705385208
                 }
               },
               "1.25": {
@@ -1657,40 +1991,21 @@
                 "summary": {
                   "status": "ok",
                   "observed_frames": 17,
-                  "active_frames": 15,
-                  "active_frame_fraction": 0.8823529411764706,
-                  "median_active_fraction": 0.1360700734641156,
-                  "median_largest_component_fraction": 0.09837962962962964,
-                  "q10_largest_component_fraction": 0.07801270603032717,
-                  "q90_largest_component_fraction": 0.11883962686310282,
-                  "median_effective_component_count": 24.90525512448086,
-                  "q90_effective_component_count": 29.42538422459609,
-                  "median_boundary_active_fraction": 0.04695898161244696
-                }
-              },
-              "1.30": {
-                "validity": {
-                  "status": "ok",
-                  "reasons": []
-                },
-                "persistent_support_fraction": 0.7299566869972598,
-                "summary": {
-                  "status": "ok",
-                  "observed_frames": 17,
-                  "active_frames": 14,
-                  "active_frame_fraction": 0.8235294117647058,
-                  "median_active_fraction": 0.09633083070961493,
-                  "median_largest_component_fraction": 0.0990849369655825,
-                  "q10_largest_component_fraction": 0.08373177842565598,
-                  "q90_largest_component_fraction": 0.12515794684301712,
-                  "median_effective_component_count": 24.049951530795088,
-                  "q90_effective_component_count": 27.47101363252331,
-                  "median_boundary_active_fraction": 0.04857794947309013
+                  "active_frames": 17,
+                  "active_frame_fraction": 1.0,
+                  "median_active_fraction": 0.08884314200371357,
+                  "median_largest_component_fraction": 0.11389802631578948,
+                  "q10_largest_component_fraction": 0.09322036705757636,
+                  "q90_largest_component_fraction": 0.1403749590566449,
+                  "median_effective_component_count": 21.818578032984938,
+                  "q90_effective_component_count": 25.630131652641253,
+                  "median_boundary_active_fraction": 0.04274937133277452,
+                  "median_reference_scale": 0.1839225705385208
                 }
               }
             },
             "dynamic": {
-              "1.20": {
+              "0.75": {
                 "validity": {
                   "status": "ok",
                   "reasons": []
@@ -1701,13 +2016,35 @@
                   "observed_frames": 17,
                   "active_frames": 17,
                   "active_frame_fraction": 1.0,
-                  "median_active_fraction": 0.20006135805835834,
-                  "median_largest_component_fraction": 0.17853780985252587,
-                  "q10_largest_component_fraction": 0.11167259061447503,
-                  "q90_largest_component_fraction": 0.25229263212311653,
-                  "median_effective_component_count": 16.319208025148082,
-                  "q90_effective_component_count": 25.131465897942387,
-                  "median_boundary_active_fraction": 0.01751959428307976
+                  "median_active_fraction": 0.21436976987447698,
+                  "median_largest_component_fraction": 0.18921541447186027,
+                  "q10_largest_component_fraction": 0.12904196207837296,
+                  "q90_largest_component_fraction": 0.2661656597692036,
+                  "median_effective_component_count": 14.610263569542333,
+                  "q90_effective_component_count": 17.679184807458533,
+                  "median_boundary_active_fraction": 0.01734620886981402,
+                  "median_reference_scale": 0.1839225705385208
+                }
+              },
+              "1.00": {
+                "validity": {
+                  "status": "ok",
+                  "reasons": []
+                },
+                "persistent_support_fraction": 0.7299566869972598,
+                "summary": {
+                  "status": "ok",
+                  "observed_frames": 17,
+                  "active_frames": 17,
+                  "active_frame_fraction": 1.0,
+                  "median_active_fraction": 0.15421947557697008,
+                  "median_largest_component_fraction": 0.10951299520565229,
+                  "q10_largest_component_fraction": 0.09898808584625761,
+                  "q90_largest_component_fraction": 0.18958872800103121,
+                  "median_effective_component_count": 21.92061236650318,
+                  "q90_effective_component_count": 24.636260749974607,
+                  "median_boundary_active_fraction": 0.016856600189933523,
+                  "median_reference_scale": 0.1839225705385208
                 }
               },
               "1.25": {
@@ -1719,35 +2056,16 @@
                 "summary": {
                   "status": "ok",
                   "observed_frames": 17,
-                  "active_frames": 15,
-                  "active_frame_fraction": 0.8823529411764706,
-                  "median_active_fraction": 0.1500314705005466,
-                  "median_largest_component_fraction": 0.10478170478170479,
-                  "q10_largest_component_fraction": 0.0980632937992698,
-                  "q90_largest_component_fraction": 0.12008034857784977,
-                  "median_effective_component_count": 22.944041551854475,
-                  "q90_effective_component_count": 26.294421883736337,
-                  "median_boundary_active_fraction": 0.01567674983440053
-                }
-              },
-              "1.30": {
-                "validity": {
-                  "status": "ok",
-                  "reasons": []
-                },
-                "persistent_support_fraction": 0.7299566869972598,
-                "summary": {
-                  "status": "ok",
-                  "observed_frames": 17,
-                  "active_frames": 14,
-                  "active_frame_fraction": 0.8235294117647058,
-                  "median_active_fraction": 0.10563623267504993,
-                  "median_largest_component_fraction": 0.10798518272928662,
-                  "q10_largest_component_fraction": 0.09819644203647332,
-                  "q90_largest_component_fraction": 0.12791012904668678,
-                  "median_effective_component_count": 24.876338060620377,
-                  "q90_effective_component_count": 28.513777763481244,
-                  "median_boundary_active_fraction": 0.013415258052206058
+                  "active_frames": 17,
+                  "active_frame_fraction": 1.0,
+                  "median_active_fraction": 0.09756726276784276,
+                  "median_largest_component_fraction": 0.12154096581660337,
+                  "q10_largest_component_fraction": 0.10007630286090985,
+                  "q90_largest_component_fraction": 0.1497457755433305,
+                  "median_effective_component_count": 23.43430437429662,
+                  "q90_effective_component_count": 27.615638079641226,
+                  "median_boundary_active_fraction": 0.013780260707635009,
+                  "median_reference_scale": 0.1839225705385208
                 }
               }
             }
@@ -1756,142 +2074,150 @@
         "wide": {
           "support_disagreement": {
             "strongest": {
-              "position": 20,
-              "source_index": 4,
-              "absolute_difference": 0.166748947520631,
-              "fixed_largest_component_fraction": 0.10312035661218424,
-              "dynamic_largest_component_fraction": 0.26986930413281524
+              "position": 15,
+              "source_index": 255,
+              "absolute_difference": 0.11349944207417131,
+              "fixed_largest_component_fraction": 0.07617328519855596,
+              "dynamic_largest_component_fraction": 0.18967272727272727
             },
             "control": {
-              "position": 18,
-              "source_index": 2,
-              "absolute_difference": 0.002185239352397783,
-              "fixed_largest_component_fraction": 0.11855670103092783,
-              "dynamic_largest_component_fraction": 0.11637146167853005
+              "position": 19,
+              "source_index": 3,
+              "absolute_difference": 0.00010406870805321211,
+              "fixed_largest_component_fraction": 0.11528731478135164,
+              "dynamic_largest_component_fraction": 0.11518324607329843
             }
           },
           "fixed_evidence": {
             "broadest": {
-              "position": 23,
-              "source_index": 7,
+              "position": 7,
+              "source_index": 247,
               "status": "ok",
               "reason": null,
               "support_pixels": 20506,
-              "active_pixels": 2781,
-              "active_fraction": 0.13561884326538573,
-              "component_count": 167,
-              "largest_component_pixels": 352,
-              "largest_component_fraction": 0.12657317511686444,
-              "largest_component_support_fraction": 0.01716570759777626,
-              "effective_component_count": 22.6310597791895,
-              "boundary_active_pixels": 138,
-              "boundary_active_fraction": 0.04962243797195254,
-              "components_touching_support_boundary": 23
+              "active_pixels": 3451,
+              "active_fraction": 0.16829220715888032,
+              "component_count": 182,
+              "largest_component_pixels": 518,
+              "largest_component_fraction": 0.15010141987829614,
+              "largest_component_support_fraction": 0.025260899249000292,
+              "effective_component_count": 15.365918201722977,
+              "boundary_active_pixels": 161,
+              "boundary_active_fraction": 0.04665314401622718,
+              "components_touching_support_boundary": 30,
+              "reference_scale": 0.09646085692048072,
+              "active_threshold_value": 0.8886020560324192
             },
             "most_fragmented": {
-              "position": 25,
-              "source_index": 9,
+              "position": 27,
+              "source_index": 11,
               "status": "ok",
               "reason": null,
               "support_pixels": 20506,
-              "active_pixels": 2662,
-              "active_fraction": 0.12981566370818298,
-              "component_count": 218,
-              "largest_component_pixels": 182,
-              "largest_component_fraction": 0.06836964688204357,
-              "largest_component_support_fraction": 0.008875451087486589,
-              "effective_component_count": 30.85268199233716,
-              "boundary_active_pixels": 109,
-              "boundary_active_fraction": 0.040946656649135986,
-              "components_touching_support_boundary": 28
+              "active_pixels": 3380,
+              "active_fraction": 0.16482980591046523,
+              "component_count": 226,
+              "largest_component_pixels": 321,
+              "largest_component_fraction": 0.09497041420118343,
+              "largest_component_support_fraction": 0.015653954940017555,
+              "effective_component_count": 31.46784189505578,
+              "boundary_active_pixels": 175,
+              "boundary_active_fraction": 0.051775147928994084,
+              "components_touching_support_boundary": 30,
+              "reference_scale": 0.12330226986408233,
+              "active_threshold_value": 0.8874623069047928
             },
             "matched_active_area_pair": {
-              "area_difference": 0.0030722715302838044,
-              "largest_component_fraction_difference": 0.05896980265924083,
+              "area_difference": 0.015019994148054244,
+              "largest_component_fraction_difference": 0.06645179602301649,
               "within_tolerance": true,
               "left": {
-                "position": 13,
-                "source_index": 253,
+                "position": 9,
+                "source_index": 249,
                 "status": "ok",
                 "reason": null,
                 "support_pixels": 20506,
-                "active_pixels": 2725,
-                "active_fraction": 0.1328879352384668,
-                "component_count": 137,
-                "largest_component_pixels": 347,
-                "largest_component_fraction": 0.1273394495412844,
-                "largest_component_support_fraction": 0.01692187652394421,
-                "effective_component_count": 21.964950734617698,
-                "boundary_active_pixels": 149,
-                "boundary_active_fraction": 0.05467889908256881,
-                "components_touching_support_boundary": 22
+                "active_pixels": 3078,
+                "active_fraction": 0.15010240905100947,
+                "component_count": 213,
+                "largest_component_pixels": 439,
+                "largest_component_fraction": 0.14262508122157244,
+                "largest_component_support_fraction": 0.021408368282453915,
+                "effective_component_count": 19.113615455381787,
+                "boundary_active_pixels": 124,
+                "boundary_active_fraction": 0.04028589993502274,
+                "components_touching_support_boundary": 25,
+                "reference_scale": 0.09719229413866996,
+                "active_threshold_value": 0.9126111335933208
               },
               "right": {
-                "position": 25,
-                "source_index": 9,
+                "position": 15,
+                "source_index": 255,
                 "status": "ok",
                 "reason": null,
                 "support_pixels": 20506,
-                "active_pixels": 2662,
-                "active_fraction": 0.12981566370818298,
-                "component_count": 218,
-                "largest_component_pixels": 182,
-                "largest_component_fraction": 0.06836964688204357,
-                "largest_component_support_fraction": 0.008875451087486589,
-                "effective_component_count": 30.85268199233716,
-                "boundary_active_pixels": 109,
-                "boundary_active_fraction": 0.040946656649135986,
-                "components_touching_support_boundary": 28
+                "active_pixels": 2770,
+                "active_fraction": 0.13508241490295522,
+                "component_count": 105,
+                "largest_component_pixels": 211,
+                "largest_component_fraction": 0.07617328519855596,
+                "largest_component_support_fraction": 0.010289671315712474,
+                "effective_component_count": 23.49139382657841,
+                "boundary_active_pixels": 166,
+                "boundary_active_fraction": 0.059927797833935016,
+                "components_touching_support_boundary": 27,
+                "reference_scale": 0.16219238113760948,
+                "active_threshold_value": 0.8706951208055019
               }
             }
           },
           "fixed_threshold_sensitivity": {
-            "position": 20,
-            "source_index": 4,
-            "largest_component_fraction_range": 0.10595171338551321,
+            "position": 25,
+            "source_index": 9,
+            "largest_component_fraction_range": 0.11598232247240244,
             "threshold_values": [
               {
-                "threshold": "1.20",
-                "largest_component_fraction": 0.20907206999769745,
-                "effective_component_count": 13.135612295139618
+                "threshold": "0.75",
+                "largest_component_fraction": 0.1931085770946951,
+                "effective_component_count": 13.554547514176626
+              },
+              {
+                "threshold": "1.00",
+                "largest_component_fraction": 0.11504747991234478,
+                "effective_component_count": 25.07104636541189
               },
               {
                 "threshold": "1.25",
-                "largest_component_fraction": 0.10312035661218424,
-                "effective_component_count": 21.440913213649353
-              },
-              {
-                "threshold": "1.30",
-                "largest_component_fraction": 0.12359984550019312,
-                "effective_component_count": 20.82486772651156
+                "largest_component_fraction": 0.07712625462229265,
+                "effective_component_count": 28.347155751386325
               }
             ]
           },
           "dynamic_threshold_sensitivity": {
-            "position": 18,
-            "source_index": 2,
-            "largest_component_fraction_range": 0.1674465369204819,
+            "position": 17,
+            "source_index": 1,
+            "largest_component_fraction_range": 0.1852391335197381,
             "threshold_values": [
               {
-                "threshold": "1.20",
-                "largest_component_fraction": 0.2706907280647169,
-                "effective_component_count": 8.810611208178535
+                "threshold": "0.75",
+                "largest_component_fraction": 0.2807197191339965,
+                "effective_component_count": 9.135735700980765
+              },
+              {
+                "threshold": "1.00",
+                "largest_component_fraction": 0.09548058561425843,
+                "effective_component_count": 23.317012465555703
               },
               {
                 "threshold": "1.25",
-                "largest_component_fraction": 0.11637146167853005,
-                "effective_component_count": 17.87926953721908
-              },
-              {
-                "threshold": "1.30",
-                "largest_component_fraction": 0.10324419114423498,
-                "effective_component_count": 24.331491583522922
+                "largest_component_fraction": 0.13787319691378733,
+                "effective_component_count": 21.852656713775268
               }
             ]
           },
           "supports": {
             "fixed": {
-              "1.20": {
+              "0.75": {
                 "validity": {
                   "status": "ok",
                   "reasons": []
@@ -1902,13 +2228,35 @@
                   "observed_frames": 33,
                   "active_frames": 33,
                   "active_frame_fraction": 1.0,
-                  "median_active_fraction": 0.1260606651711694,
-                  "median_largest_component_fraction": 0.1141966562765656,
-                  "q10_largest_component_fraction": 0.09019299729637843,
-                  "q90_largest_component_fraction": 0.15344729567475499,
-                  "median_effective_component_count": 22.58943010228933,
-                  "q90_effective_component_count": 30.529229479688098,
-                  "median_boundary_active_fraction": 0.046804227478610974
+                  "median_active_fraction": 0.20813420462303717,
+                  "median_largest_component_fraction": 0.12375690607734807,
+                  "q10_largest_component_fraction": 0.09080112016002422,
+                  "q90_largest_component_fraction": 0.19275273205841478,
+                  "median_effective_component_count": 18.975973594396663,
+                  "q90_effective_component_count": 24.016410937139646,
+                  "median_boundary_active_fraction": 0.047777040477770406,
+                  "median_reference_scale": 0.12330226986408233
+                }
+              },
+              "1.00": {
+                "validity": {
+                  "status": "ok",
+                  "reasons": []
+                },
+                "persistent_support_fraction": 0.6026922172584058,
+                "summary": {
+                  "status": "ok",
+                  "observed_frames": 33,
+                  "active_frames": 33,
+                  "active_frame_fraction": 1.0,
+                  "median_active_fraction": 0.15117526577587048,
+                  "median_largest_component_fraction": 0.11206012982576016,
+                  "q10_largest_component_fraction": 0.08226190847196453,
+                  "q90_largest_component_fraction": 0.1316907237956453,
+                  "median_effective_component_count": 23.469344533095953,
+                  "q90_effective_component_count": 27.791959337365483,
+                  "median_boundary_active_fraction": 0.04696745562130177,
+                  "median_reference_scale": 0.12330226986408233
                 }
               },
               "1.25": {
@@ -1920,40 +2268,21 @@
                 "summary": {
                   "status": "ok",
                   "observed_frames": 33,
-                  "active_frames": 25,
-                  "active_frame_fraction": 0.7575757575757576,
-                  "median_active_fraction": 0.12137910855359407,
-                  "median_largest_component_fraction": 0.10803324099722991,
-                  "q10_largest_component_fraction": 0.08137946761817742,
-                  "q90_largest_component_fraction": 0.12703293977151642,
-                  "median_effective_component_count": 24.15292137801623,
-                  "q90_effective_component_count": 26.415802171490196,
-                  "median_boundary_active_fraction": 0.04918032786885246
-                }
-              },
-              "1.30": {
-                "validity": {
-                  "status": "ok",
-                  "reasons": []
-                },
-                "persistent_support_fraction": 0.6026922172584058,
-                "summary": {
-                  "status": "ok",
-                  "observed_frames": 33,
-                  "active_frames": 17,
-                  "active_frame_fraction": 0.5151515151515151,
-                  "median_active_fraction": 0.09202184726421535,
-                  "median_largest_component_fraction": 0.1005524861878453,
-                  "q10_largest_component_fraction": 0.08444874630217242,
-                  "q90_largest_component_fraction": 0.12790310021169943,
-                  "median_effective_component_count": 23.335686058628077,
-                  "q90_effective_component_count": 26.361553230031134,
-                  "median_boundary_active_fraction": 0.05126760563380282
+                  "active_frames": 33,
+                  "active_frame_fraction": 1.0,
+                  "median_active_fraction": 0.11762411001658052,
+                  "median_largest_component_fraction": 0.10736639383726529,
+                  "q10_largest_component_fraction": 0.0869500733155453,
+                  "q90_largest_component_fraction": 0.13653004532092847,
+                  "median_effective_component_count": 23.540820374992006,
+                  "q90_effective_component_count": 28.333576708585674,
+                  "median_boundary_active_fraction": 0.04481579946828713,
+                  "median_reference_scale": 0.12330226986408233
                 }
               }
             },
             "dynamic": {
-              "1.20": {
+              "0.75": {
                 "validity": {
                   "status": "ok",
                   "reasons": []
@@ -1964,13 +2293,35 @@
                   "observed_frames": 33,
                   "active_frames": 33,
                   "active_frame_fraction": 1.0,
-                  "median_active_fraction": 0.14402024425129278,
-                  "median_largest_component_fraction": 0.11579980372914622,
-                  "q10_largest_component_fraction": 0.08385864928868011,
-                  "q90_largest_component_fraction": 0.22988294353024535,
-                  "median_effective_component_count": 21.121882246505116,
-                  "q90_effective_component_count": 35.45905405995198,
-                  "median_boundary_active_fraction": 0.017369727047146403
+                  "median_active_fraction": 0.2264550965647464,
+                  "median_largest_component_fraction": 0.15701906412478336,
+                  "q10_largest_component_fraction": 0.10858563707914241,
+                  "q90_largest_component_fraction": 0.2674723903147115,
+                  "median_effective_component_count": 14.808419551140805,
+                  "q90_effective_component_count": 21.967464351799308,
+                  "median_boundary_active_fraction": 0.019120161666407585,
+                  "median_reference_scale": 0.12330226986408233
+                }
+              },
+              "1.00": {
+                "validity": {
+                  "status": "ok",
+                  "reasons": []
+                },
+                "persistent_support_fraction": 0.6026922172584058,
+                "summary": {
+                  "status": "ok",
+                  "observed_frames": 33,
+                  "active_frames": 33,
+                  "active_frame_fraction": 1.0,
+                  "median_active_fraction": 0.17048490515629175,
+                  "median_largest_component_fraction": 0.11647798742138364,
+                  "q10_largest_component_fraction": 0.09218286388065515,
+                  "q90_largest_component_fraction": 0.18864511612475116,
+                  "median_effective_component_count": 21.363734315804113,
+                  "q90_effective_component_count": 30.633519151538742,
+                  "median_boundary_active_fraction": 0.01843506759524785,
+                  "median_reference_scale": 0.12330226986408233
                 }
               },
               "1.25": {
@@ -1982,35 +2333,16 @@
                 "summary": {
                   "status": "ok",
                   "observed_frames": 33,
-                  "active_frames": 25,
-                  "active_frame_fraction": 0.7575757575757576,
-                  "median_active_fraction": 0.14600717387200302,
-                  "median_largest_component_fraction": 0.11183496199782844,
-                  "q10_largest_component_fraction": 0.09704240713415026,
-                  "q90_largest_component_fraction": 0.13816075421419835,
-                  "median_effective_component_count": 23.331598661015974,
-                  "q90_effective_component_count": 31.719228733174987,
-                  "median_boundary_active_fraction": 0.015574896930829134
-                }
-              },
-              "1.30": {
-                "validity": {
-                  "status": "ok",
-                  "reasons": []
-                },
-                "persistent_support_fraction": 0.6026922172584058,
-                "summary": {
-                  "status": "ok",
-                  "observed_frames": 33,
-                  "active_frames": 17,
-                  "active_frame_fraction": 0.5151515151515151,
-                  "median_active_fraction": 0.1110921734387783,
-                  "median_largest_component_fraction": 0.10492591109331198,
-                  "q10_largest_component_fraction": 0.0940471020067991,
-                  "q90_largest_component_fraction": 0.12367952047696422,
-                  "median_effective_component_count": 25.00718345739269,
-                  "q90_effective_component_count": 29.71949084285422,
-                  "median_boundary_active_fraction": 0.013829787234042552
+                  "active_frames": 33,
+                  "active_frame_fraction": 1.0,
+                  "median_active_fraction": 0.131359714370723,
+                  "median_largest_component_fraction": 0.11105792245093346,
+                  "q10_largest_component_fraction": 0.0869910061046647,
+                  "q90_largest_component_fraction": 0.16135775073532554,
+                  "median_effective_component_count": 26.330564784053163,
+                  "q90_effective_component_count": 31.709148659345193,
+                  "median_boundary_active_fraction": 0.017548019919373964,
+                  "median_reference_scale": 0.12330226986408233
                 }
               }
             }
@@ -2022,53 +2354,53 @@
   "analysis": {
     "median_largest_component_fraction": {
       "core_values": {
-        "IGI-LG756580087": 0.5420112303561335,
-        "IGI-LG756520111": null,
-        "IGI-LG818659722": 0.16217105263157894,
-        "IGI-LG836619414": 0.09837962962962964
+        "IGI-LG756580087": 0.34354543074103167,
+        "IGI-LG756520111": 0.12614789753504108,
+        "IGI-LG818659722": 0.19230769230769232,
+        "IGI-LG836619414": 0.11091954022988505
       },
       "wide_values": {
-        "IGI-LG756580087": 0.48951686417502277,
-        "IGI-LG756520111": null,
-        "IGI-LG818659722": 0.15766969535008016,
-        "IGI-LG836619414": 0.10803324099722991
+        "IGI-LG756580087": 0.31105651105651105,
+        "IGI-LG756520111": 0.1499015568650086,
+        "IGI-LG818659722": 0.22276645768025077,
+        "IGI-LG836619414": 0.11206012982576016
       },
       "core_to_wide_spearman": 1.0,
-      "threshold_rank_spearman_1.20_vs_1.25": 1.0,
-      "threshold_rank_spearman_1.30_vs_1.25": 1.0,
+      "threshold_rank_spearman_0.75_vs_1.00": 1.0,
+      "threshold_rank_spearman_1.25_vs_1.00": 1.0,
       "fixed_vs_dynamic_core_spearman": 1.0,
       "redundancy": {
-        "whole_stone_activation_total_excursion_spearman": -0.5,
-        "inner_middle_switch_rate_spearman": -0.5
+        "whole_stone_activation_total_excursion_spearman": -0.19999999999999998,
+        "inner_middle_switch_rate_spearman": 0.0
       }
     },
     "median_effective_component_count": {
       "core_values": {
-        "IGI-LG756580087": 3.2912718438359265,
-        "IGI-LG756520111": null,
-        "IGI-LG818659722": 19.57846509078385,
-        "IGI-LG836619414": 24.90525512448086
+        "IGI-LG756580087": 7.351860729229834,
+        "IGI-LG756520111": 22.2913303290034,
+        "IGI-LG818659722": 16.087577344121847,
+        "IGI-LG836619414": 23.771331660954665
       },
       "wide_values": {
-        "IGI-LG756580087": 3.8144159861349447,
-        "IGI-LG756520111": null,
-        "IGI-LG818659722": 20.50503264668864,
-        "IGI-LG836619414": 24.15292137801623
+        "IGI-LG756580087": 7.848950213664214,
+        "IGI-LG756520111": 20.178979225218768,
+        "IGI-LG818659722": 11.860079437269675,
+        "IGI-LG836619414": 23.469344533095953
       },
       "core_to_wide_spearman": 1.0,
-      "threshold_rank_spearman_1.20_vs_1.25": 1.0,
-      "threshold_rank_spearman_1.30_vs_1.25": 1.0,
-      "fixed_vs_dynamic_core_spearman": 1.0,
+      "threshold_rank_spearman_0.75_vs_1.00": 0.7999999999999999,
+      "threshold_rank_spearman_1.25_vs_1.00": 1.0,
+      "fixed_vs_dynamic_core_spearman": 0.7999999999999999,
       "redundancy": {
-        "whole_stone_activation_total_excursion_spearman": 0.5,
-        "inner_middle_switch_rate_spearman": 0.5
+        "whole_stone_activation_total_excursion_spearman": 0.19999999999999998,
+        "inner_middle_switch_rate_spearman": 0.0
       }
     },
     "pooled_core_frames": {
-      "n": 42,
-      "active_area_vs_largest_component_fraction_spearman": -0.4358641925289684,
-      "active_area_vs_effective_component_count_spearman": 0.4099343651243822,
-      "largest_component_fraction_vs_effective_component_count_spearman": -0.9711530670123978
+      "n": 64,
+      "active_area_vs_largest_component_fraction_spearman": 0.23676739926739926,
+      "active_area_vs_effective_component_count_spearman": -0.2724358974358974,
+      "largest_component_fraction_vs_effective_component_count_spearman": -0.9598443223443223
     }
   },
   "redundancy_inputs": {
