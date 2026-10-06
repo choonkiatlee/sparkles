@@ -19,6 +19,9 @@ from . import descriptor_profile as dp
 
 CALIBRATION_SCHEMA = "diamond360-calibration/1"
 OBSERVATION_SCHEMA = "diamond360-human-observations/1"
+EVIDENCE_PACKET_SCHEMA = "diamond360-evidence-packet/1"
+EVIDENCE_SUMMARY_SCHEMA = "diamond360-evidence-packet-benchmark/1"
+EVIDENCE_ROOT = "docs/360/evidence-packet"
 
 EXPLANATION_LEVELS = {"explained", "partial", "unexplained"}
 LINK_ASSESSMENTS = {"supports", "partial", "contradicts", "irrelevant"}
@@ -30,6 +33,17 @@ HYPOTHESIS_FAMILIES = {
     "directional",
     "morphology",
     "unexplained_static",
+}
+
+_DESCRIPTOR_TO_EVIDENCE_FAMILY = {
+    "activation": "activity_motion",
+    "mobility": "activity_motion",
+    "occupancy": "relative_dark_state",
+    "switching": "relative_dark_state",
+    "persistence": "dark_persistence",
+    "coordination": "nested_step",
+    "opposing": "directional",
+    "morphology": "flash_morphology",
 }
 
 
@@ -196,6 +210,224 @@ def _validate_human_observations(payload, repository_root: Path, certificates):
     return reviews, observations
 
 
+
+def _validate_evidence_packets(summary, packets, certificates):
+    if summary.get("schema_version") != EVIDENCE_SUMMARY_SCHEMA:
+        raise ValueError(
+            f"evidence summary schema mismatch: expected {EVIDENCE_SUMMARY_SCHEMA}, "
+            f"got {summary.get('schema_version')!r}"
+        )
+    if summary.get("profile_schema") != dp.PROFILE_SCHEMA:
+        raise ValueError("evidence summary profile schema differs from #45")
+    if summary.get("packet_schema") != EVIDENCE_PACKET_SCHEMA:
+        raise ValueError("evidence summary packet schema is unsupported")
+    if summary.get("window_contract") != dp.WINDOW_ID:
+        raise ValueError("evidence summary window differs from #45 core17")
+
+    rows = summary.get("stones")
+    if not isinstance(rows, list):
+        raise ValueError("evidence summary requires stones")
+    summary_certs = [row.get("certificate") for row in rows]
+    if set(summary_certs) != set(certificates) or len(summary_certs) != len(set(summary_certs)):
+        raise ValueError("evidence summary must cover each profile certificate exactly once")
+    if set(packets) != set(certificates):
+        raise ValueError("evidence packets must cover each profile certificate exactly once")
+
+    summary_lookup = {row["certificate"]: row for row in rows}
+    for certificate in certificates:
+        packet = packets[certificate]
+        if packet.get("schema_version") != EVIDENCE_PACKET_SCHEMA:
+            raise ValueError(f"{certificate}: unsupported evidence packet schema")
+        if packet.get("profile_schema") != dp.PROFILE_SCHEMA:
+            raise ValueError(f"{certificate}: evidence packet profile schema differs from #45")
+        if packet.get("certificate") != certificate:
+            raise ValueError(f"{certificate}: evidence packet certificate mismatch")
+        if packet.get("window_contract") != dp.WINDOW_ID:
+            raise ValueError(f"{certificate}: evidence packet window differs from #45 core17")
+        items = packet.get("items")
+        if not isinstance(items, list) or not items:
+            raise ValueError(f"{certificate}: evidence packet has no selected items")
+        if packet.get("selected_count") != len(items):
+            raise ValueError(f"{certificate}: evidence packet selected_count mismatch")
+        if summary_lookup[certificate].get("selected_count") != len(items):
+            raise ValueError(f"{certificate}: evidence summary selected_count mismatch")
+
+        ranks = []
+        for position, item in enumerate(items, start=1):
+            rank = item.get("rank", position)
+            if type(rank) is not int or rank < 1:
+                raise ValueError(f"{certificate}: evidence item rank must be positive integer")
+            ranks.append(rank)
+            render_indices = item.get("render_source_indices", [])
+            if (
+                not isinstance(render_indices, list)
+                or any(type(index) is not int or index < 0 for index in render_indices)
+            ):
+                raise ValueError(f"{certificate}: invalid evidence render_source_indices")
+            for claim in item.get("claims", []):
+                for field_id in claim.get("profile_field_ids", []):
+                    if field_id not in dp.PRODUCTION_FIELD_IDS:
+                        raise ValueError(
+                            f"{certificate}: evidence claim contains non-production field {field_id}"
+                        )
+        if len(ranks) != len(set(ranks)):
+            raise ValueError(f"{certificate}: evidence item ranks must be unique")
+    return summary_lookup
+
+
+def _field_evidence_family(field_id):
+    family = dp.FIELD_SPECS[field_id]["family"]
+    try:
+        return _DESCRIPTOR_TO_EVIDENCE_FAMILY[family]
+    except KeyError as exc:
+        raise ValueError(f"{field_id}: no #21 evidence-family mapping") from exc
+
+
+def _circular_distance(left, right, frame_count=256):
+    delta = abs(int(left) - int(right))
+    return min(delta, frame_count - delta)
+
+
+def _evidence_item_ref(
+    certificate,
+    packet_path,
+    contact_sheet_path,
+    item,
+    human_frames,
+    resolution,
+    field_id=None,
+):
+    claims = item.get("claims", [])
+    if field_id is not None:
+        selected_claims = [
+            claim for claim in claims
+            if field_id in claim.get("profile_field_ids", [])
+        ]
+    else:
+        selected_claims = claims
+    render_indices = list(
+        item.get("render_source_indices")
+        or item.get("location", {}).get("source_indices", [])
+    )
+    overlap = sorted(set(render_indices).intersection(human_frames))
+    nearest = None
+    if render_indices and human_frames:
+        nearest = min(
+            _circular_distance(machine, human)
+            for machine in render_indices
+            for human in human_frames
+        )
+    profile_fields = sorted({
+        profile_field
+        for claim in selected_claims
+        for profile_field in claim.get("profile_field_ids", [])
+    })
+    return {
+        "resolution": resolution,
+        "packet_path": packet_path,
+        "contact_sheet_path": contact_sheet_path,
+        "packet_item_rank": item.get("rank"),
+        "location": item.get("location"),
+        "render_source_indices": render_indices,
+        "selected_for": item.get("selected_for"),
+        "coverage_families": list(item.get("coverage_families", [])),
+        "event_types": sorted({
+            claim.get("event_type")
+            for claim in selected_claims
+            if claim.get("event_type")
+        }),
+        "profile_field_ids": profile_fields,
+        "human_frame_overlap": overlap,
+        "nearest_human_frame_distance": nearest,
+    }
+
+
+def _link_machine_evidence(
+    certificate,
+    packet,
+    packet_path,
+    contact_sheet_path,
+    field_id,
+    human_frames,
+):
+    exact = [
+        item for item in packet["items"]
+        if any(
+            field_id in claim.get("profile_field_ids", [])
+            for claim in item.get("claims", [])
+        )
+    ]
+    if exact:
+        return {
+            "resolution": "exact_field",
+            "items": [
+                _evidence_item_ref(
+                    certificate,
+                    packet_path,
+                    contact_sheet_path,
+                    item,
+                    human_frames,
+                    "exact_field",
+                    field_id=field_id,
+                )
+                for item in exact
+            ],
+        }
+
+    coverage_family = _field_evidence_family(field_id)
+    representative = [
+        item for item in packet["items"]
+        if item.get("selected_for") == coverage_family
+    ]
+    if not representative:
+        representative = [
+            item for item in packet["items"]
+            if coverage_family in item.get("coverage_families", [])
+        ]
+    return {
+        "resolution": "family_representative",
+        "coverage_family": coverage_family,
+        "items": [
+            _evidence_item_ref(
+                certificate,
+                packet_path,
+                contact_sheet_path,
+                item,
+                human_frames,
+                "family_representative",
+            )
+            for item in representative
+        ],
+    }
+
+
+def _machine_evidence_audit(observations):
+    links = [
+        link
+        for observation in observations
+        for link in observation.get("descriptor_links", [])
+    ]
+    counts = Counter(
+        link.get("machine_evidence", {}).get("resolution", "missing")
+        for link in links
+    )
+    item_refs = [
+        item
+        for link in links
+        for item in link.get("machine_evidence", {}).get("items", [])
+    ]
+    with_overlap = sum(bool(item.get("human_frame_overlap")) for item in item_refs)
+    return {
+        "linked_descriptor_count": len(links),
+        "exact_field_links": counts.get("exact_field", 0),
+        "family_representative_links": counts.get("family_representative", 0),
+        "missing_links": counts.get("missing", 0),
+        "evidence_item_references": len(item_refs),
+        "item_refs_with_human_frame_overlap": with_overlap,
+        "item_refs_without_exact_human_frame_overlap": len(item_refs) - with_overlap,
+    }
+
+
 def _field_orders(comparison):
     orders = {}
     stones = comparison["stones"]
@@ -295,12 +527,19 @@ def _unexplained_concepts(observations):
 def build_calibration_payload(
     comparison,
     human_observations,
+    evidence_summary=None,
+    evidence_packets=None,
     repository_root=".",
 ):
     repository_root = Path(repository_root)
     certificates = _validate_profile(comparison)
     reviews, observations = _validate_human_observations(
         human_observations, repository_root, certificates
+    )
+    if evidence_summary is None or evidence_packets is None:
+        raise ValueError("#22 calibration requires the merged #21 compact evidence packets")
+    evidence_summary_lookup = _validate_evidence_packets(
+        evidence_summary, evidence_packets, certificates
     )
     field_orders = _field_orders(comparison)
     rank_lookup = _rank_lookup(field_orders)
@@ -314,6 +553,11 @@ def build_calibration_payload(
     for observation in observations:
         certificate = observation["certificate"]
         stone = stone_lookup[certificate]
+        packet = evidence_packets[certificate]
+        packet_summary = evidence_summary_lookup[certificate]
+        packet_path = f"{EVIDENCE_ROOT}/{packet_summary['packet']}"
+        contact_sheet_path = f"{EVIDENCE_ROOT}/{packet_summary['contact_sheet']}"
+        source_frames = list(observation.get("source_frames", []))
         links = []
         for link in observation.get("descriptor_links", []):
             field_id = link["field_id"]
@@ -331,6 +575,14 @@ def build_calibration_payload(
                         "reasons": list(cell.get("reasons", [])),
                         **rank,
                     },
+                    "machine_evidence": _link_machine_evidence(
+                        certificate,
+                        packet,
+                        packet_path,
+                        contact_sheet_path,
+                        field_id,
+                        source_frames,
+                    ),
                     "metadata": {
                         key: metadata[key]
                         for key in (
@@ -349,7 +601,6 @@ def build_calibration_payload(
                 }
             )
 
-        source_frames = list(observation.get("source_frames", []))
         joined_observations.append(
             {
                 "id": observation["id"],
@@ -368,6 +619,12 @@ def build_calibration_payload(
                 "source_frames_outside_profile_window": [
                     index for index in source_frames if index not in profile_window_set
                 ],
+                "evidence_packet": {
+                    "packet_path": packet_path,
+                    "contact_sheet_path": contact_sheet_path,
+                    "selected_count": packet["selected_count"],
+                    "covered_families": list(packet.get("covered_families", [])),
+                },
                 "descriptor_links": links,
             }
         )
@@ -402,12 +659,21 @@ def build_calibration_payload(
         },
         "window_contract": comparison["window_contract"],
         "machine_evidence": {
-            "status": "pending_issue_21_compact_packet",
+            "status": "integrated_issue_21",
             "issue": 21,
+            "summary_schema": EVIDENCE_SUMMARY_SCHEMA,
+            "packet_schema": EVIDENCE_PACKET_SCHEMA,
+            "summary_path": f"{EVIDENCE_ROOT}/summary.json",
+            "selected_counts": {
+                certificate: evidence_packets[certificate]["selected_count"]
+                for certificate in certificates
+            },
+            "audit": _machine_evidence_audit(joined_observations),
             "contract_note": (
-                "#22 does not duplicate descriptor-native evidence selection. "
-                "Compact machine-selected source evidence is attached only after #21 "
-                "publishes its final packet contract."
+                "#22 consumes #21 compact packets as-is. Exact selected evidence is "
+                "linked when the retained field is present; otherwise the packet's "
+                "coverage representative for that descriptor family is referenced. "
+                "#22 never re-selects descriptor-native evidence."
             ),
         },
         "redundancy_groups": comparison.get("redundancy_groups", {}),
@@ -450,6 +716,11 @@ def _csv_rows(payload):
                     "rank_descending": "",
                     "sample_size": "",
                     "redundancy_group": "",
+                    "evidence_resolution": "",
+                    "evidence_item_ranks": "",
+                    "evidence_render_frames": "",
+                    "human_machine_overlap": "",
+                    "evidence_packet": observation["evidence_packet"]["packet_path"],
                     "rationale": "",
                 }
             )
@@ -504,6 +775,11 @@ def write_outputs(payload, output_dir):
         "rank_descending",
         "sample_size",
         "redundancy_group",
+        "evidence_resolution",
+        "evidence_item_ranks",
+        "evidence_render_frames",
+        "human_machine_overlap",
+        "evidence_packet",
         "rationale",
     ]
     benchmark_csv = output_dir / "benchmark.csv"
@@ -523,7 +799,20 @@ def build_calibration(
     root = Path(repository)
     comparison = _load_json(root / "docs/360/profile/comparison.json")
     observations = _load_json(root / observations_path)
-    payload = build_calibration_payload(comparison, observations, repository_root=root)
+    evidence_summary = _load_json(root / EVIDENCE_ROOT / "summary.json")
+    evidence_packets = {
+        certificate: _load_json(
+            root / EVIDENCE_ROOT / "per-stone" / certificate / "evidence.json"
+        )
+        for certificate in _validate_profile(comparison)
+    }
+    payload = build_calibration_payload(
+        comparison,
+        observations,
+        evidence_summary=evidence_summary,
+        evidence_packets=evidence_packets,
+        repository_root=root,
+    )
     write_outputs(payload, root / output)
     return payload
 
