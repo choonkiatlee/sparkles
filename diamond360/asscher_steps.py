@@ -302,6 +302,44 @@ def normalised_radius_map(mask, angle_count=192):
     return u, theta
 
 
+def boundary_strip_masks(mask, sector_u, width, guard=.01, sector_mask=None):
+    """Build fixed strips just inside/outside an existing radial boundary.
+
+    ``sector_u`` is the existing eight-sector boundary control in the same
+    silhouette-normalised radial coordinate used by #19. The boundary is not
+    re-estimated per frame. ``guard`` deliberately excludes the immediate edge
+    so downstream tonal contrast is less sensitive to sharpening/edge pixels.
+    """
+    mask = np.asarray(mask, bool)
+    controls = np.asarray(sector_u, float)
+    if controls.shape != (8,) or not np.all(np.isfinite(controls)):
+        raise ValueError("sector_u must contain eight finite boundary controls")
+    if np.any((controls <= 0) | (controls >= 1)):
+        raise ValueError("boundary controls must lie strictly inside the silhouette")
+    width = float(width)
+    guard = float(guard)
+    if not np.isfinite(width) or width <= 0:
+        raise ValueError("strip width must be finite and positive")
+    if not np.isfinite(guard) or guard < 0:
+        raise ValueError("strip guard must be finite and nonnegative")
+
+    u, theta = normalised_radius_map(mask)
+    boundary = _periodic_boundary(theta, controls)
+    support = mask.copy()
+    if sector_mask is not None:
+        sector_mask = np.asarray(sector_mask, bool)
+        if sector_mask.shape != mask.shape:
+            raise ValueError("sector mask must match the silhouette shape")
+        support &= sector_mask
+
+    inner_hi = boundary - guard
+    inner_lo = inner_hi - width
+    outer_lo = boundary + guard
+    outer_hi = outer_lo + width
+    inside = support & (u >= inner_lo) & (u < inner_hi)
+    outside = support & (u > outer_lo) & (u <= outer_hi)
+    return {"inside": inside, "outside": outside}
+
 def build_masks(mask, controls):
     if len(controls) != 3:
         raise ValueError("Exactly three nested boundaries are required for four step bands")
