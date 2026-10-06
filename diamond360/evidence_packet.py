@@ -178,9 +178,10 @@ def _field_ids(family, **criteria):
             continue
         if all(spec.get(key) == value for key, value in criteria.items()):
             matches.append(field_id)
-    if not matches:
+    if len(matches) != 1:
         raise ValueError(
-            f"no retained #45 field for {family} evidence selector {criteria}"
+            f"expected exactly one retained #45 field for {family} evidence "
+            f"selector {criteria}, found {len(matches)}"
         )
     return tuple(matches)
 
