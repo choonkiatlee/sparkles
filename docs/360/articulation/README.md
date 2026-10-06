@@ -34,11 +34,14 @@ Each run automatically selects:
 - lowest-articulation frame;
 - median-articulation frame;
 - highest-articulation frame;
-- the closest pair of frames by whole-stone brightness.
+- a brightness-matched pair whose internal articulation differs.
 
-The matched-brightness pair is selected by brightness *first* and merely reports
-the resulting articulation gap. This avoids cherry-picking a large descriptor
-difference at different exposure.
+A pair is considered brightness-matched when whole-stone median brightness
+differs by no more than 2%. Among those fixed-tolerance candidates, the selector
+chooses the largest articulation gap. If no pair meets the tolerance, it falls
+back to the closest-brightness pair and records that fallback explicitly. This
+makes the requested counterexample genuinely test internal structure at similar
+overall brightness without any per-stone tuning.
 
 Per-frame outputs preserve inner pixel Q10/Q50/Q90, all candidate measures,
 whole-stone references, source index, support and upstream validity.
@@ -93,7 +96,7 @@ The unit tests require:
 - raw spread to scale with a uniform brightness multiplier;
 - normalized/log variants to remain invariant under that multiplier;
 - gaps to remain gaps rather than being interpolated;
-- the matched-brightness evidence pair to prioritize brightness similarity;
+- the matched-brightness evidence pair to maximize articulation difference within a fixed 2% brightness tolerance, with an explicit closest-pair fallback;
 - upstream `review` validity never to be upgraded.
 
 ## Empirical disposition: REVISE
