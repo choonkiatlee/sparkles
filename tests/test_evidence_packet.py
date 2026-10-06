@@ -492,5 +492,166 @@ class ConsolidationTests(unittest.TestCase):
             )
 
 
+class CompactSelectionTests(unittest.TestCase):
+    def test_compact_selection_covers_all_available_roles(self):
+        profile = build_profile()
+        candidates = ep.apply_profile_contract(
+            ep.collect_candidates(build_results()),
+            profile,
+        )
+        items = ep.merge_exact_duplicates(candidates)
+        groups = ep.group_near_duplicates(items)
+        selected = ep.select_compact_evidence(
+            items,
+            profile,
+            groups,
+            min_items=4,
+            max_items=6,
+        )
+        covered = {
+            role
+            for item in selected
+            for role in item.coverage_families
+        }
+        self.assertEqual(covered, set(ep.COVERAGE_ORDER))
+        self.assertGreaterEqual(len(selected), 4)
+        self.assertLessEqual(len(selected), 6)
+        self.assertEqual(
+            len({item.item.location.key for item in selected}),
+            len(selected),
+        )
+        self.assertTrue(
+            any(len(item.coverage_families) > 1 for item in selected)
+        )
+
+    def test_morphology_prefers_one_matched_area_contrast_event(self):
+        profile = build_profile()
+        candidates = ep.apply_profile_contract(
+            ep.adapt_morphology(build_results()["morphology"]),
+            profile,
+        )
+        items = ep.merge_exact_duplicates(candidates)
+        selected = ep.select_compact_evidence(
+            items,
+            profile,
+            min_items=1,
+            max_items=1,
+        )
+        self.assertEqual(len(selected), 1)
+        self.assertEqual(
+            selected[0].item.location,
+            ep.EvidenceLocation("pair", (0, 1)),
+        )
+        self.assertTrue(
+            any(
+                claim.event_type == "matched_active_area_pair"
+                for claim in selected[0].item.claims
+            )
+        )
+
+    def test_correlation_event_choice_follows_profile_sign(self):
+        field_id = "nested_step.centre_inner_pearson"
+        profile = build_profile()
+        profile["measurements"][field_id]["value"] = -0.75
+
+        coordinated = ep.EvidenceCandidate(
+            descriptor_family="coordination",
+            native_id="coarse/fixed/centre__inner",
+            event_type="strongest_coordinated",
+            location=ep.EvidenceLocation("pair", (0, 1)),
+            profile_field_ids=(field_id,),
+            rationale="test coordinated",
+        )
+        divergent = ep.EvidenceCandidate(
+            descriptor_family="coordination",
+            native_id="coarse/fixed/centre__inner",
+            event_type="strongest_divergent",
+            location=ep.EvidenceLocation("pair", (1, 2)),
+            profile_field_ids=(field_id,),
+            rationale="test divergent",
+        )
+        selected = ep.select_compact_evidence(
+            ep.merge_exact_duplicates([coordinated, divergent]),
+            profile,
+            min_items=1,
+            max_items=1,
+        )
+        self.assertEqual(
+            selected[0].item.location,
+            ep.EvidenceLocation("pair", (1, 2)),
+        )
+
+        profile["measurements"][field_id]["value"] = 0.75
+        selected = ep.select_compact_evidence(
+            ep.merge_exact_duplicates([coordinated, divergent]),
+            profile,
+            min_items=1,
+            max_items=1,
+        )
+        self.assertEqual(
+            selected[0].item.location,
+            ep.EvidenceLocation("pair", (0, 1)),
+        )
+
+    def test_packet_and_contact_sheet_use_original_source_frames(self):
+        import hashlib
+        from PIL import Image
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            frames = root / "frames"
+            frames.mkdir()
+            manifest_frames = []
+            for index, shade in ((255, 70), (0, 140), (1, 210)):
+                path = frames / f"frame-{index:03d}.jpg"
+                Image.new("RGB", (120, 100), (shade, shade, shade)).save(
+                    path,
+                    quality=95,
+                )
+                raw = path.read_bytes()
+                manifest_frames.append({
+                    "source_index": index,
+                    "path": f"frames/{path.name}",
+                    "sha256": hashlib.sha256(raw).hexdigest(),
+                    "bytes": len(raw),
+                    "source_url": f"https://example.invalid/batch/{index}",
+                })
+            manifest = {
+                "schema_version": "diamond360-source/1",
+                "certificate": "TEST",
+                "source_pipeline": "synthetic",
+                "source_frame_count": 256,
+                "frames": manifest_frames,
+            }
+            packet = ep.build_packet(
+                build_results(),
+                build_profile(),
+                manifest,
+                source_manifest_ref="synthetic/source-manifest.json",
+            )
+            out = root / "out"
+            ep.write_packet(packet, out, source_root=root)
+            self.assertTrue((out / "evidence.json").is_file())
+            self.assertTrue((out / "contact-sheet.jpg").is_file())
+            self.assertGreater(
+                (out / "contact-sheet.jpg").stat().st_size,
+                1000,
+            )
+            encoded = json.loads((out / "evidence.json").read_text())
+            self.assertEqual(encoded["schema_version"], ep.PACKET_SCHEMA)
+            self.assertEqual(encoded["certificate"], "TEST")
+            self.assertGreaterEqual(encoded["selected_count"], 4)
+            self.assertLessEqual(encoded["selected_count"], 6)
+            self.assertEqual(
+                set(encoded["covered_families"]),
+                set(ep.COVERAGE_ORDER),
+            )
+            for item in encoded["items"]:
+                self.assertTrue(item["original_frames"])
+                for frame in item["original_frames"]:
+                    self.assertIn(frame["source_index"], {255, 0, 1})
+                    self.assertIn("sha256", frame)
+
+
 if __name__ == "__main__":
     unittest.main()
