@@ -164,3 +164,75 @@ def adapt_still(image_path, output, *, provenance):
         source_media_path=image_path,
         copy_frames=True,
     )
+
+
+
+def adapt_archived_sequence(archive_root, sequence, output, *, provenance):
+    """Normalize an archived ordered frame manifest into diamond360-source/1.
+
+    The archive manifest remains authoritative for ordering and optional hashes.
+    This adapter only maps its frame paths into the production source envelope.
+    """
+    archive_root = Path(archive_root).resolve()
+    manifest_path = archive_root / sequence["manifest_path"]
+    if not manifest_path.is_file():
+        raise ValueError(f"archived sequence manifest missing: {manifest_path}")
+    payload = json.loads(manifest_path.read_text())
+    entries = payload.get("frames")
+    if not isinstance(entries, list) or not entries:
+        raise ValueError(f"{manifest_path}: archived frame manifest has no frames")
+
+    index_field = sequence.get("frame_index_field") or "source_index"
+    ordered = []
+    for row in entries:
+        if not isinstance(row, dict):
+            raise ValueError(f"{manifest_path}: frame entries must be objects")
+        index = row.get(index_field)
+        if type(index) is not int or index < 0:
+            raise ValueError(
+                f"{manifest_path}: frame missing nonnegative {index_field}"
+            )
+        relative = next(
+            (
+                row.get(key)
+                for key in ("path", "artifact_path", "filename", "file", "name")
+                if isinstance(row.get(key), str) and row.get(key)
+            ),
+            None,
+        )
+        if relative is None:
+            raise ValueError(f"{manifest_path}: frame {index} has no usable path")
+        candidates = [
+            (manifest_path.parent / relative).resolve(),
+            (archive_root / relative).resolve(),
+            (manifest_path.parent / "frames" / relative).resolve(),
+        ]
+        path = next((candidate for candidate in candidates if candidate.is_file()), None)
+        if path is None:
+            raise ValueError(f"{manifest_path}: archived frame missing: {relative}")
+        expected = row.get("sha256")
+        if expected is not None and expected != _sha256(path):
+            raise ValueError(f"{manifest_path}: archived frame hash mismatch: {relative}")
+        ordered.append((index, path))
+
+    ordered.sort(key=lambda item: item[0])
+    indices = [index for index, _ in ordered]
+    expected_count = sequence.get("frame_count", sequence.get("frames"))
+    if expected_count is not None and expected_count != len(ordered):
+        raise ValueError(
+            f"{manifest_path}: expected {expected_count} frames, found {len(ordered)}"
+        )
+    if indices != list(range(len(ordered))):
+        raise ValueError(f"{manifest_path}: archived frame indices are not contiguous")
+
+    return build_source(
+        [path for _, path in ordered],
+        output,
+        provenance={
+            **provenance,
+            "archived_manifest": str(manifest_path.relative_to(archive_root)),
+            "archived_manifest_sha256": _sha256(manifest_path),
+            "archived_index_field": index_field,
+        },
+        copy_frames=True,
+    )
