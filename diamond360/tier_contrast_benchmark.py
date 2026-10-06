@@ -879,7 +879,7 @@ def _draw_localized_panel(destination, pair_id, pair_result, result, processed):
     canvas.save(destination)
 
 def _overlay_boundary_strips(
-    image, mask_path, region_path, geometry, width, guard, sector, processed
+    image, mask_path, region_path, geometry, fraction, guard, sector, processed
 ):
     image = image.convert("RGB")
     if not mask_path or not region_path or not sector:
@@ -888,22 +888,28 @@ def _overlay_boundary_strips(
     mask = np.asarray(Image.open(processed / mask_path).convert("L")) > 0
     with np.load(processed / region_path) as data:
         sector_mask = np.asarray(data[sector], bool)
-    if geometry.get("type") == "semantic":
-        strips = steps.boundary_strip_masks(
+    if geometry.get("type") == "semantic_relative":
+        strips = steps.relative_boundary_strip_masks(
             mask,
-            geometry["sector_u"],
-            width=float(width),
+            geometry["inner_sector_u"],
+            geometry["boundary_sector_u"],
+            geometry["outer_sector_u"],
+            fraction=float(fraction),
+            guard=float(guard),
+            sector_mask=sector_mask,
+        )
+    elif geometry.get("type") == "coarse_relative":
+        strips = coarse_regions.relative_boundary_strip_masks(
+            mask,
+            geometry["inner_radius"],
+            geometry["boundary_radius"],
+            geometry["outer_radius"],
+            fraction=float(fraction),
             guard=float(guard),
             sector_mask=sector_mask,
         )
     else:
-        strips = coarse_regions.boundary_strip_masks(
-            mask,
-            geometry["radius"],
-            width=float(width),
-            guard=float(guard),
-            sector_mask=sector_mask,
-        )
+        return image
     array = np.asarray(image).copy()
     inside = strips["inside"]
     outside = strips["outside"]
@@ -919,17 +925,23 @@ def _overlay_boundary_strips(
 
 
 def _draw_boundary_local_panel(
-    destination, pair_id, pair_result, result, processed, geometry_name, width_key="0.040"
+    destination,
+    pair_id,
+    pair_result,
+    result,
+    processed,
+    geometry_name,
+    display_fraction=.40,
 ):
     boundary = pair_result.get("boundary_local") or {}
-    candidate = (boundary.get("widths") or {}).get(width_key, {}).get(geometry_name, {})
+    candidate = (boundary.get("multi_scale") or {}).get(geometry_name, {})
     evidence = candidate.get("evidence") or {}
     if not candidate.get("frame_trace") or not evidence:
         return False
     ordered = [
-        ("weakest boundary-local separation", evidence.get("weakest")),
-        ("median boundary-local separation", evidence.get("median")),
-        ("strongest boundary-local separation", evidence.get("strongest")),
+        ("weakest multiscale separation", evidence.get("weakest")),
+        ("median multiscale separation", evidence.get("median")),
+        ("strongest multiscale separation", evidence.get("strongest")),
     ]
     rows = [(label, event) for label, event in ordered if event is not None]
     if not rows:
@@ -938,28 +950,33 @@ def _draw_boundary_local_panel(
     draw = ImageDraw.Draw(canvas)
     draw.text(
         (10, 10),
-        f"{pair_id}: {geometry_name} guarded boundary strips; source (left), strip overlay (right)",
+        f"{pair_id}: {geometry_name} tier-relative multiscale contrast",
         fill="black",
     )
     draw.text(
         (10, 30),
-        f"width={width_key}; guard={result.get('boundary_local_definition', {}).get('guard_u')}; red=inside blue=outside",
+        (
+            f"consensus across alpha={result.get('boundary_local_definition', {}).get('scale_fractions')}; "
+            f"overlay alpha={display_fraction:.2f}; red=inside blue=outside"
+        ),
         fill="black",
     )
     geometry = candidate.get("geometry") or {}
-    guard = result.get("boundary_local_definition", {}).get("guard_u", BOUNDARY_GUARD)
+    guard = result.get("boundary_local_definition", {}).get(
+        "guard_u", BOUNDARY_GUARD
+    )
     for index, (label, event) in enumerate(rows):
         position = event["position"]
         source_index = event["source_index"]
         value = event.get("median_separation")
-        if value is None:
-            value = event.get("separation")
         strongest = event.get("strongest_sector")
         strongest_value = event.get("strongest_sector_separation")
         value_text = f"{value:.5f}" if value is not None else "n/a"
         detail = f"{label}: source {source_index}; median={value_text}"
         if strongest is not None and strongest_value is not None:
             detail += f"; strongest={strongest} {strongest_value:.5f}"
+        if event.get("median_scale_spread") is not None:
+            detail += f"; scale-spread={event['median_scale_spread']:.5f}"
         y = 60 + index * 235
         draw.text((10, y), detail, fill="black")
         camera_path = result.get("frame_camera_paths", [])[position]
@@ -975,7 +992,14 @@ def _draw_boundary_local_panel(
             with Image.open(Path(processed) / registered_path) as registered:
                 registered = registered.convert("RGB")
             registered = _overlay_boundary_strips(
-                registered, mask_path, region_path, geometry, float(width_key), guard, strongest, processed
+                registered,
+                mask_path,
+                region_path,
+                geometry,
+                display_fraction,
+                guard,
+                strongest,
+                processed,
             )
             registered.thumbnail((480, 190))
             canvas.paste(registered, (520, y + 25))
@@ -984,13 +1008,18 @@ def _draw_boundary_local_panel(
 
 
 def _draw_same_frame_boundary_comparison(
-    destination, pair_id, pair_result, result, processed, width_key="0.040"
+    destination,
+    pair_id,
+    pair_result,
+    result,
+    processed,
+    display_fraction=.40,
 ):
-    """Compare all PR-A formulations on the same selected source frames."""
+    """Compare broad and revised multiscale formulations on aligned frames."""
     boundary = pair_result.get("boundary_local") or {}
-    geometries = (boundary.get("widths") or {}).get(width_key, {})
-    semantic = geometries.get("semantic") or {}
-    coarse = geometries.get("coarse") or {}
+    multi = boundary.get("multi_scale") or {}
+    semantic = multi.get("semantic") or {}
+    coarse = multi.get("coarse") or {}
     evidence = semantic.get("evidence") or {}
     if not semantic.get("frame_trace") or not coarse.get("frame_trace"):
         return False
@@ -998,7 +1027,10 @@ def _draw_same_frame_boundary_comparison(
         ("weak", evidence.get("weakest")),
         ("typical", evidence.get("median")),
         ("strong", evidence.get("strongest")),
-        ("vs broad disagreement", semantic.get("strongest_disagreement_vs_broad")),
+        (
+            "vs broad disagreement",
+            semantic.get("strongest_disagreement_vs_broad"),
+        ),
     ]
     rows = [(label, event) for label, event in ordered if event is not None]
     if not rows:
@@ -1008,15 +1040,20 @@ def _draw_same_frame_boundary_comparison(
     draw = ImageDraw.Draw(canvas)
     draw.text(
         (10, 8),
-        f"{pair_id}: same-frame PR-A comparison at width={width_key}",
+        f"{pair_id}: same-frame revised PR-A comparison",
         fill="black",
     )
     draw.text(
         (10, 28),
-        "camera source | legacy coarse-boundary strips | #19 semantic-boundary strips; red=inside blue=outside",
+        (
+            "camera source | coarse tier-relative strips | #19 tier-relative strips; "
+            f"values=multiscale consensus, overlays alpha={display_fraction:.2f}"
+        ),
         fill="black",
     )
-    guard = result.get("boundary_local_definition", {}).get("guard_u", BOUNDARY_GUARD)
+    guard = result.get("boundary_local_definition", {}).get(
+        "guard_u", BOUNDARY_GUARD
+    )
     simple_trace = (pair_result.get("simple") or {}).get("frame_trace") or []
     broad_trace = (pair_result.get("localized") or {}).get("frame_trace") or []
 
@@ -1027,7 +1064,10 @@ def _draw_same_frame_boundary_comparison(
         position = event["position"]
         semantic_row = semantic["frame_trace"][position]
         coarse_row = coarse["frame_trace"][position]
-        sector = event.get("strongest_sector") or semantic_row.get("strongest_sector")
+        sector = (
+            event.get("strongest_sector")
+            or semantic_row.get("strongest_sector")
+        )
         simple_value = (
             simple_trace[position].get("separation")
             if position < len(simple_trace) else None
@@ -1037,19 +1077,14 @@ def _draw_same_frame_boundary_comparison(
             if position < len(broad_trace) else None
         )
         y = 58 + row_index * 250
-        draw.text(
-            (10, y),
-            (
-                f"{label}: source {event['source_index']} · whole={fmt(simple_value)} · "
-                f"broad-sector={fmt(broad_value)} · coarse-strip={fmt(coarse_row.get('median_separation'))} · "
-                f"semantic-strip={fmt(semantic_row.get('median_separation'))} · sector={sector or 'n/a'}"
-                + (
-                    f" · rank-disagreement={event['rank_disagreement']:.2f}"
-                    if event.get("rank_disagreement") is not None else ""
-                )
-            ),
-            fill="black",
+        detail = (
+            f"{label}: source {event['source_index']} · whole={fmt(simple_value)} · "
+            f"broad-sector={fmt(broad_value)} · coarse-multiscale={fmt(coarse_row.get('median_separation'))} · "
+            f"semantic-multiscale={fmt(semantic_row.get('median_separation'))} · sector={sector or 'n/a'}"
         )
+        if event.get("rank_disagreement") is not None:
+            detail += f" · rank-disagreement={event['rank_disagreement']:.2f}"
+        draw.text((10, y), detail, fill="black")
         camera_path = result.get("frame_camera_paths", [])[position]
         registered_path = result.get("frame_rgb_paths", [])[position]
         mask_path = result.get("frame_mask_paths", [])[position]
@@ -1063,12 +1098,24 @@ def _draw_same_frame_boundary_comparison(
             with Image.open(Path(processed) / registered_path) as base:
                 base = base.convert("RGB")
             coarse_image = _overlay_boundary_strips(
-                base, mask_path, region_path, coarse.get("geometry") or {},
-                float(width_key), guard, sector, processed,
+                base,
+                mask_path,
+                region_path,
+                coarse.get("geometry") or {},
+                display_fraction,
+                guard,
+                sector,
+                processed,
             )
             semantic_image = _overlay_boundary_strips(
-                base, mask_path, region_path, semantic.get("geometry") or {},
-                float(width_key), guard, sector, processed,
+                base,
+                mask_path,
+                region_path,
+                semantic.get("geometry") or {},
+                display_fraction,
+                guard,
+                sector,
+                processed,
             )
             coarse_image.thumbnail((480, 205))
             semantic_image.thumbnail((480, 205))
@@ -1077,11 +1124,12 @@ def _draw_same_frame_boundary_comparison(
     canvas.save(destination)
     return True
 
+
 def _write_boundary_local_csv(result, output):
     rows = []
     for pair_id, pair in result.get("pairs", {}).items():
         boundary = pair.get("boundary_local") or {}
-        for width_key, geometries in (boundary.get("widths") or {}).items():
+        for scale_key, geometries in (boundary.get("scales") or {}).items():
             for geometry_name, candidate in geometries.items():
                 summary = candidate.get("median_summary") or {}
                 q75 = candidate.get("q75_summary") or {}
@@ -1093,29 +1141,59 @@ def _write_boundary_local_csv(result, output):
                         value = cell.get("min_support_pixels")
                         if value is not None:
                             pixels.append(int(value))
-                        fraction = cell.get("min_support_fraction")
-                        if fraction is not None:
-                            fractions.append(float(fraction))
+                        value = cell.get("min_support_fraction")
+                        if value is not None:
+                            fractions.append(float(value))
                 rows.append({
                     "pair": pair_id,
-                    "width_u": width_key,
+                    "scale_fraction": scale_key,
                     "geometry": geometry_name,
-                    "status": (candidate.get("validity") or {}).get("status", candidate.get("status")),
+                    "status": (candidate.get("validity") or {}).get(
+                        "status", candidate.get("status")
+                    ),
                     "q10": summary.get("q10"),
                     "q50": summary.get("q50"),
                     "q90": summary.get("q90"),
                     "q75_frame_median": q75.get("q50"),
+                    "scale_spread_q50": None,
                     "finite_frames": summary.get("finite_frames"),
                     "min_frame_support_pixels": min(pixels) if pixels else None,
-                    "min_frame_support_fraction": min(fractions) if fractions else None,
+                    "min_frame_support_fraction": (
+                        min(fractions) if fractions else None
+                    ),
                 })
+        for geometry_name, candidate in (
+            boundary.get("multi_scale") or {}
+        ).items():
+            summary = candidate.get("median_summary") or {}
+            q75 = candidate.get("q75_summary") or {}
+            spread = candidate.get("scale_spread_summary") or {}
+            rows.append({
+                "pair": pair_id,
+                "scale_fraction": "consensus",
+                "geometry": geometry_name,
+                "status": (candidate.get("validity") or {}).get(
+                    "status", candidate.get("status")
+                ),
+                "q10": summary.get("q10"),
+                "q50": summary.get("q50"),
+                "q90": summary.get("q90"),
+                "q75_frame_median": q75.get("q50"),
+                "scale_spread_q50": spread.get("q50"),
+                "finite_frames": summary.get("finite_frames"),
+                "min_frame_support_pixels": None,
+                "min_frame_support_fraction": None,
+            })
     if not rows:
         return
     fields = list(rows[0])
-    with (Path(output) / "boundary-local.csv").open("w", newline="") as handle:
+    with (Path(output) / "boundary-local.csv").open(
+        "w", newline=""
+    ) as handle:
         writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()
         writer.writerows(rows)
+
 
 def write_stone_outputs(result, output, processed=None):
     output = Path(output)
@@ -1148,32 +1226,30 @@ def write_stone_outputs(result, output, processed=None):
         localized = pair.get("localized") or {}
         localized_summary = localized.get("median_summary") or {}
         localized_q75 = localized.get("q75_summary") or {}
-        rows.append(
-            {
-                "pair": pair_id,
-                "simple_status": simple["validity"]["status"],
-                "simple_q10": simple["summary"]["q10"],
-                "simple_q50": simple["summary"]["q50"],
-                "simple_q90": simple["summary"]["q90"],
-                "standardized_status": standardized["validity"]["status"],
-                "standardized_q10": standardized["summary"]["q10"],
-                "standardized_q50": standardized["summary"]["q50"],
-                "standardized_q90": standardized["summary"]["q90"],
-                "left_support_fraction": pair["component_provenance"]["left"].get(
-                    "persistent_support_fraction"
-                ),
-                "right_support_fraction": pair["component_provenance"]["right"].get(
-                    "persistent_support_fraction"
-                ),
-                "localized_status": (localized.get("validity") or {}).get(
-                    "status", localized.get("status", "unavailable")
-                ),
-                "localized_q10": localized_summary.get("q10"),
-                "localized_q50": localized_summary.get("q50"),
-                "localized_q90": localized_summary.get("q90"),
-                "localized_q75_q50": localized_q75.get("q50"),
-            }
-        )
+        rows.append({
+            "pair": pair_id,
+            "simple_status": simple["validity"]["status"],
+            "simple_q10": simple["summary"]["q10"],
+            "simple_q50": simple["summary"]["q50"],
+            "simple_q90": simple["summary"]["q90"],
+            "standardized_status": standardized["validity"]["status"],
+            "standardized_q10": standardized["summary"]["q10"],
+            "standardized_q50": standardized["summary"]["q50"],
+            "standardized_q90": standardized["summary"]["q90"],
+            "left_support_fraction": pair["component_provenance"]["left"].get(
+                "persistent_support_fraction"
+            ),
+            "right_support_fraction": pair["component_provenance"]["right"].get(
+                "persistent_support_fraction"
+            ),
+            "localized_status": (localized.get("validity") or {}).get(
+                "status", localized.get("status", "unavailable")
+            ),
+            "localized_q10": localized_summary.get("q10"),
+            "localized_q50": localized_summary.get("q50"),
+            "localized_q90": localized_summary.get("q90"),
+            "localized_q75_q50": localized_q75.get("q50"),
+        })
         if processed is not None:
             evidence_dir = output / "evidence"
             evidence_dir.mkdir(exist_ok=True)
@@ -1192,26 +1268,26 @@ def write_stone_outputs(result, output, processed=None):
                     result,
                     processed,
                 )
-            boundary = pair.get("boundary_local") or {}
-            widths = boundary.get("widths") or {}
-            if "0.040" in widths:
-                for geometry_name in ("semantic", "coarse"):
-                    _draw_boundary_local_panel(
-                        evidence_dir / f"{pair_id}-boundary-{geometry_name}.png",
-                        pair_id,
-                        pair,
-                        result,
-                        processed,
-                        geometry_name,
-                    )
-                _draw_same_frame_boundary_comparison(
-                    evidence_dir / f"{pair_id}-boundary-comparison.png",
+            for geometry_name in ("semantic", "coarse"):
+                _draw_boundary_local_panel(
+                    evidence_dir
+                    / f"{pair_id}-boundary-{geometry_name}.png",
                     pair_id,
                     pair,
                     result,
                     processed,
+                    geometry_name,
                 )
-    with (output / "tier-contrast.csv").open("w", newline="") as handle:
+            _draw_same_frame_boundary_comparison(
+                evidence_dir / f"{pair_id}-boundary-comparison.png",
+                pair_id,
+                pair,
+                result,
+                processed,
+            )
+    with (output / "tier-contrast.csv").open(
+        "w", newline=""
+    ) as handle:
         writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()
         writer.writerows(rows)
@@ -1227,28 +1303,91 @@ def _comparison_rows(certificate, pipeline_name, window, result):
             "pipeline": pipeline_name,
             "window": window,
             "pair": pair_id,
-            "broad_localized_status": (localized.get("validity") or {}).get("status", localized.get("status")),
-            "broad_localized_q50": (localized.get("median_summary") or {}).get("q50"),
+            "broad_localized_status": (localized.get("validity") or {}).get(
+                "status", localized.get("status")
+            ),
+            "broad_localized_q50": (
+                localized.get("median_summary") or {}
+            ).get("q50"),
         }
         boundary = pair.get("boundary_local") or {}
-        for width_key, geometries in (boundary.get("widths") or {}).items():
+        for scale_key, geometries in (
+            boundary.get("scales") or {}
+        ).items():
             row = dict(base)
-            row["width_u"] = width_key
+            row["scale_fraction"] = scale_key
+            row["formulation"] = "single_scale"
             for geometry_name in ("coarse", "semantic"):
                 candidate = geometries.get(geometry_name) or {}
                 summary = candidate.get("median_summary") or {}
-                row[f"{geometry_name}_status"] = (candidate.get("validity") or {}).get(
-                    "status", candidate.get("status")
-                )
+                row[f"{geometry_name}_status"] = (
+                    candidate.get("validity") or {}
+                ).get("status", candidate.get("status"))
                 row[f"{geometry_name}_q10"] = summary.get("q10")
                 row[f"{geometry_name}_q50"] = summary.get("q50")
                 row[f"{geometry_name}_q90"] = summary.get("q90")
+                row[f"{geometry_name}_scale_spread_q50"] = None
             rows.append(row)
+
+        row = dict(base)
+        row["scale_fraction"] = "consensus"
+        row["formulation"] = "multiscale_consensus"
+        for geometry_name in ("coarse", "semantic"):
+            candidate = (
+                boundary.get("multi_scale") or {}
+            ).get(geometry_name, {})
+            summary = candidate.get("median_summary") or {}
+            spread = candidate.get("scale_spread_summary") or {}
+            row[f"{geometry_name}_status"] = (
+                candidate.get("validity") or {}
+            ).get("status", candidate.get("status"))
+            row[f"{geometry_name}_q10"] = summary.get("q10")
+            row[f"{geometry_name}_q50"] = summary.get("q50")
+            row[f"{geometry_name}_q90"] = summary.get("q90")
+            row[f"{geometry_name}_scale_spread_q50"] = spread.get("q50")
+        rows.append(row)
+    return rows
+
+
+def _diagnostic_control(payload, name):
+    control, source = _boundary_control(payload, name)
+    if control is None:
+        return None, source
+    return np.asarray(control["sector_u"], float), source
+
+
+def _geometry_diagnostic(canonical_payload, alternative_payload):
+    rows = {}
+    for name in steps.BOUNDARIES:
+        canonical, canonical_source = _diagnostic_control(
+            canonical_payload, name
+        )
+        alternative, alternative_source = _diagnostic_control(
+            alternative_payload, name
+        )
+        if canonical is None or alternative is None:
+            rows[name] = {
+                "status": "unavailable",
+                "canonical_source": canonical_source,
+                "alternative_source": alternative_source,
+            }
+            continue
+        delta = alternative - canonical
+        rows[name] = {
+            "status": "ok",
+            "canonical_source": canonical_source,
+            "alternative_source": alternative_source,
+            "canonical_median_u": float(np.median(canonical)),
+            "alternative_median_u": float(np.median(alternative)),
+            "median_signed_delta_u": float(np.median(delta)),
+            "median_abs_delta_u": float(np.median(np.abs(delta))),
+            "max_abs_delta_u": float(np.max(np.abs(delta))),
+        }
     return rows
 
 
 def run_source_benchmark(source_root, output, bundle_manifest):
-    """Run PR-A boundary-local comparisons on the canonical four-stone source set."""
+    """Run revised PR-A comparisons with one canonical wide #19 ruler."""
     source_root = Path(source_root).resolve()
     output = Path(output).resolve()
     manifest = json.loads(Path(bundle_manifest).read_text())
@@ -1256,7 +1395,9 @@ def run_source_benchmark(source_root, output, bundle_manifest):
     rows = []
     stones = []
 
-    with tempfile.TemporaryDirectory(prefix="sparkles-tier-readability-") as temporary:
+    with tempfile.TemporaryDirectory(
+        prefix="sparkles-tier-readability-"
+    ) as temporary:
         work = Path(temporary)
         for item in manifest["bundles"]:
             certificate = item["certificate"]
@@ -1272,37 +1413,121 @@ def run_source_benchmark(source_root, output, bundle_manifest):
                 diagnostic_indices=CORE_INDICES,
                 accept_review=True,
             )
-            pipeline_name = "Workshop" if certificate == "IGI-LG756520111" else "Diajewel"
+            pipeline_name = (
+                "Workshop"
+                if certificate == "IGI-LG756520111"
+                else "Diajewel"
+            )
+
+            canonical_step_output = (
+                work / certificate / "steps-canonical-wide"
+            )
+            steps.run(
+                processed,
+                canonical_step_output,
+                WIDE_INDICES,
+                wrap=True,
+            )
+            canonical_payload = json.loads(
+                (canonical_step_output / "steps.json").read_text()
+            )
+
+            core_diagnostic_output = (
+                work / certificate / "steps-diagnostic-core"
+            )
+            steps.run(
+                processed,
+                core_diagnostic_output,
+                CORE_INDICES,
+                wrap=True,
+            )
+            core_payload = json.loads(
+                (core_diagnostic_output / "steps.json").read_text()
+            )
+
             stone_summary = {
                 "certificate": certificate,
                 "pipeline": pipeline_name,
+                "canonical_geometry": {
+                    "window": "wide",
+                    "requested_indices": WIDE_INDICES,
+                    "template_status": canonical_payload.get(
+                        "template_status"
+                    ),
+                    "template_reason": canonical_payload.get(
+                        "template_reason"
+                    ),
+                },
+                "geometry_diagnostics": {
+                    "core_only_vs_canonical_wide": _geometry_diagnostic(
+                        canonical_payload, core_payload
+                    ),
+                    "core_only_template_status": core_payload.get(
+                        "template_status"
+                    ),
+                    "core_only_template_reason": core_payload.get(
+                        "template_reason"
+                    ),
+                },
                 "windows": {},
             }
-            for window, indices in (("core", CORE_INDICES), ("wide", WIDE_INDICES)):
-                step_output = work / certificate / f"steps-{window}"
-                steps.run(processed, step_output, indices, wrap=True)
-                measured = measure_stone(processed, step_output, indices, wrap=True)
-                destination = output / "per-stone" / certificate / window
-                write_stone_outputs(measured, destination, processed=processed)
-                rows.extend(_comparison_rows(certificate, pipeline_name, window, measured))
+
+            for window, indices in (
+                ("core", CORE_INDICES),
+                ("wide", WIDE_INDICES),
+            ):
+                measured = measure_stone(
+                    processed,
+                    canonical_step_output,
+                    indices,
+                    wrap=True,
+                )
+                destination = (
+                    output / "per-stone" / certificate / window
+                )
+                write_stone_outputs(
+                    measured, destination, processed=processed
+                )
+                rows.extend(
+                    _comparison_rows(
+                        certificate,
+                        pipeline_name,
+                        window,
+                        measured,
+                    )
+                )
                 stone_summary["windows"][window] = {
-                    "step_template_status": json.loads((step_output / "steps.json").read_text()).get("template_status"),
-                    "tier_contrast_json": str(destination.relative_to(output) / "tier-contrast.json"),
-                    "boundary_local_csv": str(destination.relative_to(output) / "boundary-local.csv"),
-                    "evidence_dir": str(destination.relative_to(output) / "evidence"),
+                    "measurement_geometry": "canonical_wide",
+                    "tier_contrast_json": str(
+                        destination.relative_to(output)
+                        / "tier-contrast.json"
+                    ),
+                    "boundary_local_csv": str(
+                        destination.relative_to(output)
+                        / "boundary-local.csv"
+                    ),
+                    "evidence_dir": str(
+                        destination.relative_to(output) / "evidence"
+                    ),
                 }
             stones.append(stone_summary)
 
     summary = {
-        "schema_version": "diamond360-tier-readability-pr-a-benchmark/1",
+        "schema_version": (
+            "diamond360-tier-readability-pr-a-benchmark/2"
+        ),
         "descriptor_schema": SCHEMA,
         "core_indices": CORE_INDICES,
         "wide_indices": WIDE_INDICES,
-        "boundary_widths_u": list(BOUNDARY_WIDTHS),
+        "canonical_geometry_window": "wide",
+        "boundary_scale_fractions": list(BOUNDARY_FRACTIONS),
         "boundary_guard_u": BOUNDARY_GUARD,
         "stones": stones,
         "interpretation": (
-            "Research comparison only: broad #49 matched sectors versus guarded local strips around legacy coarse and #19 boundaries."
+            "Research comparison only: one canonical wide #19 geometry is "
+            "reused for both core and wide measurements; tier-relative "
+            "multiscale strips are compared with #49 broad matched sectors "
+            "and a legacy coarse-geometry control."
         ),
         "non_goals": [
             "no Q25/spatial-coverage production choice in PR A",
@@ -1310,10 +1535,14 @@ def run_source_benchmark(source_root, output, bundle_manifest):
             "no aesthetic threshold or higher-is-better claim",
         ],
     }
-    (output / "summary.json").write_text(json.dumps(summary, indent=2, allow_nan=False) + "\n")
+    (output / "summary.json").write_text(
+        json.dumps(summary, indent=2, allow_nan=False) + "\n"
+    )
     if rows:
         fields = list(rows[0])
-        with (output / "comparison.csv").open("w", newline="") as handle:
+        with (output / "comparison.csv").open(
+            "w", newline=""
+        ) as handle:
             writer = csv.DictWriter(handle, fieldnames=fields)
             writer.writeheader()
             writer.writerows(rows)
