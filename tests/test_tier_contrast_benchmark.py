@@ -172,6 +172,8 @@ class CommittedTierContrastArtifactTests(unittest.TestCase):
             self.assertAlmostEqual(simple["summary"]["q50"], row["q50"])
             self.assertAlmostEqual(simple["summary"]["q90"], row["q90"])
             evidence = rebuilt["pairs"][row["pair"]]["evidence"]
+            self.assertIn(row["status"], {"ok", "review", "unavailable"})
+            self.assertIsInstance(row["reasons"], list)
             self.assertEqual(
                 evidence["weakest"]["source_index"],
                 row["weakest"]["source_index"],
