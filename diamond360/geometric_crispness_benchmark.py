@@ -179,6 +179,7 @@ def _measure_frames(
     arm_frames = []
     sectors = []
     render = []
+    transforms = []
     u = angles = None
 
     for record in records:
@@ -219,6 +220,9 @@ def _measure_frames(
         )
         tier_frames.append(tier_frame)
         arm_frames.append(arm_frame)
+        transforms.append(
+            normalized["transform"]
+        )
         u = polar["u"]
         angles = polar["angles"]
 
@@ -246,6 +250,7 @@ def _measure_frames(
             _step_diagnostic(
                 sectors, u
             ),
+        "transforms": transforms,
         "u": u,
         "angles": angles,
         "render": render,
@@ -1275,8 +1280,48 @@ def _human_crispness(path):
     return output
 
 
+def _transfer_summary(transforms):
+    if not transforms:
+        return {}
+    diameters = [
+        row["source_effective_diameter_px"]
+        for row in transforms
+    ]
+    scales = [
+        row["isotropic_scale"]
+        for row in transforms
+    ]
+    valid = [
+        row["valid_fraction_of_mask"]
+        for row in transforms
+    ]
+    return {
+        "source_effective_diameter_px": {
+            "min": float(np.min(diameters)),
+            "median": float(np.median(diameters)),
+            "max": float(np.max(diameters)),
+        },
+        "isotropic_scale": {
+            "min": float(np.min(scales)),
+            "median": float(np.median(scales)),
+            "max": float(np.max(scales)),
+        },
+        "valid_fraction_of_mask": {
+            "min": float(np.min(valid)),
+            "median": float(np.median(valid)),
+            "max": float(np.max(valid)),
+        },
+    }
+
+
 def _compact(result):
     return {
+        "normalization_diagnostics":
+            _transfer_summary(
+                result["baseline"][
+                    "transforms"
+                ]
+            ),
         "tier_summary":
             result["baseline"][
                 "tier_summary"
