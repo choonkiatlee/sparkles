@@ -843,6 +843,228 @@ def _arm_overlay(result, event):
     return image
 
 
+def _all_tier_overlay(result, pos):
+    render = result["_render"]["frames"][pos]
+    normalized = render["normalized"]
+    image = Image.fromarray(
+        _normalized_rgb(normalized["brightness"])
+    )
+    draw = ImageDraw.Draw(image)
+    mask = normalized["mask"]
+    angles = np.asarray(
+        result["_render"]["angles"]
+    )
+    _, outlines, _, _ = (
+        steps._ray_geometry(
+            mask,
+            angles,
+            radial_samples=32,
+        )
+    )
+    h, w = mask.shape
+    cy, cx = (h-1)/2, (w-1)/2
+    for boundary in tier.BOUNDARIES:
+        row = result["baseline"][
+            "tier_frames"
+        ][pos][boundary]
+        points = []
+        for i, ray in enumerate(
+            row.get("rays", [])
+        ):
+            if (
+                ray is None
+                or ray.get("position_u")
+                is None
+            ):
+                continue
+            radius = (
+                ray["position_u"]
+                * outlines[i]
+            )
+            points.append(
+                (
+                    cx
+                    + math.cos(angles[i])
+                    * radius,
+                    cy
+                    + math.sin(angles[i])
+                    * radius,
+                )
+            )
+        if len(points) > 2:
+            draw.line(
+                points + [points[0]],
+                fill="white",
+                width=1,
+            )
+    return image
+
+
+def _all_arm_overlay(result, pos):
+    render = result["_render"]["frames"][pos]
+    normalized = render["normalized"]
+    image = Image.fromarray(
+        _normalized_rgb(normalized["brightness"])
+    )
+    draw = ImageDraw.Draw(image)
+    mask = normalized["mask"]
+    yy, xx = np.nonzero(mask)
+    cy = float(np.mean(yy))
+    cx = float(np.mean(xx))
+    radius = (
+        ng.effective_diameter(mask) / 2
+    )
+    for name, angle in zip(
+        arms.ARM_NAMES, arms.ARM_ANGLES
+    ):
+        ca, sa = (
+            math.cos(angle),
+            math.sin(angle),
+        )
+        px, py = -sa, ca
+        trace = result["baseline"][
+            "arm_frames"
+        ][pos]["arms"][name].get(
+            "trace", []
+        )
+        points = []
+        for row in trace:
+            if row is None:
+                continue
+            r = (
+                row["radius_fraction"]
+                * radius
+            )
+            off = (
+                row[
+                    "offset_radius_fraction"
+                ]
+                * radius
+            )
+            points.append(
+                (
+                    cx + ca*r + px*off,
+                    cy + sa*r + py*off,
+                )
+            )
+        if len(points) > 1:
+            draw.line(
+                points,
+                fill="white",
+                width=1,
+            )
+    return image
+
+
+def render_human_evidence(
+    result, source_indices, output
+):
+    output = Path(output)
+    output.mkdir(
+        parents=True, exist_ok=True
+    )
+    files = {}
+    processed = Path(
+        result["_render"]["processed"]
+    )
+    for source_index in source_indices:
+        if (
+            source_index
+            not in result["accepted_indices"]
+        ):
+            continue
+        pos = result[
+            "accepted_indices"
+        ].index(source_index)
+        record = result[
+            "_render"
+        ]["frames"][pos]["record"]
+        source = Image.open(
+            processed
+            / (
+                record.get(
+                    "camera_original_path"
+                )
+                or record["registration"][
+                    "rgb_path"
+                ]
+            )
+        ).convert("RGB")
+        tier_overlay = _all_tier_overlay(
+            result, pos
+        )
+        arm_overlay = _all_arm_overlay(
+            result, pos
+        )
+        for image in (
+            source,
+            tier_overlay,
+            arm_overlay,
+        ):
+            image.thumbnail((420, 420))
+        canvas = Image.new(
+            "RGB",
+            (
+                1280,
+                max(
+                    source.height,
+                    tier_overlay.height,
+                    arm_overlay.height,
+                )
+                + 60,
+            ),
+            "white",
+        )
+        draw = ImageDraw.Draw(canvas)
+        draw.text(
+            (10, 8),
+            (
+                "human-review source "
+                + str(source_index)
+            ),
+            fill="black",
+        )
+        draw.text(
+            (10, 32),
+            "original source",
+            fill="black",
+        )
+        draw.text(
+            (435, 32),
+            "normalized tier transitions",
+            fill="black",
+        )
+        draw.text(
+            (860, 32),
+            "normalized diagonal traces",
+            fill="black",
+        )
+        canvas.paste(
+            source, (10, 55)
+        )
+        canvas.paste(
+            tier_overlay, (435, 55)
+        )
+        canvas.paste(
+            arm_overlay, (860, 55)
+        )
+        destination = (
+            output
+            / (
+                "human_static_"
+                + str(source_index)
+                + ".jpg"
+            )
+        )
+        canvas.save(
+            destination, quality=90
+        )
+        files[str(source_index)] = (
+            destination.name
+        )
+    return files
+
+
 def render_evidence(result, output):
     output = Path(output)
     output.mkdir(
@@ -939,7 +1161,9 @@ def render_evidence(result, output):
 
 
 def write_stone_outputs(
-    result, output
+    result,
+    output,
+    human_source_indices=None,
 ):
     output = Path(output)
     output.mkdir(
@@ -947,6 +1171,11 @@ def write_stone_outputs(
     )
     evidence = render_evidence(
         result,
+        output / "evidence",
+    )
+    human_evidence = render_human_evidence(
+        result,
+        human_source_indices or [],
         output / "evidence",
     )
     clean = {
@@ -957,6 +1186,9 @@ def write_stone_outputs(
     }
     clean["evidence_files"] = (
         evidence
+    )
+    clean["human_evidence_files"] = (
+        human_evidence
     )
     (
         output
@@ -1104,10 +1336,23 @@ def run_source_benchmark(
                 / "per-stone"
                 / certificate
             )
+            human_frames = []
+            for observation in human.get(
+                certificate, []
+            ):
+                human_frames.extend(
+                    observation.get(
+                        "source_frames", []
+                    )
+                )
             core_clean = (
                 write_stone_outputs(
                     core,
                     stone_output / "core",
+                    human_source_indices=
+                        sorted(
+                            set(human_frames)
+                        ),
                 )
             )
             wide_clean = {
