@@ -170,9 +170,9 @@ class TierContrastBenchmarkTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             processed, step_output, activation_result = boundary_local_fixture(Path(td))
             result = tb._boundary_local_inputs(
-                processed, step_output, activation_result, widths=(.04,), guard=.01
+                processed, step_output, activation_result, fractions=(.40,), guard=.01
             )
-            pair = result["pairs"]["centre__inner"]["widths"]["0.040"]
+            pair = result["pairs"]["centre__inner"]["scales"]["0.400"]
             semantic = pair["semantic"]
             coarse = pair["coarse"]
             self.assertEqual(semantic["validity"]["status"], "ok")
@@ -198,11 +198,12 @@ class TierContrastBenchmarkTests(unittest.TestCase):
             step_path.write_text(json.dumps(payload))
 
             result = tb._boundary_local_inputs(
-                processed, step_output, activation_result, widths=(.04,), guard=.01
+                processed, step_output, activation_result, fractions=(.40,), guard=.01
             )
             pair = result["pairs"]["centre__inner"]
-            semantic = pair["widths"]["0.040"]["semantic"]
-            self.assertEqual(pair["semantic_boundary_source"], "partial_boundary")
+            semantic = pair["scales"]["0.400"]["semantic"]
+            self.assertEqual(pair["semantic_geometry_status"], "review")
+            self.assertEqual(semantic["geometry"]["boundary_source"], "partial_boundary")
             self.assertEqual(semantic["validity"]["status"], "review")
             self.assertIn(
                 "partial_step_boundary:no_supported_middle_outer_edge",
@@ -225,15 +226,71 @@ class TierContrastBenchmarkTests(unittest.TestCase):
             step_path.write_text(json.dumps(payload))
 
             result = tb._boundary_local_inputs(
-                processed, step_output, activation_result, widths=(.04,), guard=.01
+                processed, step_output, activation_result, fractions=(.40,), guard=.01
             )
             pair = result["pairs"]["centre__inner"]
-            semantic = pair["widths"]["0.040"]["semantic"]
-            self.assertEqual(pair["semantic_boundary_source"], "unavailable")
+            semantic = pair["scales"]["0.400"]["semantic"]
+            self.assertEqual(pair["semantic_geometry_status"], "unavailable")
             self.assertEqual(semantic["status"], "unavailable")
             self.assertEqual(
                 semantic["reason"], "semantic_boundaries_not_separable"
             )
+
+    def test_missing_outer_reference_is_mirrored_but_reviewed(self):
+        with tempfile.TemporaryDirectory() as td:
+            processed, step_output, activation_result = boundary_local_fixture(Path(td))
+            step_path = step_output / "steps.json"
+            payload = json.loads(step_path.read_text())
+            payload["template_status"] = "unavailable"
+            payload["template_reason"] = "no_supported_middle_outer_edge"
+            payload["partial_boundaries"] = {
+                name: payload["boundaries"][name]
+                for name in ("centre_inner", "inner_middle")
+            }
+            payload["boundaries"] = {}
+            step_path.write_text(json.dumps(payload))
+
+            result = tb._boundary_local_inputs(
+                processed, step_output, activation_result,
+                fractions=(.40,), guard=.01,
+            )
+            semantic = result["pairs"]["inner__middle"]["scales"]["0.400"]["semantic"]
+            geometry = semantic["geometry"]
+            self.assertEqual(semantic["validity"]["status"], "review")
+            self.assertEqual(
+                geometry["outer_reference_source"], "mirrored_inner_span"
+            )
+            self.assertIn(
+                "mirrored_outer_reference:middle_outer",
+                geometry["reasons"],
+            )
+
+    def test_geometry_diagnostic_reports_moved_ruler_without_using_it(self):
+        canonical = {
+            "template_status": "ok",
+            "template_reason": None,
+            "boundaries": {
+                "centre_inner": {"sector_u": [.60] * 8},
+                "inner_middle": {"sector_u": [.75] * 8},
+                "middle_outer": {"sector_u": [.88] * 8},
+            },
+        }
+        alternative = {
+            "template_status": "ok",
+            "template_reason": None,
+            "boundaries": {
+                "centre_inner": {"sector_u": [.51] * 8},
+                "inner_middle": {"sector_u": [.74] * 8},
+                "middle_outer": {"sector_u": [.88] * 8},
+            },
+        }
+        diagnostic = tb._geometry_diagnostic(canonical, alternative)
+        self.assertAlmostEqual(
+            diagnostic["centre_inner"]["median_abs_delta_u"], .09
+        )
+        self.assertAlmostEqual(
+            diagnostic["inner_middle"]["median_abs_delta_u"], .01
+        )
 
     def test_guarded_strips_ignore_narrow_boundary_spike(self):
         with tempfile.TemporaryDirectory() as td:
@@ -243,11 +300,11 @@ class TierContrastBenchmarkTests(unittest.TestCase):
             p1, s1, a1 = boundary_local_fixture(base, edge_spike=False)
             p2, s2, a2 = boundary_local_fixture(spike, edge_spike=True)
             first = tb._boundary_local_inputs(
-                p1, s1, a1, widths=(.04,), guard=.01
-            )["pairs"]["centre__inner"]["widths"]["0.040"]["semantic"]
+                p1, s1, a1, fractions=(.40,), guard=.01
+            )["pairs"]["centre__inner"]["scales"]["0.400"]["semantic"]
             second = tb._boundary_local_inputs(
-                p2, s2, a2, widths=(.04,), guard=.01
-            )["pairs"]["centre__inner"]["widths"]["0.040"]["semantic"]
+                p2, s2, a2, fractions=(.40,), guard=.01
+            )["pairs"]["centre__inner"]["scales"]["0.400"]["semantic"]
             self.assertAlmostEqual(
                 first["median_summary"]["q50"],
                 second["median_summary"]["q50"],
