@@ -1,6 +1,11 @@
 name: PriceScope external archive
 
 on:
+  pull_request:
+    paths:
+      - "docs/360/external-benchmark/pricescope/source-catalog.json"
+      - "tools/archive_pricescope_external.py"
+      - ".github/workflows/pricescope-external-archive.yml"
   workflow_dispatch:
 
 permissions:
