@@ -123,6 +123,35 @@ class AsscherStepTests(unittest.TestCase):
             s.boundary_strip_masks(mask, np.full(8, .60), width=0)
         with self.assertRaises(ValueError):
             s.boundary_strip_masks(mask, np.full(7, .60), width=.04)
+    def test_relative_boundary_strip_masks_follow_adjacent_tier_spans(self):
+        mask = octagon_mask()
+        inner = np.full(8, .40)
+        boundary = np.full(8, .60)
+        outer = np.full(8, .90)
+        strips = s.relative_boundary_strip_masks(
+            mask, inner, boundary, outer, fraction=.5, guard=.01
+        )
+        self.assertFalse(np.any(strips["inside"] & strips["outside"]))
+        self.assertGreater(strips["inside"].sum(), 0)
+        self.assertGreater(strips["outside"].sum(), 0)
+        self.assertAlmostEqual(
+            float(np.median(strips["inside_width_u"][mask])), .10, places=6
+        )
+        self.assertAlmostEqual(
+            float(np.median(strips["outside_width_u"][mask])), .15, places=6
+        )
+
+    def test_relative_boundary_strip_masks_reject_unordered_controls(self):
+        mask = octagon_mask()
+        with self.assertRaises(ValueError):
+            s.relative_boundary_strip_masks(
+                mask,
+                np.full(8, .70),
+                np.full(8, .60),
+                np.full(8, .90),
+                fraction=.4,
+            )
+
     def test_missing_outer_edge_preserves_supported_inner_boundaries(self):
         u = np.linspace(0, 1, 160)
         profile = (
