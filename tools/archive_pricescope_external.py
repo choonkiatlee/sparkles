@@ -146,9 +146,11 @@ def digest_record(sample_id: str, url: str, out_dir: Path) -> dict:
             }
         )
     except Exception as exc:  # archive should record failures rather than erase them
+        status = "blocked_by_source" if isinstance(exc, HTTPError) and exc.code == 403 else "failed"
         record.update(
             {
-                "retrieval_status": "failed",
+                "retrieval_status": status,
+                "http_status": exc.code if isinstance(exc, HTTPError) else None,
                 "error": f"{type(exc).__name__}: {exc}",
             }
         )
@@ -277,6 +279,7 @@ def main() -> int:
 
     summary = {
         "explicit_ok": sum(x.get("retrieval_status") == "ok" for x in records),
+        "explicit_blocked": sum(x.get("retrieval_status") == "blocked_by_source" for x in records),
         "explicit_total": len(records),
         "thread_samples_with_media": sum(bool(x["discovered_media_urls"]) for x in thread_records),
         "thread_sample_total": len(thread_records),
