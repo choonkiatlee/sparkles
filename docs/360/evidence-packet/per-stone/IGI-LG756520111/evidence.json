@@ -1404,9 +1404,7 @@
           2
         ]
       },
-      "coverage_families": [
-        "relative_dark_state"
-      ],
+      "coverage_families": [],
       "selected_for": "contrast_fill",
       "near_group_id": 1,
       "selection_rationale": "meaningful native contrast retained after distinct-family coverage; the soft minimum is never padded with repetition",

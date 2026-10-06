@@ -37,7 +37,7 @@
     },
     {
       "certificate": "IGI-LG818659722",
-      "selected_count": 4,
+      "selected_count": 5,
       "covered_families": [
         "activity_motion",
         "relative_dark_state",
