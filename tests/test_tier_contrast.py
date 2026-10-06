@@ -75,6 +75,35 @@ class TierContrastTests(unittest.TestCase):
         )
         self.assertEqual(result["summary"]["status"], "unavailable")
 
+    def test_brightness_contrast_recovers_log_ratio_and_sign(self):
+        result = tc.brightness_contrast_trace(
+            [4.0, 2.0, 8.0],
+            [2.0, 4.0, 8.0],
+            [0, 1, 2],
+        )
+        expected = math.log(2.0)
+        self.assertAlmostEqual(result["frame_trace"][0]["signed_log_contrast"], expected)
+        self.assertAlmostEqual(result["frame_trace"][1]["signed_log_contrast"], -expected)
+        self.assertEqual(result["frame_trace"][2]["separation"], 0.0)
+
+    def test_brightness_contrast_is_invariant_to_common_scale(self):
+        first = tc.brightness_contrast_trace(
+            [4.0, 8.0, 12.0], [2.0, 4.0, 6.0], [0, 1, 2]
+        )
+        second = tc.brightness_contrast_trace(
+            [40.0, 80.0, 120.0], [20.0, 40.0, 60.0], [0, 1, 2]
+        )
+        self.assertEqual(first["separation_values"], second["separation_values"])
+
+    def test_brightness_contrast_preserves_nonpositive_values_as_gaps(self):
+        result = tc.brightness_contrast_trace(
+            [1.0, 0.0, None], [2.0, 2.0, 2.0], [0, 1, 2]
+        )
+        self.assertEqual(
+            [row["status"] for row in result["frame_trace"]],
+            ["ok", "gap", "gap"],
+        )
+        self.assertIsNone(result["frame_trace"][1]["inside_brightness"])
     def test_robust_fractional_spread_is_scale_invariant(self):
         first = tc.robust_fractional_spread([1, 2, 2, 3, 100])
         second = tc.robust_fractional_spread([10, 20, 20, 30, 1000])
@@ -170,6 +199,10 @@ class TierContrastTests(unittest.TestCase):
         result = tc.sectorized_contrast_trace(left, right, [10, 11, 12])
         self.assertEqual(set(result["per_sector"]), {"a", "b"})
         self.assertEqual(result["frame_trace"][2]["finite_sectors"], 1)
+        self.assertEqual(
+            set(result["frame_trace"][0]["sector_signed_log_contrasts"]),
+            {"a", "b"},
+        )
         evidence = tc.select_sectorized_evidence(result["frame_trace"])
         self.assertIsNotNone(evidence["strongest"])
 
