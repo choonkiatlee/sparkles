@@ -1,4 +1,4 @@
-name: tier-readability-a
+name: tier-readability-b
 
 on:
   pull_request:
@@ -15,7 +15,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: tier-readability-a-${{ github.event.pull_request.number || github.ref }}
+  group: tier-readability-b-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -32,7 +32,7 @@ jobs:
       - name: Install package
         run: python -m pip install -e .
 
-      - name: Run issue 57 PR A tests
+      - name: Run issue 57 PR B tests
         run: |
           python -m unittest \
             tests.test_asscher_steps \
@@ -71,17 +71,19 @@ jobs:
                   bundle.extractall(destination)
           PY
 
-      - name: Run four-stone PR A benchmark
+      - name: Run four-stone PR B benchmark
         run: |
           python -m diamond360.tier_contrast_benchmark \
             --source-root outputs/tier-readability-sources \
-            --output outputs/tier-readability-a
-          cat outputs/tier-readability-a/comparison.csv
+            --output outputs/tier-readability-b
+          cat outputs/tier-readability-b/comparison.csv
+          echo "--- PR B profile ---"
+          cat outputs/tier-readability-b/readability-profile.csv
 
-      - name: Upload PR A benchmark
+      - name: Upload PR B benchmark
         uses: actions/upload-artifact@v4
         with:
-          name: tier-readability-a-benchmark
-          path: outputs/tier-readability-a
+          name: tier-readability-b-benchmark
+          path: outputs/tier-readability-b
           if-no-files-found: error
           retention-days: 90
