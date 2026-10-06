@@ -521,8 +521,20 @@ groups. It also emits ascending/descending sample ranks with
 
 The benchmark records which human-selected source frames fall outside the
 profile's exact core17 window instead of treating those views as machine-measured
-evidence. Compact machine-selected source evidence remains a separate #21
-contract and is not re-selected inside #22.
+evidence.
+
+#22 also consumes the final `diamond360-evidence-packet/1` outputs from #21.
+Every descriptor relationship carries machine-evidence resolution:
+`exact_field` when a selected packet item contains that exact retained field,
+or `family_representative` when the compact #21 selector de-duplicated the
+field-specific native event but retained the corresponding coverage-family
+representative. The latter is explicitly weaker provenance and must not be
+presented as exact scalar evidence.
+
+Evidence references preserve packet path, contact-sheet path, selected item
+rank, source location/render indices, event types, covered profile fields,
+human-frame overlap and nearest human-frame distance. #22 never re-runs or
+re-ranks #21 descriptor-native evidence.
 
 `benchmark.csv` contains one row per observation/descriptor relationship and
 retains descriptor-less rows for unexplained observations. The calibration
