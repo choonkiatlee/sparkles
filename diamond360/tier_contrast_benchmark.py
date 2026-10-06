@@ -272,6 +272,11 @@ def _fixed_spread_inputs(processed, activation):
             record.get("regions_path") if record is not None else None
             for record in selected
         ],
+        "mask_paths": [
+            record.get("registration", {}).get("mask_path")
+            if record is not None else None
+            for record in selected
+        ],
     }
 
 
@@ -410,11 +415,25 @@ def _boundary_local_inputs(
                         measured["median_summary"]["status"],
                         measured["median_summary"].get("reasons", []),
                     )
+                geometry_meta = (
+                    {
+                        "type": "semantic",
+                        "boundary_name": spec["semantic"],
+                        "sector_u": [float(value) for value in semantic_control["sector_u"]],
+                    }
+                    if geometry == "semantic"
+                    else {
+                        "type": "coarse",
+                        "boundary_name": pair_id,
+                        "radius": float(spec["coarse_radius"]),
+                    }
+                )
                 by_geometry[geometry] = {
                     **measured,
                     "validity": validity,
                     "evidence": tc.select_sectorized_evidence(measured["frame_trace"]),
                     "strip_support": support,
+                    "geometry": geometry_meta,
                 }
             pair_out["widths"][width_key] = by_geometry
         output["pairs"][pair_id] = pair_out
@@ -446,6 +465,7 @@ def measure_stone(processed, step_output, indices, wrap=False):
     }
     result["frame_camera_paths"] = spread_inputs["camera_paths"]
     result["frame_region_paths"] = spread_inputs["region_paths"]
+    result["frame_mask_paths"] = spread_inputs["mask_paths"]
     return result
 
 
