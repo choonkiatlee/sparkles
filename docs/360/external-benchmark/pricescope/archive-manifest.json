@@ -2,14 +2,16 @@
   "schema_version": "sparkles-external-archive/1",
   "benchmark_id": "pricescope-asscher-external-v0",
   "archive_date": "2026-10-06",
-  "disposition": "mixed_archive_success",
+  "disposition": "article_originals_recovered_forum_inline_previews_recovered",
   "purpose": "Durable provenance record for external falsification. No descriptor analysis or metric tuning is included.",
   "completeness": {
     "catalogued_samples": 32,
     "explicit_original_media_urls": 16,
     "forum_post_samples": 10,
-    "byte_archived_samples": 2,
-    "hashed_samples": 2
+    "byte_archived_samples": 26,
+    "hashed_samples": 26,
+    "original_byte_archived_samples": 16,
+    "forum_inline_preview_samples": 10
   },
   "verification": {
     "source_context": "PriceScope article and three forum threads/linked product pages were independently checked against currently accessible public pages on 2026-10-06.",
@@ -27,11 +29,12 @@
         "result": "16 direct media URLs probed: 14 PriceScope-hosted assets remained HTTP 403; both Kashi MP4s downloaded successfully and were hashed."
       }
     ],
-    "integrity_rule": "Do not invent SHA-256 or byte counts. Populate them only after exact original bytes are successfully recovered."
+    "integrity_rule": "Do not invent SHA-256 or byte counts. Populate them only after exact original bytes are successfully recovered.",
+    "work_session_recovery": "26 assets fetched with curl; images decoded, MP4s fully decoded, hashes and byte counts checked. Raw media excluded from Git."
   },
   "storage_policy": {
     "git": "Source catalog, manifest and retrieval tooling only.",
-    "raw_third_party_media": "Keep out of Git; when recoverable, store as short-lived workflow artifact or external source cache and record exact hashes here.",
+    "raw_third_party_media": "Persistent external bundle; raw bytes excluded from Git.",
     "substitutes": "Do not silently substitute screenshots, thumbnails or recompressed copies for originals."
   },
   "explicit_media": [
@@ -41,11 +44,13 @@
       "media_url": "https://www.pricescope.com/files/images/journal/Performance_and_p3/page3image2.gif",
       "media_type": "gif",
       "source_context_verified": true,
-      "byte_archive_status": "blocked_by_source",
-      "retrieval_http_status": 403,
-      "sha256": null,
-      "bytes": null,
-      "note": "Direct original-media URL is preserved, but PriceScope returned HTTP 403 to GitHub-hosted archival fetches on 2026-10-06."
+      "byte_archive_status": "archived_original",
+      "retrieval_http_status": 200,
+      "sha256": "a6fb44559329e368d68fe0f4b14eacb6a0fd0153a1dd506709c251440adfed49",
+      "bytes": 23381,
+      "note": "Original bytes recovered in Work session; earlier runner 403 probes retained in verification history.",
+      "artifact_path": "media/p3-extremely-off.gif",
+      "retrieved_at": "2026-10-06T21:28:43.309382+00:00"
     },
     {
       "sample_id": "p3-slightly-off",
@@ -53,11 +58,13 @@
       "media_url": "https://www.pricescope.com/files/images/journal/Performance_and_p3/page3image3.gif",
       "media_type": "gif",
       "source_context_verified": true,
-      "byte_archive_status": "blocked_by_source",
-      "retrieval_http_status": 403,
-      "sha256": null,
-      "bytes": null,
-      "note": "Direct original-media URL is preserved, but PriceScope returned HTTP 403 to GitHub-hosted archival fetches on 2026-10-06."
+      "byte_archive_status": "archived_original",
+      "retrieval_http_status": 200,
+      "sha256": "3ca051c37f1ed5045478087a4a516c743ae3c56f7e1593cba0b5762d008d5172",
+      "bytes": 13803,
+      "note": "Original bytes recovered in Work session; earlier runner 403 probes retained in verification history.",
+      "artifact_path": "media/p3-slightly-off.gif",
+      "retrieved_at": "2026-10-06T21:28:43.298001+00:00"
     },
     {
       "sample_id": "p3-acceptable-1",
@@ -65,11 +72,13 @@
       "media_url": "https://www.pricescope.com/files/images/journal/Performance_and_p3/page4image1.gif",
       "media_type": "gif",
       "source_context_verified": true,
-      "byte_archive_status": "blocked_by_source",
-      "retrieval_http_status": 403,
-      "sha256": null,
-      "bytes": null,
-      "note": "Direct original-media URL is preserved, but PriceScope returned HTTP 403 to GitHub-hosted archival fetches on 2026-10-06."
+      "byte_archive_status": "archived_original",
+      "retrieval_http_status": 200,
+      "sha256": "5a3e364980d09c4f0d6148fd5ee89146135cd17676d3d3249f7df32f389cbde6",
+      "bytes": 19249,
+      "note": "Original bytes recovered in Work session; earlier runner 403 probes retained in verification history.",
+      "artifact_path": "media/p3-acceptable-1.gif",
+      "retrieved_at": "2026-10-06T21:28:43.405636+00:00"
     },
     {
       "sample_id": "p3-acceptable-2",
@@ -77,11 +86,13 @@
       "media_url": "https://www.pricescope.com/files/images/journal/Performance_and_p3/page4image2.gif",
       "media_type": "gif",
       "source_context_verified": true,
-      "byte_archive_status": "blocked_by_source",
-      "retrieval_http_status": 403,
-      "sha256": null,
-      "bytes": null,
-      "note": "Direct original-media URL is preserved, but PriceScope returned HTTP 403 to GitHub-hosted archival fetches on 2026-10-06."
+      "byte_archive_status": "archived_original",
+      "retrieval_http_status": 200,
+      "sha256": "4e242a0a8d69123a02685a6a46e1ae3874e433acfb1497c1596c1a6790f82ccf",
+      "bytes": 23140,
+      "note": "Original bytes recovered in Work session; earlier runner 403 probes retained in verification history.",
+      "artifact_path": "media/p3-acceptable-2.gif",
+      "retrieved_at": "2026-10-06T21:28:43.440860+00:00"
     },
     {
       "sample_id": "p3-acceptable-3",
@@ -89,11 +100,13 @@
       "media_url": "https://www.pricescope.com/files/images/journal/Performance_and_p3/page4image3.gif",
       "media_type": "gif",
       "source_context_verified": true,
-      "byte_archive_status": "blocked_by_source",
-      "retrieval_http_status": 403,
-      "sha256": null,
-      "bytes": null,
-      "note": "Direct original-media URL is preserved, but PriceScope returned HTTP 403 to GitHub-hosted archival fetches on 2026-10-06."
+      "byte_archive_status": "archived_original",
+      "retrieval_http_status": 200,
+      "sha256": "b5a44d9a488dfc6f897a77ea7e5a388059e6ba9bc29816ba5b78378dcb854523",
+      "bytes": 21912,
+      "note": "Original bytes recovered in Work session; earlier runner 403 probes retained in verification history.",
+      "artifact_path": "media/p3-acceptable-3.gif",
+      "retrieved_at": "2026-10-06T21:28:43.389547+00:00"
     },
     {
       "sample_id": "p3-video-cut-for-weight",
@@ -101,11 +114,13 @@
       "media_url": "https://www.pricescope.com/wp-content/uploads/2008/08/karl_video1.mp4",
       "media_type": "mp4",
       "source_context_verified": true,
-      "byte_archive_status": "blocked_by_source",
-      "retrieval_http_status": 403,
-      "sha256": null,
-      "bytes": null,
-      "note": "Direct original-media URL is preserved, but PriceScope returned HTTP 403 to GitHub-hosted archival fetches on 2026-10-06."
+      "byte_archive_status": "archived_original",
+      "retrieval_http_status": 200,
+      "sha256": "3afb5b47f7a2963113b3aaa8ab7b1a45ad01060ba1689cae9b96100ffafe15b0",
+      "bytes": 75357,
+      "note": "Original bytes recovered in Work session; earlier runner 403 probes retained in verification history.",
+      "artifact_path": "media/p3-video-cut-for-weight.mp4",
+      "retrieved_at": "2026-10-06T21:28:43.340765+00:00"
     },
     {
       "sample_id": "p3-video-corrected",
@@ -113,11 +128,13 @@
       "media_url": "https://www.pricescope.com/wp-content/uploads/2008/08/karl_video2.mp4",
       "media_type": "mp4",
       "source_context_verified": true,
-      "byte_archive_status": "blocked_by_source",
-      "retrieval_http_status": 403,
-      "sha256": null,
-      "bytes": null,
-      "note": "Direct original-media URL is preserved, but PriceScope returned HTTP 403 to GitHub-hosted archival fetches on 2026-10-06."
+      "byte_archive_status": "archived_original",
+      "retrieval_http_status": 200,
+      "sha256": "d81ba3d51d51085002001826b7448908f87005e9d7bf8a81ddbd65976f55a64e",
+      "bytes": 73463,
+      "note": "Original bytes recovered in Work session; earlier runner 403 probes retained in verification history.",
+      "artifact_path": "media/p3-video-corrected.mp4",
+      "retrieved_at": "2026-10-06T21:28:47.045317+00:00"
     },
     {
       "sample_id": "p3-video-higher-performance",
@@ -125,11 +142,13 @@
       "media_url": "https://www.pricescope.com/wp-content/uploads/2008/08/karl_video3.mp4",
       "media_type": "mp4",
       "source_context_verified": true,
-      "byte_archive_status": "blocked_by_source",
-      "retrieval_http_status": 403,
-      "sha256": null,
-      "bytes": null,
-      "note": "Direct original-media URL is preserved, but PriceScope returned HTTP 403 to GitHub-hosted archival fetches on 2026-10-06."
+      "byte_archive_status": "archived_original",
+      "retrieval_http_status": 200,
+      "sha256": "a57ab7fac261afd92b98b1787bcb6f9bef04b5de4c5e33ad95d1c3ca94173f07",
+      "bytes": 67532,
+      "note": "Original bytes recovered in Work session; earlier runner 403 probes retained in verification history.",
+      "artifact_path": "media/p3-video-higher-performance.mp4",
+      "retrieved_at": "2026-10-06T21:28:47.018203+00:00"
     },
     {
       "sample_id": "p3-static-cut-for-weight-a",
@@ -137,11 +156,13 @@
       "media_url": "https://www.pricescope.com/files/images/journal/Performance_and_p3/page-22image1.gif",
       "media_type": "gif",
       "source_context_verified": true,
-      "byte_archive_status": "blocked_by_source",
-      "retrieval_http_status": 403,
-      "sha256": null,
-      "bytes": null,
-      "note": "Direct original-media URL is preserved, but PriceScope returned HTTP 403 to GitHub-hosted archival fetches on 2026-10-06."
+      "byte_archive_status": "archived_original",
+      "retrieval_http_status": 200,
+      "sha256": "d0a20ef4ba74be9207bd10d28b632268dca23021f1a0337a1f8bc5e3fc28e9ad",
+      "bytes": 16438,
+      "note": "Original bytes recovered in Work session; earlier runner 403 probes retained in verification history.",
+      "artifact_path": "media/p3-static-cut-for-weight-a.gif",
+      "retrieved_at": "2026-10-06T21:28:47.089292+00:00"
     },
     {
       "sample_id": "p3-static-cut-for-weight-b",
@@ -149,11 +170,13 @@
       "media_url": "https://www.pricescope.com/files/images/journal/Performance_and_p3/page-22image2.gif",
       "media_type": "gif",
       "source_context_verified": true,
-      "byte_archive_status": "blocked_by_source",
-      "retrieval_http_status": 403,
-      "sha256": null,
-      "bytes": null,
-      "note": "Direct original-media URL is preserved, but PriceScope returned HTTP 403 to GitHub-hosted archival fetches on 2026-10-06."
+      "byte_archive_status": "archived_original",
+      "retrieval_http_status": 200,
+      "sha256": "dc7cbb14644cb6e29a8f029fc17f90afb2482953ea24c35a92189941800b3ebe",
+      "bytes": 15544,
+      "note": "Original bytes recovered in Work session; earlier runner 403 probes retained in verification history.",
+      "artifact_path": "media/p3-static-cut-for-weight-b.gif",
+      "retrieved_at": "2026-10-06T21:28:47.062793+00:00"
     },
     {
       "sample_id": "p3-static-corrected-a",
@@ -161,11 +184,13 @@
       "media_url": "https://www.pricescope.com/files/images/journal/Performance_and_p3/page-23image1.gif",
       "media_type": "gif",
       "source_context_verified": true,
-      "byte_archive_status": "blocked_by_source",
-      "retrieval_http_status": 403,
-      "sha256": null,
-      "bytes": null,
-      "note": "Direct original-media URL is preserved, but PriceScope returned HTTP 403 to GitHub-hosted archival fetches on 2026-10-06."
+      "byte_archive_status": "archived_original",
+      "retrieval_http_status": 200,
+      "sha256": "11ae19bd04bec916e8b19d66a99bd94a5312a11b1c21906dbcfdfe82daf2cbbe",
+      "bytes": 25321,
+      "note": "Original bytes recovered in Work session; earlier runner 403 probes retained in verification history.",
+      "artifact_path": "media/p3-static-corrected-a.gif",
+      "retrieved_at": "2026-10-06T21:28:47.060089+00:00"
     },
     {
       "sample_id": "p3-static-corrected-b",
@@ -173,11 +198,13 @@
       "media_url": "https://www.pricescope.com/files/images/journal/Performance_and_p3/page-23image2.gif",
       "media_type": "gif",
       "source_context_verified": true,
-      "byte_archive_status": "blocked_by_source",
-      "retrieval_http_status": 403,
-      "sha256": null,
-      "bytes": null,
-      "note": "Direct original-media URL is preserved, but PriceScope returned HTTP 403 to GitHub-hosted archival fetches on 2026-10-06."
+      "byte_archive_status": "archived_original",
+      "retrieval_http_status": 200,
+      "sha256": "2c19f6f27339bc103164c2c1bb5952dcaeb53753593ed88a13205cd5106f00f8",
+      "bytes": 15348,
+      "note": "Original bytes recovered in Work session; earlier runner 403 probes retained in verification history.",
+      "artifact_path": "media/p3-static-corrected-b.gif",
+      "retrieved_at": "2026-10-06T21:28:47.082093+00:00"
     },
     {
       "sample_id": "p3-static-higher-performance-a",
@@ -185,11 +212,13 @@
       "media_url": "https://www.pricescope.com/files/images/journal/Performance_and_p3/page-24image1.gif",
       "media_type": "gif",
       "source_context_verified": true,
-      "byte_archive_status": "blocked_by_source",
-      "retrieval_http_status": 403,
-      "sha256": null,
-      "bytes": null,
-      "note": "Direct original-media URL is preserved, but PriceScope returned HTTP 403 to GitHub-hosted archival fetches on 2026-10-06."
+      "byte_archive_status": "archived_original",
+      "retrieval_http_status": 200,
+      "sha256": "ecf8ac624a2457d4c27ad1747714c6c15ea148e92a4b981600d9510521febefa",
+      "bytes": 21600,
+      "note": "Original bytes recovered in Work session; earlier runner 403 probes retained in verification history.",
+      "artifact_path": "media/p3-static-higher-performance-a.gif",
+      "retrieved_at": "2026-10-06T21:28:52.384194+00:00"
     },
     {
       "sample_id": "p3-static-higher-performance-b",
@@ -197,11 +226,13 @@
       "media_url": "https://www.pricescope.com/files/images/journal/Performance_and_p3/page-24image2.gif",
       "media_type": "gif",
       "source_context_verified": true,
-      "byte_archive_status": "blocked_by_source",
-      "retrieval_http_status": 403,
-      "sha256": null,
-      "bytes": null,
-      "note": "Direct original-media URL is preserved, but PriceScope returned HTTP 403 to GitHub-hosted archival fetches on 2026-10-06."
+      "byte_archive_status": "archived_original",
+      "retrieval_http_status": 200,
+      "sha256": "84642b2917d6d63f32aa9fa1d30082cea36ea55eee16a914e608604e407df0d2",
+      "bytes": 14811,
+      "note": "Original bytes recovered in Work session; earlier runner 403 probes retained in verification history.",
+      "artifact_path": "media/p3-static-higher-performance-b.gif",
+      "retrieved_at": "2026-10-06T21:28:52.430926+00:00"
     },
     {
       "sample_id": "asscher-eval-messy-arrows",
@@ -209,13 +240,15 @@
       "media_url": "https://www.kashiimports.com/video/22957.mp4",
       "media_type": "mp4",
       "source_context_verified": true,
-      "byte_archive_status": "retrieved_to_ci_artifact",
+      "byte_archive_status": "archived_original",
       "retrieval_http_status": 200,
       "sha256": "ec4a17f8c89ce710dd5a9b8e4e8d08b8e398d99692e583e4f63f970bfd4f487a",
       "bytes": 5886312,
       "content_type": "video/mp4",
       "last_modified": "Fri, 17 May 2024 15:01:04 GMT",
-      "note": "Exact original MP4 downloaded successfully in Actions run 37533954460; raw bytes kept out of Git."
+      "note": "Original downloaded bytes preserved in persistent recovery bundle; previous CI provenance retained.",
+      "artifact_path": "media/asscher-eval-messy-arrows.mp4",
+      "retrieved_at": "2026-10-06T21:28:54.752511+00:00"
     },
     {
       "sample_id": "asscher-eval-nice-dance",
@@ -223,13 +256,15 @@
       "media_url": "https://www.kashiimports.com/video/27196.mp4",
       "media_type": "mp4",
       "source_context_verified": true,
-      "byte_archive_status": "retrieved_to_ci_artifact",
+      "byte_archive_status": "archived_original",
       "retrieval_http_status": 200,
       "sha256": "f69e6e8e429665246becc6121621fe4d92955383cb7e2163cd6b91aa010a5b27",
       "bytes": 4840046,
       "content_type": "video/mp4",
       "last_modified": "Fri, 17 May 2024 14:46:47 GMT",
-      "note": "Exact original MP4 downloaded successfully in Actions run 37533954460; raw bytes kept out of Git."
+      "note": "Original downloaded bytes preserved in persistent recovery bundle; previous CI provenance retained.",
+      "artifact_path": "media/asscher-eval-nice-dance.mp4",
+      "retrieved_at": "2026-10-06T21:28:54.704316+00:00"
     }
   ],
   "forum_samples": [
@@ -240,10 +275,18 @@
       "source_page": "https://www.pricescope.com/community/threads/why-cut-asschers-with-small-corners-and-windmills.78433/",
       "source_context_verified": true,
       "original_media_url": null,
-      "byte_archive_status": "unresolved_original_media",
-      "sha256": null,
-      "bytes": null,
-      "note": "Post text/label is preserved and currently indexable; the migrated forum rendering does not expose the original inline-media URL to the archive tooling, and direct page fetches from GitHub Actions are HTTP 403."
+      "byte_archive_status": "archived_inline_preview_original_unverified",
+      "sha256": "6cbeb041db72d2cb853143453dd8128b0e21e0191b5196a18934e7f68d27ea01",
+      "bytes": 13174,
+      "note": "Public inline preview recovered. Full attachment returns login HTML; full original remains unresolved.",
+      "inline_media_url": "https://www.pricescope.com/community/data/attachments/108/108739-73b2e16c11ce81664c2b605268a10a36.jpg?hash=c7LhbBHOgW",
+      "full_attachment_url": "https://www.pricescope.com/community/attachments/6424144-jpg.112068/",
+      "artifact_path": "media/windmill-24.jpg",
+      "dimensions": [
+        254,
+        300
+      ],
+      "media_post_number": 1
     },
     {
       "sample_id": "windmill-22",
@@ -252,10 +295,18 @@
       "source_page": "https://www.pricescope.com/community/threads/why-cut-asschers-with-small-corners-and-windmills.78433/",
       "source_context_verified": true,
       "original_media_url": null,
-      "byte_archive_status": "unresolved_original_media",
-      "sha256": null,
-      "bytes": null,
-      "note": "Post text/label is preserved and currently indexable; the migrated forum rendering does not expose the original inline-media URL to the archive tooling, and direct page fetches from GitHub Actions are HTTP 403."
+      "byte_archive_status": "archived_inline_preview_original_unverified",
+      "sha256": "194ce999e5cafc09b2a336cc57f90073df18d5292b889f049dcdf7f4220fe2a8",
+      "bytes": 13480,
+      "note": "Public inline preview recovered. Full attachment returns login HTML; full original remains unresolved.",
+      "inline_media_url": "https://www.pricescope.com/community/data/attachments/120/120369-bbf6f4dfcccc75ed81561d07f80840a7.jpg?hash=u_b038zMde",
+      "full_attachment_url": "https://www.pricescope.com/community/attachments/6422147-jpg.124102/",
+      "artifact_path": "media/windmill-22.jpg",
+      "dimensions": [
+        254,
+        300
+      ],
+      "media_post_number": 2
     },
     {
       "sample_id": "windmill-20",
@@ -264,10 +315,18 @@
       "source_page": "https://www.pricescope.com/community/threads/why-cut-asschers-with-small-corners-and-windmills.78433/",
       "source_context_verified": true,
       "original_media_url": null,
-      "byte_archive_status": "unresolved_original_media",
-      "sha256": null,
-      "bytes": null,
-      "note": "Post text/label is preserved and currently indexable; the migrated forum rendering does not expose the original inline-media URL to the archive tooling, and direct page fetches from GitHub Actions are HTTP 403."
+      "byte_archive_status": "archived_inline_preview_original_unverified",
+      "sha256": "151188ba5e1b8ffc3b0c44e6e3eea105680873369e21b98474f0ee169c6c0cbe",
+      "bytes": 13140,
+      "note": "Public inline preview recovered. Full attachment returns login HTML; full original remains unresolved.",
+      "inline_media_url": "https://www.pricescope.com/community/data/attachments/120/120247-c6edddabed66643bf9af74bda1f89167.jpg?hash=xu3dq-1mZD",
+      "full_attachment_url": "https://www.pricescope.com/community/attachments/6420151-jpg.123976/",
+      "artifact_path": "media/windmill-20.jpg",
+      "dimensions": [
+        254,
+        300
+      ],
+      "media_post_number": 3
     },
     {
       "sample_id": "windmill-18",
@@ -276,10 +335,18 @@
       "source_page": "https://www.pricescope.com/community/threads/why-cut-asschers-with-small-corners-and-windmills.78433/",
       "source_context_verified": true,
       "original_media_url": null,
-      "byte_archive_status": "unresolved_original_media",
-      "sha256": null,
-      "bytes": null,
-      "note": "Post text/label is preserved and currently indexable; the migrated forum rendering does not expose the original inline-media URL to the archive tooling, and direct page fetches from GitHub Actions are HTTP 403."
+      "byte_archive_status": "archived_inline_preview_original_unverified",
+      "sha256": "e94e45c1617ce528c2605d1915adea3e1276330dc884ad50ab70a441e4534fbe",
+      "bytes": 12839,
+      "note": "Public inline preview recovered. Full attachment returns login HTML; full original remains unresolved.",
+      "inline_media_url": "https://www.pricescope.com/community/data/attachments/108/108741-7be5466e484236bf46f04eef92bcca32.jpg?hash=e-VGbkhCNr",
+      "full_attachment_url": "https://www.pricescope.com/community/attachments/6418152-jpg.112070/",
+      "artifact_path": "media/windmill-18.jpg",
+      "dimensions": [
+        254,
+        300
+      ],
+      "media_post_number": 4
     },
     {
       "sample_id": "windmill-16",
@@ -288,10 +355,18 @@
       "source_page": "https://www.pricescope.com/community/threads/why-cut-asschers-with-small-corners-and-windmills.78433/",
       "source_context_verified": true,
       "original_media_url": null,
-      "byte_archive_status": "unresolved_original_media",
-      "sha256": null,
-      "bytes": null,
-      "note": "Post text/label is preserved and currently indexable; the migrated forum rendering does not expose the original inline-media URL to the archive tooling, and direct page fetches from GitHub Actions are HTTP 403."
+      "byte_archive_status": "archived_inline_preview_original_unverified",
+      "sha256": "5da8e2795174d18df7b1e628dc51f6d82e83413cc0813ac0fc19fe6a39e2ce1f",
+      "bytes": 13233,
+      "note": "Public inline preview recovered. Full attachment returns login HTML; full original remains unresolved.",
+      "inline_media_url": "https://www.pricescope.com/community/data/attachments/108/108742-de0221e41f4c46364383a908f5a77379.jpg?hash=3gIh5B9MRj",
+      "full_attachment_url": "https://www.pricescope.com/community/attachments/6416155-jpg.112071/",
+      "artifact_path": "media/windmill-16.jpg",
+      "dimensions": [
+        254,
+        300
+      ],
+      "media_post_number": 5
     },
     {
       "sample_id": "windmill-14",
@@ -300,10 +375,18 @@
       "source_page": "https://www.pricescope.com/community/threads/why-cut-asschers-with-small-corners-and-windmills.78433/",
       "source_context_verified": true,
       "original_media_url": null,
-      "byte_archive_status": "unresolved_original_media",
-      "sha256": null,
-      "bytes": null,
-      "note": "Post text/label is preserved and currently indexable; the migrated forum rendering does not expose the original inline-media URL to the archive tooling, and direct page fetches from GitHub Actions are HTTP 403."
+      "byte_archive_status": "archived_inline_preview_original_unverified",
+      "sha256": "4e09984486462bd927ed5f2495f3a41c011195f99492e4a30cc26d4e7e9a42fc",
+      "bytes": 13384,
+      "note": "Public inline preview recovered. Full attachment returns login HTML; full original remains unresolved.",
+      "inline_media_url": "https://www.pricescope.com/community/data/attachments/108/108743-6e645cf3c7624dfcf410ec19ffd71467.jpg?hash=bmRc88diTf",
+      "full_attachment_url": "https://www.pricescope.com/community/attachments/6414156-jpg.112072/",
+      "artifact_path": "media/windmill-14.jpg",
+      "dimensions": [
+        254,
+        300
+      ],
+      "media_post_number": 6
     },
     {
       "sample_id": "thread-leakage-negative",
@@ -312,10 +395,18 @@
       "source_page": "https://www.pricescope.com/community/threads/why-cut-asschers-with-small-corners-and-windmills.78433/page-2",
       "source_context_verified": true,
       "original_media_url": null,
-      "byte_archive_status": "unresolved_original_media",
-      "sha256": null,
-      "bytes": null,
-      "note": "Post text/label is preserved and currently indexable; the migrated forum rendering does not expose the original inline-media URL to the archive tooling, and direct page fetches from GitHub Actions are HTTP 403."
+      "byte_archive_status": "archived_inline_preview_original_unverified",
+      "sha256": "b3a6184479452c66d0b1fecbde3c987b15aa99ec8ef456f6659d2b15c33f7600",
+      "bytes": 12262,
+      "note": "Public inline preview recovered. Full attachment returns login HTML; full original remains unresolved.",
+      "inline_media_url": "https://www.pricescope.com/community/data/attachments/120/120374-9674136c36e1d397f5d57a7339a2bcfb.jpg?hash=lnQTbDbh05",
+      "full_attachment_url": "https://www.pricescope.com/community/attachments/leakage-jpg.124107/",
+      "artifact_path": "media/thread-leakage-negative.jpg",
+      "dimensions": [
+        300,
+        202
+      ],
+      "media_post_number": 32
     },
     {
       "sample_id": "thread-low-contrast-mixed",
@@ -324,10 +415,18 @@
       "source_page": "https://www.pricescope.com/community/threads/why-cut-asschers-with-small-corners-and-windmills.78433/page-2",
       "source_context_verified": true,
       "original_media_url": null,
-      "byte_archive_status": "unresolved_original_media",
-      "sha256": null,
-      "bytes": null,
-      "note": "Post text/label is preserved and currently indexable; the migrated forum rendering does not expose the original inline-media URL to the archive tooling, and direct page fetches from GitHub Actions are HTTP 403."
+      "byte_archive_status": "archived_inline_preview_original_unverified",
+      "sha256": "70a2c2f3f1f491389ce8314d80261ed3f13233ae1d228a316428e7400844f2fd",
+      "bytes": 10964,
+      "note": "Public inline preview recovered. Full attachment returns login HTML; full original remains unresolved.",
+      "inline_media_url": "https://www.pricescope.com/community/data/attachments/120/120221-6a125e2a6d152e35e3d15090d44c980c.jpg?hash=ahJeKm0VLj",
+      "full_attachment_url": "https://www.pricescope.com/community/attachments/themonster453734-jpg.123949/",
+      "artifact_path": "media/thread-low-contrast-mixed.jpg",
+      "dimensions": [
+        254,
+        300
+      ],
+      "media_post_number": 46
     },
     {
       "sample_id": "thread-strong-positive",
@@ -336,10 +435,18 @@
       "source_page": "https://www.pricescope.com/community/threads/why-cut-asschers-with-small-corners-and-windmills.78433/page-2",
       "source_context_verified": true,
       "original_media_url": null,
-      "byte_archive_status": "unresolved_original_media",
-      "sha256": null,
-      "bytes": null,
-      "note": "Post text/label is preserved and currently indexable; the migrated forum rendering does not expose the original inline-media URL to the archive tooling, and direct page fetches from GitHub Actions are HTTP 403."
+      "byte_archive_status": "archived_inline_preview_original_unverified",
+      "sha256": "fc2258280139f02bf3cb4a8bdbb90dfee31a859f4f03631c9a1194d95b56b213",
+      "bytes": 9794,
+      "note": "Public inline preview recovered. Full attachment returns login HTML; full original remains unresolved.",
+      "inline_media_url": "https://www.pricescope.com/community/data/attachments/120/120607-2ef77f2fcf6c55938851bcf0d25f2440.jpg?hash=Lvd_L89sVZ",
+      "full_attachment_url": "https://www.pricescope.com/community/attachments/thenextone-jpg.124344/",
+      "artifact_path": "media/thread-strong-positive.jpg",
+      "dimensions": [
+        254,
+        300
+      ],
+      "media_post_number": 54
     },
     {
       "sample_id": "thread-tilt-positive",
@@ -348,10 +455,18 @@
       "source_page": "https://www.pricescope.com/community/threads/why-cut-asschers-with-small-corners-and-windmills.78433/page-2",
       "source_context_verified": true,
       "original_media_url": null,
-      "byte_archive_status": "unresolved_original_media",
-      "sha256": null,
-      "bytes": null,
-      "note": "Post text/label is preserved and currently indexable; the migrated forum rendering does not expose the original inline-media URL to the archive tooling, and direct page fetches from GitHub Actions are HTTP 403."
+      "byte_archive_status": "archived_inline_preview_original_unverified",
+      "sha256": "26a96263419a0247e4c7af2a308063c5de7a4dad7bce45fc5d945757a208738b",
+      "bytes": 9392,
+      "note": "Public inline preview recovered. Full attachment returns login HTML; full original remains unresolved. Label post 58 refers to media post 56.",
+      "inline_media_url": "https://www.pricescope.com/community/data/attachments/120/120391-31cfac651ee0ba28a93cf5d3bc0f145a.jpg?hash=Mc-sZR7gui",
+      "full_attachment_url": "https://www.pricescope.com/community/attachments/thenextone15degreedowntilt-jpg.124125/",
+      "artifact_path": "media/thread-tilt-positive.jpg",
+      "dimensions": [
+        254,
+        300
+      ],
+      "media_post_number": 56
     }
   ],
   "viewer_and_product_sources": [
@@ -392,5 +507,11 @@
       "status": "product_page_live_2026-10-06",
       "archive_note": "Exact GIA identity and stone details survive; historical video endpoint still needs extraction/recovery."
     }
-  ]
+  ],
+  "storage_bundle": {
+    "filename": "pricescope-media-recovery-2026-10-06.zip",
+    "library_file_id": "libfile_a2fd6a1be6888191ab540158c3265490",
+    "download_url": "https://chatgpt.com/api/library/files/libfile_a2fd6a1be6888191ab540158c3265490/download",
+    "bytes": 11226559
+  }
 }
