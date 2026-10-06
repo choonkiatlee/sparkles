@@ -207,6 +207,27 @@ class TierContrastTests(unittest.TestCase):
         evidence = tc.select_sectorized_evidence(result["frame_trace"])
         self.assertIsNotNone(evidence["strongest"])
 
+    def test_multiscale_sector_consensus_medians_scale_without_collapsing_sectors(self):
+        low = tc.sectorized_contrast_trace(
+            {"a": [2.0, 2.0, 2.0], "b": [4.0, 4.0, 4.0]},
+            {"a": [1.0, 1.0, 1.0], "b": [1.0, 1.0, 1.0]},
+            [0, 1, 2],
+        )
+        high = tc.sectorized_contrast_trace(
+            {"a": [4.0, 4.0, 4.0], "b": [8.0, 8.0, 8.0]},
+            {"a": [1.0, 1.0, 1.0], "b": [1.0, 1.0, 1.0]},
+            [0, 1, 2],
+        )
+        result = tc.multiscale_sector_consensus({"0.25": low, "0.55": high})
+        row = result["frame_trace"][0]
+        self.assertEqual(set(row["sector_separations"]), {"a", "b"})
+        self.assertAlmostEqual(
+            row["sector_separations"]["a"],
+            (math.log(2.0) + math.log(4.0)) / 2,
+        )
+        self.assertGreater(row["sector_scale_spread"]["a"], 0)
+        self.assertEqual(result["scale_labels"], ["0.25", "0.55"])
+
     def test_strongest_rank_disagreement_uses_aligned_frame_ranks(self):
         left = [
             {"position": 0, "source_index": 10, "median_separation": .1},
