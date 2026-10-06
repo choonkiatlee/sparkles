@@ -498,3 +498,45 @@ status and reasons columns for every field. Upstream QC/sensitivity remains
 linked through `audit_refs` rather than being flattened into production
 features. The machine-readable envelope is documented in
 `docs/360/profile/schema.json`.
+## Empirical calibration: `diamond360-human-observations/1` and `diamond360-calibration/1`
+
+`human-observations.json` is a curated annotation layer over the existing
+Asscher evaluations. Each observation records a certificate, normalized visual
+concept, hypothesis family, review role, human-selected source-frame indices,
+a profile explanation state (`explained | partial | unexplained`), and zero or
+more links to retained #45 measurement fields.
+
+Descriptor links are restricted to
+`diamond360.descriptor_profile.PRODUCTION_FIELD_IDS`. Context-only fields and
+non-retained descriptor variants are invalid calibration inputs. Each link
+records `supports | partial | contradicts | irrelevant` plus a human-readable
+rationale. An `unexplained` observation must have no descriptor links so gaps
+remain explicit rather than being force-fit to an existing metric.
+
+`benchmark.json` uses `diamond360-calibration/1`. It joins the curated
+observations to the exact `diamond360-descriptor-profile/1` values and preserves
+their `ok | review | unavailable` status/reasons, field metadata and redundancy
+groups. It also emits ascending/descending sample ranks with
+`direction: descriptive_only`; ranks are ordering aids, never quality scores.
+
+The benchmark records which human-selected source frames fall outside the
+profile's exact core17 window instead of treating those views as machine-measured
+evidence.
+
+#22 also consumes the final `diamond360-evidence-packet/1` outputs from #21.
+Every descriptor relationship carries machine-evidence resolution:
+`exact_field` when a selected packet item contains that exact retained field,
+or `family_representative` when the compact #21 selector de-duplicated the
+field-specific native event but retained the corresponding coverage-family
+representative. The latter is explicitly weaker provenance and must not be
+presented as exact scalar evidence.
+
+Evidence references preserve packet path, contact-sheet path, selected item
+rank, source location/render indices, event types, covered profile fields,
+human-frame overlap and nearest human-frame distance. #22 never re-runs or
+re-ranks #21 descriptor-native evidence.
+
+`benchmark.csv` contains one row per observation/descriptor relationship and
+retains descriptor-less rows for unexplained observations. The calibration
+schema defines no fitted weights, thresholds, regression model, composite score
+or aesthetic direction.

@@ -1,0 +1,3150 @@
+{
+  "schema_version": "diamond360-calibration/1",
+  "profile_schema": "diamond360-descriptor-profile/1",
+  "human_observation_schema": "diamond360-human-observations/1",
+  "sample": {
+    "certificate_count": 4,
+    "certificates": [
+      "IGI-LG756520111",
+      "IGI-LG756580087",
+      "IGI-LG818659722",
+      "IGI-LG836619414"
+    ],
+    "review_outcomes": {
+      "IGI-LG756520111": "Shortlist",
+      "IGI-LG756580087": "Shortlist",
+      "IGI-LG818659722": "Reserve",
+      "IGI-LG836619414": "Shortlist"
+    },
+    "profile_validity_counts": {
+      "IGI-LG756520111": {
+        "ok": 0,
+        "review": 20,
+        "unavailable": 0
+      },
+      "IGI-LG756580087": {
+        "ok": 20,
+        "review": 0,
+        "unavailable": 0
+      },
+      "IGI-LG818659722": {
+        "ok": 0,
+        "review": 20,
+        "unavailable": 0
+      },
+      "IGI-LG836619414": {
+        "ok": 20,
+        "review": 0,
+        "unavailable": 0
+      }
+    },
+    "interpretation_limit": "Four stones can falsify poor interpretations and surface counterexamples; they do not support aesthetic thresholds or universal directionality."
+  },
+  "window_contract": {
+    "id": "core17",
+    "source_indices": [
+      248,
+      249,
+      250,
+      251,
+      252,
+      253,
+      254,
+      255,
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "wrap_explicit": true,
+    "source_step_semantics": "ordinal samples; not seconds or calibrated degrees"
+  },
+  "machine_evidence": {
+    "status": "integrated_issue_21",
+    "issue": 21,
+    "summary_schema": "diamond360-evidence-packet-benchmark/1",
+    "packet_schema": "diamond360-evidence-packet/1",
+    "summary_path": "docs/360/evidence-packet/summary.json",
+    "selected_counts": {
+      "IGI-LG756520111": 4,
+      "IGI-LG756580087": 4,
+      "IGI-LG818659722": 5,
+      "IGI-LG836619414": 4
+    },
+    "audit": {
+      "linked_descriptor_count": 21,
+      "exact_field_links": 16,
+      "family_representative_links": 5,
+      "missing_links": 0,
+      "evidence_item_references": 24,
+      "item_refs_with_human_frame_overlap": 12,
+      "item_refs_without_exact_human_frame_overlap": 12
+    },
+    "contract_note": "#22 consumes #21 compact packets as-is. Exact selected evidence is linked when the retained field is present; otherwise the packet's coverage representative for that descriptor family is referenced. #22 never re-selects descriptor-native evidence."
+  },
+  "redundancy_groups": {
+    "activity_motion": {
+      "relationship": "related_not_additive",
+      "description": "Activation excursion and contrast mobility describe related recorded-image movement and must not be added as independent quality points."
+    },
+    "relative_dark_state": {
+      "relationship": "shared_state_redundant",
+      "description": "Relative-dark occupancy and switching share the same k=0.65 pixel-state definition; their scalar rankings are redundant enough that downstream code must not count them as independent votes."
+    }
+  },
+  "field_orders": {
+    "activity.activation.whole_stone_total_excursion": {
+      "sample_size": 4,
+      "direction": "descriptive_only",
+      "descending": [
+        {
+          "certificate": "IGI-LG818659722",
+          "value": 0.13746194839477544,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 1,
+          "rank_ascending": 4
+        },
+        {
+          "certificate": "IGI-LG756520111",
+          "value": 0.11018902063369751,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 2,
+          "rank_ascending": 3
+        },
+        {
+          "certificate": "IGI-LG836619414",
+          "value": 0.07579008936882026,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 3,
+          "rank_ascending": 2
+        },
+        {
+          "certificate": "IGI-LG756580087",
+          "value": 0.022581475973129206,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 4,
+          "rank_ascending": 1
+        }
+      ]
+    },
+    "activity.activation.centre_relative_total_excursion": {
+      "sample_size": 4,
+      "direction": "descriptive_only",
+      "descending": [
+        {
+          "certificate": "IGI-LG818659722",
+          "value": 0.17675200495061433,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 1,
+          "rank_ascending": 4
+        },
+        {
+          "certificate": "IGI-LG756580087",
+          "value": 0.07231796134979748,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 2,
+          "rank_ascending": 3
+        },
+        {
+          "certificate": "IGI-LG756520111",
+          "value": 0.05962840099786483,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 3,
+          "rank_ascending": 2
+        },
+        {
+          "certificate": "IGI-LG836619414",
+          "value": 0.05060509646137193,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 4,
+          "rank_ascending": 1
+        }
+      ]
+    },
+    "activity.activation.inner_relative_total_excursion": {
+      "sample_size": 4,
+      "direction": "descriptive_only",
+      "descending": [
+        {
+          "certificate": "IGI-LG818659722",
+          "value": 0.278834844971213,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 1,
+          "rank_ascending": 4
+        },
+        {
+          "certificate": "IGI-LG756520111",
+          "value": 0.07962734198553362,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 2,
+          "rank_ascending": 3
+        },
+        {
+          "certificate": "IGI-LG836619414",
+          "value": 0.056317863651336605,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 3,
+          "rank_ascending": 2
+        },
+        {
+          "certificate": "IGI-LG756580087",
+          "value": 0.03507454687665894,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 4,
+          "rank_ascending": 1
+        }
+      ]
+    },
+    "activity.activation.middle_relative_total_excursion": {
+      "sample_size": 4,
+      "direction": "descriptive_only",
+      "descending": [
+        {
+          "certificate": "IGI-LG818659722",
+          "value": 0.08464106360426321,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 1,
+          "rank_ascending": 4
+        },
+        {
+          "certificate": "IGI-LG836619414",
+          "value": 0.038823963398823186,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 2,
+          "rank_ascending": 3
+        },
+        {
+          "certificate": "IGI-LG756520111",
+          "value": 0.020733704704706646,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 3,
+          "rank_ascending": 2
+        },
+        {
+          "certificate": "IGI-LG756580087",
+          "value": 0.017756912209351654,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 4,
+          "rank_ascending": 1
+        }
+      ]
+    },
+    "activity.mobility.centre_median": {
+      "sample_size": 4,
+      "direction": "descriptive_only",
+      "descending": [
+        {
+          "certificate": "IGI-LG818659722",
+          "value": 0.045980002539862924,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 1,
+          "rank_ascending": 4
+        },
+        {
+          "certificate": "IGI-LG756580087",
+          "value": 0.0240573407121749,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 2,
+          "rank_ascending": 3
+        },
+        {
+          "certificate": "IGI-LG836619414",
+          "value": 0.014958113432199244,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 3,
+          "rank_ascending": 2
+        },
+        {
+          "certificate": "IGI-LG756520111",
+          "value": 0.011099420627681059,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 4,
+          "rank_ascending": 1
+        }
+      ]
+    },
+    "activity.mobility.inner_median": {
+      "sample_size": 4,
+      "direction": "descriptive_only",
+      "descending": [
+        {
+          "certificate": "IGI-LG818659722",
+          "value": 0.048664650324539066,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 1,
+          "rank_ascending": 4
+        },
+        {
+          "certificate": "IGI-LG836619414",
+          "value": 0.021587586988502827,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 2,
+          "rank_ascending": 3
+        },
+        {
+          "certificate": "IGI-LG756520111",
+          "value": 0.009986337360752516,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 3,
+          "rank_ascending": 2
+        },
+        {
+          "certificate": "IGI-LG756580087",
+          "value": 0.007348132228689491,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 4,
+          "rank_ascending": 1
+        }
+      ]
+    },
+    "activity.mobility.middle_median": {
+      "sample_size": 4,
+      "direction": "descriptive_only",
+      "descending": [
+        {
+          "certificate": "IGI-LG818659722",
+          "value": 0.024842516486233424,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 1,
+          "rank_ascending": 4
+        },
+        {
+          "certificate": "IGI-LG836619414",
+          "value": 0.011442952637702009,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 2,
+          "rank_ascending": 3
+        },
+        {
+          "certificate": "IGI-LG756520111",
+          "value": 0.004622994864987434,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 3,
+          "rank_ascending": 2
+        },
+        {
+          "certificate": "IGI-LG756580087",
+          "value": 0.004524170667554686,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 4,
+          "rank_ascending": 1
+        }
+      ]
+    },
+    "dark_state.occupancy.centre_mean": {
+      "sample_size": 4,
+      "direction": "descriptive_only",
+      "descending": [
+        {
+          "certificate": "IGI-LG818659722",
+          "value": 0.12159850089620333,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 1,
+          "rank_ascending": 4
+        },
+        {
+          "certificate": "IGI-LG756580087",
+          "value": 0.048028352615284334,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 2,
+          "rank_ascending": 3
+        },
+        {
+          "certificate": "IGI-LG836619414",
+          "value": 0.044402802672315465,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 3,
+          "rank_ascending": 2
+        },
+        {
+          "certificate": "IGI-LG756520111",
+          "value": 0.04277334202379013,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 4,
+          "rank_ascending": 1
+        }
+      ]
+    },
+    "dark_state.occupancy.inner_mean": {
+      "sample_size": 4,
+      "direction": "descriptive_only",
+      "descending": [
+        {
+          "certificate": "IGI-LG818659722",
+          "value": 0.17628281151170144,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 1,
+          "rank_ascending": 4
+        },
+        {
+          "certificate": "IGI-LG836619414",
+          "value": 0.1002826533839342,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 2,
+          "rank_ascending": 3
+        },
+        {
+          "certificate": "IGI-LG756520111",
+          "value": 0.08233515180265655,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 3,
+          "rank_ascending": 2
+        },
+        {
+          "certificate": "IGI-LG756580087",
+          "value": 0.07776921252371916,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 4,
+          "rank_ascending": 1
+        }
+      ]
+    },
+    "dark_state.occupancy.middle_mean": {
+      "sample_size": 4,
+      "direction": "descriptive_only",
+      "descending": [
+        {
+          "certificate": "IGI-LG836619414",
+          "value": 0.16100566564347113,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 1,
+          "rank_ascending": 4
+        },
+        {
+          "certificate": "IGI-LG818659722",
+          "value": 0.13042557932263815,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 2,
+          "rank_ascending": 3
+        },
+        {
+          "certificate": "IGI-LG756580087",
+          "value": 0.11214349376114083,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 3,
+          "rank_ascending": 2
+        },
+        {
+          "certificate": "IGI-LG756520111",
+          "value": 0.09286987522281641,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 4,
+          "rank_ascending": 1
+        }
+      ]
+    },
+    "dark_state.persistence.inner_dark_q90_window_fraction": {
+      "sample_size": 4,
+      "direction": "descriptive_only",
+      "descending": [
+        {
+          "certificate": "IGI-LG818659722",
+          "value": 0.35294117647058826,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 1,
+          "rank_ascending": 4
+        },
+        {
+          "certificate": "IGI-LG756580087",
+          "value": 0.23529411764705882,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 2,
+          "rank_ascending": 3
+        },
+        {
+          "certificate": "IGI-LG756520111",
+          "value": 0.17647058823529413,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 3,
+          "rank_ascending": 2
+        },
+        {
+          "certificate": "IGI-LG836619414",
+          "value": 0.17647058823529413,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 4,
+          "rank_ascending": 1
+        }
+      ]
+    },
+    "temporal_reconfiguration.switching.inner_rate": {
+      "sample_size": 4,
+      "direction": "descriptive_only",
+      "descending": [
+        {
+          "certificate": "IGI-LG818659722",
+          "value": 0.16995337701612903,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 1,
+          "rank_ascending": 4
+        },
+        {
+          "certificate": "IGI-LG836619414",
+          "value": 0.10970052083333333,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 2,
+          "rank_ascending": 3
+        },
+        {
+          "certificate": "IGI-LG756520111",
+          "value": 0.06979796706989247,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 3,
+          "rank_ascending": 2
+        },
+        {
+          "certificate": "IGI-LG756580087",
+          "value": 0.062415994623655914,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 4,
+          "rank_ascending": 1
+        }
+      ]
+    },
+    "temporal_reconfiguration.switching.middle_rate": {
+      "sample_size": 4,
+      "direction": "descriptive_only",
+      "descending": [
+        {
+          "certificate": "IGI-LG836619414",
+          "value": 0.15135192726583957,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 1,
+          "rank_ascending": 4
+        },
+        {
+          "certificate": "IGI-LG818659722",
+          "value": 0.11105587121212121,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 2,
+          "rank_ascending": 3
+        },
+        {
+          "certificate": "IGI-LG756580087",
+          "value": 0.10685369318181819,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 3,
+          "rank_ascending": 2
+        },
+        {
+          "certificate": "IGI-LG756520111",
+          "value": 0.06686789772727272,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 4,
+          "rank_ascending": 1
+        }
+      ]
+    },
+    "nested_step.centre_inner_pearson": {
+      "sample_size": 4,
+      "direction": "descriptive_only",
+      "descending": [
+        {
+          "certificate": "IGI-LG818659722",
+          "value": 0.5314286406,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 1,
+          "rank_ascending": 4
+        },
+        {
+          "certificate": "IGI-LG756520111",
+          "value": 0.4860299445,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 2,
+          "rank_ascending": 3
+        },
+        {
+          "certificate": "IGI-LG756580087",
+          "value": 0.4343388164,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 3,
+          "rank_ascending": 2
+        },
+        {
+          "certificate": "IGI-LG836619414",
+          "value": -0.1021545538,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 4,
+          "rank_ascending": 1
+        }
+      ]
+    },
+    "nested_step.inner_middle_pearson": {
+      "sample_size": 4,
+      "direction": "descriptive_only",
+      "descending": [
+        {
+          "certificate": "IGI-LG756520111",
+          "value": 0.49059073,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 1,
+          "rank_ascending": 4
+        },
+        {
+          "certificate": "IGI-LG818659722",
+          "value": 0.3822326486,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 2,
+          "rank_ascending": 3
+        },
+        {
+          "certificate": "IGI-LG836619414",
+          "value": -0.2189669955,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 3,
+          "rank_ascending": 2
+        },
+        {
+          "certificate": "IGI-LG756580087",
+          "value": -0.6237114584,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 4,
+          "rank_ascending": 1
+        }
+      ]
+    },
+    "directional.side_E_W_pearson": {
+      "sample_size": 4,
+      "direction": "descriptive_only",
+      "descending": [
+        {
+          "certificate": "IGI-LG836619414",
+          "value": 0.310465135173277,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 1,
+          "rank_ascending": 4
+        },
+        {
+          "certificate": "IGI-LG756520111",
+          "value": 0.014666301957435974,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 2,
+          "rank_ascending": 3
+        },
+        {
+          "certificate": "IGI-LG818659722",
+          "value": -0.04580897934001224,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 3,
+          "rank_ascending": 2
+        },
+        {
+          "certificate": "IGI-LG756580087",
+          "value": -0.2952601354931592,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 4,
+          "rank_ascending": 1
+        }
+      ]
+    },
+    "directional.side_N_S_pearson": {
+      "sample_size": 4,
+      "direction": "descriptive_only",
+      "descending": [
+        {
+          "certificate": "IGI-LG818659722",
+          "value": 0.9838306224408927,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 1,
+          "rank_ascending": 4
+        },
+        {
+          "certificate": "IGI-LG836619414",
+          "value": -0.09946439372440417,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 2,
+          "rank_ascending": 3
+        },
+        {
+          "certificate": "IGI-LG756580087",
+          "value": -0.10766777351028008,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 3,
+          "rank_ascending": 2
+        },
+        {
+          "certificate": "IGI-LG756520111",
+          "value": -0.9146084182603903,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 4,
+          "rank_ascending": 1
+        }
+      ]
+    },
+    "directional.corner_NE_SW_pearson": {
+      "sample_size": 4,
+      "direction": "descriptive_only",
+      "descending": [
+        {
+          "certificate": "IGI-LG818659722",
+          "value": 0.38779982820298164,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 1,
+          "rank_ascending": 4
+        },
+        {
+          "certificate": "IGI-LG836619414",
+          "value": 0.24291718417535219,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 2,
+          "rank_ascending": 3
+        },
+        {
+          "certificate": "IGI-LG756580087",
+          "value": -0.3147184781173796,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 3,
+          "rank_ascending": 2
+        },
+        {
+          "certificate": "IGI-LG756520111",
+          "value": -0.7074131838565342,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 4,
+          "rank_ascending": 1
+        }
+      ]
+    },
+    "directional.corner_NW_SE_pearson": {
+      "sample_size": 4,
+      "direction": "descriptive_only",
+      "descending": [
+        {
+          "certificate": "IGI-LG756520111",
+          "value": 0.4781102364393397,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 1,
+          "rank_ascending": 4
+        },
+        {
+          "certificate": "IGI-LG818659722",
+          "value": 0.42713919815193563,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 2,
+          "rank_ascending": 3
+        },
+        {
+          "certificate": "IGI-LG756580087",
+          "value": -0.7261448324284232,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 3,
+          "rank_ascending": 2
+        },
+        {
+          "certificate": "IGI-LG836619414",
+          "value": -0.7524409778239303,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 4,
+          "rank_ascending": 1
+        }
+      ]
+    },
+    "flash_morphology.median_largest_component_fraction": {
+      "sample_size": 4,
+      "direction": "descriptive_only",
+      "descending": [
+        {
+          "certificate": "IGI-LG756580087",
+          "value": 0.34354543074103167,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 1,
+          "rank_ascending": 4
+        },
+        {
+          "certificate": "IGI-LG818659722",
+          "value": 0.19230769230769232,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 2,
+          "rank_ascending": 3
+        },
+        {
+          "certificate": "IGI-LG756520111",
+          "value": 0.12614789753504108,
+          "status": "review",
+          "reasons": [
+            "foreground_or_nonuniformity_on_border",
+            "outline_near_image_edge"
+          ],
+          "rank_descending": 3,
+          "rank_ascending": 2
+        },
+        {
+          "certificate": "IGI-LG836619414",
+          "value": 0.11091954022988505,
+          "status": "ok",
+          "reasons": [],
+          "rank_descending": 4,
+          "rank_ascending": 1
+        }
+      ]
+    }
+  },
+  "family_summary": {
+    "activity_motion": {
+      "observation_count": 2,
+      "certificate_count": 2,
+      "explanation_counts": {
+        "explained": 1,
+        "partial": 1,
+        "unexplained": 0
+      },
+      "linked_field_ids": [
+        "activity.activation.inner_relative_total_excursion",
+        "activity.activation.middle_relative_total_excursion",
+        "activity.mobility.inner_median",
+        "temporal_reconfiguration.switching.middle_rate"
+      ]
+    },
+    "dark_state": {
+      "observation_count": 2,
+      "certificate_count": 2,
+      "explanation_counts": {
+        "explained": 1,
+        "partial": 1,
+        "unexplained": 0
+      },
+      "linked_field_ids": [
+        "dark_state.occupancy.centre_mean",
+        "dark_state.occupancy.inner_mean",
+        "dark_state.persistence.inner_dark_q90_window_fraction",
+        "directional.side_N_S_pearson",
+        "temporal_reconfiguration.switching.inner_rate"
+      ]
+    },
+    "directional": {
+      "observation_count": 1,
+      "certificate_count": 1,
+      "explanation_counts": {
+        "explained": 0,
+        "partial": 1,
+        "unexplained": 0
+      },
+      "linked_field_ids": [
+        "directional.corner_NE_SW_pearson",
+        "directional.side_N_S_pearson"
+      ]
+    },
+    "morphology": {
+      "observation_count": 4,
+      "certificate_count": 4,
+      "explanation_counts": {
+        "explained": 2,
+        "partial": 2,
+        "unexplained": 0
+      },
+      "linked_field_ids": [
+        "flash_morphology.median_largest_component_fraction"
+      ]
+    },
+    "nested_step": {
+      "observation_count": 3,
+      "certificate_count": 3,
+      "explanation_counts": {
+        "explained": 1,
+        "partial": 2,
+        "unexplained": 0
+      },
+      "linked_field_ids": [
+        "nested_step.centre_inner_pearson",
+        "nested_step.inner_middle_pearson"
+      ]
+    },
+    "unexplained_static": {
+      "observation_count": 5,
+      "certificate_count": 4,
+      "explanation_counts": {
+        "explained": 0,
+        "partial": 0,
+        "unexplained": 5
+      },
+      "linked_field_ids": []
+    }
+  },
+  "unexplained_concepts": [
+    {
+      "concept": "quiet_or_pale_inner_region",
+      "observation_ids": [
+        "LG756520111-pale-inner-panels",
+        "LG756580087-pale-inner-panels",
+        "LG836619414-pale-inner-tiers"
+      ],
+      "certificates": [
+        "IGI-LG756520111",
+        "IGI-LG756580087",
+        "IGI-LG836619414"
+      ],
+      "occurrences": 3
+    },
+    {
+      "concept": "static_geometric_crispness",
+      "observation_ids": [
+        "LG818659722-static-crispness",
+        "LG836619414-static-crispness"
+      ],
+      "certificates": [
+        "IGI-LG818659722",
+        "IGI-LG836619414"
+      ],
+      "occurrences": 2
+    }
+  ],
+  "observations": [
+    {
+      "id": "LG756520111-tier-readability",
+      "certificate": "IGI-LG756520111",
+      "review_outcome": "Shortlist",
+      "evaluation_path": "evaluations/Sparkles IGI-LG756520111 evaluation 2026-10-05-140217.md",
+      "concept": "layered_tier_readability",
+      "hypothesis_family": "nested_step",
+      "role": "strength",
+      "profile_explanation": "partial",
+      "summary": "Separated nested tiers remain readable while several lower bands visibly change together.",
+      "source_frames": [
+        248,
+        252,
+        0,
+        4
+      ],
+      "source_frames_in_profile_window": [
+        248,
+        252,
+        0,
+        4
+      ],
+      "source_frames_outside_profile_window": [],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/contact-sheet.jpg",
+        "selected_count": 4,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
+      "descriptor_links": [
+        {
+          "field_id": "nested_step.centre_inner_pearson",
+          "assessment": "partial",
+          "rationale": "Positive centre-inner coordination is consistent with grouped nested movement, but correlation does not measure static tier separation or crispness.",
+          "measurement": {
+            "value": 0.4860299445,
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ],
+            "rank_descending": 2,
+            "rank_ascending": 3,
+            "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "family_representative",
+            "coverage_family": "nested_step",
+            "items": [
+              {
+                "resolution": "family_representative",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/contact-sheet.jpg",
+                "packet_item_rank": 1,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    3,
+                    4
+                  ]
+                },
+                "render_source_indices": [
+                  3,
+                  4
+                ],
+                "selected_for": "activity_motion",
+                "coverage_families": [
+                  "activity_motion",
+                  "relative_dark_state",
+                  "nested_step",
+                  "directional"
+                ],
+                "event_types": [
+                  "highest",
+                  "largest",
+                  "largest_negative_move",
+                  "largest_positive_move",
+                  "strongest_coordinated",
+                  "strongest_divergent"
+                ],
+                "profile_field_ids": [
+                  "activity.activation.centre_relative_total_excursion",
+                  "activity.activation.middle_relative_total_excursion",
+                  "activity.activation.whole_stone_total_excursion",
+                  "activity.mobility.centre_median",
+                  "activity.mobility.middle_median",
+                  "dark_state.occupancy.inner_mean",
+                  "dark_state.occupancy.middle_mean",
+                  "directional.corner_NW_SE_pearson",
+                  "directional.side_N_S_pearson",
+                  "nested_step.inner_middle_pearson",
+                  "temporal_reconfiguration.switching.middle_rate"
+                ],
+                "human_frame_overlap": [
+                  4
+                ],
+                "nearest_human_frame_distance": 0
+              }
+            ]
+          },
+          "metadata": {
+            "representation": "coarse",
+            "support_policy": "fixed",
+            "statistic": "pearson_r",
+            "units": "correlation",
+            "pair": "centre__inner"
+          }
+        },
+        {
+          "field_id": "nested_step.inner_middle_pearson",
+          "assessment": "partial",
+          "rationale": "Positive inner-middle coordination is consistent with several bands moving together, but does not by itself establish hall-of-mirrors quality.",
+          "measurement": {
+            "value": 0.49059073,
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ],
+            "rank_descending": 1,
+            "rank_ascending": 4,
+            "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "exact_field",
+            "items": [
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/contact-sheet.jpg",
+                "packet_item_rank": 1,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    3,
+                    4
+                  ]
+                },
+                "render_source_indices": [
+                  3,
+                  4
+                ],
+                "selected_for": "activity_motion",
+                "coverage_families": [
+                  "activity_motion",
+                  "relative_dark_state",
+                  "nested_step",
+                  "directional"
+                ],
+                "event_types": [
+                  "strongest_coordinated"
+                ],
+                "profile_field_ids": [
+                  "nested_step.inner_middle_pearson"
+                ],
+                "human_frame_overlap": [
+                  4
+                ],
+                "nearest_human_frame_distance": 0
+              }
+            ]
+          },
+          "metadata": {
+            "representation": "coarse",
+            "support_policy": "fixed",
+            "statistic": "pearson_r",
+            "units": "correlation",
+            "pair": "inner__middle"
+          }
+        }
+      ]
+    },
+    {
+      "id": "LG756520111-directional-opposition",
+      "certificate": "IGI-LG756520111",
+      "review_outcome": "Shortlist",
+      "evaluation_path": "evaluations/Sparkles IGI-LG756520111 evaluation 2026-10-05-140217.md",
+      "concept": "directional_opposition",
+      "hypothesis_family": "directional",
+      "role": "mixed",
+      "profile_explanation": "partial",
+      "summary": "The review notes unequal directional light/dark behaviour and grouped lower-band movement rather than uniform opposing-region balance.",
+      "source_frames": [
+        248,
+        254,
+        0,
+        4
+      ],
+      "source_frames_in_profile_window": [
+        248,
+        254,
+        0,
+        4
+      ],
+      "source_frames_outside_profile_window": [],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/contact-sheet.jpg",
+        "selected_count": 4,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
+      "descriptor_links": [
+        {
+          "field_id": "directional.side_N_S_pearson",
+          "assessment": "supports",
+          "rationale": "Strongly negative north-south correlation is consistent with opposing upper/lower temporal behaviour rather than coordinated movement.",
+          "measurement": {
+            "value": -0.9146084182603903,
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ],
+            "rank_descending": 4,
+            "rank_ascending": 1,
+            "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "exact_field",
+            "items": [
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/contact-sheet.jpg",
+                "packet_item_rank": 1,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    3,
+                    4
+                  ]
+                },
+                "render_source_indices": [
+                  3,
+                  4
+                ],
+                "selected_for": "activity_motion",
+                "coverage_families": [
+                  "activity_motion",
+                  "relative_dark_state",
+                  "nested_step",
+                  "directional"
+                ],
+                "event_types": [
+                  "strongest_divergent"
+                ],
+                "profile_field_ids": [
+                  "directional.side_N_S_pearson"
+                ],
+                "human_frame_overlap": [
+                  4
+                ],
+                "nearest_human_frame_distance": 0
+              }
+            ]
+          },
+          "metadata": {
+            "representation": "coarse",
+            "support_policy": "fixed",
+            "statistic": "correlation",
+            "units": "correlation",
+            "pair": "side_N_S",
+            "surface_id": "coarse_whole"
+          }
+        },
+        {
+          "field_id": "directional.corner_NE_SW_pearson",
+          "assessment": "partial",
+          "rationale": "Negative diagonal correlation supports directional independence in some corner behaviour, although the human review is not a pair-specific motion annotation.",
+          "measurement": {
+            "value": -0.7074131838565342,
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ],
+            "rank_descending": 4,
+            "rank_ascending": 1,
+            "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "family_representative",
+            "coverage_family": "directional",
+            "items": [
+              {
+                "resolution": "family_representative",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/contact-sheet.jpg",
+                "packet_item_rank": 1,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    3,
+                    4
+                  ]
+                },
+                "render_source_indices": [
+                  3,
+                  4
+                ],
+                "selected_for": "activity_motion",
+                "coverage_families": [
+                  "activity_motion",
+                  "relative_dark_state",
+                  "nested_step",
+                  "directional"
+                ],
+                "event_types": [
+                  "highest",
+                  "largest",
+                  "largest_negative_move",
+                  "largest_positive_move",
+                  "strongest_coordinated",
+                  "strongest_divergent"
+                ],
+                "profile_field_ids": [
+                  "activity.activation.centre_relative_total_excursion",
+                  "activity.activation.middle_relative_total_excursion",
+                  "activity.activation.whole_stone_total_excursion",
+                  "activity.mobility.centre_median",
+                  "activity.mobility.middle_median",
+                  "dark_state.occupancy.inner_mean",
+                  "dark_state.occupancy.middle_mean",
+                  "directional.corner_NW_SE_pearson",
+                  "directional.side_N_S_pearson",
+                  "nested_step.inner_middle_pearson",
+                  "temporal_reconfiguration.switching.middle_rate"
+                ],
+                "human_frame_overlap": [
+                  4
+                ],
+                "nearest_human_frame_distance": 0
+              }
+            ]
+          },
+          "metadata": {
+            "representation": "coarse",
+            "support_policy": "fixed",
+            "statistic": "correlation",
+            "units": "correlation",
+            "pair": "corner_NE_SW",
+            "surface_id": "coarse_whole"
+          }
+        }
+      ]
+    },
+    {
+      "id": "LG756520111-pale-inner-panels",
+      "certificate": "IGI-LG756520111",
+      "review_outcome": "Shortlist",
+      "evaluation_path": "evaluations/Sparkles IGI-LG756520111 evaluation 2026-10-05-140217.md",
+      "concept": "quiet_or_pale_inner_region",
+      "hypothesis_family": "unexplained_static",
+      "role": "check",
+      "profile_explanation": "unexplained",
+      "summary": "Inner side wedges, especially the right, remain comparatively pale and less articulated in the inspected views.",
+      "source_frames": [
+        248,
+        254,
+        0,
+        4
+      ],
+      "source_frames_in_profile_window": [
+        248,
+        254,
+        0,
+        4
+      ],
+      "source_frames_outside_profile_window": [],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/contact-sheet.jpg",
+        "selected_count": 4,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
+      "descriptor_links": []
+    },
+    {
+      "id": "LG756520111-flash-scale",
+      "certificate": "IGI-LG756520111",
+      "review_outcome": "Shortlist",
+      "evaluation_path": "evaluations/Sparkles IGI-LG756520111 evaluation 2026-10-05-140217.md",
+      "concept": "broad_flash_scale",
+      "hypothesis_family": "morphology",
+      "role": "neutral",
+      "profile_explanation": "partial",
+      "summary": "Broad apparent step bands coexist with smaller diagonal/corner patches, so static broad architecture does not imply consistently broad dynamic flashes.",
+      "source_frames": [
+        248,
+        254,
+        0,
+        4
+      ],
+      "source_frames_in_profile_window": [
+        248,
+        254,
+        0,
+        4
+      ],
+      "source_frames_outside_profile_window": [],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/contact-sheet.jpg",
+        "selected_count": 4,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
+      "descriptor_links": [
+        {
+          "field_id": "flash_morphology.median_largest_component_fraction",
+          "assessment": "partial",
+          "rationale": "The relatively small retained component fraction fits a mixed broad-plus-finer dynamic character and cautions against equating broad static tiers with broad flash morphology.",
+          "measurement": {
+            "value": 0.12614789753504108,
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ],
+            "rank_descending": 3,
+            "rank_ascending": 2,
+            "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "exact_field",
+            "items": [
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756520111/contact-sheet.jpg",
+                "packet_item_rank": 3,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    252,
+                    2
+                  ]
+                },
+                "render_source_indices": [
+                  252,
+                  2
+                ],
+                "selected_for": "flash_morphology",
+                "coverage_families": [
+                  "flash_morphology"
+                ],
+                "event_types": [
+                  "matched_active_area_pair"
+                ],
+                "profile_field_ids": [
+                  "flash_morphology.median_largest_component_fraction"
+                ],
+                "human_frame_overlap": [],
+                "nearest_human_frame_distance": 2
+              }
+            ]
+          },
+          "metadata": {
+            "representation": "whole_stone",
+            "support_policy": "fixed",
+            "statistic": "median_largest_component_fraction",
+            "units": "fraction_of_active_area",
+            "threshold": 1.0
+          }
+        }
+      ]
+    },
+    {
+      "id": "LG756580087-broad-flashes",
+      "certificate": "IGI-LG756580087",
+      "review_outcome": "Shortlist",
+      "evaluation_path": "evaluations/Sparkles IGI-LG756580087 evaluation 2026-10-05-140217.md",
+      "concept": "broad_flash_scale",
+      "hypothesis_family": "morphology",
+      "role": "strength",
+      "profile_explanation": "explained",
+      "summary": "Clean broad horizontal tiers dominate the visual character, with large directional apparent flashes.",
+      "source_frames": [
+        248,
+        254,
+        0,
+        4
+      ],
+      "source_frames_in_profile_window": [
+        248,
+        254,
+        0,
+        4
+      ],
+      "source_frames_outside_profile_window": [],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756580087/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756580087/contact-sheet.jpg",
+        "selected_count": 4,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
+      "descriptor_links": [
+        {
+          "field_id": "flash_morphology.median_largest_component_fraction",
+          "assessment": "supports",
+          "rationale": "The stone is the clear high-end morphology case in the current sample, matching the review's broad deliberate flash/tier character.",
+          "measurement": {
+            "value": 0.34354543074103167,
+            "status": "ok",
+            "reasons": [],
+            "rank_descending": 1,
+            "rank_ascending": 4,
+            "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "exact_field",
+            "items": [
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756580087/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756580087/contact-sheet.jpg",
+                "packet_item_rank": 4,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    251,
+                    3
+                  ]
+                },
+                "render_source_indices": [
+                  251,
+                  3
+                ],
+                "selected_for": "flash_morphology",
+                "coverage_families": [
+                  "flash_morphology"
+                ],
+                "event_types": [
+                  "matched_active_area_pair"
+                ],
+                "profile_field_ids": [
+                  "flash_morphology.median_largest_component_fraction"
+                ],
+                "human_frame_overlap": [],
+                "nearest_human_frame_distance": 1
+              }
+            ]
+          },
+          "metadata": {
+            "representation": "whole_stone",
+            "support_policy": "fixed",
+            "statistic": "median_largest_component_fraction",
+            "units": "fraction_of_active_area",
+            "threshold": 1.0
+          }
+        }
+      ]
+    },
+    {
+      "id": "LG756580087-independent-layers",
+      "certificate": "IGI-LG756580087",
+      "review_outcome": "Shortlist",
+      "evaluation_path": "evaluations/Sparkles IGI-LG756580087 evaluation 2026-10-05-140217.md",
+      "concept": "independent_layer_motion",
+      "hypothesis_family": "nested_step",
+      "role": "strength",
+      "profile_explanation": "explained",
+      "summary": "Horizontal tiers and adjacent inner/middle regions change separately rather than behaving as one synchronized block.",
+      "source_frames": [
+        254,
+        0,
+        4,
+        8
+      ],
+      "source_frames_in_profile_window": [
+        254,
+        0,
+        4,
+        8
+      ],
+      "source_frames_outside_profile_window": [],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756580087/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756580087/contact-sheet.jpg",
+        "selected_count": 4,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
+      "descriptor_links": [
+        {
+          "field_id": "nested_step.inner_middle_pearson",
+          "assessment": "supports",
+          "rationale": "Strong negative inner-middle correlation directly matches the observed alternating/separately changing nested layers.",
+          "measurement": {
+            "value": -0.6237114584,
+            "status": "ok",
+            "reasons": [],
+            "rank_descending": 4,
+            "rank_ascending": 1,
+            "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "exact_field",
+            "items": [
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756580087/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756580087/contact-sheet.jpg",
+                "packet_item_rank": 1,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    254,
+                    255
+                  ]
+                },
+                "render_source_indices": [
+                  254,
+                  255
+                ],
+                "selected_for": "activity_motion",
+                "coverage_families": [
+                  "activity_motion",
+                  "nested_step",
+                  "directional"
+                ],
+                "event_types": [
+                  "strongest_divergent"
+                ],
+                "profile_field_ids": [
+                  "nested_step.inner_middle_pearson"
+                ],
+                "human_frame_overlap": [
+                  254
+                ],
+                "nearest_human_frame_distance": 0
+              }
+            ]
+          },
+          "metadata": {
+            "representation": "coarse",
+            "support_policy": "fixed",
+            "statistic": "pearson_r",
+            "units": "correlation",
+            "pair": "inner__middle"
+          }
+        }
+      ]
+    },
+    {
+      "id": "LG756580087-no-central-blackout",
+      "certificate": "IGI-LG756580087",
+      "review_outcome": "Shortlist",
+      "evaluation_path": "evaluations/Sparkles IGI-LG756580087 evaluation 2026-10-05-140217.md",
+      "concept": "regional_recovery",
+      "hypothesis_family": "dark_state",
+      "role": "strength",
+      "profile_explanation": "partial",
+      "summary": "The central convergence stays defined and the inspected views do not show a large persistent central blackout.",
+      "source_frames": [
+        250,
+        254,
+        0,
+        8
+      ],
+      "source_frames_in_profile_window": [
+        250,
+        254,
+        0,
+        8
+      ],
+      "source_frames_outside_profile_window": [],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756580087/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756580087/contact-sheet.jpg",
+        "selected_count": 4,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
+      "descriptor_links": [
+        {
+          "field_id": "dark_state.occupancy.centre_mean",
+          "assessment": "supports",
+          "rationale": "Low centre relative-dark occupancy is consistent with the absence of a persistent large central dark state in the inspected core window.",
+          "measurement": {
+            "value": 0.048028352615284334,
+            "status": "ok",
+            "reasons": [],
+            "rank_descending": 2,
+            "rank_ascending": 3,
+            "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "exact_field",
+            "items": [
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756580087/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756580087/contact-sheet.jpg",
+                "packet_item_rank": 2,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    5,
+                    6
+                  ]
+                },
+                "render_source_indices": [
+                  5,
+                  6
+                ],
+                "selected_for": "relative_dark_state",
+                "coverage_families": [
+                  "activity_motion",
+                  "relative_dark_state"
+                ],
+                "event_types": [
+                  "largest_positive_move"
+                ],
+                "profile_field_ids": [
+                  "dark_state.occupancy.centre_mean"
+                ],
+                "human_frame_overlap": [],
+                "nearest_human_frame_distance": 2
+              }
+            ]
+          },
+          "metadata": {
+            "representation": "coarse",
+            "support_policy": "fixed",
+            "statistic": "mean",
+            "units": "fraction",
+            "region": "centre",
+            "threshold": 0.65,
+            "redundancy_group": "relative_dark_state"
+          }
+        },
+        {
+          "field_id": "dark_state.persistence.inner_dark_q90_window_fraction",
+          "assessment": "partial",
+          "rationale": "Moderate inner persistence provides temporal context, but the retained persistence field is inner-region rather than centre-specific.",
+          "measurement": {
+            "value": 0.23529411764705882,
+            "status": "ok",
+            "reasons": [],
+            "rank_descending": 2,
+            "rank_ascending": 3,
+            "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "exact_field",
+            "items": [
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756580087/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756580087/contact-sheet.jpg",
+                "packet_item_rank": 3,
+                "location": {
+                  "kind": "run",
+                  "source_indices": [
+                    253,
+                    254,
+                    255,
+                    0,
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                  ]
+                },
+                "render_source_indices": [
+                  253,
+                  3,
+                  8
+                ],
+                "selected_for": "dark_persistence",
+                "coverage_families": [
+                  "dark_persistence"
+                ],
+                "event_types": [
+                  "dark_q90_run"
+                ],
+                "profile_field_ids": [
+                  "dark_state.persistence.inner_dark_q90_window_fraction"
+                ],
+                "human_frame_overlap": [
+                  8
+                ],
+                "nearest_human_frame_distance": 0
+              }
+            ]
+          },
+          "metadata": {
+            "representation": "coarse",
+            "support_policy": "fixed",
+            "statistic": "q90_window_fraction",
+            "units": "fraction_of_requested_source_steps",
+            "region": "inner",
+            "threshold": 0.65
+          }
+        }
+      ]
+    },
+    {
+      "id": "LG756580087-pale-inner-panels",
+      "certificate": "IGI-LG756580087",
+      "review_outcome": "Shortlist",
+      "evaluation_path": "evaluations/Sparkles IGI-LG756580087 evaluation 2026-10-05-140217.md",
+      "concept": "quiet_or_pale_inner_region",
+      "hypothesis_family": "unexplained_static",
+      "role": "check",
+      "profile_explanation": "unexplained",
+      "summary": "Broad inner side panels often look pale and less articulated than the horizontal tiers.",
+      "source_frames": [
+        254,
+        0,
+        8
+      ],
+      "source_frames_in_profile_window": [
+        254,
+        0,
+        8
+      ],
+      "source_frames_outside_profile_window": [],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG756580087/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG756580087/contact-sheet.jpg",
+        "selected_count": 4,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
+      "descriptor_links": []
+    },
+    {
+      "id": "LG818659722-grouped-dark-stack",
+      "certificate": "IGI-LG818659722",
+      "review_outcome": "Reserve",
+      "evaluation_path": "evaluations/Sparkles IGI-LG818659722 evaluation 2026-10-05-144629.md",
+      "concept": "grouped_darkness",
+      "hypothesis_family": "dark_state",
+      "role": "drawback",
+      "profile_explanation": "explained",
+      "summary": "Broad upper/lower inner sectors darken together through the near-face-up interval while the sides remain brighter.",
+      "source_frames": [
+        252,
+        0,
+        6
+      ],
+      "source_frames_in_profile_window": [
+        252,
+        0,
+        6
+      ],
+      "source_frames_outside_profile_window": [],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/contact-sheet.jpg",
+        "selected_count": 5,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
+      "descriptor_links": [
+        {
+          "field_id": "dark_state.occupancy.inner_mean",
+          "assessment": "supports",
+          "rationale": "High inner relative-dark occupancy matches the unusually large amount of dark inner-region state in the core interval.",
+          "measurement": {
+            "value": 0.17628281151170144,
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ],
+            "rank_descending": 1,
+            "rank_ascending": 4,
+            "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "family_representative",
+            "coverage_family": "relative_dark_state",
+            "items": [
+              {
+                "resolution": "family_representative",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/contact-sheet.jpg",
+                "packet_item_rank": 2,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    5,
+                    6
+                  ]
+                },
+                "render_source_indices": [
+                  5,
+                  6
+                ],
+                "selected_for": "relative_dark_state",
+                "coverage_families": [
+                  "relative_dark_state"
+                ],
+                "event_types": [
+                  "highest",
+                  "largest_negative_move",
+                  "q90"
+                ],
+                "profile_field_ids": [
+                  "activity.mobility.centre_median",
+                  "dark_state.occupancy.middle_mean",
+                  "temporal_reconfiguration.switching.inner_rate"
+                ],
+                "human_frame_overlap": [
+                  6
+                ],
+                "nearest_human_frame_distance": 0
+              }
+            ]
+          },
+          "metadata": {
+            "representation": "coarse",
+            "support_policy": "fixed",
+            "statistic": "mean",
+            "units": "fraction",
+            "region": "inner",
+            "threshold": 0.65,
+            "redundancy_group": "relative_dark_state"
+          }
+        },
+        {
+          "field_id": "dark_state.persistence.inner_dark_q90_window_fraction",
+          "assessment": "supports",
+          "rationale": "The longest retained inner dark persistence in the sample matches the human concern that the grouped dark state persists across nearby views.",
+          "measurement": {
+            "value": 0.35294117647058826,
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ],
+            "rank_descending": 1,
+            "rank_ascending": 4,
+            "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "exact_field",
+            "items": [
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/contact-sheet.jpg",
+                "packet_item_rank": 3,
+                "location": {
+                  "kind": "run",
+                  "source_indices": [
+                    250,
+                    251,
+                    252,
+                    253,
+                    254,
+                    255,
+                    0,
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6
+                  ]
+                },
+                "render_source_indices": [
+                  250,
+                  0,
+                  6
+                ],
+                "selected_for": "dark_persistence",
+                "coverage_families": [
+                  "dark_persistence"
+                ],
+                "event_types": [
+                  "dark_q90_run"
+                ],
+                "profile_field_ids": [
+                  "dark_state.persistence.inner_dark_q90_window_fraction"
+                ],
+                "human_frame_overlap": [
+                  0,
+                  6
+                ],
+                "nearest_human_frame_distance": 0
+              }
+            ]
+          },
+          "metadata": {
+            "representation": "coarse",
+            "support_policy": "fixed",
+            "statistic": "q90_window_fraction",
+            "units": "fraction_of_requested_source_steps",
+            "region": "inner",
+            "threshold": 0.65
+          }
+        },
+        {
+          "field_id": "directional.side_N_S_pearson",
+          "assessment": "supports",
+          "rationale": "Near-perfect positive north-south coordination matches the upper/lower sectors darkening together as a directional pair.",
+          "measurement": {
+            "value": 0.9838306224408927,
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ],
+            "rank_descending": 1,
+            "rank_ascending": 4,
+            "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "exact_field",
+            "items": [
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/contact-sheet.jpg",
+                "packet_item_rank": 1,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    6,
+                    7
+                  ]
+                },
+                "render_source_indices": [
+                  6,
+                  7
+                ],
+                "selected_for": "activity_motion",
+                "coverage_families": [
+                  "activity_motion",
+                  "nested_step"
+                ],
+                "event_types": [
+                  "strongest_divergent"
+                ],
+                "profile_field_ids": [
+                  "directional.side_N_S_pearson"
+                ],
+                "human_frame_overlap": [
+                  6
+                ],
+                "nearest_human_frame_distance": 0
+              },
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/contact-sheet.jpg",
+                "packet_item_rank": 4,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    250,
+                    251
+                  ]
+                },
+                "render_source_indices": [
+                  250,
+                  251
+                ],
+                "selected_for": "directional",
+                "coverage_families": [
+                  "relative_dark_state",
+                  "nested_step",
+                  "directional"
+                ],
+                "event_types": [
+                  "strongest_coordinated"
+                ],
+                "profile_field_ids": [
+                  "directional.side_N_S_pearson"
+                ],
+                "human_frame_overlap": [],
+                "nearest_human_frame_distance": 1
+              }
+            ]
+          },
+          "metadata": {
+            "representation": "coarse",
+            "support_policy": "fixed",
+            "statistic": "correlation",
+            "units": "correlation",
+            "pair": "side_N_S",
+            "surface_id": "coarse_whole"
+          }
+        },
+        {
+          "field_id": "temporal_reconfiguration.switching.inner_rate",
+          "assessment": "partial",
+          "rationale": "High switching confirms substantial inner-state reconfiguration, but it is redundant with occupancy and does not independently identify whether that motion is attractive.",
+          "measurement": {
+            "value": 0.16995337701612903,
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ],
+            "rank_descending": 1,
+            "rank_ascending": 4,
+            "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "exact_field",
+            "items": [
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/contact-sheet.jpg",
+                "packet_item_rank": 2,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    5,
+                    6
+                  ]
+                },
+                "render_source_indices": [
+                  5,
+                  6
+                ],
+                "selected_for": "relative_dark_state",
+                "coverage_families": [
+                  "relative_dark_state"
+                ],
+                "event_types": [
+                  "highest"
+                ],
+                "profile_field_ids": [
+                  "temporal_reconfiguration.switching.inner_rate"
+                ],
+                "human_frame_overlap": [
+                  6
+                ],
+                "nearest_human_frame_distance": 0
+              }
+            ]
+          },
+          "metadata": {
+            "representation": "coarse",
+            "support_policy": "fixed",
+            "statistic": "regional_switch_rate",
+            "units": "switched_pixel_pairs_per_eligible_pixel_pair",
+            "region": "inner",
+            "threshold": 0.65,
+            "redundancy_group": "relative_dark_state"
+          }
+        }
+      ]
+    },
+    {
+      "id": "LG818659722-recovery-activity",
+      "certificate": "IGI-LG818659722",
+      "review_outcome": "Reserve",
+      "evaluation_path": "evaluations/Sparkles IGI-LG818659722 evaluation 2026-10-05-144629.md",
+      "concept": "regional_recovery",
+      "hypothesis_family": "activity_motion",
+      "role": "mixed",
+      "profile_explanation": "explained",
+      "summary": "The central/inner region is not simply dead: it changes strongly and recovers toward paler states around the dark-stack interval.",
+      "source_frames": [
+        248,
+        252,
+        0,
+        6,
+        10
+      ],
+      "source_frames_in_profile_window": [
+        248,
+        252,
+        0,
+        6
+      ],
+      "source_frames_outside_profile_window": [
+        10
+      ],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/contact-sheet.jpg",
+        "selected_count": 5,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
+      "descriptor_links": [
+        {
+          "field_id": "activity.activation.inner_relative_total_excursion",
+          "assessment": "supports",
+          "rationale": "Very large inner activation excursion matches the visible transition into and away from the grouped dark state.",
+          "measurement": {
+            "value": 0.278834844971213,
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ],
+            "rank_descending": 1,
+            "rank_ascending": 4,
+            "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "exact_field",
+            "items": [
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/contact-sheet.jpg",
+                "packet_item_rank": 1,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    6,
+                    7
+                  ]
+                },
+                "render_source_indices": [
+                  6,
+                  7
+                ],
+                "selected_for": "activity_motion",
+                "coverage_families": [
+                  "activity_motion",
+                  "nested_step"
+                ],
+                "event_types": [
+                  "largest_positive_move"
+                ],
+                "profile_field_ids": [
+                  "activity.activation.inner_relative_total_excursion"
+                ],
+                "human_frame_overlap": [
+                  6
+                ],
+                "nearest_human_frame_distance": 0
+              },
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/contact-sheet.jpg",
+                "packet_item_rank": 4,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    250,
+                    251
+                  ]
+                },
+                "render_source_indices": [
+                  250,
+                  251
+                ],
+                "selected_for": "directional",
+                "coverage_families": [
+                  "relative_dark_state",
+                  "nested_step",
+                  "directional"
+                ],
+                "event_types": [
+                  "largest_negative_move"
+                ],
+                "profile_field_ids": [
+                  "activity.activation.inner_relative_total_excursion"
+                ],
+                "human_frame_overlap": [],
+                "nearest_human_frame_distance": 1
+              }
+            ]
+          },
+          "metadata": {
+            "representation": "coarse",
+            "support_policy": "fixed",
+            "statistic": "total_excursion",
+            "units": "log_brightness_ratio",
+            "region": "inner",
+            "redundancy_group": "activity_motion"
+          }
+        },
+        {
+          "field_id": "activity.mobility.inner_median",
+          "assessment": "supports",
+          "rationale": "High inner local mobility confirms that the concern is uneven/grouped activity rather than an absence of change.",
+          "measurement": {
+            "value": 0.048664650324539066,
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ],
+            "rank_descending": 1,
+            "rank_ascending": 4,
+            "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "exact_field",
+            "items": [
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/contact-sheet.jpg",
+                "packet_item_rank": 1,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    6,
+                    7
+                  ]
+                },
+                "render_source_indices": [
+                  6,
+                  7
+                ],
+                "selected_for": "activity_motion",
+                "coverage_families": [
+                  "activity_motion",
+                  "nested_step"
+                ],
+                "event_types": [
+                  "largest"
+                ],
+                "profile_field_ids": [
+                  "activity.mobility.inner_median"
+                ],
+                "human_frame_overlap": [
+                  6
+                ],
+                "nearest_human_frame_distance": 0
+              },
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/contact-sheet.jpg",
+                "packet_item_rank": 4,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    250,
+                    251
+                  ]
+                },
+                "render_source_indices": [
+                  250,
+                  251
+                ],
+                "selected_for": "directional",
+                "coverage_families": [
+                  "relative_dark_state",
+                  "nested_step",
+                  "directional"
+                ],
+                "event_types": [
+                  "q90"
+                ],
+                "profile_field_ids": [
+                  "activity.mobility.inner_median"
+                ],
+                "human_frame_overlap": [],
+                "nearest_human_frame_distance": 1
+              }
+            ]
+          },
+          "metadata": {
+            "representation": "coarse",
+            "support_policy": "fixed",
+            "statistic": "median_mobility",
+            "units": "log_brightness_ratio_per_source_step",
+            "region": "inner",
+            "redundancy_group": "activity_motion"
+          }
+        }
+      ]
+    },
+    {
+      "id": "LG818659722-static-crispness",
+      "certificate": "IGI-LG818659722",
+      "review_outcome": "Reserve",
+      "evaluation_path": "evaluations/Sparkles IGI-LG818659722 evaluation 2026-10-05-144629.md",
+      "concept": "static_geometric_crispness",
+      "hypothesis_family": "unexplained_static",
+      "role": "strength",
+      "profile_explanation": "unexplained",
+      "summary": "The review finds clean square geometry, legible diagonal arms and distinct mirror tiers despite the grouped dark-state concern.",
+      "source_frames": [
+        252,
+        0
+      ],
+      "source_frames_in_profile_window": [
+        252,
+        0
+      ],
+      "source_frames_outside_profile_window": [],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/contact-sheet.jpg",
+        "selected_count": 5,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
+      "descriptor_links": []
+    },
+    {
+      "id": "LG818659722-flash-scale",
+      "certificate": "IGI-LG818659722",
+      "review_outcome": "Reserve",
+      "evaluation_path": "evaluations/Sparkles IGI-LG818659722 evaluation 2026-10-05-144629.md",
+      "concept": "broad_flash_scale",
+      "hypothesis_family": "morphology",
+      "role": "neutral",
+      "profile_explanation": "partial",
+      "summary": "Long band reflections dominate parts of the sequence while smaller corner reflections continue to change.",
+      "source_frames": [
+        252,
+        0,
+        6
+      ],
+      "source_frames_in_profile_window": [
+        252,
+        0,
+        6
+      ],
+      "source_frames_outside_profile_window": [],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/contact-sheet.jpg",
+        "selected_count": 5,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
+      "descriptor_links": [
+        {
+          "field_id": "flash_morphology.median_largest_component_fraction",
+          "assessment": "supports",
+          "rationale": "The second-largest morphology value in the sample is consistent with relatively broad connected changes, but broadness itself is not a quality verdict.",
+          "measurement": {
+            "value": 0.19230769230769232,
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ],
+            "rank_descending": 2,
+            "rank_ascending": 3,
+            "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "exact_field",
+            "items": [
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG818659722/contact-sheet.jpg",
+                "packet_item_rank": 5,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    5,
+                    7
+                  ]
+                },
+                "render_source_indices": [
+                  5,
+                  7
+                ],
+                "selected_for": "flash_morphology",
+                "coverage_families": [
+                  "flash_morphology"
+                ],
+                "event_types": [
+                  "matched_active_area_pair"
+                ],
+                "profile_field_ids": [
+                  "flash_morphology.median_largest_component_fraction"
+                ],
+                "human_frame_overlap": [],
+                "nearest_human_frame_distance": 1
+              }
+            ]
+          },
+          "metadata": {
+            "representation": "whole_stone",
+            "support_policy": "fixed",
+            "statistic": "median_largest_component_fraction",
+            "units": "fraction_of_active_area",
+            "threshold": 1.0
+          }
+        }
+      ]
+    },
+    {
+      "id": "LG836619414-rim-vs-inner",
+      "certificate": "IGI-LG836619414",
+      "review_outcome": "Shortlist",
+      "evaluation_path": "evaluations/Sparkles IGI-LG836619414 evaluation 2026-10-05-140217.md",
+      "concept": "rim_vs_inner_activity",
+      "hypothesis_family": "activity_motion",
+      "role": "mixed",
+      "profile_explanation": "partial",
+      "summary": "The rim looks more active while the inner table remains comparatively quiet/pale.",
+      "source_frames": [
+        248,
+        252,
+        0,
+        8
+      ],
+      "source_frames_in_profile_window": [
+        248,
+        252,
+        0,
+        8
+      ],
+      "source_frames_outside_profile_window": [],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/contact-sheet.jpg",
+        "selected_count": 4,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
+      "descriptor_links": [
+        {
+          "field_id": "activity.activation.middle_relative_total_excursion",
+          "assessment": "partial",
+          "rationale": "Elevated middle-region activation is consistent with activity away from the centre, but the coarse middle band is not an exact rim measurement.",
+          "measurement": {
+            "value": 0.038823963398823186,
+            "status": "ok",
+            "reasons": [],
+            "rank_descending": 2,
+            "rank_ascending": 3,
+            "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "family_representative",
+            "coverage_family": "activity_motion",
+            "items": [
+              {
+                "resolution": "family_representative",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/contact-sheet.jpg",
+                "packet_item_rank": 1,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    6,
+                    7
+                  ]
+                },
+                "render_source_indices": [
+                  6,
+                  7
+                ],
+                "selected_for": "activity_motion",
+                "coverage_families": [
+                  "activity_motion",
+                  "relative_dark_state",
+                  "nested_step"
+                ],
+                "event_types": [
+                  "highest",
+                  "largest",
+                  "largest_negative_move",
+                  "strongest_coordinated",
+                  "strongest_divergent"
+                ],
+                "profile_field_ids": [
+                  "activity.activation.centre_relative_total_excursion",
+                  "activity.mobility.centre_median",
+                  "dark_state.occupancy.middle_mean",
+                  "directional.corner_NE_SW_pearson",
+                  "directional.side_N_S_pearson",
+                  "nested_step.centre_inner_pearson",
+                  "nested_step.inner_middle_pearson",
+                  "temporal_reconfiguration.switching.inner_rate"
+                ],
+                "human_frame_overlap": [],
+                "nearest_human_frame_distance": 1
+              }
+            ]
+          },
+          "metadata": {
+            "representation": "coarse",
+            "support_policy": "fixed",
+            "statistic": "total_excursion",
+            "units": "log_brightness_ratio",
+            "region": "middle",
+            "redundancy_group": "activity_motion"
+          }
+        },
+        {
+          "field_id": "temporal_reconfiguration.switching.middle_rate",
+          "assessment": "partial",
+          "rationale": "High middle switching supports strong reconfiguration outside the inner table, but the retained geometry cannot isolate the visual rim precisely.",
+          "measurement": {
+            "value": 0.15135192726583957,
+            "status": "ok",
+            "reasons": [],
+            "rank_descending": 1,
+            "rank_ascending": 4,
+            "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "family_representative",
+            "coverage_family": "relative_dark_state",
+            "items": [
+              {
+                "resolution": "family_representative",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/contact-sheet.jpg",
+                "packet_item_rank": 1,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    6,
+                    7
+                  ]
+                },
+                "render_source_indices": [
+                  6,
+                  7
+                ],
+                "selected_for": "activity_motion",
+                "coverage_families": [
+                  "activity_motion",
+                  "relative_dark_state",
+                  "nested_step"
+                ],
+                "event_types": [
+                  "highest",
+                  "largest",
+                  "largest_negative_move",
+                  "strongest_coordinated",
+                  "strongest_divergent"
+                ],
+                "profile_field_ids": [
+                  "activity.activation.centre_relative_total_excursion",
+                  "activity.mobility.centre_median",
+                  "dark_state.occupancy.middle_mean",
+                  "directional.corner_NE_SW_pearson",
+                  "directional.side_N_S_pearson",
+                  "nested_step.centre_inner_pearson",
+                  "nested_step.inner_middle_pearson",
+                  "temporal_reconfiguration.switching.inner_rate"
+                ],
+                "human_frame_overlap": [],
+                "nearest_human_frame_distance": 1
+              }
+            ]
+          },
+          "metadata": {
+            "representation": "coarse",
+            "support_policy": "fixed",
+            "statistic": "regional_switch_rate",
+            "units": "switched_pixel_pairs_per_eligible_pixel_pair",
+            "region": "middle",
+            "threshold": 0.65,
+            "redundancy_group": "relative_dark_state"
+          }
+        }
+      ]
+    },
+    {
+      "id": "LG836619414-independent-layers",
+      "certificate": "IGI-LG836619414",
+      "review_outcome": "Shortlist",
+      "evaluation_path": "evaluations/Sparkles IGI-LG836619414 evaluation 2026-10-05-140217.md",
+      "concept": "independent_layer_motion",
+      "hypothesis_family": "nested_step",
+      "role": "strength",
+      "profile_explanation": "partial",
+      "summary": "Adjacent bands and smaller rim regions change independently while the tier architecture remains readable.",
+      "source_frames": [
+        248,
+        252,
+        0,
+        8
+      ],
+      "source_frames_in_profile_window": [
+        248,
+        252,
+        0,
+        8
+      ],
+      "source_frames_outside_profile_window": [],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/contact-sheet.jpg",
+        "selected_count": 4,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
+      "descriptor_links": [
+        {
+          "field_id": "nested_step.inner_middle_pearson",
+          "assessment": "supports",
+          "rationale": "Negative inner-middle correlation is consistent with separately changing nested regions, although the magnitude is modest.",
+          "measurement": {
+            "value": -0.2189669955,
+            "status": "ok",
+            "reasons": [],
+            "rank_descending": 3,
+            "rank_ascending": 2,
+            "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "exact_field",
+            "items": [
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/contact-sheet.jpg",
+                "packet_item_rank": 1,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    6,
+                    7
+                  ]
+                },
+                "render_source_indices": [
+                  6,
+                  7
+                ],
+                "selected_for": "activity_motion",
+                "coverage_families": [
+                  "activity_motion",
+                  "relative_dark_state",
+                  "nested_step"
+                ],
+                "event_types": [
+                  "strongest_coordinated"
+                ],
+                "profile_field_ids": [
+                  "nested_step.inner_middle_pearson"
+                ],
+                "human_frame_overlap": [],
+                "nearest_human_frame_distance": 1
+              }
+            ]
+          },
+          "metadata": {
+            "representation": "coarse",
+            "support_policy": "fixed",
+            "statistic": "pearson_r",
+            "units": "correlation",
+            "pair": "inner__middle"
+          }
+        },
+        {
+          "field_id": "nested_step.centre_inner_pearson",
+          "assessment": "partial",
+          "rationale": "Near-zero/negative centre-inner coordination adds evidence for independence but is too weak to carry the interpretation alone.",
+          "measurement": {
+            "value": -0.1021545538,
+            "status": "ok",
+            "reasons": [],
+            "rank_descending": 4,
+            "rank_ascending": 1,
+            "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "exact_field",
+            "items": [
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/contact-sheet.jpg",
+                "packet_item_rank": 1,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    6,
+                    7
+                  ]
+                },
+                "render_source_indices": [
+                  6,
+                  7
+                ],
+                "selected_for": "activity_motion",
+                "coverage_families": [
+                  "activity_motion",
+                  "relative_dark_state",
+                  "nested_step"
+                ],
+                "event_types": [
+                  "strongest_divergent"
+                ],
+                "profile_field_ids": [
+                  "nested_step.centre_inner_pearson"
+                ],
+                "human_frame_overlap": [],
+                "nearest_human_frame_distance": 1
+              }
+            ]
+          },
+          "metadata": {
+            "representation": "coarse",
+            "support_policy": "fixed",
+            "statistic": "pearson_r",
+            "units": "correlation",
+            "pair": "centre__inner"
+          }
+        }
+      ]
+    },
+    {
+      "id": "LG836619414-finer-flash-structure",
+      "certificate": "IGI-LG836619414",
+      "review_outcome": "Shortlist",
+      "evaluation_path": "evaluations/Sparkles IGI-LG836619414 evaluation 2026-10-05-140217.md",
+      "concept": "fragmented_flash_scale",
+      "hypothesis_family": "morphology",
+      "role": "neutral",
+      "profile_explanation": "explained",
+      "summary": "The review notes broad step bands alongside smaller rim reflections; the dynamic pattern is finer and less dominated by one broad connected flash than LG756580087.",
+      "source_frames": [
+        248,
+        252,
+        8
+      ],
+      "source_frames_in_profile_window": [
+        248,
+        252,
+        8
+      ],
+      "source_frames_outside_profile_window": [],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/contact-sheet.jpg",
+        "selected_count": 4,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
+      "descriptor_links": [
+        {
+          "field_id": "flash_morphology.median_largest_component_fraction",
+          "assessment": "supports",
+          "rationale": "The lowest morphology value in the current sample matches the comparatively finer/fragmented dynamic flash structure without implying worse cut quality.",
+          "measurement": {
+            "value": 0.11091954022988505,
+            "status": "ok",
+            "reasons": [],
+            "rank_descending": 4,
+            "rank_ascending": 1,
+            "sample_size": 4
+          },
+          "machine_evidence": {
+            "resolution": "exact_field",
+            "items": [
+              {
+                "resolution": "exact_field",
+                "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/evidence.json",
+                "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/contact-sheet.jpg",
+                "packet_item_rank": 4,
+                "location": {
+                  "kind": "pair",
+                  "source_indices": [
+                    249,
+                    0
+                  ]
+                },
+                "render_source_indices": [
+                  249,
+                  0
+                ],
+                "selected_for": "flash_morphology",
+                "coverage_families": [
+                  "flash_morphology"
+                ],
+                "event_types": [
+                  "matched_active_area_pair"
+                ],
+                "profile_field_ids": [
+                  "flash_morphology.median_largest_component_fraction"
+                ],
+                "human_frame_overlap": [],
+                "nearest_human_frame_distance": 1
+              }
+            ]
+          },
+          "metadata": {
+            "representation": "whole_stone",
+            "support_policy": "fixed",
+            "statistic": "median_largest_component_fraction",
+            "units": "fraction_of_active_area",
+            "threshold": 1.0
+          }
+        }
+      ]
+    },
+    {
+      "id": "LG836619414-static-crispness",
+      "certificate": "IGI-LG836619414",
+      "review_outcome": "Shortlist",
+      "evaluation_path": "evaluations/Sparkles IGI-LG836619414 evaluation 2026-10-05-140217.md",
+      "concept": "static_geometric_crispness",
+      "hypothesis_family": "unexplained_static",
+      "role": "strength",
+      "profile_explanation": "unexplained",
+      "summary": "Crisp nested tiers and coherent diagonal arms remain an obvious static strength despite weak/negative nested-step temporal correlations.",
+      "source_frames": [
+        0,
+        8
+      ],
+      "source_frames_in_profile_window": [
+        0,
+        8
+      ],
+      "source_frames_outside_profile_window": [],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/contact-sheet.jpg",
+        "selected_count": 4,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
+      "descriptor_links": []
+    },
+    {
+      "id": "LG836619414-pale-inner-tiers",
+      "certificate": "IGI-LG836619414",
+      "review_outcome": "Shortlist",
+      "evaluation_path": "evaluations/Sparkles IGI-LG836619414 evaluation 2026-10-05-140217.md",
+      "concept": "quiet_or_pale_inner_region",
+      "hypothesis_family": "unexplained_static",
+      "role": "check",
+      "profile_explanation": "unexplained",
+      "summary": "The inner tiers remain relatively pale beside the active rim and complete inner-panel recovery is not established.",
+      "source_frames": [
+        248,
+        0,
+        8
+      ],
+      "source_frames_in_profile_window": [
+        248,
+        0,
+        8
+      ],
+      "source_frames_outside_profile_window": [],
+      "evidence_packet": {
+        "packet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/evidence.json",
+        "contact_sheet_path": "docs/360/evidence-packet/per-stone/IGI-LG836619414/contact-sheet.jpg",
+        "selected_count": 4,
+        "covered_families": [
+          "activity_motion",
+          "relative_dark_state",
+          "dark_persistence",
+          "nested_step",
+          "directional",
+          "flash_morphology"
+        ]
+      },
+      "descriptor_links": []
+    }
+  ]
+}
