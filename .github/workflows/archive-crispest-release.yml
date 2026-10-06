@@ -1,0 +1,76 @@
+name: Publish Crispest research archive
+on:
+  push:
+    branches: [archive-crispest-release-20261006]
+    paths: [.github/workflows/archive-crispest-release.yml]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install image dependency
+        run: python -m pip install Pillow
+      - name: Download existing archive and saved CI evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download pricescope-research-2026-10-06-v1 --repo choonkiatlee/sparkles --pattern pricescope-media-recovery-2026-10-06-v2.zip
+          gh api repos/choonkiatlee/sparkles/actions/artifacts/11446043257/zip > d360-ci.zip
+      - name: Build and validate updated archive
+        run: |
+          cat > build.py <<'PY'
+          import sys,json,zipfile,hashlib,io
+          from pathlib import Path
+          from PIL import Image,ImageDraw
+          base,artifact,out=map(Path,sys.argv[1:])
+          sha=lambda b:hashlib.sha256(b).hexdigest()
+          assert sha(artifact.read_bytes())=='56d7c68e965e3edbba0cd875af670873bcd64399f11ff48a11ff285d9815b3d2'
+          prefix='79-BT-5165227/';dest='d360/asscher-eval-crispest/'
+          with zipfile.ZipFile(base) as prior,zipfile.ZipFile(artifact) as ci:
+           assert prior.testzip() is None and ci.testzip() is None
+           m=json.loads(ci.read(prefix+'source-manifest.json'))
+           assert m['item_id']=='79-BT-5165227' and m['dimensions']==[648,511]
+           assert m['sequence_complete'] and m['source_frame_count']==256
+           assert [f['source_index'] for f in m['frames']]==list(range(256))
+           assert len({f['sha256'] for f in m['frames']})==256
+           for f in m['frames']:
+            raw=ci.read(prefix+f['path']);assert sha(raw)==f['sha256'] and len(raw)==f['bytes']
+            im=Image.open(io.BytesIO(raw));im.load();assert im.format=='JPEG' and im.size==(648,511)
+           assert m['frames'][0]['sha256']==m['still_sha256']=='f8fa831797275f7cb647f5f7baaf9ef2c30bc631ab38d0634fe75c76c8d01574'
+           sheet=Image.new('RGB',(1160,1008),'#eee');d=ImageDraw.Draw(sheet)
+           for k,i in enumerate(range(0,256,16)):
+            im=Image.open(io.BytesIO(ci.read(prefix+m['frames'][i]['path'])));im.thumbnail((280,220));x=k%4*290;y=k//4*252;sheet.paste(im,(x,y+22));d.text((x+8,y+4),f'Frame {i:03}',fill='black')
+           b=io.BytesIO();sheet.save(b,format='JPEG',quality=88)
+           status=json.loads(prior.read('d360/recovery-status.json'))
+           status['asscher-eval-crispest']={'status':'complete_frame_sequence_archived','frames':256,'dimensions':[648,511],'manifest_path':dest+'source-manifest.json','source_artifact_id':11446043257,'source_workflow_run':37536103420,'inspection':'Ordered overview 0,16,...,240 and originals 252,0,4. Not all frames visually inspected.'}
+           inv=json.loads(prior.read('bundle-manifest.json'))
+           inv['d360_recovery_status_path']='d360/recovery-status.json'
+           inv['archive_revision']=3
+           provenance={'sample_id':'asscher-eval-crispest','label':'crispest','viewer':m['viewer'],'source':'Saved exact-viewer CI extraction; live skill-helper attempt stopped at batch 1 HTTP 403.','workflow_run_url':'https://github.com/choonkiatlee/sparkles/actions/runs/37536103420','artifact_id':11446043257,'artifact_sha256':sha(artifact.read_bytes()),'extracted_at':m['retrieved_at'],'validation':'256 unique JPEGs decoded; dimensions, original hashes and frame-0/still agreement checked locally. Original manifest retained unchanged.','inspection':status['asscher-eval-crispest']['inspection'],'limitations':'Ordinary one-axis rotation; unknown calibrated angles/timing. Viewer label is not independent lab identity or a new human quality label.'}
+           replacements={'README.txt':b'PriceScope media archive, revision 3. Includes prior article/forum originals and both complete 256-frame D360 sequences: Glittery and Crispest. Crispest (79-BT-5165227) is 648 x 511. Original JPEG bytes, frame indices, hashes and source manifests are preserved. See d360/recovery-status.json and per-source provenance. Historical access reports remain historical. Full forum attachments remain unverified.\n','d360/recovery-status.json':json.dumps(status,indent=2).encode(),'bundle-manifest.json':json.dumps(inv,indent=2).encode()}
+           with zipfile.ZipFile(out,'w',zipfile.ZIP_DEFLATED) as z:
+            for n in prior.namelist():z.writestr(n,replacements.get(n,prior.read(n)))
+            for n in ci.namelist():
+             if n.startswith(prefix):z.writestr(dest+n[len(prefix):],ci.read(n))
+            z.writestr(dest+'overview.jpg',b.getvalue())
+            z.writestr(dest+'recovery-provenance.json',json.dumps(provenance,indent=2))
+           with zipfile.ZipFile(out) as z:
+            assert z.testzip() is None
+            for n in prior.namelist():
+             if n not in replacements:assert z.read(n)==prior.read(n)
+            assert sum(n.startswith(dest+'frames/') for n in z.namelist())==256
+          print(json.dumps({'output':str(out),'bytes':out.stat().st_size,'sha256':sha(out.read_bytes()),'crispest_frames':256,'dimensions':[648,511],'existing_members_preserved':True}))
+          
+          PY
+          python build.py pricescope-media-recovery-2026-10-06-v2.zip d360-ci.zip pricescope-media-recovery-2026-10-06-v3.zip
+      - name: Publish and verify bytes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload pricescope-research-2026-10-06-v1 pricescope-media-recovery-2026-10-06-v3.zip --repo choonkiatlee/sparkles
+          mkdir verified
+          gh release download pricescope-research-2026-10-06-v1 --repo choonkiatlee/sparkles --pattern pricescope-media-recovery-2026-10-06-v3.zip --dir verified
+          cmp pricescope-media-recovery-2026-10-06-v3.zip verified/pricescope-media-recovery-2026-10-06-v3.zip
+          sha256sum verified/pricescope-media-recovery-2026-10-06-v3.zip
