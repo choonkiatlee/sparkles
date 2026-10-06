@@ -709,7 +709,7 @@
         "locator": null,
         "full_original_verified": true
       },
-      "analysis_status": "not_run"
+      "analysis_status": "primary_blind_run_pr70"
     },
     {
       "sample_id": "p3-video-corrected",
@@ -774,7 +774,7 @@
         "locator": null,
         "full_original_verified": true
       },
-      "analysis_status": "not_run"
+      "analysis_status": "primary_blind_run_pr70"
     },
     {
       "sample_id": "p3-video-higher-performance",
@@ -839,7 +839,7 @@
         "locator": null,
         "full_original_verified": true
       },
-      "analysis_status": "not_run"
+      "analysis_status": "primary_blind_run_pr70"
     },
     {
       "sample_id": "p3-static-cut-for-weight-a",
@@ -1309,7 +1309,7 @@
         "locator": null,
         "full_original_verified": false
       },
-      "analysis_status": "not_run"
+      "analysis_status": "primary_blind_run_pr70"
     },
     {
       "sample_id": "windmill-22",
@@ -1383,7 +1383,7 @@
         "locator": null,
         "full_original_verified": false
       },
-      "analysis_status": "not_run"
+      "analysis_status": "primary_blind_run_pr70"
     },
     {
       "sample_id": "windmill-20",
@@ -1457,7 +1457,7 @@
         "locator": null,
         "full_original_verified": false
       },
-      "analysis_status": "not_run"
+      "analysis_status": "primary_blind_run_pr70"
     },
     {
       "sample_id": "windmill-18",
@@ -1530,7 +1530,7 @@
         "locator": null,
         "full_original_verified": false
       },
-      "analysis_status": "not_run"
+      "analysis_status": "primary_blind_run_pr70"
     },
     {
       "sample_id": "windmill-16",
@@ -1604,7 +1604,7 @@
         "locator": null,
         "full_original_verified": false
       },
-      "analysis_status": "not_run"
+      "analysis_status": "primary_blind_run_pr70"
     },
     {
       "sample_id": "windmill-14",
@@ -1677,7 +1677,7 @@
         "locator": null,
         "full_original_verified": false
       },
-      "analysis_status": "not_run"
+      "analysis_status": "primary_blind_run_pr70"
     },
     {
       "sample_id": "thread-leakage-negative",
@@ -2157,7 +2157,7 @@
         },
         "full_original_verified": true
       },
-      "analysis_status": "not_run"
+      "analysis_status": "primary_blind_run_pr70"
     },
     {
       "sample_id": "asscher-eval-crispest",
@@ -2265,7 +2265,7 @@
         },
         "full_original_verified": true
       },
-      "analysis_status": "not_run"
+      "analysis_status": "primary_blind_run_pr70"
     },
     {
       "sample_id": "asscher-eval-royal-asscher-clone",
@@ -2394,7 +2394,7 @@
         "locator": null,
         "full_original_verified": true
       },
-      "analysis_status": "not_run"
+      "analysis_status": "primary_blind_run_pr70"
     },
     {
       "sample_id": "asscher-eval-small-positive",
@@ -2670,7 +2670,7 @@
         "locator": null,
         "full_original_verified": true
       },
-      "analysis_status": "not_run"
+      "analysis_status": "primary_blind_run_pr70"
     }
   ],
   "general_principles": [
@@ -2723,6 +2723,16 @@
     "original_d360_frames": 512,
     "locator_only_samples": 4,
     "general_principles": 3,
-    "descriptor_runs_completed": 0
+    "descriptor_runs_completed": 13
+  },
+  "analysis": {
+    "status": "primary_blind_run_complete",
+    "sample_count": 13,
+    "findings_path": "docs/360/external-benchmark/pricescope/findings.md",
+    "pull_request": 70,
+    "workflow_run_id": 37546261729,
+    "head_sha": "830e2e2bc08d68d439101a85f91941f505e46be4",
+    "artifact_id": 11451271108,
+    "note": "Primary falsification benchmark only; secondary, paired-view and locator-only records remain not_run. No descriptor tuning against source labels."
   }
 }
