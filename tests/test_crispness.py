@@ -116,6 +116,51 @@ class CrispnessKernelTests(unittest.TestCase):
             all(t["status"] in {"ok", "review"} for t in templates)
         )
 
+    def test_crossfit_template_failure_downgrades_partial_measurement(self):
+        edge, support = self._edge()
+        frame_edges = np.stack([edge] * 6)
+        frame_support = np.stack([support] * 6)
+        templates = [
+            {
+                "fold": 0,
+                "train_positions": [1, 3, 5],
+                "holdout_positions": [0, 2, 4],
+                "status": "unavailable",
+                "reason": "fixture_missing_boundary",
+                "controls": None,
+            },
+            {
+                "fold": 1,
+                "train_positions": [0, 2, 4],
+                "holdout_positions": [1, 3, 5],
+                "status": "ok",
+                "reason": None,
+                "controls": [self.control, self.control, self.control],
+            },
+        ]
+        result = c.score_crossfit(
+            frame_edges,
+            frame_support,
+            self.u,
+            self.angles,
+            templates,
+            include_ray_evidence=False,
+        )
+        self.assertEqual(result["crossfit_status"], "review")
+        self.assertEqual(
+            result["crossfit_reasons"],
+            ["crossfit_template_unavailable"],
+        )
+        cell = result["summary"]["centre_inner"]
+        self.assertEqual(cell["requested_frame_count"], 6)
+        self.assertEqual(cell["scored_frame_count"], 3)
+        self.assertAlmostEqual(cell["coverage_fraction"], .5)
+        self.assertEqual(cell["status"], "review")
+        self.assertEqual(
+            cell["reasons"],
+            ["crossfit_template_unavailable"],
+        )
+
     def test_ray_local_photometry_is_invariant_to_global_scale(self):
         size = 96
         y, x = np.indices((size, size))
