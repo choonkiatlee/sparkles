@@ -15,7 +15,6 @@ import csv
 import hashlib
 import json
 import math
-from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
