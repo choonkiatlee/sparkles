@@ -11,6 +11,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw
 
+from . import activation as activation
 from . import activation_benchmark as ab
 from . import asscher_steps as steps
 from . import crispness as c
@@ -369,6 +370,18 @@ def measure_stone(processed, indices, wrap=True):
             "scored": scored,
         }
 
+    upstream = ab._upstream_validity(records, excluded)
+    for cell in baseline["summary"].values():
+        cell["validity"] = activation.compose_validity(
+            [
+                upstream,
+                {
+                    "status": cell.get("status", "unavailable"),
+                    "reasons": cell.get("reasons", []),
+                },
+            ]
+        )
+
     result = {
         "schema_version": SCHEMA,
         "descriptor_schema": c.SCHEMA,
@@ -403,10 +416,7 @@ def measure_stone(processed, indices, wrap=True):
                 "combined crispness score"
             ),
         },
-        "upstream_validity": ab._upstream_validity(
-            records,
-            excluded,
-        ),
+        "upstream_validity": upstream,
         "crossfit_templates": _serialise_templates(templates),
         "baseline": baseline,
         "full_template_diagnostic": _full_template_diagnostic(
