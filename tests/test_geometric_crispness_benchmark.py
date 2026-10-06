@@ -245,6 +245,24 @@ class GeometricCrispnessBenchmarkTests(
                 ],
                 "none",
             )
+            self.assertEqual(
+                len(
+                    result["baseline"][
+                        "transforms"
+                    ]
+                ),
+                8,
+            )
+            self.assertTrue(
+                all(
+                    row[
+                        "source_effective_diameter_px"
+                    ] > 0
+                    for row in result[
+                        "baseline"
+                    ]["transforms"]
+                )
+            )
 
     def test_output_is_json_safe_and_renders_evidence(self):
         with tempfile.TemporaryDirectory() as td:
