@@ -1,13 +1,9 @@
 name: issue21 validation
 
 on:
-  pull_request:
-    branches: [master]
-    paths:
-      - "diamond360/evidence_packet.py"
-      - "diamond360/evidence_benchmark.py"
-      - "tests/test_evidence_packet.py"
-      - ".github/workflows/issue21-check.yml"
+  push:
+    branches:
+      - issue-21-evidence-normalization-v2
 
 jobs:
   test:
