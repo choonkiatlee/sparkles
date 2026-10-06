@@ -332,6 +332,17 @@ jobs:
           publish.mkdir(parents=True)
           shutil.copy2(OUT_ROOT / "summary.json", publish / "summary.json")
           shutil.copy2(OUT_ROOT / "summary.csv", publish / "summary.csv")
+          selected_evidence = [
+              "per-stone/IGI-LG756520111/core/evidence/coarse-inner-fixed-relative.png",
+              "per-stone/IGI-LG756580087/core/evidence/coarse-centre-fixed-relative.png",
+              "per-stone/IGI-LG756580087/core/evidence/coarse-middle-fixed-relative.png",
+              "per-stone/IGI-LG818659722/core/evidence/coarse-inner-fixed-relative.png",
+          ]
+          for relative in selected_evidence:
+              source_panel = OUT_ROOT / relative
+              target_panel = publish / relative
+              target_panel.parent.mkdir(parents=True, exist_ok=True)
+              shutil.copy2(source_panel, target_panel)
 
           artifact = ROOT / "artifact"
           shutil.copytree(OUT_ROOT, artifact)
