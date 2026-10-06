@@ -1,0 +1,80 @@
+name: geometric-crispness-benchmark
+
+concurrency:
+  group: geometric-crispness-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    paths:
+      - "diamond360/normalized_geometry.py"
+      - "diamond360/normalized_tier_edges.py"
+      - "diamond360/diagonal_arms.py"
+      - "diamond360/geometric_crispness_benchmark.py"
+      - "tests/test_geometric_crispness_v2.py"
+      - "tests/test_geometric_crispness_benchmark.py"
+      - ".github/workflows/geometric-crispness-benchmark.yml"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: python -m pip install -e .
+
+      - name: Run issue 55 tests
+        run: |
+          python -m unittest             tests.test_geometric_crispness_v2             tests.test_geometric_crispness_benchmark -v
+
+      - name: Record full-suite status
+        continue-on-error: true
+        run: python -m unittest discover -s tests -v
+
+      - name: Download benchmark source bundles
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import urllib.request
+          import zipfile
+          from pathlib import Path
+
+          manifest = json.loads(
+              Path("docs/360/benchmark/source-bundles.json").read_text()
+          )
+          root = Path("outputs/geometric-crispness-sources")
+          root.mkdir(parents=True, exist_ok=True)
+
+          for item in manifest["bundles"]:
+              archive = root / item["filename"]
+              urllib.request.urlretrieve(item["download_url"], archive)
+              assert archive.stat().st_size == item["bytes"]
+              assert (
+                  hashlib.sha256(archive.read_bytes()).hexdigest()
+                  == item["sha256"]
+              )
+              destination = root / item["certificate"]
+              destination.mkdir(parents=True, exist_ok=True)
+              with zipfile.ZipFile(archive) as bundle:
+                  bundle.extractall(destination)
+          PY
+
+      - name: Run four-stone benchmark
+        run: |
+          python -m diamond360.geometric_crispness_benchmark             --source-root outputs/geometric-crispness-sources             --output outputs/geometric-crispness-benchmark
+
+      - name: Upload benchmark outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: geometric-crispness-benchmark
+          path: outputs/geometric-crispness-benchmark
+          if-no-files-found: error
+          retention-days: 90
