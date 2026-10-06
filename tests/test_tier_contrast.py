@@ -140,6 +140,39 @@ class TierContrastTests(unittest.TestCase):
             0.0,
         )
 
+    def test_sectorized_contrast_recovers_local_separation_hidden_by_global_median(self):
+        # Whole-band medians can be identical while matched directions differ.
+        # Sector A swaps dark/bright with sector B, so pooling would cancel.
+        left = {
+            "side_E": [1.0, 1.0, 1.0],
+            "side_W": [4.0, 4.0, 4.0],
+        }
+        right = {
+            "side_E": [4.0, 4.0, 4.0],
+            "side_W": [1.0, 1.0, 1.0],
+        }
+        result = tc.sectorized_contrast_trace(left, right, [0, 1, 2])
+        expected = abs(math.log(4.0))
+        self.assertAlmostEqual(result["median_summary"]["q50"], expected)
+        self.assertAlmostEqual(result["q75_summary"]["q50"], expected)
+        self.assertEqual(
+            result["frame_trace"][0]["finite_sectors"],
+            2,
+        )
+        self.assertIn(
+            result["frame_trace"][0]["strongest_sector"],
+            {"side_E", "side_W"},
+        )
+
+    def test_sectorized_contrast_preserves_directional_traces(self):
+        left = {"a": [1.0, 2.0, None], "b": [2.0, 2.0, 2.0]}
+        right = {"a": [2.0, 1.0, 1.0], "b": [2.0, 4.0, 1.0]}
+        result = tc.sectorized_contrast_trace(left, right, [10, 11, 12])
+        self.assertEqual(set(result["per_sector"]), {"a", "b"})
+        self.assertEqual(result["frame_trace"][2]["finite_sectors"], 1)
+        evidence = tc.select_sectorized_evidence(result["frame_trace"])
+        self.assertIsNotNone(evidence["strongest"])
+
     def test_validity_is_monotone(self):
         result = tc.compose_validity(
             [{"status": "review", "reasons": ["upstream_review"]}],
