@@ -1,8 +1,10 @@
 """Measure adjacent-tier tonal separation from retained #26 activation outputs."""
 from __future__ import annotations
 
+import argparse
 import csv
 import json
+import tempfile
 from pathlib import Path
 
 import numpy as np
@@ -13,6 +15,7 @@ from . import activation_benchmark as ab
 from . import asscher_steps as steps
 from . import regions as coarse_regions
 from . import tier_contrast as tc
+from . import pipeline
 
 SCHEMA = "diamond360-tier-contrast/1"
 REGION_TRACE_SCHEMA = "diamond360-region-traces/1"
@@ -23,6 +26,8 @@ BOUNDARY_SPECS = {
     "centre__inner": {"semantic": "centre_inner", "coarse_radius": .20},
     "inner__middle": {"semantic": "inner_middle", "coarse_radius": .45},
 }
+CORE_INDICES = [248,249,250,251,252,253,254,255,0,1,2,3,4,5,6,7,8]
+WIDE_INDICES = list(range(240,256)) + list(range(0,17))
 
 
 def _cell(activation, band):
@@ -852,3 +857,123 @@ def write_stone_outputs(result, output, processed=None):
         writer.writeheader()
         writer.writerows(rows)
     _write_boundary_local_csv(result, output)
+
+
+def _comparison_rows(certificate, pipeline_name, window, result):
+    rows = []
+    for pair_id, pair in result.get("pairs", {}).items():
+        localized = pair.get("localized") or {}
+        base = {
+            "certificate": certificate,
+            "pipeline": pipeline_name,
+            "window": window,
+            "pair": pair_id,
+            "broad_localized_status": (localized.get("validity") or {}).get("status", localized.get("status")),
+            "broad_localized_q50": (localized.get("median_summary") or {}).get("q50"),
+        }
+        boundary = pair.get("boundary_local") or {}
+        for width_key, geometries in (boundary.get("widths") or {}).items():
+            row = dict(base)
+            row["width_u"] = width_key
+            for geometry_name in ("coarse", "semantic"):
+                candidate = geometries.get(geometry_name) or {}
+                summary = candidate.get("median_summary") or {}
+                row[f"{geometry_name}_status"] = (candidate.get("validity") or {}).get(
+                    "status", candidate.get("status")
+                )
+                row[f"{geometry_name}_q10"] = summary.get("q10")
+                row[f"{geometry_name}_q50"] = summary.get("q50")
+                row[f"{geometry_name}_q90"] = summary.get("q90")
+            rows.append(row)
+    return rows
+
+
+def run_source_benchmark(source_root, output, bundle_manifest):
+    """Run PR-A boundary-local comparisons on the canonical four-stone source set."""
+    source_root = Path(source_root).resolve()
+    output = Path(output).resolve()
+    manifest = json.loads(Path(bundle_manifest).read_text())
+    output.mkdir(parents=True, exist_ok=True)
+    rows = []
+    stones = []
+
+    with tempfile.TemporaryDirectory(prefix="sparkles-tier-readability-") as temporary:
+        work = Path(temporary)
+        for item in manifest["bundles"]:
+            certificate = item["certificate"]
+            source = source_root / certificate
+            order_manifest = source / "source-manifest.json"
+            processed = work / certificate / "processed"
+            processed.parent.mkdir(parents=True, exist_ok=True)
+            pipeline.run(
+                source,
+                processed,
+                order_manifest,
+                gain=1.0,
+                diagnostic_indices=CORE_INDICES,
+                accept_review=True,
+            )
+            pipeline_name = "Workshop" if certificate == "IGI-LG756520111" else "Diajewel"
+            stone_summary = {
+                "certificate": certificate,
+                "pipeline": pipeline_name,
+                "windows": {},
+            }
+            for window, indices in (("core", CORE_INDICES), ("wide", WIDE_INDICES)):
+                step_output = work / certificate / f"steps-{window}"
+                steps.run(processed, step_output, indices, wrap=True)
+                measured = measure_stone(processed, step_output, indices, wrap=True)
+                destination = output / "per-stone" / certificate / window
+                write_stone_outputs(measured, destination, processed=processed)
+                rows.extend(_comparison_rows(certificate, pipeline_name, window, measured))
+                stone_summary["windows"][window] = {
+                    "step_template_status": json.loads((step_output / "steps.json").read_text()).get("template_status"),
+                    "tier_contrast_json": str(destination.relative_to(output) / "tier-contrast.json"),
+                    "boundary_local_csv": str(destination.relative_to(output) / "boundary-local.csv"),
+                    "evidence_dir": str(destination.relative_to(output) / "evidence"),
+                }
+            stones.append(stone_summary)
+
+    summary = {
+        "schema_version": "diamond360-tier-readability-pr-a-benchmark/1",
+        "descriptor_schema": SCHEMA,
+        "core_indices": CORE_INDICES,
+        "wide_indices": WIDE_INDICES,
+        "boundary_widths_u": list(BOUNDARY_WIDTHS),
+        "boundary_guard_u": BOUNDARY_GUARD,
+        "stones": stones,
+        "interpretation": (
+            "Research comparison only: broad #49 matched sectors versus guarded local strips around legacy coarse and #19 boundaries."
+        ),
+        "non_goals": [
+            "no Q25/spatial-coverage production choice in PR A",
+            "no joint nested-tier score",
+            "no aesthetic threshold or higher-is-better claim",
+        ],
+    }
+    (output / "summary.json").write_text(json.dumps(summary, indent=2, allow_nan=False) + "\n")
+    if rows:
+        fields = list(rows[0])
+        with (output / "comparison.csv").open("w", newline="") as handle:
+            writer = csv.DictWriter(handle, fieldnames=fields)
+            writer.writeheader()
+            writer.writerows(rows)
+    return summary
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--source-root", type=Path, required=True)
+    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--bundle-manifest",
+        type=Path,
+        default=Path("docs/360/benchmark/source-bundles.json"),
+    )
+    args = parser.parse_args()
+    run_source_benchmark(args.source_root, args.output, args.bundle_manifest)
+    print(f"wrote tier readability PR-A benchmark -> {args.output}")
+
+
+if __name__ == "__main__":
+    main()
