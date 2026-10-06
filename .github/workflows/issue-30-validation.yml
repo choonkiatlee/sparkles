@@ -1,0 +1,348 @@
+name: Issue 30 temporary validation
+
+on:
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: issue-30-contrast-mobility
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e .
+      - name: Run repository tests
+        run: python -m unittest discover -s tests -v
+      - name: Run four-stone mobility benchmark from release assets
+        shell: python
+        run: |
+          import csv
+          import hashlib
+          import json
+          import shutil
+          import urllib.request
+          import zipfile
+          from pathlib import Path
+
+          import numpy as np
+          from scipy.stats import rankdata, spearmanr
+
+          from diamond360.pipeline import run as preprocess
+          from diamond360.asscher_steps import run as step_bands
+          from diamond360.mobility_benchmark import measure_stone, write_stone_outputs
+
+          ROOT = Path(".work-issue30")
+          SOURCE_ROOT = ROOT / "sources"
+          WORK_ROOT = ROOT / "runs"
+          OUT_ROOT = ROOT / "mobility"
+          for path in (SOURCE_ROOT, WORK_ROOT, OUT_ROOT):
+              path.mkdir(parents=True, exist_ok=True)
+
+          CORE = list(range(248, 256)) + list(range(0, 9))
+          WIDE = list(range(240, 256)) + list(range(0, 17))
+          bundle_index = json.loads(
+              Path("docs/360/benchmark/source-bundles.json").read_text()
+          )
+          if bundle_index.get("release_tag") != "benchmark-sources-v1":
+              raise RuntimeError("unexpected benchmark source release")
+          bundles = bundle_index["bundles"]
+
+          switching = json.loads(Path("docs/360/switching/summary.json").read_text())
+          baseline = float(switching["baseline_threshold"])
+          switching_lookup = {}
+          for row in switching["rows"]:
+              if (
+                  row["representation"] == "coarse"
+                  and row["support_mode"] == "fixed"
+                  and float(row["threshold"]) == baseline
+              ):
+                  switching_lookup[
+                      (row["certificate"], row["window"], row["region"])
+                  ] = row["regional_switch_rate"]
+
+          def download_bundle(bundle):
+              certificate = bundle["certificate"]
+              archive = SOURCE_ROOT / bundle["filename"]
+              request = urllib.request.Request(
+                  bundle["download_url"],
+                  headers={
+                      "User-Agent": "sparkles-issue-30-benchmark/1",
+                      "Accept": "application/octet-stream",
+                  },
+              )
+              with urllib.request.urlopen(request, timeout=120) as response:
+                  archive.write_bytes(response.read())
+              data = archive.read_bytes()
+              actual = hashlib.sha256(data).hexdigest()
+              if actual != bundle["sha256"]:
+                  raise RuntimeError(
+                      f"{certificate}: release ZIP sha mismatch "
+                      f"{actual} != {bundle['sha256']}"
+                  )
+              if len(data) != bundle["bytes"]:
+                  raise RuntimeError(f"{certificate}: release ZIP size mismatch")
+              extracted = SOURCE_ROOT / certificate
+              extracted.mkdir()
+              with zipfile.ZipFile(archive) as handle:
+                  handle.extractall(extracted)
+              manifests = list(extracted.rglob("source-manifest.json"))
+              if len(manifests) != 1:
+                  raise RuntimeError(
+                      f"{certificate}: expected one source-manifest.json"
+                  )
+              manifest_path = manifests[0]
+              release_manifest = json.loads(manifest_path.read_text())
+              committed_manifest = json.loads(
+                  Path(bundle["source_manifest"]).read_text()
+              )
+              release_frames = [
+                  (item["source_index"], item["path"], item["sha256"])
+                  for item in release_manifest["frames"]
+              ]
+              committed_frames = [
+                  (item["source_index"], item["path"], item["sha256"])
+                  for item in committed_manifest["frames"]
+              ]
+              if release_frames != committed_frames:
+                  raise RuntimeError(
+                      f"{certificate}: release manifest frame contract changed"
+                  )
+              for item in release_manifest["frames"]:
+                  frame = manifest_path.parent / item["path"]
+                  if hashlib.sha256(frame.read_bytes()).hexdigest() != item["sha256"]:
+                      raise RuntimeError(
+                          f"{certificate}: source frame sha mismatch at "
+                          f"{item['source_index']}"
+                      )
+              return manifest_path.parent, manifest_path
+
+          rows = []
+          for bundle in bundles:
+              certificate = bundle["certificate"]
+              source, manifest_path = download_bundle(bundle)
+              stone_work = WORK_ROOT / certificate
+              processed = stone_work / "processed"
+              preprocess(
+                  source,
+                  processed,
+                  order_manifest=manifest_path,
+                  gain=1.0,
+                  diagnostic_indices=WIDE,
+                  accept_review=True,
+              )
+              for window, indices in (("core", CORE), ("wide", WIDE)):
+                  steps = stone_work / f"steps-{window}"
+                  step_bands(processed, steps, indices, wrap=True)
+                  result = measure_stone(processed, steps, indices, wrap=True)
+                  target = OUT_ROOT / "per-stone" / certificate / window
+                  write_stone_outputs(result, target, processed)
+
+                  for trace_id, trace in result["traces"].items():
+                      upstream = trace["upstream_activation"]
+                      summary = trace["summary"]
+                      switching_rate = None
+                      if (
+                          trace["representation"] == "coarse"
+                          and trace["support_mode"] == "fixed"
+                      ):
+                          switching_rate = switching_lookup.get(
+                              (certificate, window, trace["region"])
+                          )
+                      rows.append({
+                          "certificate": certificate,
+                          "window": window,
+                          "trace_id": trace_id,
+                          "representation": trace["representation"],
+                          "region": trace["region"],
+                          "support_mode": trace["support_mode"],
+                          "trace_type": trace["trace_type"],
+                          "primary": trace["primary"],
+                          "upstream_disposition": upstream["disposition"],
+                          "status": trace["validity"]["status"],
+                          "reasons": ";".join(trace["validity"]["reasons"]),
+                          "observed_adjacent_pairs": summary["observed_adjacent_pairs"],
+                          "median_mobility": summary["median"],
+                          "q90_mobility": summary["q90"],
+                          "activation_total_excursion": upstream["summary"].get(
+                              "total_excursion"
+                          ),
+                          "switching_rate": switching_rate,
+                          "persistent_support_fraction": upstream["support"].get(
+                              "persistent_support_fraction"
+                          ),
+                      })
+              print(certificate, "measured from release source")
+
+          def finite_pairs(a, b):
+              pairs = [
+                  (float(x), float(y))
+                  for x, y in zip(a, b)
+                  if x is not None and y is not None
+                  and np.isfinite(float(x)) and np.isfinite(float(y))
+              ]
+              if len(pairs) < 2:
+                  return None
+              x, y = zip(*pairs)
+              value = spearmanr(x, y).statistic
+              return None if not np.isfinite(value) else float(value)
+
+          def by_trace(trace_id, window):
+              return [
+                  row for row in rows
+                  if row["trace_id"] == trace_id and row["window"] == window
+              ]
+
+          primary_ids = [
+              "whole_stone/whole_stone/fixed/raw",
+              "coarse/centre/fixed/relative",
+              "coarse/inner/fixed/relative",
+              "coarse/middle/fixed/relative",
+          ]
+          comparisons = {}
+          for trace_id in primary_ids:
+              core = by_trace(trace_id, "core")
+              wide = by_trace(trace_id, "wide")
+              wide_by_stone = {row["certificate"]: row for row in wide}
+              aligned = [
+                  (row, wide_by_stone[row["certificate"]])
+                  for row in core
+                  if row["certificate"] in wide_by_stone
+              ]
+              comparisons[trace_id] = {
+                  "core_wide_rank_median": finite_pairs(
+                      [a["median_mobility"] for a, _ in aligned],
+                      [b["median_mobility"] for _, b in aligned],
+                  ),
+                  "core_wide_rank_q90": finite_pairs(
+                      [a["q90_mobility"] for a, _ in aligned],
+                      [b["q90_mobility"] for _, b in aligned],
+                  ),
+                  "core_activation_rank_median": finite_pairs(
+                      [r["median_mobility"] for r in core],
+                      [r["activation_total_excursion"] for r in core],
+                  ),
+                  "core_activation_rank_q90": finite_pairs(
+                      [r["q90_mobility"] for r in core],
+                      [r["activation_total_excursion"] for r in core],
+                  ),
+                  "core_switching_rank_median": finite_pairs(
+                      [r["median_mobility"] for r in core],
+                      [r["switching_rate"] for r in core],
+                  ),
+                  "core_switching_rank_q90": finite_pairs(
+                      [r["q90_mobility"] for r in core],
+                      [r["switching_rate"] for r in core],
+                  ),
+              }
+
+          pooled_core = [
+              row for row in rows
+              if row["window"] == "core"
+              and row["trace_id"] in {
+                  "coarse/centre/fixed/relative",
+                  "coarse/inner/fixed/relative",
+                  "coarse/middle/fixed/relative",
+              }
+          ]
+          pooled = {
+              "mobility_median_vs_activation_excursion": finite_pairs(
+                  [r["median_mobility"] for r in pooled_core],
+                  [r["activation_total_excursion"] for r in pooled_core],
+              ),
+              "mobility_q90_vs_activation_excursion": finite_pairs(
+                  [r["q90_mobility"] for r in pooled_core],
+                  [r["activation_total_excursion"] for r in pooled_core],
+              ),
+              "mobility_median_vs_switching_rate": finite_pairs(
+                  [r["median_mobility"] for r in pooled_core],
+                  [r["switching_rate"] for r in pooled_core],
+              ),
+              "mobility_q90_vs_switching_rate": finite_pairs(
+                  [r["q90_mobility"] for r in pooled_core],
+                  [r["switching_rate"] for r in pooled_core],
+              ),
+              "median_vs_q90": finite_pairs(
+                  [r["median_mobility"] for r in pooled_core],
+                  [r["q90_mobility"] for r in pooled_core],
+              ),
+          }
+
+          def strongest_rank_disagreements(metric):
+              valid = [
+                  row for row in pooled_core
+                  if row["median_mobility"] is not None and row[metric] is not None
+              ]
+              if len(valid) < 2:
+                  return []
+              mobility_rank = rankdata([r["median_mobility"] for r in valid])
+              other_rank = rankdata([r[metric] for r in valid])
+              scored = []
+              for row, mr, orank in zip(valid, mobility_rank, other_rank):
+                  scored.append({
+                      "certificate": row["certificate"],
+                      "region": row["region"],
+                      "median_mobility": row["median_mobility"],
+                      metric: row[metric],
+                      "rank_difference": float(abs(mr - orank)),
+                  })
+              return sorted(
+                  scored,
+                  key=lambda item: (-item["rank_difference"], item["certificate"], item["region"]),
+              )[:4]
+
+          summary = {
+              "schema_version": "sparkles-contrast-mobility-benchmark/1",
+              "issue": 30,
+              "core_indices": CORE,
+              "wide_indices": WIDE,
+              "stones": [bundle["certificate"] for bundle in bundles],
+              "source_release_tag": bundle_index["release_tag"],
+              "rows": rows,
+              "comparisons": comparisons,
+              "pooled_core_primary_local": pooled,
+              "strongest_rank_disagreements": {
+                  "activation_total_excursion": strongest_rank_disagreements(
+                      "activation_total_excursion"
+                  ),
+                  "switching_rate": strongest_rank_disagreements("switching_rate"),
+              },
+          }
+          (OUT_ROOT / "summary.json").write_text(
+              json.dumps(summary, indent=2, allow_nan=False) + "\n"
+          )
+          fields = list(rows[0])
+          with (OUT_ROOT / "summary.csv").open("w", newline="") as handle:
+              writer = csv.DictWriter(handle, fieldnames=fields)
+              writer.writeheader()
+              writer.writerows(rows)
+
+          publish = Path("docs/360/mobility")
+          if publish.exists():
+              shutil.rmtree(publish)
+          publish.mkdir(parents=True)
+          shutil.copy2(OUT_ROOT / "summary.json", publish / "summary.json")
+          shutil.copy2(OUT_ROOT / "summary.csv", publish / "summary.csv")
+
+          artifact = ROOT / "artifact"
+          shutil.copytree(OUT_ROOT, artifact)
+          shutil.make_archive("issue30-mobility-benchmark", "zip", artifact)
+          print("benchmark rows", len(rows))
+      - name: Commit compact benchmark summary
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A docs/360/mobility
+          git diff --cached --quiet || git commit -m "docs: benchmark contrast mobility [skip ci]"
+          git push origin HEAD:issue-30-contrast-mobility
+      - uses: actions/upload-artifact@v4
+        with:
+          name: issue30-mobility-benchmark
+          path: issue30-mobility-benchmark.zip
+          retention-days: 3
