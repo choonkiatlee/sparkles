@@ -22,10 +22,12 @@ jobs:
       - name: Install project
         run: python -m pip install -e . pytest
 
-      - name: Check motion decoder
+      - name: Install motion decoder
         run: |
-          ffmpeg -version | head -1
-          ffprobe -version | head -1
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          command -v ffmpeg
+          command -v ffprobe
 
       - name: Unit tests
         run: python -m pytest -q tests/test_external_benchmark.py
