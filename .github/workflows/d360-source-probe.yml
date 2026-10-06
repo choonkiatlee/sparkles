@@ -1,4 +1,4 @@
-name: d360 source probe
+name: d360 source integration
 
 on:
   pull_request:
@@ -12,39 +12,53 @@ permissions:
   contents: read
 
 jobs:
-  probe:
+  extract:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Confirm d360 scramble key
-        shell: bash
+
+      - name: Install project and test dependency
+        run: python -m pip install -e . pytest
+
+      - name: Unit tests
+        run: python -m pytest -q tests/test_d360_source.py
+
+      - name: Extract Karl-labelled d360 sources
         run: |
-          set -euxo pipefail
+          python -m diamond360.d360_source 79-BB-5159600 /tmp/d360/79-BB-5159600
+          python -m diamond360.d360_source 79-BT-5165227 /tmp/d360/79-BT-5165227
+
+      - name: Validate Sparkles source contract
+        run: |
           python - <<'PY'
           import json
-          from urllib.request import Request, urlopen
           from pathlib import Path
-          ids=["79-BB-5159600","79-BT-5165227"]
-          for item in ids:
-              url=f"https://media.d360.us/imaged/{item}/0.json"
-              with urlopen(Request(url,headers={"User-Agent":"Mozilla/5.0 SparklesD360Probe/5","Referer":"https://d360.tech/"}),timeout=30) as r:
-                  data=json.load(r)
-              Path(f"/tmp/{item}.scramble").write_text(data["scramble"])
+          from diamond360.ingestion import ingest
+
+          for item in ("79-BB-5159600", "79-BT-5165227"):
+              root = Path("/tmp/d360") / item
+              manifest = root / "source-manifest.json"
+              result = ingest(root, manifest)
+              assert result["frame_count"] == 256
+              assert result["valid_count"] == 256
+              assert not result["sparse"]
+              assert result["ordering"] == "explicit_manifest"
+              source = json.loads(manifest.read_text())
+              print(json.dumps({
+                  "item_id": item,
+                  "frame_count": result["frame_count"],
+                  "dimensions": result["dimensions"],
+                  "metadata_sha256": source["metadata_sha256"],
+                  "bootstrap_sha256": source["bootstrap_sha256"],
+                  "first_frame_sha256": source["frames"][0]["sha256"],
+                  "last_frame_sha256": source["frames"][-1]["sha256"],
+              }, sort_keys=True))
           PY
-          node - <<'JS'
-          const fs=require("fs"),crypto=require("crypto");
-          const key=Buffer.from("2606198511121984","utf8");
-          for(const id of ["79-BB-5159600","79-BT-5165227"]){
-            const enc=Buffer.from(fs.readFileSync("/tmp/"+id+".scramble","utf8").replace(/[^A-Za-z0-9+/=]/g,""),"base64");
-            const decipher=crypto.createDecipheriv("aes-128-cbc",key,key);
-            decipher.setAutoPadding(false);
-            const raw=Buffer.concat([decipher.update(enc),decipher.final()]);
-            let end=raw.length;
-            const pad=raw[raw.length-1];
-            if(pad>0 && pad<=16 && raw.slice(-pad).every(x=>x===pad)) end-=pad;
-            const txt=raw.slice(0,end).toString("utf8").replace(/\r/g,"");
-            console.log("SCRAMBLE",id,txt);
-            const obj=JSON.parse(txt);
-            console.log("LEVELS",id,obj.map(x=>x.length),"TOTAL",obj.reduce((a,x)=>a+x.length,0));
-          }
-          JS
+
+      - name: Upload extracted sources
+        uses: actions/upload-artifact@v4
+        with:
+          name: d360-karl-labelled-sources
+          path: /tmp/d360
+          if-no-files-found: error
+          retention-days: 7
