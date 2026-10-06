@@ -11,33 +11,33 @@ fit a score or classifier.
 
 - canonical retained profile: `docs/360/profile/comparison.json`
   (`diamond360-descriptor-profile/1`);
-- curated human review annotations: `human-observations.json`;
+- curated AI-generated evaluation annotations: `human-observations.json` (legacy filename);
 - compact #21 evidence packets from `docs/360/evidence-packet/`
   (`diamond360-evidence-packet/1`).
 
-Only #45 production measurement IDs can be linked to human observations.
+Only #45 production measurement IDs can be linked to these evaluation-derived observations.
 Context-only, REVISE/REJECT, semantic, outer or dynamic-support fields cannot
 silently enter calibration.
 
-## Human observation contract
+## Evaluation-derived observation contract
 
-`human-observations.json` normalizes the current four reviews into explicit,
-auditable observations. Every observation records:
+`human-observations.json` (a legacy filename) normalizes the current four AI-generated evaluations into explicit,
+auditable observations. These are not independent human labels. Every observation records:
 
 - certificate and source evaluation;
 - normalized visual concept;
 - hypothesis family;
 - review role (`strength | drawback | check | mixed | neutral`);
-- human-selected source frame indices;
+- AI-selected source frame indices from the evaluation;
 - whether the retained profile explains the observation
   (`explained | partial | unexplained`);
 - zero or more retained profile fields with a relationship
   (`supports | partial | contradicts | irrelevant`) and rationale.
 
 `unexplained` observations must have **no descriptor links**. This prevents the
-calibration exercise from forcing every human phrase into an existing metric.
+calibration exercise from forcing every evaluation phrase into an existing metric.
 
-Human-selected frames may extend outside the exact 17-step machine profile
+Evaluation-selected frames may extend outside the exact 17-step machine profile
 window. The benchmark records those indices explicitly rather than pretending
 the measurement covered them.
 
@@ -45,7 +45,7 @@ the measurement covered them.
 
 `benchmark.json` (`diamond360-calibration/1`) contains:
 
-- the joined human observation + #45 measurement records;
+- the joined evaluation-derived observation + #45 measurement records;
 - direction-free ascending/descending sample ranks;
 - validity/reasons copied from the profile;
 - redundancy-group metadata;
@@ -69,7 +69,7 @@ python -m diamond360.calibration \
 ```
 
 The builder writes only `benchmark.json` and `benchmark.csv`. The curated
-annotation file and findings remain human-reviewed inputs/interpretation.
+annotation file and findings remain AI-generated research inputs/interpretation unless a future human review is explicitly added.
 
 ## Calibration rules
 
@@ -81,7 +81,7 @@ annotation file and findings remain human-reviewed inputs/interpretation.
 4. Profile `review`/unavailable states remain visible and are never upgraded.
 5. No thresholds, weights, regression, p-values or composite scores are fit on
    the four-stone sample.
-6. Human reviews are calibration evidence, not perfect optical ground truth.
+6. The AI-generated evaluations are calibration targets for internal consistency, not independent human evidence or optical ground truth.
 7. #22 consumes #21 evidence packets as-is and never re-selects descriptor
    evidence. When a compact packet retains the exact linked field, calibration
    records an `exact_field` reference. When de-duplication removes that scalar's
@@ -96,7 +96,7 @@ observation↔descriptor relationships, 16 resolve to exact selected field
 evidence and 5 resolve to an explicit family representative; none is missing.
 There are 24 packet-item references because some fields have more than one
 selected event. Twelve share at least one frame with the independently
-human-selected review frames and twelve are independent source-frame checks.
+evaluation-selected review frames and twelve are independent source-frame checks.
 
 The distinction between exact and family-level evidence is part of the output
 contract and should remain visible in #23.

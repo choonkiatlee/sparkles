@@ -1,6 +1,6 @@
 {
   "schema_version": "diamond360-human-observations/1",
-  "purpose": "Curated human-observation labels from the current four complete Asscher evaluations for issue #22 calibration. These are annotations of the existing reviews, not new optical measurements or ground-truth quality labels.",
+  "purpose": "Curated evaluation-derived labels from the current four complete Asscher evaluations for issue #22 calibration. The evaluations and these normalized annotations were AI-generated; they are not independent human observations, new optical measurements, or ground-truth quality labels.",
   "concept_catalog": {
     "layered_tier_readability": "Nested tiers are visually separated/readable as layers. This is partly static architecture and partly dynamic contrast behaviour.",
     "grouped_darkness": "Broad regions enter or remain in a dark/grey state together, creating a grouped dark stack rather than independent local contrast.",
@@ -421,5 +421,10 @@
       ],
       "descriptor_links": []
     }
-  ]
+  ],
+  "provenance": {
+    "label_origin": "ai_generated_from_existing_asscher_evaluations",
+    "human_ground_truth": false,
+    "legacy_naming_note": "The file name and schema retain 'human-observations' for compatibility with the existing #22 pipeline; that wording is a legacy misnomer."
+  }
 }
