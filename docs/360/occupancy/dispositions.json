@@ -100,7 +100,11 @@
     ],
     "note": "Only representative panels are committed; exhaustive generated evidence is reproducible but intentionally omitted from Git."
   },
-  "redundancy_with_switching": "pending_issue_28",
+  "redundancy_with_switching": {
+    "status": "resolved_issue_28",
+    "conclusion": "Scalar rankings are highly correlated in this four-stone sample, so occupancy and switching should not be treated as independent ranking axes. Switching retains distinct adjacent-pair reconfiguration information because bidirectional state changes can cancel in net occupancy.",
+    "pooled_core_coarse_fixed_spearman_rho": 0.916083916083916
+  },
   "decisions": [
     {
       "representation": "coarse",
