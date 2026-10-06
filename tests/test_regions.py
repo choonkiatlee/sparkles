@@ -38,5 +38,20 @@ class RegionTests(unittest.TestCase):
         )
         self.assertTrue(np.all(~strips['inside'] | sector))
         self.assertTrue(np.all(~strips['outside'] | sector))
+    def test_relative_boundary_strip_masks_scale_with_adjacent_rings(self):
+        mask = np.ones((101, 101), bool)
+        strips = regions.relative_boundary_strip_masks(
+            mask,
+            inner_radius=.20,
+            boundary_radius=.45,
+            outer_radius=.70,
+            fraction=.4,
+            guard=.01,
+            target_extent=100,
+        )
+        self.assertFalse(np.any(strips['inside'] & strips['outside']))
+        self.assertAlmostEqual(strips['inside_width_u'], .10, places=6)
+        self.assertAlmostEqual(strips['outside_width_u'], .10, places=6)
+
     def test_non_square_canvas_rejected(self):
         with self.assertRaises(ValueError):regions.build(np.ones((80,100),bool))
