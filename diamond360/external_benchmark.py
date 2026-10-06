@@ -362,6 +362,8 @@ def _prepare_source(sample, archive_root, destination):
         ), True
     asset, path = _verify_asset(sample, archive_root)
     media_type = asset.get("media_type")
+    if media_type is None:
+        media_type = Path(asset["artifact_path"]).suffix.lower().lstrip(".")
     if media_type in {"mp4", "gif"}:
         return extract_video(
             path,
@@ -384,6 +386,8 @@ def _mode(sample):
     assets = media.get("assets") or []
     if assets:
         kind = assets[0].get("media_type")
+        if kind is None:
+            kind = Path(assets[0].get("artifact_path", "")).suffix.lower().lstrip(".")
         if kind in {"mp4", "gif"}:
             return "dynamic_ordered"
         if kind in {"jpg", "jpeg", "png"}:
