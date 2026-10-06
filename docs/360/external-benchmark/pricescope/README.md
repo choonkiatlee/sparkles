@@ -53,21 +53,21 @@ Verified raw-video records:
 Those bytes were retrieved in Actions run `37533954460`. They are not committed
 to Git; the manifest preserves exact source URLs, sizes and hashes.
 
-The d360 sequences remain **incomplete**. For `asscher-eval-glittery`, the
-public `0.json` metadata and its original embedded JPEG at frame 0 were recovered
-(758 × 597). The current client uses 256 sparse frame slots and seven progressive
-JPEG packs with a public AES-CBC ordering map; full ordering is not validated.
+The **Glittery** d360 sequence is now archived: 256 unique original 758 × 597
+JPEGs, imported from the saved verified source bundle. Every image decodes and
+matches its recorded byte count, SHA-256 and contiguous frame index. Source
+manifest and labelled derived previews are included in release bundle v2.
+Visual inspection was sampled; timing and calibrated viewing angles are unknown.
 
-The subsequent media metadata request returned an explicit **automated-scraping
-block**. Further requests to the source stopped, including the second candidate.
-The bundle preserves the partial source/frame and exact response in
-`d360/recovery-status.json`. One frame must not be treated as archived motion.
-A permitted full source export is still needed to complete these two sequences.
+**Crispest** remains missing. No saved extract was found, and further source
+requests were not attempted after this session's earlier explicit scraping block.
+Historical partial-recovery evidence is retained separately in the bundle.
 
 ## Persistent recovered bundle
 
-[Download the 26-file recovery bundle](https://github.com/choonkiatlee/sparkles/releases/download/pricescope-research-2026-10-06-v1/pricescope-media-recovery-2026-10-06.zip):
-14 article originals, 2 Kashi original videos and 10 public forum inline previews.
+[Download recovery bundle v2](https://github.com/choonkiatlee/sparkles/releases/download/pricescope-research-2026-10-06-v1/pricescope-media-recovery-2026-10-06-v2.zip):
+14 article originals, 2 Kashi original videos, 10 public forum inline previews,
+and the complete 256-frame Glittery d360 sequence.
 The ZIP includes source URLs, SHA-256, byte counts and post associations.
 It is preserved as a [GitHub release asset](https://github.com/choonkiatlee/sparkles/releases/tag/pricescope-research-2026-10-06-v1)
 for future agents and research workflows. Raw
