@@ -14,6 +14,7 @@ from PIL import Image, ImageDraw
 from . import activation_benchmark as ab
 from . import asscher_steps as steps
 from . import crispness as old_crispness
+from . import crispness_benchmark as old_benchmark
 from . import diagonal_arms as arms
 from . import normalized_geometry as ng
 from . import normalized_tier_edges as tier
@@ -167,6 +168,20 @@ def _step_diagnostic(sectors, u):
             )
         }
     return output
+
+
+def _original_step_diagnostic(processed, records):
+    """Run the actual #19/#50 diagnostic on the original registered representation."""
+    arrays = old_benchmark._frame_arrays(
+        processed,
+        records,
+        angle_count=96,
+        radial_samples=160,
+    )
+    return old_benchmark._full_template_diagnostic(
+        arrays["sectors"],
+        arrays["u"],
+    )
 
 
 def _measure_frames(
@@ -657,6 +672,12 @@ def measure_stone(
         processed,
         records,
         include_evidence=True,
+    )
+    # Comparison to #19 must use #19's original registered representation,
+    # not the new normalized transfer used by the candidate descriptors.
+    baseline["step_diagnostic"] = _original_step_diagnostic(
+        processed,
+        records,
     )
     sensitivity = {}
     for kind in (
