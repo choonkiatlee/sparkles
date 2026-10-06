@@ -313,6 +313,8 @@ def build_label_packet(benchmark_root, source_root, output, per_stone=5):
     output.mkdir(parents=True, exist_ok=True)
 
     manifest_items = []
+    blind_frames = output / "frames"
+    blind_frames.mkdir(exist_ok=True)
     feature_lookup = {
         (certificate, row["source_index"]): row
         for certificate, rows in features.items()
@@ -323,10 +325,14 @@ def build_label_packet(benchmark_root, source_root, output, per_stone=5):
         path, source = _source_frame(
             source_root, item["certificate"], item["source_index"]
         )
+        blind_path = blind_frames / f"{item['item_id']}.jpg"
+        with Image.open(path) as source_image:
+            source_image.convert("RGB").save(blind_path, quality=95)
         manifest_items.append({
             **item,
             "source_sha256": source.get("sha256"),
             "source_path": source.get("path"),
+            "blind_frame_path": str(blind_path.relative_to(output)),
         })
         audit.append({
             **item,
