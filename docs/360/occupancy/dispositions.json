@@ -1,0 +1,367 @@
+{
+  "schema_version": "sparkles-relative-dark-occupancy-dispositions/1",
+  "issue": 27,
+  "baseline_threshold": 0.65,
+  "sensitivity_thresholds": [
+    0.6,
+    0.65,
+    0.7
+  ],
+  "surviving_state_definition": {
+    "representation": "coarse",
+    "regions": [
+      "centre",
+      "inner",
+      "middle"
+    ],
+    "support_mode": "fixed",
+    "pixel_state": "encoded brightness Y_t(p) < 0.65 * same-frame fixed-support whole-stone median G_t",
+    "primitive": "full per-frame occupancy fraction with numerator and denominator retained",
+    "primary_scalar": "mean occupancy over the exact predeclared 17-frame core",
+    "wide_window_role": "sensitivity only"
+  },
+  "summary_candidates": [
+    {
+      "candidate": "mean occupancy",
+      "disposition": "KEEP",
+      "role": "primary scalar on surviving coarse-fixed centre/inner/middle surfaces"
+    },
+    {
+      "candidate": "median occupancy",
+      "disposition": "REJECT",
+      "role": "not primary; Q50 retained as trace diagnostic"
+    },
+    {
+      "candidate": "Q10/Q50/Q90",
+      "disposition": "KEEP",
+      "role": "distribution diagnostics and deterministic evidence selection"
+    }
+  ],
+  "threshold_disposition": {
+    "k_0_65": "KEEP as the fixed operational baseline, not a calibrated truth",
+    "k_0_60_and_0_70": "KEEP as sensitivity probes only; no per-stone or per-region tuning"
+  },
+  "primary_metrics": {
+    "centre": {
+      "mean_core_to_wide_rank_rho": 0.7999999999999999,
+      "median_core_to_wide_rank_rho": 0.39999999999999997,
+      "mean_rank_rho_k060_vs_k065": 1,
+      "mean_rank_rho_k070_vs_k065": 0.7999999999999999,
+      "median_threshold_range_over_baseline_cross_stone_range": 0.35891472868217067
+    },
+    "inner": {
+      "mean_core_to_wide_rank_rho": 0.7999999999999999,
+      "median_core_to_wide_rank_rho": -0.19999999999999998,
+      "mean_rank_rho_k060_vs_k065": 1,
+      "mean_rank_rho_k070_vs_k065": 1,
+      "median_threshold_range_over_baseline_cross_stone_range": 0.2978531300160513
+    },
+    "middle": {
+      "mean_core_to_wide_rank_rho": 0.7999999999999999,
+      "median_core_to_wide_rank_rho": 0.19999999999999998,
+      "mean_rank_rho_k060_vs_k065": 1,
+      "mean_rank_rho_k070_vs_k065": 1,
+      "median_threshold_range_over_baseline_cross_stone_range": 0.6790449402342513
+    },
+    "outer": {
+      "mean_core_to_wide_rank_rho": 0.7999999999999999,
+      "median_core_to_wide_rank_rho": 0.6000000000000001,
+      "mean_rank_rho_k060_vs_k065": 1,
+      "mean_rank_rho_k070_vs_k065": 1,
+      "median_threshold_range_over_baseline_cross_stone_range": 1.073624584675813
+    }
+  },
+  "support_diagnostics": {
+    "coarse_centre_inner_middle": {
+      "minimum_fixed_dynamic_trace_correlation_across_stones_windows": 0.9982492702001752,
+      "maximum_fixed_dynamic_trace_mae": 0.0035927064401203314,
+      "maximum_fixed_dynamic_mean_difference": 0.0014540078712583782
+    },
+    "coarse_outer": {
+      "minimum_persistent_support_fraction": 0.19884241971620611,
+      "maximum_fixed_dynamic_mean_difference": 0.08001173421035343
+    },
+    "semantic": {
+      "minimum_persistent_support_fraction": 0.001725673569360944,
+      "minimum_fixed_dynamic_trace_correlation": 0.13763317859311514,
+      "wide_unavailable_stone": "IGI-LG756580087",
+      "wide_unavailable_reason": "no_supported_middle_outer_edge"
+    }
+  },
+  "benchmark_evidence": {
+    "visual_correspondence_example": "per-stone/IGI-LG818659722/core/evidence/coarse-inner-fixed.png",
+    "strongest_coarse_semantic_disagreement": [
+      "per-stone/IGI-LG756580087/core/evidence/coarse-middle-dynamic.png",
+      "per-stone/IGI-LG756580087/core/evidence/semantic-middle_step-dynamic.png"
+    ],
+    "strongest_fixed_dynamic_support_disagreement": [
+      "per-stone/IGI-LG836619414/wide/evidence/semantic-middle_step-fixed.png",
+      "per-stone/IGI-LG836619414/wide/evidence/semantic-middle_step-dynamic.png"
+    ],
+    "note": "Only representative panels are committed; exhaustive generated evidence is reproducible but intentionally omitted from Git."
+  },
+  "redundancy_with_switching": "pending_issue_28",
+  "decisions": [
+    {
+      "representation": "coarse",
+      "region": "centre",
+      "support_mode": "fixed",
+      "summary_candidate": "mean",
+      "disposition": "KEEP",
+      "reason": "Primary occupancy surface: visible dark-area changes, stable threshold ordering, strong core-to-wide rank persistence, and support choice is effectively immaterial."
+    },
+    {
+      "representation": "coarse",
+      "region": "centre",
+      "support_mode": "fixed",
+      "summary_candidate": "median",
+      "disposition": "REJECT",
+      "reason": "Reject as primary scalar: little distinct visual interpretation and materially less stable than mean under 17→33 frame sensitivity. Q50 remains diagnostic."
+    },
+    {
+      "representation": "coarse",
+      "region": "centre",
+      "support_mode": "dynamic",
+      "summary_candidate": "mean",
+      "disposition": "REJECT",
+      "reason": "Reject as a separate primary candidate: effectively identical to fixed support in well-supported coarse bands; retain only as QC."
+    },
+    {
+      "representation": "coarse",
+      "region": "centre",
+      "support_mode": "dynamic",
+      "summary_candidate": "median",
+      "disposition": "REJECT",
+      "reason": "Reject as primary scalar: little distinct visual interpretation and materially less stable than mean under 17→33 frame sensitivity. Q50 remains diagnostic."
+    },
+    {
+      "representation": "coarse",
+      "region": "inner",
+      "support_mode": "fixed",
+      "summary_candidate": "mean",
+      "disposition": "KEEP",
+      "reason": "Primary occupancy surface: visible dark-area changes, stable threshold ordering, strong core-to-wide rank persistence, and support choice is effectively immaterial."
+    },
+    {
+      "representation": "coarse",
+      "region": "inner",
+      "support_mode": "fixed",
+      "summary_candidate": "median",
+      "disposition": "REJECT",
+      "reason": "Reject as primary scalar: little distinct visual interpretation and materially less stable than mean under 17→33 frame sensitivity. Q50 remains diagnostic."
+    },
+    {
+      "representation": "coarse",
+      "region": "inner",
+      "support_mode": "dynamic",
+      "summary_candidate": "mean",
+      "disposition": "REJECT",
+      "reason": "Reject as a separate primary candidate: effectively identical to fixed support in well-supported coarse bands; retain only as QC."
+    },
+    {
+      "representation": "coarse",
+      "region": "inner",
+      "support_mode": "dynamic",
+      "summary_candidate": "median",
+      "disposition": "REJECT",
+      "reason": "Reject as primary scalar: little distinct visual interpretation and materially less stable than mean under 17→33 frame sensitivity. Q50 remains diagnostic."
+    },
+    {
+      "representation": "coarse",
+      "region": "middle",
+      "support_mode": "fixed",
+      "summary_candidate": "mean",
+      "disposition": "KEEP",
+      "reason": "Primary occupancy surface: visible dark-area changes, stable threshold ordering, strong core-to-wide rank persistence, and support choice is effectively immaterial."
+    },
+    {
+      "representation": "coarse",
+      "region": "middle",
+      "support_mode": "fixed",
+      "summary_candidate": "median",
+      "disposition": "REJECT",
+      "reason": "Reject as primary scalar: little distinct visual interpretation and materially less stable than mean under 17→33 frame sensitivity. Q50 remains diagnostic."
+    },
+    {
+      "representation": "coarse",
+      "region": "middle",
+      "support_mode": "dynamic",
+      "summary_candidate": "mean",
+      "disposition": "REJECT",
+      "reason": "Reject as a separate primary candidate: effectively identical to fixed support in well-supported coarse bands; retain only as QC."
+    },
+    {
+      "representation": "coarse",
+      "region": "middle",
+      "support_mode": "dynamic",
+      "summary_candidate": "median",
+      "disposition": "REJECT",
+      "reason": "Reject as primary scalar: little distinct visual interpretation and materially less stable than mean under 17→33 frame sensitivity. Q50 remains diagnostic."
+    },
+    {
+      "representation": "coarse",
+      "region": "outer",
+      "support_mode": "fixed",
+      "summary_candidate": "mean",
+      "disposition": "REVISE",
+      "reason": "Outer occupancy is support sensitive and its threshold-induced level range is as large as or larger than baseline between-stone spread; candidate/QC only."
+    },
+    {
+      "representation": "coarse",
+      "region": "outer",
+      "support_mode": "fixed",
+      "summary_candidate": "median",
+      "disposition": "REJECT",
+      "reason": "Reject as primary scalar: little distinct visual interpretation and materially less stable than mean under 17→33 frame sensitivity. Q50 remains diagnostic."
+    },
+    {
+      "representation": "coarse",
+      "region": "outer",
+      "support_mode": "dynamic",
+      "summary_candidate": "mean",
+      "disposition": "REVISE",
+      "reason": "Outer occupancy is support sensitive and its threshold-induced level range is as large as or larger than baseline between-stone spread; candidate/QC only."
+    },
+    {
+      "representation": "coarse",
+      "region": "outer",
+      "support_mode": "dynamic",
+      "summary_candidate": "median",
+      "disposition": "REJECT",
+      "reason": "Reject as primary scalar: little distinct visual interpretation and materially less stable than mean under 17→33 frame sensitivity. Q50 remains diagnostic."
+    },
+    {
+      "representation": "semantic",
+      "region": "centre",
+      "support_mode": "fixed",
+      "summary_candidate": "mean",
+      "disposition": "REVISE",
+      "reason": "Semantic localisation changes the state materially in some stones, can have very low persistent support, and is unavailable for one wide-window stone."
+    },
+    {
+      "representation": "semantic",
+      "region": "centre",
+      "support_mode": "fixed",
+      "summary_candidate": "median",
+      "disposition": "REJECT",
+      "reason": "Reject as primary scalar: little distinct visual interpretation and materially less stable than mean under 17→33 frame sensitivity. Q50 remains diagnostic."
+    },
+    {
+      "representation": "semantic",
+      "region": "centre",
+      "support_mode": "dynamic",
+      "summary_candidate": "mean",
+      "disposition": "REVISE",
+      "reason": "Semantic localisation changes the state materially in some stones, can have very low persistent support, and is unavailable for one wide-window stone."
+    },
+    {
+      "representation": "semantic",
+      "region": "centre",
+      "support_mode": "dynamic",
+      "summary_candidate": "median",
+      "disposition": "REJECT",
+      "reason": "Reject as primary scalar: little distinct visual interpretation and materially less stable than mean under 17→33 frame sensitivity. Q50 remains diagnostic."
+    },
+    {
+      "representation": "semantic",
+      "region": "inner",
+      "support_mode": "fixed",
+      "summary_candidate": "mean",
+      "disposition": "REVISE",
+      "reason": "Semantic localisation changes the state materially in some stones, can have very low persistent support, and is unavailable for one wide-window stone."
+    },
+    {
+      "representation": "semantic",
+      "region": "inner",
+      "support_mode": "fixed",
+      "summary_candidate": "median",
+      "disposition": "REJECT",
+      "reason": "Reject as primary scalar: little distinct visual interpretation and materially less stable than mean under 17→33 frame sensitivity. Q50 remains diagnostic."
+    },
+    {
+      "representation": "semantic",
+      "region": "inner",
+      "support_mode": "dynamic",
+      "summary_candidate": "mean",
+      "disposition": "REVISE",
+      "reason": "Semantic localisation changes the state materially in some stones, can have very low persistent support, and is unavailable for one wide-window stone."
+    },
+    {
+      "representation": "semantic",
+      "region": "inner",
+      "support_mode": "dynamic",
+      "summary_candidate": "median",
+      "disposition": "REJECT",
+      "reason": "Reject as primary scalar: little distinct visual interpretation and materially less stable than mean under 17→33 frame sensitivity. Q50 remains diagnostic."
+    },
+    {
+      "representation": "semantic",
+      "region": "middle",
+      "support_mode": "fixed",
+      "summary_candidate": "mean",
+      "disposition": "REVISE",
+      "reason": "Semantic localisation changes the state materially in some stones, can have very low persistent support, and is unavailable for one wide-window stone."
+    },
+    {
+      "representation": "semantic",
+      "region": "middle",
+      "support_mode": "fixed",
+      "summary_candidate": "median",
+      "disposition": "REJECT",
+      "reason": "Reject as primary scalar: little distinct visual interpretation and materially less stable than mean under 17→33 frame sensitivity. Q50 remains diagnostic."
+    },
+    {
+      "representation": "semantic",
+      "region": "middle",
+      "support_mode": "dynamic",
+      "summary_candidate": "mean",
+      "disposition": "REVISE",
+      "reason": "Semantic localisation changes the state materially in some stones, can have very low persistent support, and is unavailable for one wide-window stone."
+    },
+    {
+      "representation": "semantic",
+      "region": "middle",
+      "support_mode": "dynamic",
+      "summary_candidate": "median",
+      "disposition": "REJECT",
+      "reason": "Reject as primary scalar: little distinct visual interpretation and materially less stable than mean under 17→33 frame sensitivity. Q50 remains diagnostic."
+    },
+    {
+      "representation": "semantic",
+      "region": "outer",
+      "support_mode": "fixed",
+      "summary_candidate": "mean",
+      "disposition": "REVISE",
+      "reason": "Semantic localisation changes the state materially in some stones, can have very low persistent support, and is unavailable for one wide-window stone."
+    },
+    {
+      "representation": "semantic",
+      "region": "outer",
+      "support_mode": "fixed",
+      "summary_candidate": "median",
+      "disposition": "REJECT",
+      "reason": "Reject as primary scalar: little distinct visual interpretation and materially less stable than mean under 17→33 frame sensitivity. Q50 remains diagnostic."
+    },
+    {
+      "representation": "semantic",
+      "region": "outer",
+      "support_mode": "dynamic",
+      "summary_candidate": "mean",
+      "disposition": "REVISE",
+      "reason": "Semantic localisation changes the state materially in some stones, can have very low persistent support, and is unavailable for one wide-window stone."
+    },
+    {
+      "representation": "semantic",
+      "region": "outer",
+      "support_mode": "dynamic",
+      "summary_candidate": "median",
+      "disposition": "REJECT",
+      "reason": "Reject as primary scalar: little distinct visual interpretation and materially less stable than mean under 17→33 frame sensitivity. Q50 remains diagnostic."
+    }
+  ],
+  "limitations": [
+    "Four stones only; no population quality threshold is inferred.",
+    "Occupancy is recorded-image behavior, not calibrated radiance, leakage, light return, fire, facet identity or cut quality.",
+    "Window-level values are only comparable under the same predeclared interval and measurement contract."
+  ]
+}

@@ -147,3 +147,15 @@ sensitivity window, compares coarse/semantic × fixed/dynamic support, and recor
 explicit KEEP/REVISE/REJECT dispositions without turning the measurements into a
 quality score. Machine-readable results and per-trace evidence panels live under
 [activation/](activation/).
+
+
+## Relative-dark occupancy descriptor validation
+
+Issue #27's four-stone occupancy benchmark is documented in
+[occupancy/README.md](occupancy/README.md). It keeps the full per-frame
+pixel-level relative-dark trace and tests the fixed global threshold
+`k=0.65` against `0.60/0.70`, coarse/semantic geometry, fixed/dynamic
+support and the 33-frame sensitivity window. The surviving state handed to #28
+is fixed coarse centre/inner/middle occupancy with mean occupancy as the primary
+scalar; outer and semantic formulations remain revised/QC-only rather than
+quality claims.
