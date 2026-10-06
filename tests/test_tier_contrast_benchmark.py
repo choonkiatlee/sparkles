@@ -156,6 +156,17 @@ class TierContrastBenchmarkTests(unittest.TestCase):
             support["support_mode"],
             "per_frame_valid_with_fixed_normalised_geometry",
         )
+    def test_strip_trace_rejects_tiny_per_frame_support(self):
+        brightness = np.ones((3, 6, 6), float)
+        valid = np.ones_like(brightness, bool)
+        masks = np.zeros_like(brightness, bool)
+        masks[:, 2:4, 2:4] = True
+        values, support = tb._strip_trace(
+            brightness, valid, masks, np.ones(3, bool)
+        )
+        self.assertEqual(values, [None, None, None])
+        self.assertEqual(support["minimum_pixels"], tb.MIN_STRIP_PIXELS)
+        self.assertEqual(support["min_support_pixels"], 4)
     def test_boundary_local_semantic_strips_recover_known_tier_jump(self):
         with tempfile.TemporaryDirectory() as td:
             processed, step_output, activation_result = boundary_local_fixture(Path(td))
