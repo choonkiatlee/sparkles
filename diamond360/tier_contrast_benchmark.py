@@ -492,6 +492,29 @@ def measure_stone(processed, step_output, indices, wrap=False):
                 {"status": "unavailable", "reason": boundary_local.get("reason")},
             )
         )
+        broad_trace = (pair.get("localized") or {}).get("frame_trace") or []
+        for geometries in (pair["boundary_local"].get("widths") or {}).values():
+            coarse = geometries.get("coarse") or {}
+            semantic = geometries.get("semantic") or {}
+            for candidate in (coarse, semantic):
+                if broad_trace and candidate.get("frame_trace"):
+                    candidate["strongest_disagreement_vs_broad"] = (
+                        tc.strongest_rank_disagreement(
+                            broad_trace,
+                            "median_separation",
+                            candidate["frame_trace"],
+                            "median_separation",
+                        )
+                    )
+            if coarse.get("frame_trace") and semantic.get("frame_trace"):
+                semantic["strongest_disagreement_vs_coarse_boundary"] = (
+                    tc.strongest_rank_disagreement(
+                        coarse["frame_trace"],
+                        "median_separation",
+                        semantic["frame_trace"],
+                        "median_separation",
+                    )
+                )
     result["boundary_local_definition"] = {
         key: value for key, value in boundary_local.items() if key != "pairs"
     }
