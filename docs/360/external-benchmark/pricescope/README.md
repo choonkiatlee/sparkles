@@ -53,9 +53,16 @@ Verified raw-video records:
 Those bytes were retrieved in Actions run `37533954460`. They are not committed
 to Git; the manifest preserves exact source URLs, sizes and hashes.
 
-The d360 cases are **viewer-live but not yet frame-archived**. They need a small
-d360-specific extraction adapter rather than weakening the existing Sparkles
-source contracts.
+The d360 sequences remain **incomplete**. For `asscher-eval-glittery`, the
+public `0.json` metadata and its original embedded JPEG at frame 0 were recovered
+(758 × 597). The current client uses 256 sparse frame slots and seven progressive
+JPEG packs with a public AES-CBC ordering map; full ordering is not validated.
+
+The subsequent media metadata request returned an explicit **automated-scraping
+block**. Further requests to the source stopped, including the second candidate.
+The bundle preserves the partial source/frame and exact response in
+`d360/recovery-status.json`. One frame must not be treated as archived motion.
+A permitted full source export is still needed to complete these two sequences.
 
 ## Persistent recovered bundle
 
