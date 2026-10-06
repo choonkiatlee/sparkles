@@ -755,6 +755,95 @@ def _draw_boundary_local_panel(
     return True
 
 
+def _draw_same_frame_boundary_comparison(
+    destination, pair_id, pair_result, result, processed, width_key="0.040"
+):
+    """Compare all PR-A formulations on the same selected source frames."""
+    boundary = pair_result.get("boundary_local") or {}
+    geometries = (boundary.get("widths") or {}).get(width_key, {})
+    semantic = geometries.get("semantic") or {}
+    coarse = geometries.get("coarse") or {}
+    evidence = semantic.get("evidence") or {}
+    if not semantic.get("frame_trace") or not coarse.get("frame_trace"):
+        return False
+    ordered = [
+        ("weak", evidence.get("weakest")),
+        ("typical", evidence.get("median")),
+        ("strong", evidence.get("strongest")),
+    ]
+    rows = [(label, event) for label, event in ordered if event is not None]
+    if not rows:
+        return False
+
+    canvas = Image.new("RGB", (1510, 70 + 250 * len(rows)), "white")
+    draw = ImageDraw.Draw(canvas)
+    draw.text(
+        (10, 8),
+        f"{pair_id}: same-frame PR-A comparison at width={width_key}",
+        fill="black",
+    )
+    draw.text(
+        (10, 28),
+        "camera source | legacy coarse-boundary strips | #19 semantic-boundary strips; red=inside blue=outside",
+        fill="black",
+    )
+    guard = result.get("boundary_local_definition", {}).get("guard_u", BOUNDARY_GUARD)
+    simple_trace = (pair_result.get("simple") or {}).get("frame_trace") or []
+    broad_trace = (pair_result.get("localized") or {}).get("frame_trace") or []
+
+    def fmt(value):
+        return "n/a" if value is None else f"{float(value):.5f}"
+
+    for row_index, (label, event) in enumerate(rows):
+        position = event["position"]
+        sector = event.get("strongest_sector")
+        semantic_row = semantic["frame_trace"][position]
+        coarse_row = coarse["frame_trace"][position]
+        simple_value = (
+            simple_trace[position].get("separation")
+            if position < len(simple_trace) else None
+        )
+        broad_value = (
+            broad_trace[position].get("median_separation")
+            if position < len(broad_trace) else None
+        )
+        y = 58 + row_index * 250
+        draw.text(
+            (10, y),
+            (
+                f"{label}: source {event['source_index']} · whole={fmt(simple_value)} · "
+                f"broad-sector={fmt(broad_value)} · coarse-strip={fmt(coarse_row.get('median_separation'))} · "
+                f"semantic-strip={fmt(semantic_row.get('median_separation'))} · sector={sector or 'n/a'}"
+            ),
+            fill="black",
+        )
+        camera_path = result.get("frame_camera_paths", [])[position]
+        registered_path = result.get("frame_rgb_paths", [])[position]
+        mask_path = result.get("frame_mask_paths", [])[position]
+        region_path = result.get("frame_region_paths", [])[position]
+        if camera_path:
+            with Image.open(Path(processed) / camera_path) as source:
+                source = source.convert("RGB")
+            source.thumbnail((480, 205))
+            canvas.paste(source, (10, y + 25))
+        if registered_path:
+            with Image.open(Path(processed) / registered_path) as base:
+                base = base.convert("RGB")
+            coarse_image = _overlay_boundary_strips(
+                base, mask_path, region_path, coarse.get("geometry") or {},
+                float(width_key), guard, sector, processed,
+            )
+            semantic_image = _overlay_boundary_strips(
+                base, mask_path, region_path, semantic.get("geometry") or {},
+                float(width_key), guard, sector, processed,
+            )
+            coarse_image.thumbnail((480, 205))
+            semantic_image.thumbnail((480, 205))
+            canvas.paste(coarse_image, (515, y + 25))
+            canvas.paste(semantic_image, (1010, y + 25))
+    canvas.save(destination)
+    return True
+
 def _write_boundary_local_csv(result, output):
     rows = []
     for pair_id, pair in result.get("pairs", {}).items():
@@ -882,6 +971,13 @@ def write_stone_outputs(result, output, processed=None):
                         processed,
                         geometry_name,
                     )
+                _draw_same_frame_boundary_comparison(
+                    evidence_dir / f"{pair_id}-boundary-comparison.png",
+                    pair_id,
+                    pair,
+                    result,
+                    processed,
+                )
     with (output / "tier-contrast.csv").open("w", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()
