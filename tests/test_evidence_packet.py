@@ -593,6 +593,64 @@ class CompactSelectionTests(unittest.TestCase):
             ep.EvidenceLocation("pair", (0, 1)),
         )
 
+    def test_incidental_wrong_sign_claim_does_not_satisfy_directional_role(self):
+        profile = build_profile()
+        field_id = "directional.side_N_S_pearson"
+        profile["measurements"][field_id]["value"] = 0.9
+
+        activity_field = "activity.mobility.centre_median"
+        shared = ep.EvidenceItem(
+            ep.EvidenceLocation("pair", (0, 1)),
+            (
+                ep.EvidenceCandidate(
+                    descriptor_family="mobility",
+                    native_id="coarse/centre/fixed/relative",
+                    event_type="largest",
+                    location=ep.EvidenceLocation("pair", (0, 1)),
+                    profile_field_ids=(activity_field,),
+                    rationale="activity",
+                ),
+                ep.EvidenceCandidate(
+                    descriptor_family="opposing",
+                    native_id="coarse_whole/fixed/side_N_S",
+                    event_type="strongest_divergent",
+                    location=ep.EvidenceLocation("pair", (0, 1)),
+                    profile_field_ids=(field_id,),
+                    rationale="wrong-sign incidental claim",
+                ),
+            ),
+        )
+        representative = ep.EvidenceItem(
+            ep.EvidenceLocation("pair", (1, 2)),
+            (
+                ep.EvidenceCandidate(
+                    descriptor_family="opposing",
+                    native_id="coarse_whole/fixed/side_N_S",
+                    event_type="strongest_coordinated",
+                    location=ep.EvidenceLocation("pair", (1, 2)),
+                    profile_field_ids=(field_id,),
+                    rationale="sign-matched directional claim",
+                ),
+            ),
+        )
+        selected = ep.select_compact_evidence(
+            [shared, representative],
+            profile,
+            min_items=1,
+            max_items=2,
+        )
+        self.assertEqual(len(selected), 2)
+        self.assertEqual(selected[0].selected_for, "activity_motion")
+        self.assertNotIn(
+            "directional",
+            selected[0].coverage_families,
+        )
+        self.assertEqual(selected[1].selected_for, "directional")
+        self.assertEqual(
+            selected[1].item.location,
+            ep.EvidenceLocation("pair", (1, 2)),
+        )
+
     def test_packet_and_contact_sheet_use_original_source_frames(self):
         import hashlib
         from PIL import Image
