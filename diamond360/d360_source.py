@@ -166,8 +166,10 @@ def extract(viewer_or_id: str, output: str | Path, *, media_base: str = DEFAULT_
 
     metadata_url = f"{source_root}/metadata.json"
     bootstrap_url = f"{source_root}/0.json"
+    still_url = f"{source_root}/still.jpg"
     metadata_raw, _ = _fetch(metadata_url)
     bootstrap_raw, _ = _fetch(bootstrap_url)
+    still_raw, _ = _fetch(still_url)
     if sha256(bootstrap_raw) != known["bootstrap_sha256"]:
         raise ValueError(
             "d360 bootstrap changed since ordering audit; refuse to reuse stale scramble map"
@@ -175,7 +177,12 @@ def extract(viewer_or_id: str, output: str | Path, *, media_base: str = DEFAULT_
     bootstrap = json.loads(bootstrap_raw)
     if not isinstance(bootstrap.get("image"), str) or not isinstance(bootstrap.get("scramble"), str):
         raise ValueError("Unexpected d360 0.json structure")
+    preview_raw = base64.b64decode("".join(bootstrap["image"].split()), validate=True)
+    if preview_raw != still_raw:
+        raise ValueError("d360 0.json preview and still.jpg disagree")
     expected_dimensions = (int(bootstrap["width"]), int(bootstrap["height"]))
+    if _jpeg_dimensions(still_raw) != expected_dimensions:
+        raise ValueError("d360 still.jpg dimensions disagree with 0.json")
     positions = ordered_positions(known["scramble"])
 
     batches = []
@@ -218,6 +225,8 @@ def extract(viewer_or_id: str, output: str | Path, *, media_base: str = DEFAULT_
     if any(x is None for x in frame_records):
         missing = [i for i, x in enumerate(frame_records) if x is None]
         raise ValueError(f"Incomplete d360 extraction; missing source indices {missing}")
+    if frame_records[0]["sha256"] != sha256(still_raw):
+        raise ValueError("d360 reconstructed source frame 0 does not match still.jpg")
 
     manifest = {
         "schema_version": "diamond360-source/1",
@@ -229,13 +238,16 @@ def extract(viewer_or_id: str, output: str | Path, *, media_base: str = DEFAULT_
         "metadata_sha256": sha256(metadata_raw),
         "bootstrap_url": bootstrap_url,
         "bootstrap_sha256": sha256(bootstrap_raw),
+        "still_url": still_url,
+        "still_sha256": sha256(still_raw),
         "source_frame_count": FRAME_COUNT,
         "sequence_complete": True,
         "dimensions": list(expected_dimensions),
         "ordering": "d360 audited scramble map over canonical progressive odd-position interleave",
         "ordering_validation": (
             "bootstrap SHA-256 pinned to audited viewer; seven scramble levels are exact "
-            "permutations; 256 progressive images map one-to-one onto source indices 0..255"
+            "permutations; 256 progressive images map one-to-one onto source indices 0..255; "
+            "reconstructed source frame 0 matches vendor still.jpg byte-for-byte"
         ),
         "scramble_provenance": (
             "decrypted from the vendor 0.json scramble field using the vendor viewer algorithm "
