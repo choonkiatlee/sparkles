@@ -183,6 +183,33 @@ class TierContrastBenchmarkTests(unittest.TestCase):
             signed = semantic["frame_trace"][0]["sector_signed_log_contrasts"]
             self.assertTrue(all(value > 0 for value in signed.values() if value is not None))
 
+    def test_partial_semantic_boundary_is_review_not_unavailable(self):
+        with tempfile.TemporaryDirectory() as td:
+            processed, step_output, activation_result = boundary_local_fixture(Path(td))
+            step_path = step_output / "steps.json"
+            payload = json.loads(step_path.read_text())
+            payload["template_status"] = "unavailable"
+            payload["template_reason"] = "no_supported_middle_outer_edge"
+            payload["partial_boundaries"] = {
+                name: payload["boundaries"][name]
+                for name in ("centre_inner", "inner_middle")
+            }
+            payload["boundaries"] = {}
+            step_path.write_text(json.dumps(payload))
+
+            result = tb._boundary_local_inputs(
+                processed, step_output, activation_result, widths=(.04,), guard=.01
+            )
+            pair = result["pairs"]["centre__inner"]
+            semantic = pair["widths"]["0.040"]["semantic"]
+            self.assertEqual(pair["semantic_boundary_source"], "partial_boundary")
+            self.assertEqual(semantic["validity"]["status"], "review")
+            self.assertIn(
+                "partial_step_boundary:no_supported_middle_outer_edge",
+                semantic["validity"]["reasons"],
+            )
+            self.assertIsNotNone(semantic["median_summary"]["q50"])
+
     def test_guarded_strips_ignore_narrow_boundary_spike(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
