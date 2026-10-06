@@ -28,8 +28,12 @@ jobs:
       - name: Adapter and disposition tests
         run: python -m pytest -q tests/test_external_media.py tests/test_external_benchmark.py
 
-      - name: Check video decoder
-        run: ffmpeg -version | head -1
+      - name: Install video decoder
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          set -o pipefail
+          ffmpeg -version | head -1
 
       - name: Download pinned PriceScope recovery bundle
         run: |
