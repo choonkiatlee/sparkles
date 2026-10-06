@@ -1,0 +1,112 @@
+{
+  "schema_version": "diamond360-opposing-region-symmetry-dispositions/1",
+  "issue": 31,
+  "scope": "Four complete #18 benchmark stones; exact 17-frame core primary, 33-frame window sensitivity only.",
+  "primary_definition": {
+    "representation": "coarse_whole",
+    "support_mode": "fixed",
+    "upstream_trace": "diamond360-activation/1 relative_values",
+    "pair_aggregation": "none"
+  },
+  "pair_correlation": [
+    {
+      "pair_id": "side_E_W",
+      "disposition": "KEEP",
+      "core_wide_rank_spearman": 1,
+      "reason": "Stable cross-window ranking; retain fixed-support correlation with pair-local QC."
+    },
+    {
+      "pair_id": "side_N_S",
+      "disposition": "KEEP",
+      "core_wide_rank_spearman": 0.8,
+      "reason": "Strong positive and negative visual examples plus good cross-window ranking."
+    },
+    {
+      "pair_id": "corner_NE_SW",
+      "disposition": "KEEP",
+      "core_wide_rank_spearman": 1,
+      "reason": "Primary-window corner support is sufficient and ranking is stable; weak wide support remains QC."
+    },
+    {
+      "pair_id": "corner_NW_SE",
+      "disposition": "KEEP",
+      "core_wide_rank_spearman": 0.8,
+      "reason": "Primary fixed-support ranking is stable; lower-support wide cases require QC."
+    }
+  ],
+  "summary_families": [
+    {
+      "candidate": "pair_trace_correlation",
+      "disposition": "KEEP",
+      "role": "primary pairwise coordination summary",
+      "reason": "Continuous, visually falsifiable and 17→33-frame cross-stone rank preservation is 0.8-1.0 for all four baseline pairs."
+    },
+    {
+      "candidate": "median_absolute_pair_difference",
+      "disposition": "REVISE",
+      "role": "audit / within-stone imbalance evidence",
+      "reason": "Interpretable and relatively support-stable, but baseline core→wide rank preservation is only 0.2-0.4 and localisation changes it materially."
+    },
+    {
+      "candidate": "adjacent_sign_agreement",
+      "disposition": "REJECT",
+      "role": "retain same/opposite/flat counts and events for audit",
+      "reason": "Quantized over 16 core adjacent pairs, inconsistently window-stable and moderately redundant with continuous correlation."
+    },
+    {
+      "candidate": "median_signed_pair_difference",
+      "disposition": "REJECT",
+      "role": "audit field only",
+      "reason": "Useful for direction of persistent imbalance but not a coordination summary."
+    }
+  ],
+  "representation_support": [
+    {
+      "candidate": "coarse_whole_fixed",
+      "disposition": "KEEP",
+      "role": "baseline production representation",
+      "reason": "Uses declared image-space opposites and the #26 retained relative activation definition."
+    },
+    {
+      "candidate": "dynamic_support",
+      "disposition": "REJECT",
+      "role": "QC/falsification only",
+      "reason": "Changing region membership can materially move correlation in lower-support cases."
+    },
+    {
+      "candidate": "coarse_inner_middle_localisation",
+      "disposition": "REVISE",
+      "role": "localisation/QC only",
+      "reason": "Can sharpen individual events but does not consistently improve the whole-sector pair definition."
+    },
+    {
+      "candidate": "semantic_inner_middle_localisation",
+      "disposition": "REVISE",
+      "role": "localisation/QC only",
+      "reason": "Coarse↔semantic values can change sharply; LG756580087 wide has no usable semantic template, LG818659722 core is review, and semantic persistent support can collapse to zero, including unavailable LG836619414 wide middle-step pairs."
+    }
+  ],
+  "benchmark_notes": {
+    "total_rows": 304,
+    "coarse_whole_core_fixed_support_range": [
+      0.6877214925995414,
+      0.9790466212676794
+    ],
+    "pooled_core_spearman_correlation_vs_sign_agreement": 0.5942397168623279,
+    "semantic_middle_fixed_unavailable_pairs": 3,
+    "synthetic_global_scale_invariance_test": "pass",
+    "semantic_template_runs": {
+      "IGI-LG756580087/wide": {
+        "status": "unavailable",
+        "reason": "no_supported_middle_outer_edge",
+        "effect": "semantic surfaces omitted"
+      },
+      "IGI-LG818659722/core": {
+        "status": "review",
+        "reason": "semantic_window_edge",
+        "effect": "semantic pair validity remains review"
+      }
+    }
+  },
+  "non_goal": "No symmetry quality grade, exact physical facet identity, pair aggregation score, or purchase score."
+}

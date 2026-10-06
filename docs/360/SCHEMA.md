@@ -403,3 +403,52 @@ Both `fixed` common support and `dynamic` frame-local support are emitted. The t
 Summaries include active-frame fraction and medians/quantiles of morphology only over active frames. Evidence selection deterministically surfaces broadest, most fragmented, matched-active-area, threshold-sensitive, strongest support-disagreement and low-disagreement cases.
 
 The retained primary descriptor is the fixed-support median largest-component fraction at `k=1.00`. Effective/raw component counts remain diagnostic. The descriptor is recorded-image morphology, not calibrated light return, fire, physical-facet identity, sparkle quality or a purchase grade.
+
+## Opposing-region coordination: `diamond360-opposing-region-symmetry/1`
+
+`opposing-symmetry.json` measures four declared image-space opposing pairs:
+`side_E↔side_W`, `side_N↔side_S`, `corner_NE↔corner_SW`, and
+`corner_NW↔corner_SE`. It consumes `diamond360-activation/1`
+`relative_values`; it does not define a new photometric normalization.
+
+Each component trace is:
+
+`C_(r,t) = log(B_(r,t)) - log(G_t)`
+
+where `B_(r,t)` is the supported regional median encoded brightness and `G_t`
+is the same #26 fixed-common-support whole-stone median. A shared positive
+multiplicative whole-frame brightness change therefore cancels by construction.
+
+For each pair the schema preserves the complete paired frame trace, signed and
+absolute pair difference, adjacent-step trace, support diagnostics, upstream trace
+provenance, monotone validity/reasons and deterministic evidence. The three tested
+summary families are:
+
+- `correlation`: Pearson correlation across paired finite component observations;
+- `median_absolute_difference`: median `abs(C_left-C_right)`;
+- `sign_agreement`: same-direction / (same-direction + opposite-direction)
+  over observed non-flat adjacent source-step pairs.
+
+`median_signed_difference` is retained as a directional audit field. Flat adjacent
+moves remain explicit in counts but are excluded from the sign-agreement denominator.
+Missing, rejected, non-finite or non-adjacent observations break adjacency and are never
+interpolated. Explicit `255→0` adjacency is accepted only when the requested interval
+declares wrapping. Correlation is unavailable with fewer than three paired finite
+observations or zero variance in either component trace.
+
+The primary retained representation is `coarse_whole` with `fixed` support.
+`dynamic` support and coarse/semantic inner/middle radial restrictions are emitted as
+falsification/localisation views. Semantic validity affects only semantic-restricted
+surfaces. Pair validity is the monotone worse state of both component traces plus
+pair-local mathematical availability.
+
+Evidence metadata selects strongest coordinated, strongest divergent and representative
+typical adjacent events. PNG evidence panels plot both component traces and overlay both
+pair members on the same source frames. Aggregate disagreement records identify
+fixed↔dynamic and coarse↔semantic falsification cases.
+
+The four-stone #31 benchmark retains fixed coarse-whole pair correlation as the primary
+coordination summary. Median absolute pair difference remains audit evidence; adjacent
+sign agreement is not a separate primary scalar. The descriptor remains four pairwise
+observations: no aggregate symmetry score, exact physical-facet identity, cut-quality
+grade, calibrated light-return claim or purchase score is defined.

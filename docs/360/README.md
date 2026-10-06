@@ -223,3 +223,16 @@ Fixed-support median largest-component fraction survives as the primary
 broad↔fragmented descriptor. Effective/raw component counts are diagnostic only,
 and radial band restriction is deliberately omitted because imposed boundaries
 can manufacture fragmentation.
+
+## Opposing-region coordination descriptor validation
+
+Issue #31's four-stone benchmark is documented in
+[opposing-symmetry/README.md](opposing-symmetry/README.md). It consumes #26's
+relative activation traces for the four declared opposing side/corner pairs and
+tests correlation, median pair imbalance and adjacent sign agreement across the
+exact 17-frame core plus 33-frame sensitivity window. The retained primary
+definition is **fixed coarse-whole pair correlation**, kept separately for E/W,
+N/S, NE/SW and NW/SE rather than collapsed into one symmetry score. Dynamic
+support and coarse/semantic radial restrictions remain QC/localisation views;
+median pair difference remains audit evidence and sign agreement is rejected as
+a separate primary scalar.
