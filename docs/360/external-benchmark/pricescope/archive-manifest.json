@@ -2,19 +2,19 @@
   "schema_version": "sparkles-external-archive/1",
   "benchmark_id": "pricescope-asscher-external-v0",
   "archive_date": "2026-10-06",
-  "disposition": "article_originals_recovered_forum_inline_previews_recovered",
+  "disposition": "article_originals_recovered_forum_inline_previews_and_both_d360_sequences_recovered",
   "purpose": "Durable provenance record for external falsification. No descriptor analysis or metric tuning is included.",
   "completeness": {
     "catalogued_samples": 32,
     "explicit_original_media_urls": 16,
     "forum_post_samples": 10,
-    "byte_archived_samples": 26,
-    "hashed_samples": 26,
-    "original_byte_archived_samples": 16,
+    "byte_archived_samples": 28,
+    "hashed_samples": 28,
+    "original_byte_archived_samples": 18,
     "forum_inline_preview_samples": 10,
     "partial_d360_samples": 0,
-    "complete_d360_sequences": 1,
-    "d360_original_frames": 256
+    "complete_d360_sequences": 2,
+    "d360_original_frames": 512
   },
   "verification": {
     "source_context": "PriceScope article and three forum threads/linked product pages were independently checked against currently accessible public pages on 2026-10-06.",
@@ -30,10 +30,19 @@
       {
         "run_id": 37533954460,
         "result": "16 direct media URLs probed: 14 PriceScope-hosted assets remained HTTP 403; both Kashi MP4s downloaded successfully and were hashed."
+      },
+      {
+        "run_id": 37536103420,
+        "result": "Saved CI artifact contains both complete exact-viewer D360 sequences; Crispest imported from artifact 11446043257, SHA-256 56d7c68e965e3edbba0cd875af670873bcd64399f11ff48a11ff285d9815b3d2."
+      },
+      {
+        "run_id": 37537412407,
+        "result": "Published v3 release archive; all prior media bytes preserved and 256 Crispest JPEGs decoded and hash-validated. Downloaded release bytes matched the published ZIP."
       }
     ],
     "integrity_rule": "Do not invent SHA-256 or byte counts. Populate them only after exact original bytes are successfully recovered.",
-    "work_session_recovery": "26 assets fetched with curl; images decoded, MP4s fully decoded, hashes and byte counts checked. Raw media excluded from Git."
+    "work_session_recovery": "26 assets fetched with curl; images decoded, MP4s fully decoded, hashes and byte counts checked. Raw media excluded from Git.",
+    "release_v3_validation": "Local re-download verified ZIP integrity and every member against prepared v3. Crispest: 256 unique 648×511 JPEGs, contiguous source indices, recorded byte counts/SHA-256 and frame 0/still agreement. Both sequences total 512 original frames."
   },
   "storage_policy": {
     "git": "Source catalog, manifest and retrieval tooling only.",
@@ -492,8 +501,9 @@
       "sample_id": "asscher-eval-crispest",
       "url": "https://d360.tech/view.html?d=79-BT-5165227",
       "source_kind": "d360_viewer",
-      "status": "not_attempted_after_source_block",
-      "archive_note": "Existing viewer locator retained; no frame retrieval attempted after explicit source service block."
+      "status": "complete_frame_sequence_archived",
+      "archive_note": "Recovered from saved exact-viewer CI artifact after live batch 1 returned HTTP 403. All 256 unique original 648×511 JPEGs validated; original source manifest, indices and hashes preserved. Visual inspection remains sampled.",
+      "manifest_path": "d360/asscher-eval-crispest/source-manifest.json"
     },
     {
       "sample_id": "asscher-eval-small-positive",
@@ -513,14 +523,13 @@
     }
   ],
   "storage_bundle": {
-    "filename": "pricescope-media-recovery-2026-10-06-v2.zip",
-    "library_file_id": "libfile_a2fd6a1be6888191ab540158c3265490",
-    "download_url": "https://github.com/choonkiatlee/sparkles/releases/download/pricescope-research-2026-10-06-v1/pricescope-media-recovery-2026-10-06-v2.zip",
-    "bytes": 27965043,
-    "sha256": "e6957362c756558a204400dd29e0abc0ceef2da541d6f12747dc17529aed89bf",
-    "current_version_number": 2,
+    "filename": "pricescope-media-recovery-2026-10-06-v3.zip",
+    "download_url": "https://github.com/choonkiatlee/sparkles/releases/download/pricescope-research-2026-10-06-v1/pricescope-media-recovery-2026-10-06-v3.zip",
+    "bytes": 36567890,
+    "sha256": "379f411098e4d96df78d7c00fea5bb9fd18d5f37d890b873928c4003ba126da5",
+    "archive_revision": 3,
     "github_release_url": "https://github.com/choonkiatlee/sparkles/releases/tag/pricescope-research-2026-10-06-v1",
-    "github_asset_id": 616751835
+    "github_asset_id": 616764645
   },
   "d360_recovery": {
     "asscher-eval-glittery": {
@@ -535,9 +544,19 @@
       "inspection": "Inspected ordered overview at indices 0,16,...,240, plus full-resolution originals 252,0,4. Derived GIF samples every fourth frame; not watched as motion. Not all 256 visually inspected."
     },
     "asscher-eval-crispest": {
-      "status": "not_retrieved",
-      "viewer": "https://d360.tech/view.html?d=79-BT-5165227",
-      "reason": "No saved extract found; further live retrieval not attempted after earlier explicit source-service scraping block."
+      "status": "complete_frame_sequence_archived",
+      "frames": 256,
+      "dimensions": [
+        648,
+        511
+      ],
+      "manifest_path": "d360/asscher-eval-crispest/source-manifest.json",
+      "source_artifact_id": 11446043257,
+      "source_workflow_run": 37536103420,
+      "inspection": "Ordered overview 0,16,...,240 and originals 252,0,4. Not all frames visually inspected.",
+      "original_jpeg_bytes": 8352663,
+      "manifest_sha256": "4f854efe658bbf17008c3772f23360346d676ed327babe12c3d180ac28e579a7",
+      "provenance_path": "d360/asscher-eval-crispest/recovery-provenance.json"
     }
   },
   "d360_recovery_history": [
