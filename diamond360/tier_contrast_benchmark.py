@@ -424,6 +424,11 @@ def _semantic_geometry(payload, spec):
     sources = [boundary_source, inner_source, outer_source]
     if template_status == "review":
         reasons.append(payload.get("template_reason") or "semantic_template_review")
+    if "partial_boundary" in sources:
+        reasons.append(
+            "partial_step_boundary:"
+            + (template_reason or "full_template_unavailable")
+        )
     if any(source in {"partial_boundary", "mirrored_inner_span", "mirrored_outer_span"}
            for source in sources):
         reasons.append("semantic_geometry_partial")
