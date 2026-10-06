@@ -1,0 +1,134 @@
+{
+  "schema_version": "diamond360-tier-contrast-raw-pixel-benchmark/1",
+  "source": {
+    "workflow_run_id": 37516176095,
+    "source_bundles": "docs/360/benchmark/source-bundles.json",
+    "preprocessing": "33-frame wide benchmark interval only; original 256 source indices/provenance retained",
+    "validation": "targeted unit suite passed before benchmark"
+  },
+  "core_wide_rank_spearman": {
+    "centre__inner": {
+      "simple_q10": 0,
+      "simple_q50": 0.2,
+      "simple_q90": 0.8,
+      "standardized_q10": -0.8,
+      "standardized_q50": 0.4,
+      "standardized_q90": 0,
+      "localized_q10": 0.8,
+      "localized_q50": 0.8,
+      "localized_q90": 0.8
+    },
+    "inner__middle": {
+      "simple_q10": -0.4,
+      "simple_q50": 0,
+      "simple_q90": 0.8,
+      "standardized_q10": -0.4,
+      "standardized_q50": 0.4,
+      "standardized_q90": 0.8,
+      "localized_q10": 0.4,
+      "localized_q50": 0.8,
+      "localized_q90": 0.8
+    }
+  },
+  "counterexample_checks": [
+    {
+      "observation_id": "LG756520111-tier-readability",
+      "certificate": "IGI-LG756520111",
+      "pair": "inner__middle",
+      "source_index": 248,
+      "simple": 0.0002380015530564633,
+      "standardized": 0.0030418765847625927,
+      "localized_median": 0.014785221856811116,
+      "localized_q75": 0.023140678571315826,
+      "strongest_sector": "side_S",
+      "strongest_sector_separation": 0.04386239882792678
+    },
+    {
+      "observation_id": "LG756580087-pale-inner-panels",
+      "certificate": "IGI-LG756580087",
+      "pair": "centre__inner",
+      "source_index": 0,
+      "simple": 0.011169279894345296,
+      "standardized": 0.07082104609516604,
+      "localized_median": 0.041891525894865306,
+      "localized_q75": 0.09999283826422117,
+      "strongest_sector": "corner_SW",
+      "strongest_sector_separation": 0.12265465720330229
+    },
+    {
+      "observation_id": "LG818659722-static-crispness",
+      "certificate": "IGI-LG818659722",
+      "pair": "centre__inner",
+      "source_index": 0,
+      "simple": 0.007861042594183465,
+      "standardized": 0.021826754804423084,
+      "localized_median": 0.10036694811122557,
+      "localized_q75": 0.13276427229980067,
+      "strongest_sector": "side_W",
+      "strongest_sector_separation": 0.13801589228639258
+    },
+    {
+      "observation_id": "LG836619414-static-crispness",
+      "certificate": "IGI-LG836619414",
+      "pair": "inner__middle",
+      "source_index": 0,
+      "simple": 0.012676375906232162,
+      "standardized": 0.07005051889421657,
+      "localized_median": 0.10157563319486503,
+      "localized_q75": 0.21203078878702458,
+      "strongest_sector": "side_W",
+      "strongest_sector_separation": 0.2891988339322307
+    }
+  ],
+  "localized_redundancy_diagnostics": {
+    "sample_size": 4,
+    "note": "Spearman only; diagnostic, not significance evidence.",
+    "centre__inner": {
+      "q10": {
+        "mean_component_activation": 0.4,
+        "mean_component_occupancy": 0,
+        "nested_step_coordination": 0.4
+      },
+      "q50": {
+        "mean_component_activation": 1,
+        "mean_component_occupancy": 0.2,
+        "nested_step_coordination": 1
+      },
+      "q90": {
+        "mean_component_activation": 0.8,
+        "mean_component_occupancy": 0.4,
+        "nested_step_coordination": 0.8
+      }
+    },
+    "inner__middle": {
+      "q10": {
+        "mean_component_activation": 0.4,
+        "mean_component_occupancy": 1,
+        "nested_step_coordination": -0.2
+      },
+      "q50": {
+        "mean_component_activation": 0.4,
+        "mean_component_occupancy": 1,
+        "nested_step_coordination": -0.2
+      },
+      "q90": {
+        "mean_component_activation": 0.8,
+        "mean_component_occupancy": 0.8,
+        "nested_step_coordination": 0.4
+      }
+    }
+  },
+  "candidate_dispositions": {
+    "coarse_simple": "REJECT_AS_PRODUCTION_KEEP_AS_BASELINE",
+    "coarse_standardized": "REJECT_AS_FIX_KEEP_AS_CONTROL",
+    "localized_matched_sector": "REVISE_PROMISING",
+    "issue_49": "REVISE"
+  },
+  "conclusions": [
+    "Standardizing coarse whole-band separation does not recover contrast lost by spatial averaging.",
+    "Matched-sector localization fixes the concrete coarse-cancellation counterexamples and materially improves Q50 core/wide rank stability.",
+    "Localized Q50 core/wide Spearman is 0.8 for both adjacent pairs, versus 0.2 and 0.0 for coarse Q50.",
+    "At n=4 localized summaries still show substantial rank redundancy with retained activation/occupancy/coordination descriptors, so incremental cross-stone value is not established.",
+    "Do not add issue #49 to the production descriptor profile yet."
+  ]
+}
