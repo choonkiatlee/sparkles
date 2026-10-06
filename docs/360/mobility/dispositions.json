@@ -1,0 +1,111 @@
+{
+  "schema_version": "diamond360-contrast-mobility-dispositions/1",
+  "issue": 30,
+  "scope": "Four complete #18 benchmark stones; 17-frame core primary, 33-frame window sensitivity only.",
+  "primary_definition": {
+    "upstream_schema": "diamond360-activation/1",
+    "representation": "coarse",
+    "regions": [
+      "centre",
+      "inner",
+      "middle"
+    ],
+    "support_mode": "fixed",
+    "trace_type": "relative",
+    "primitive": "absolute adjacent observed-source-step activation change",
+    "primary_scalar": "median mobility",
+    "units": "activation-trace units per observed source step"
+  },
+  "redundancy": {
+    "pooled_core_primary_local": {
+      "median_vs_activation_total_excursion_spearman_rho": 0.8531468531468532,
+      "median_vs_switching_rate_spearman_rho": 0.4125874125874127,
+      "q90_vs_activation_total_excursion_spearman_rho": 0.8531468531468532,
+      "q90_vs_switching_rate_spearman_rho": 0.46153846153846156,
+      "median_vs_q90_spearman_rho": 0.9440559440559443
+    },
+    "whole_stone_core_median_vs_activation_total_excursion_spearman_rho": 1,
+    "interpretation": "Local mobility is related to interval excursion but materially more distinct from thresholded spatial switching; whole-stone mobility is redundant with whole-stone excursion in this four-stone core."
+  },
+  "decisions": [
+    {
+      "candidate": "coarse-fixed centre relative median mobility",
+      "disposition": "KEEP",
+      "role": "primary local continuous-change descriptor",
+      "reason": "Core-to-wide rank rho=1.0; pair evidence corresponds to visible regional change; pooled local mobility is not identical to either #26 excursion or #28 switching."
+    },
+    {
+      "candidate": "coarse-fixed inner relative median mobility",
+      "disposition": "KEEP",
+      "role": "primary local continuous-change descriptor",
+      "reason": "Core-to-wide rank rho=0.8; LG756520111 inner supplies a strong excursion-vs-typical-motion disagreement while pair evidence remains visually ordered."
+    },
+    {
+      "candidate": "coarse-fixed middle relative median mobility",
+      "disposition": "KEEP",
+      "role": "primary local continuous-change descriptor",
+      "reason": "Core-to-wide rank rho=1.0 and switching-rank correlation is only 0.6 within this band, preserving a continuous-change interpretation distinct from threshold switching."
+    },
+    {
+      "candidate": "whole-stone fixed raw median mobility",
+      "disposition": "REJECT",
+      "role": "audit pair trace only",
+      "reason": "Four-stone core ranking is identical to whole-stone activation total excursion (rho=1.0), so a second broad scalar is not justified."
+    },
+    {
+      "candidate": "Q90 mobility",
+      "disposition": "REJECT",
+      "role": "retained upper-tail audit field",
+      "reason": "Pooled core local Q90 and median ranks are highly similar (rho≈0.94); Q90 does not justify a separate primary scalar."
+    },
+    {
+      "candidate": "coarse-fixed centre/inner/middle raw mobility",
+      "disposition": "REJECT",
+      "role": "activation audit only",
+      "reason": "Issue #26 retained regional raw activation as an audit primitive and relative activation as the primary local descriptor; #30 does not promote the raw branch into a second mobility family."
+    },
+    {
+      "candidate": "coarse-fixed outer mobility",
+      "disposition": "REVISE",
+      "role": "support-sensitivity candidate",
+      "reason": "Inherits #26 outer-region pose/persistent-support sensitivity; #30 cannot upgrade an unresolved upstream trace."
+    },
+    {
+      "candidate": "semantic fixed mobility",
+      "disposition": "REVISE",
+      "role": "representation/support sensitivity",
+      "reason": "Inherits #26 semantic correspondence/support uncertainty; useful for falsification but not a primary descriptor."
+    },
+    {
+      "candidate": "dynamic-support mobility",
+      "disposition": "REJECT",
+      "role": "not derived",
+      "reason": "Issue #26 rejected dynamic-support activation as a primary descriptor, so #30 deliberately does not rederive it."
+    }
+  ],
+  "evidence": [
+    {
+      "path": "per-stone/IGI-LG756520111/core/evidence/coarse-inner-fixed-relative.png",
+      "purpose": "strongest mobility-versus-excursion rank disagreement"
+    },
+    {
+      "path": "per-stone/IGI-LG756580087/core/evidence/coarse-centre-fixed-relative.png",
+      "purpose": "high continuous mobility versus relatively low switching"
+    },
+    {
+      "path": "per-stone/IGI-LG756580087/core/evidence/coarse-middle-fixed-relative.png",
+      "purpose": "low continuous mobility versus high switching"
+    },
+    {
+      "path": "per-stone/IGI-LG818659722/core/evidence/coarse-inner-fixed-relative.png",
+      "purpose": "strong visible mobility event plus near-static control"
+    }
+  ],
+  "constraints": [
+    "No brightness, mask, support or normalization is independently rederived from images.",
+    "Missing/rejected/non-finite activation observations break adjacency; no interpolation.",
+    "No sparkle frequency in time or degrees is inferred.",
+    "No quality grade, fire, leakage or calibrated light-return claim is made.",
+    "Validity is inherited monotonically from the exact #26 source trace."
+  ]
+}
