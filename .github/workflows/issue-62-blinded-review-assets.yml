@@ -1,0 +1,73 @@
+name: Issue 62 blinded review assets
+
+on:
+  push:
+    branches:
+      - issue-62-human-review
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Extract blinded original frames
+        run: |
+          python - <<'PY'
+          import hashlib, json, zipfile
+          from pathlib import Path
+          from urllib.request import urlretrieve
+
+          # Deliberately opaque user-facing ordering. Do not emit certificate/index
+          # metadata into the artifact.
+          selections = [
+              ("IGI-LG756580087", 4,   "pair-1-A.jpg"),
+              ("IGI-LG756580087", 253, "pair-1-B.jpg"),
+              ("IGI-LG818659722", 5,   "pair-2-A.jpg"),
+              ("IGI-LG818659722", 3,   "pair-2-B.jpg"),
+              ("IGI-LG836619414", 0,   "pair-3-A.jpg"),
+              ("IGI-LG836619414", 6,   "pair-3-B.jpg"),
+              ("IGI-LG756520111", 254, "pair-4-A.jpg"),
+              ("IGI-LG756520111", 253, "pair-4-B.jpg"),
+          ]
+
+          bundle_index = json.loads(
+              Path("docs/360/benchmark/source-bundles.json").read_text()
+          )
+          bundles = {row["certificate"]: row for row in bundle_index["bundles"]}
+          out = Path("/tmp/issue62-blinded")
+          out.mkdir(parents=True, exist_ok=True)
+          cache = Path("/tmp/issue62-downloads")
+          cache.mkdir(parents=True, exist_ok=True)
+
+          for cert in sorted({cert for cert, _, _ in selections}):
+              bundle = bundles[cert]
+              archive = cache / bundle["filename"]
+              urlretrieve(bundle["download_url"], archive)
+              assert archive.stat().st_size == bundle["bytes"]
+              assert hashlib.sha256(archive.read_bytes()).hexdigest() == bundle["sha256"]
+
+              manifest_path = Path("docs/360/benchmark/per-stone") / cert / "source-manifest.json"
+              manifest = json.loads(manifest_path.read_text())
+              frames = {row["source_index"]: row for row in manifest["frames"]}
+
+              with zipfile.ZipFile(archive) as zf:
+                  for c, source_index, output_name in selections:
+                      if c != cert:
+                          continue
+                      row = frames[source_index]
+                      payload = zf.read(row["path"])
+                      assert hashlib.sha256(payload).hexdigest() == row["sha256"]
+                      (out / output_name).write_bytes(payload)
+
+          assert len(list(out.glob("*.jpg"))) == 8
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: issue62-blinded-originals
+          path: /tmp/issue62-blinded
