@@ -865,6 +865,7 @@ class SelectedEvidence:
 
 
 def item_coverage(item: EvidenceItem):
+    """All visual roles represented by claims at this exact source event."""
     return tuple(sorted({
         _FAMILY_COVERAGE[claim.descriptor_family]
         for claim in item.claims
@@ -956,6 +957,53 @@ def _claim_role_rank(claim, role, profile):
     )
 
 
+def _claim_role_tier(claim, role, profile):
+    """Comparable preference tier without native-ID or numeric tie-breaks."""
+    rank = _claim_role_rank(claim, role, profile)
+    return (
+        _STATUS_RANK[claim.validity_status],
+        rank[0],
+        rank[1],
+    )
+
+
+def _best_role_tiers(items, profile):
+    tiers = {}
+    for role in COVERAGE_ORDER:
+        claims = [
+            claim
+            for item in items
+            for claim in item.claims
+            if _FAMILY_COVERAGE.get(claim.descriptor_family) == role
+        ]
+        if claims:
+            tiers[role] = min(
+                _claim_role_tier(claim, role, profile)
+                for claim in claims
+            )
+    return tiers
+
+
+def _representative_item_coverage(item, profile, best_tiers):
+    """Roles for which this item contains best-tier native evidence.
+
+    Exact merging may satisfy several roles, but an incidental weaker/wrong-sign
+    claim must not suppress a better representative elsewhere in the packet.
+    """
+    covered = []
+    for role in COVERAGE_ORDER:
+        best = best_tiers.get(role)
+        if best is None:
+            continue
+        if any(
+            _FAMILY_COVERAGE.get(claim.descriptor_family) == role
+            and _claim_role_tier(claim, role, profile) == best
+            for claim in item.claims
+        ):
+            covered.append(role)
+    return tuple(covered)
+
+
 def _item_role_rank(item, role, profile):
     claims = [
         claim for claim in item.claims
@@ -1038,6 +1086,7 @@ def select_compact_evidence(
     items = sorted(items, key=lambda item: item.sort_key())
     groups = list(near_groups or group_near_duplicates(items))
     group_lookup = _near_group_lookup(items, groups)
+    best_tiers = _best_role_tiers(items, profile)
     selected: list[SelectedEvidence] = []
     covered = set()
 
@@ -1048,13 +1097,19 @@ def select_compact_evidence(
             continue
         candidates = [
             item for item in items
-            if role in item_coverage(item)
-            and item.location.key not in {chosen.item.location.key for chosen in selected}
+            if role in _representative_item_coverage(
+                item, profile, best_tiers
+            )
+            and item.location.key not in {
+                chosen.item.location.key for chosen in selected
+            }
         ]
         if not candidates:
             continue
         chosen = min(candidates, key=lambda item: _item_role_rank(item, role, profile))
-        coverage = item_coverage(chosen)
+        coverage = _representative_item_coverage(
+            chosen, profile, best_tiers
+        )
         selected.append(SelectedEvidence(
             item=chosen,
             coverage_families=coverage,
@@ -1083,7 +1138,9 @@ def select_compact_evidence(
             meaningful,
             key=lambda item: _contrast_rank(item, selected, profile),
         )
-        coverage = item_coverage(chosen)
+        coverage = _representative_item_coverage(
+            chosen, profile, best_tiers
+        )
         selected.append(SelectedEvidence(
             item=chosen,
             coverage_families=coverage,
