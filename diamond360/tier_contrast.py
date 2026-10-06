@@ -571,6 +571,20 @@ def joint_nested_tier_readability(centre_inner_trace, inner_middle_trace):
                 max_scale_spread[sector] = max(spreads) if spreads else None
 
         coverage = _sector_distribution(joint.values())
+        first_coverage = _sector_distribution(first_sep.values())
+        second_coverage = _sector_distribution(second_sep.values())
+        pairwise_median_weakest = (
+            min(first_coverage["q50"], second_coverage["q50"])
+            if first_coverage["q50"] is not None
+            and second_coverage["q50"] is not None
+            else None
+        )
+        joint_median_penalty = (
+            float(pairwise_median_weakest - coverage["q50"])
+            if pairwise_median_weakest is not None
+            and coverage["q50"] is not None
+            else None
+        )
         finite_spread = [
             value for value in max_scale_spread.values()
             if value is not None
@@ -591,6 +605,15 @@ def joint_nested_tier_readability(centre_inner_trace, inner_middle_trace):
             "q90_joint_separation": coverage["q90"],
             "iqr_joint_separation": coverage["iqr"],
             "mad_joint_separation": coverage["mad"],
+            "centre_inner_median_separation": first_coverage["q50"],
+            "inner_middle_median_separation": second_coverage["q50"],
+            "pairwise_median_weakest": pairwise_median_weakest,
+            "joint_median_penalty": joint_median_penalty,
+            "joint_coverage_gap": (
+                float(coverage["q50"] - coverage["q25"])
+                if coverage["q50"] is not None and coverage["q25"] is not None
+                else None
+            ),
             "median_max_component_scale_spread": (
                 float(np.median(finite_spread)) if finite_spread else None
             ),
@@ -606,6 +629,14 @@ def joint_nested_tier_readability(centre_inner_trace, inner_middle_trace):
         scale_spread_values.append(row["median_max_component_scale_spread"])
 
     total_n = sum(total_counts.values())
+    evidence = {
+        "strongest_joint_median_penalty": _extreme_event(
+            frame_trace, "joint_median_penalty", True
+        ),
+        "strongest_joint_coverage_gap": _extreme_event(
+            frame_trace, "joint_coverage_gap", True
+        ),
+    }
     return {
         "sectors": (
             sorted((centre_inner_trace[0].get("sector_separations") or {}).keys())
@@ -625,6 +656,7 @@ def joint_nested_tier_readability(centre_inner_trace, inner_middle_trace):
             for state, count in total_counts.items()
         },
         "ordering_observations": total_n,
+        "evidence": evidence,
     }
 
 def select_sectorized_evidence(frame_trace):
