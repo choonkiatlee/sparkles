@@ -91,6 +91,27 @@ Current disposition for #23 language: **broad vs fragmented/fine flash
 structure is a calibrated character descriptor; preference direction remains
 unestablished**.
 
+## #21 compact-evidence audit
+
+The final #21 packets are now joined into the calibration rather than merely
+planned. They contain 4 / 4 / 5 / 4 selected items for the four stones and cover
+all six descriptor roles.
+
+Across the 21 curated descriptor relationships:
+
+- **16** have an exact selected packet item carrying that retained field;
+- **5** use an explicit `family_representative` because #21 deliberately
+  de-duplicated the field-specific native event from the compact packet;
+- **0** are missing machine evidence;
+- the resulting 24 packet-item references split evenly: **12** overlap at least
+  one human-selected review frame and **12** provide an independent nearby/core
+  evidence check.
+
+This is the right behaviour for a compact audit packet. A family representative
+must not be described downstream as if it were direct evidence for the exact
+scalar; #23 should preserve the `exact_field` versus
+`family_representative` distinction.
+
 ## Recurring observations the retained profile does not explain
 
 Two concepts recur without a defensible retained descriptor link:
@@ -134,7 +155,7 @@ observable → measurement → evidence validation process as #26–#33.
 - **Broader flash components ≠ better:** LG756580087 is broadest and
   LG836619414 finest in this sample; both are Shortlist.
 
-## What #23 can safely consume after #21 evidence integration
+## What #23 can safely consume now
 
 The current calibration supports cautious statements such as:
 
