@@ -36,6 +36,13 @@ Two geometries are measured on the same source pixels:
 - **coarse control** — the legacy coarse fixed radial boundary used by the
   original measurement layer.
 
+A full #19 four-band partition remains all-or-nothing. For #57 only, #19 now
+also preserves any individually supported boundary controls when another boundary
+fails. A partial boundary is usable only for this local two-strip measurement,
+is explicitly marked **review**, and does not make the full semantic step
+representation available. This matters when, for example, the outer boundary is
+missing but centre-inner and inner-middle are still well supported.
+
 This separates two questions:
 
 1. is measuring locally across a boundary useful?
