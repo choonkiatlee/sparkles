@@ -31,11 +31,14 @@ score. It tries to cover these visual roles where evidence exists:
 5. opposing-direction organisation;
 6. flash morphology.
 
-One exact event can satisfy several roles. For example, switching, nested-step
-and opposing-region claims that all select the same adjacent source pair are
-merged into one item. The nominal 4-item lower target is soft: if fewer exact
-items already cover every available role, the packet is not padded with
-repetition. The hard cap is six items.
+One exact event can satisfy several roles only when it contains the best
+available native evidence tier for each claimed role. Incidental weaker or
+wrong-sign claims remain attached for auditability but do not suppress a better
+representative elsewhere. For example, switching, nested-step and
+opposing-region claims that all select the same adjacent source pair can merge
+into one item when each is representative. The nominal 4-item lower target is
+soft: if fewer exact items already cover every available role, the packet is
+not padded with repetition. The hard cap is six items.
 
 For correlation descriptors, the representative native event follows the sign
 of the retained #45 field: coordinated evidence is preferred for positive
