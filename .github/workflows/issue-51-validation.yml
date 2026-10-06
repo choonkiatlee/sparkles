@@ -54,13 +54,90 @@ jobs:
           git fetch origin issue-49-tier-contrast
           git show origin/issue-49-tier-contrast:docs/360/tier-contrast/summary.json > /tmp/tier-contrast.json
 
-      - name: Four-stone benchmark
+      - name: Four-stone benchmark on exact canonical windows
         run: |
-          python -m diamond360.articulation_benchmark \
-            docs/360/benchmark/benchmark.json \
-            --source-root /tmp/sources \
-            --output /tmp/issue51-benchmark \
-            --tier-contrast-summary /tmp/tier-contrast.json
+          python - <<'PY'
+          import json
+          import shutil
+          from pathlib import Path
+
+          from diamond360 import articulation_benchmark as arb
+          from diamond360 import benchmark
+          from diamond360.pipeline import run as preprocess
+
+          manifest_path = Path("docs/360/benchmark/benchmark.json").resolve()
+          manifest = benchmark.validate_manifest(json.loads(manifest_path.read_text()))
+          source_root = Path("/tmp/sources")
+          sparse_root = Path("/tmp/sparse")
+          processed_root = Path("/tmp/processed")
+          output = Path("/tmp/issue51-benchmark")
+          results = {}
+
+          for stone in manifest["stones"]:
+              if stone["source_status"] != "complete":
+                  continue
+              cert = stone["certificate"]
+              full_source = source_root / cert
+              source_manifest = json.loads((full_source / "source-manifest.json").read_text())
+              wide = benchmark.cyclic_window(
+                  stone["faceup_center"], manifest["wide_window"], stone["source_frame_count"]
+              )
+              wanted = set(wide)
+
+              sparse = sparse_root / cert
+              (sparse / "frames").mkdir(parents=True, exist_ok=True)
+              kept = []
+              for frame in source_manifest["frames"]:
+                  if frame["source_index"] not in wanted:
+                      continue
+                  src = full_source / frame["path"]
+                  dst = sparse / frame["path"]
+                  dst.parent.mkdir(parents=True, exist_ok=True)
+                  shutil.copy2(src, dst)
+                  kept.append(frame)
+              derived = dict(source_manifest)
+              derived["frames"] = kept
+              derived["sequence_complete"] = False
+              (sparse / "source-manifest.json").write_text(
+                  json.dumps(derived, indent=2, allow_nan=False) + "\n"
+              )
+
+              processed = processed_root / cert
+              processed.parent.mkdir(parents=True, exist_ok=True)
+              preprocess(
+                  sparse,
+                  processed,
+                  order_manifest=sparse / "source-manifest.json",
+                  gain=1.0,
+                  diagnostic_indices=wide,
+                  accept_review=True,
+              )
+
+              results[cert] = {}
+              for window, size in (("core", manifest["core_window"]), ("wide", manifest["wide_window"])):
+                  indices = benchmark.cyclic_window(
+                      stone["faceup_center"], size, stone["source_frame_count"]
+                  )
+                  wrap = any(b < a for a, b in zip(indices, indices[1:]))
+                  result = arb.measure_stone(processed, indices, wrap=wrap)
+                  arb.write_stone_outputs(
+                      result, output / "per-stone" / cert / window, processed=processed
+                  )
+                  results[cert][window] = result
+
+          profile = json.loads(Path("docs/360/profile/comparison.json").read_text())
+          observations = json.loads(Path("docs/360/calibration/human-observations.json").read_text())
+          tier = json.loads(Path("/tmp/tier-contrast.json").read_text())
+          summary = arb.build_benchmark_summary(
+              results, profile=profile, tier_contrast=tier, observations=observations
+          )
+          arb.write_benchmark_summary(summary, output)
+          print(json.dumps({
+              "stones": sorted(results),
+              "rows": len(summary["rows"]),
+              "disposition": summary["disposition"],
+          }, indent=2))
+          PY
 
       - uses: actions/upload-artifact@v4
         with:
