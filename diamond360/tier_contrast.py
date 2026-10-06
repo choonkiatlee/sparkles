@@ -225,3 +225,92 @@ def compose_validity(component_validities, local_summary):
             if reason and reason not in reasons:
                 reasons.append(reason)
     return {"status": worst, "reasons": reasons}
+
+
+def sectorized_contrast_trace(left_sector_values, right_sector_values, source_indices):
+    """Preserve matched directional-sector contrast, then summarize typical local separation.
+
+    Inputs map sector name -> positive brightness-median trace. The calculation
+    uses log ratios directly, so common multiplicative scene brightness cancels.
+    Sector labels are image-axis locations only, not facet identities.
+    """
+    if set(left_sector_values) != set(right_sector_values) or not left_sector_values:
+        raise ValueError("left/right sector sets must match and be non-empty")
+    sectors = tuple(sorted(left_sector_values))
+    per_sector = {}
+    for sector in sectors:
+        left = left_sector_values[sector]
+        right = right_sector_values[sector]
+        if len(left) != len(source_indices) or len(right) != len(source_indices):
+            raise ValueError("sector traces must align with source indices")
+        left_log = []
+        right_log = []
+        for values, target in ((left, left_log), (right, right_log)):
+            for value in values:
+                value = _finite(value)
+                target.append(
+                    float(math.log(value))
+                    if value is not None and value > 0 else None
+                )
+        per_sector[sector] = contrast_trace(left_log, right_log, source_indices)
+
+    frame_trace = []
+    median_values = []
+    q75_values = []
+    for position, source_index in enumerate(source_indices):
+        values = {
+            sector: per_sector[sector]["frame_trace"][position]["separation"]
+            for sector in sectors
+        }
+        finite = {
+            sector: float(value)
+            for sector, value in values.items()
+            if _finite(value) is not None
+        }
+        row = {
+            "position": position,
+            "source_index": source_index,
+            "status": "ok" if finite else "gap",
+            "sector_separations": values,
+            "finite_sectors": len(finite),
+            "median_separation": None,
+            "q75_separation": None,
+            "strongest_sector": None,
+            "strongest_sector_separation": None,
+        }
+        if finite:
+            data = np.asarray(list(finite.values()), float)
+            row["median_separation"] = float(np.median(data))
+            row["q75_separation"] = float(np.quantile(data, .75))
+            strongest = max(finite, key=lambda sector: (finite[sector], sector))
+            row["strongest_sector"] = strongest
+            row["strongest_sector_separation"] = finite[strongest]
+        frame_trace.append(row)
+        median_values.append(row["median_separation"])
+        q75_values.append(row["q75_separation"])
+
+    return {
+        "sectors": list(sectors),
+        "per_sector": per_sector,
+        "frame_trace": frame_trace,
+        "median_summary": summarise(median_values),
+        "q75_summary": summarise(q75_values),
+    }
+
+
+def select_sectorized_evidence(frame_trace):
+    """Weak/typical/strong frames using median matched-sector separation."""
+    pseudo = [
+        {
+            "position": item["position"],
+            "source_index": item["source_index"],
+            "status": item["status"],
+            "separation": item.get("median_separation"),
+            "finite_sectors": item.get("finite_sectors"),
+            "strongest_sector": item.get("strongest_sector"),
+            "strongest_sector_separation": item.get("strongest_sector_separation"),
+            "sector_separations": item.get("sector_separations"),
+        }
+        for item in frame_trace
+    ]
+    return select_evidence(pseudo)
