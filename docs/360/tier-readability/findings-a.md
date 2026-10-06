@@ -1,195 +1,202 @@
-# PR A findings — boundary-local tier contrast
+# PR A / A2 findings — boundary-local tier contrast
 
 Issue: #57  
 Implementation: PR #61
 
-## Disposition: **REVISE, preserve the primitive and proceed to PR B/C**
+## Disposition: **KEEP as the research primitive; proceed to PR B/C**
 
-PR A establishes a useful **boundary-local matched-sector measurement layer**,
-but it does not justify promoting one boundary geometry, strip width, or scalar
-summary into the production profile.
+The original PR A result was **REVISE** because two effects were mixed together:
 
-The guarded-strip primitive itself is auditable and behaves correctly in
-synthetic tests. Source-frame evidence is more directly tied to the visual
-question than the original whole-band scalar: the overlay shows exactly which
-inside/outside regions produced each local contrast.
+1. core and wide windows independently rediscovered #19 geometry, so the ruler
+   moved between sensitivity windows;
+2. absolute strip widths `0.025 / 0.040 / 0.055` materially changed some
+   magnitudes.
 
-The experiment also exposes two important sensitivities that must remain
-visible downstream:
+A2 fixes the first problem and makes the second explicit rather than hiding it.
 
-1. strip width materially changes some stones/boundaries;
-2. #19 semantic boundary correspondence is not uniformly stable between the
-   exact-core and wide windows.
+The revised primitive is now:
 
-This is a useful result rather than a failed experiment: PR B/C can now work
-from a localized field while retaining the geometry/sensitivity diagnostics
-needed to reject misleading summaries.
+- one **canonical 33-frame wide #19 geometry** reused for both core and wide
+  contrast measurements;
+- tier-relative strip scales `alpha = 0.25 / 0.40 / 0.55`;
+- signed + absolute contrast preserved for all eight sectors;
+- a per-frame/per-sector **multi-scale median consensus**;
+- scale spread retained as sensitivity evidence;
+- core-only #19 geometry retained only as a diagnostic;
+- pair-specific partial geometry remains `review`, never silently upgraded.
 
-## What was tested
+This is good enough to be the measurement field consumed by PR B. It is **not**
+yet a retained production descriptor.
 
-For each adjacent boundary, source frame and one of the existing eight
-side/corner sectors:
+## Revised measurement
+
+For one boundary with adjacent references:
 
 ```
-inside  = [b - g - w, b - g]
-outside = [b + g,     b + g + w]
+inside_width  = alpha * (boundary - inner_reference)
+outside_width = alpha * (outer_reference - boundary)
+
+inside  = [boundary - guard - inside_width, boundary - guard]
+outside = [boundary + guard, boundary + guard + outside_width]
 
 signed = log(B_inside) - log(B_outside)
 L      = abs(signed)
 ```
 
-with:
+with guard `g = 0.010`.
 
-- guard `g = 0.010`;
-- widths `w = 0.025 / 0.040 / 0.055`;
-- fixed sequence-level geometry;
-- per-frame valid pixel support retained as QC;
-- no fitted support threshold.
+The three scale results remain auditable. Multi-scale consensus takes the
+median over scale **within each frame/sector**; it does not collapse the eight
+spatial sectors.
 
-Two boundary geometries are compared:
-
-- **#19 semantic boundary controls**;
-- **legacy coarse boundary** as an explicit control.
-
-The earlier #49 whole-band and broad matched-sector measurements remain in the
-same output for direct comparison.
-
-## Synthetic / contract result
+## Contract / falsification result
 
 Focused tests and the full repository suite pass.
 
-The tests establish:
+The tests now cover:
 
-- exact log-ratio recovery and signed reversal;
+- exact log-ratio recovery, zero contrast and signed reversal;
 - common multiplicative brightness invariance;
-- explicit gaps for invalid brightness;
-- local sector contrast survives whole-band cancellation;
-- guarded inside/outside strips are disjoint;
-- a narrow edge spike inside the guard does not masquerade as broad tonal
-  separation;
-- fixed normalised geometry can use per-frame valid support without requiring
-  identical persistent pixels;
-- partial #19 boundaries may be used only as `review` when a *different*
-  boundary is missing;
-- ambiguous/non-separable #19 geometry cannot be rescued by partial controls.
+- explicit gaps rather than epsilon fixes;
+- local sector cancellation hidden by whole-band aggregation;
+- asymmetric tier-relative support;
+- guarded edge-spike resistance;
+- moving registered support without requiring identical persistent pixels;
+- multi-scale consensus while retaining sector detail;
+- partial-boundary provenance;
+- mirrored adjacent-span fallback only as `review`;
+- ambiguous/non-separable geometry remaining unavailable;
+- explicit reporting of core-only vs canonical boundary movement.
 
-## Four-stone benchmark
+## Four-stone result
 
-The canonical four source bundles were run on the exact 17-frame core and
-33-frame wide windows.
+The revised benchmark uses the same canonical wide geometry for both windows.
 
-At the middle width `w=0.040`, representative Q50 values are:
+Semantic multi-scale consensus Q50:
 
-| stone | pair | #49 broad sector core | coarse-strip core | semantic-strip core |
-|---|---|---:|---:|---:|
-| LG756520111 | centre-inner | 0.0726 | 0.0657 | 0.0664 |
-| LG756580087 | centre-inner | 0.0478 | 0.0644 | 0.1046 |
-| LG818659722 | centre-inner | 0.1004 | 0.1127 | 0.1897 |
-| LG836619414 | centre-inner | 0.0380 | 0.0736 | 0.1518 |
-| LG756520111 | inner-middle | 0.0421 | 0.0485 | 0.0499 |
-| LG756580087 | inner-middle | 0.0502 | 0.0888 | 0.2032 |
-| LG818659722 | inner-middle | 0.1021 | 0.1095 | 0.1185 |
-| LG836619414 | inner-middle | 0.0921 | 0.0870 | 0.1102 |
+| stone | pair | core | wide |
+|---|---|---:|---:|
+| LG756580087 | centre-inner | 0.0626 | 0.0633 |
+| LG756520111 | centre-inner | 0.0589 | 0.0485 |
+| LG818659722 | centre-inner | 0.1333 | 0.0762 |
+| LG836619414 | centre-inner | 0.0878 | 0.0577 |
+| LG756580087 | inner-middle | 0.1467 | 0.1407 |
+| LG756520111 | inner-middle | 0.0457 | 0.0350 |
+| LG818659722 | inner-middle | 0.1041 | 0.0790 |
+| LG836619414 | inner-middle | 0.0977 | 0.0752 |
 
-These magnitudes are descriptive only. Larger is not assumed to be better.
+These values are descriptive only. Larger is not assumed to mean better.
 
-The same-frame evidence is the strongest reason to keep the primitive:
-semantic strips visibly straddle the detected nested transition rather than
-averaging the full coarse tier. The automatic rank-disagreement examples also
-show that this is genuinely a different frame-level question from #49's broad
-sector median; maximum within-sequence rank disagreements at `w=0.040` are
-commonly large (roughly 0.44–0.88 against the broad formulation in the core
-examples).
+## Core / wide stability
 
-## Width sensitivity
+Cross-stone Spearman rank correlation of **semantic Q50** is now:
 
-Width cannot be selected from the present benchmark.
+| pair | alpha=0.25 | alpha=0.40 | alpha=0.55 | multi-scale consensus |
+|---|---:|---:|---:|---:|
+| centre-inner | 0.8 | 0.2 | 0.8 | **0.8** |
+| inner-middle | 1.0 | 1.0 | 1.0 | **1.0** |
 
-Across the 16 stone × window × boundary cases, the relative range of semantic
-Q50 across the three tested widths is about **5.7% to 59.3%**. Seven of the
-sixteen cases move by more than 20% relative to their median width result.
+For context:
 
-The largest sensitivity is LG756520111 wide inner-middle. Several other
-centre-inner and inner-middle cases are materially width-sensitive.
+- #49 broad matched-sector Q50: centre-inner 0.8, inner-middle 0.8;
+- coarse tier-relative multi-scale control: centre-inner 0.2, inner-middle 0.8.
 
-Therefore PR A does **not** nominate 0.040 (or any other width) as a production
-constant. It remains a convenient evidence-panel width only.
+The main PR-A failure is therefore repaired: centre-inner no longer has 0.2
+rank stability merely because core and wide used different semantic rulers.
+The multi-scale semantic field reaches 0.8, while inner-middle reaches 1.0.
 
-## Core / wide sensitivity
+The single `alpha=0.40` centre-inner result is still only 0.2. This is exactly
+why A2 keeps the scale family and consensus rather than nominating one middle
+scale as canonical.
 
-Cross-stone Spearman rank correlation of semantic Q50 between core and wide is:
+## Geometry diagnostics
 
-| pair | w=0.025 | w=0.040 | w=0.055 |
-|---|---:|---:|---:|
-| centre-inner | 0.2 | 0.2 | 0.2 |
-| inner-middle | 0.8 | 1.0 | 1.0 |
+Freezing geometry does **not** make #19 correspondence problems disappear; it
+moves them to the correct place: QC.
 
-For comparison, #49 broad matched-sector Q50 is 0.8 for both pairs at all three
-rows (the broad value itself does not depend on strip width).
+The strongest diagnostic remains LG818659722 centre-inner:
 
-The weak centre-inner semantic stability is not just scalar noise. The largest
-geometry change is **LG818659722 centre-inner**, whose median #19 sector
-boundary moves from approximately `u=0.595` in the core template to
-`u=0.508` in the wide template. Other median semantic-boundary shifts are
-much smaller (roughly 0.001–0.011 in this benchmark).
+- canonical wide median boundary: approximately `u=0.508`;
+- independently rediscovered core-only median: approximately `u=0.595`;
+- median absolute sector shift: approximately `0.087`;
+- maximum sector shift: approximately `0.121`.
 
-That means a downstream descriptor must not silently interpret a changed
-semantic boundary as changed diamond behaviour. Geometry correspondence itself
-needs to remain part of validity/sensitivity evidence.
+The contrast calculation now uses the canonical `u≈0.508` geometry in both
+windows, so this movement cannot masquerade as descriptor sensitivity.
+However, the consensus contrast itself still changes materially for this stone
+(core 0.1333 vs wide 0.0762). That remaining window sensitivity is real
+measurement/content sensitivity and should stay visible downstream.
 
-LG756580087 also supplies a useful different failure mode: the wide #19
-template cannot recover the middle-outer boundary, while centre-inner and
-inner-middle remain supported. PR A preserves those adjacent boundaries as
-`review` rather than discarding them or pretending the full template passed.
+LG756580087 provides the other important case. Its canonical wide #19 template
+cannot recover middle-outer, but centre-inner and inner-middle controls remain
+supported. They are retained as `review`; inner-middle's missing outer
+reference is mirrored from the observed inner-side span and explicitly marked
+as such. The full semantic step representation is still unavailable.
 
-## Visual cross-checks
+## Scale sensitivity
 
-The automatically selected original-source comparisons are consistent with the
-intended measurement claim:
+Tier-relative support removes the arbitrary absolute-width unit, but it does
+**not** make scale irrelevant.
 
-- LG756520111 source 4 is an informative centre-inner disagreement case and is
-  also among the existing evaluation-derived tier-readability frames;
-- LG756580087 shows large semantic inner-middle separation on frames where the
-  visible nested transition is much more local than the broad-band statistic;
-- LG836619414 source views with clear nested architecture produce strong local
-  boundary examples, while the disagreement panel demonstrates that broad
-  sector contrast and boundary contrast need not rank frames the same way;
-- LG818659722 demonstrates why the geometry trace must remain auditable: strong
-  local contrast can coexist with a core/wide boundary-correspondence change.
+Across the 16 stone × window × pair cases, the relative range of single-scale
+semantic Q50 spans roughly **1% to 82%**. Nine of sixteen cases move by more
+than 20%, and five move by more than 50%.
 
-The existing calibration annotations are AI-derived from prior evaluations,
-not independent human ground truth. They are used here only as qualitative
-cross-checks. Independent frame-level labels remain PR C.
+The largest sensitivities are concentrated in LG756580087 and several
+centre-inner cases. Therefore:
 
-## What PR A earns
+- no individual alpha is promoted;
+- multi-scale consensus is the research default;
+- per-sector/per-frame scale spread remains part of the output;
+- PR B must not discard scale sensitivity when deriving Q25/median/weakest-link
+  summaries.
 
-Keep for the next research slices:
+## Visual evidence
 
-- the guarded boundary-local signed/absolute sector field;
-- all eight sector traces rather than only a median;
-- #19 semantic and coarse-boundary controls;
-- width sensitivity;
-- continuous support diagnostics;
-- same-frame source evidence;
-- explicit partial-boundary `review` handling.
+The same-frame panels remain useful after revision:
+
+- the semantic strips visibly follow the localized nested transition rather
+  than averaging the whole coarse band;
+- broad-sector and boundary-local formulations still produce genuine frame
+  rank disagreements;
+- the representative `alpha=0.40` overlay is only a visual aid; displayed
+  scalar values are the multi-scale consensus.
+
+The existing evaluation annotations are AI-derived, not independent human
+ground truth. They remain qualitative cross-checks only. PR C still requires
+genuinely human-entered frame labels.
+
+## What A2 earns
+
+Keep for PR B/C:
+
+- canonical fixed #19 measurement geometry;
+- tier-relative scale family;
+- multi-scale per-sector consensus;
+- scale-spread diagnostics;
+- full signed and absolute eight-sector field;
+- coarse-geometry control;
+- geometry-correspondence diagnostics;
+- explicit partial/mirrored `review` provenance;
+- original-source evidence.
 
 Do **not** yet:
 
-- choose one strip width;
-- promote semantic-boundary Q50 to the retained profile;
-- claim semantic geometry dominates the coarse control;
-- combine the two adjacent boundaries into a score;
+- promote consensus Q50 to #45;
 - assign a quality direction;
+- choose one alpha;
+- collapse the two boundaries into one score;
 - fit thresholds on four stones.
 
 ## Next step
 
-PR B should consume this field and test **spatial coverage + joint nested
-readability + signed tonal ordering** while preserving geometry/width
-sensitivity. In particular, Q25/median and weakest-link summaries should not be
-allowed to hide an unstable boundary correspondence.
+PR B can now safely consume this field to test:
 
-PR C remains necessary before any production decision because frame-level
-human calibration is the correct test of whether the localized field predicts
-visible tier readability beyond the retained activation/occupancy/coordination
-vocabulary.
+- spatial coverage / Q25 vs median;
+- joint centre→inner→middle weakest-link readability;
+- signed instantaneous tonal ordering.
+
+PR C remains the gate for production use: genuine frame-level human labels and
+leave-one-diamond-out validation must determine whether these summaries track
+visible tier readability and add information beyond the retained descriptor
+profile.
