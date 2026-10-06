@@ -66,9 +66,11 @@ A permitted full source export is still needed to complete these two sequences.
 
 ## Persistent recovered bundle
 
-[Download the 26-file recovery bundle](https://chatgpt.com/api/library/files/libfile_a2fd6a1be6888191ab540158c3265490/download):
+[Download the 26-file recovery bundle](https://github.com/choonkiatlee/sparkles/releases/download/pricescope-research-2026-10-06-v1/pricescope-media-recovery-2026-10-06.zip):
 14 article originals, 2 Kashi original videos and 10 public forum inline previews.
-The ZIP includes source URLs, SHA-256, byte counts and post associations. Raw
+The ZIP includes source URLs, SHA-256, byte counts and post associations.
+It is preserved as a [GitHub release asset](https://github.com/choonkiatlee/sparkles/releases/tag/pricescope-research-2026-10-06-v1)
+for future agents and research workflows. Raw
 media remain out of Git. All images and complete MP4s were decoded; archive
 integrity and per-file hashes were verified.
 
