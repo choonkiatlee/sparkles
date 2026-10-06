@@ -1,0 +1,434 @@
+{
+  "schema_version": "sparkles-external-source-catalog/1",
+  "benchmark_id": "pricescope-asscher-external-v0",
+  "purpose": "External falsification/archive inputs only; source commentary is not ground truth and must not be used for metric tuning.",
+  "sources": [
+    {
+      "source_id": "pricescope-p3-article",
+      "source_url": "https://www.pricescope.com/blog/performance-and-p3-facets-discussion-about-step-cut-diamonds",
+      "source_type": "article",
+      "author_display": "Karl K.",
+      "groups": [
+        {
+          "group_id": "p3-static-labelled",
+          "interpretation_type": "source_explicit_performance_label",
+          "samples": [
+            {
+              "sample_id": "p3-extremely-off",
+              "media_url": "https://www.pricescope.com/files/images/journal/Performance_and_p3/page3image2.gif",
+              "media_type": "gif",
+              "source_label": "p3 facets described as extremely far from proper angles"
+            },
+            {
+              "sample_id": "p3-slightly-off",
+              "media_url": "https://www.pricescope.com/files/images/journal/Performance_and_p3/page3image3.gif",
+              "media_type": "gif",
+              "source_label": "p3 facets described as only a little off"
+            },
+            {
+              "sample_id": "p3-acceptable-1",
+              "media_url": "https://www.pricescope.com/files/images/journal/Performance_and_p3/page4image1.gif",
+              "media_type": "gif",
+              "source_label": "example described as having acceptable p3 angles"
+            },
+            {
+              "sample_id": "p3-acceptable-2",
+              "media_url": "https://www.pricescope.com/files/images/journal/Performance_and_p3/page4image2.gif",
+              "media_type": "gif",
+              "source_label": "example described as having acceptable p3 angles"
+            },
+            {
+              "sample_id": "p3-acceptable-3",
+              "media_url": "https://www.pricescope.com/files/images/journal/Performance_and_p3/page4image3.gif",
+              "media_type": "gif",
+              "source_label": "example described as having acceptable p3 angles"
+            }
+          ]
+        },
+        {
+          "group_id": "p3-controlled-video-progression",
+          "interpretation_type": "source_explicit_performance_progression",
+          "samples": [
+            {
+              "sample_id": "p3-video-cut-for-weight",
+              "media_url": "https://www.pricescope.com/wp-content/uploads/2008/08/karl_video1.mp4",
+              "media_type": "mp4",
+              "source_label": "cut-for-weight example with bad p3 angle",
+              "relation_rank": 1
+            },
+            {
+              "sample_id": "p3-video-corrected",
+              "media_url": "https://www.pricescope.com/wp-content/uploads/2008/08/karl_video2.mp4",
+              "media_type": "mp4",
+              "source_label": "same basic example with proper p3 angle",
+              "relation_rank": 2
+            },
+            {
+              "sample_id": "p3-video-higher-performance",
+              "media_url": "https://www.pricescope.com/wp-content/uploads/2008/08/karl_video3.mp4",
+              "media_type": "mp4",
+              "source_label": "lighter example described as having higher performance",
+              "relation_rank": 3
+            }
+          ]
+        },
+        {
+          "group_id": "p3-static-performance-progression",
+          "interpretation_type": "source_explicit_performance_progression",
+          "samples": [
+            {
+              "sample_id": "p3-static-cut-for-weight-a",
+              "media_url": "https://www.pricescope.com/files/images/journal/Performance_and_p3/page-22image1.gif",
+              "media_type": "gif",
+              "source_label": "cut-for-weight case; source describes heavy leakage and weak p3 return",
+              "relation_rank": 1
+            },
+            {
+              "sample_id": "p3-static-cut-for-weight-b",
+              "media_url": "https://www.pricescope.com/files/images/journal/Performance_and_p3/page-22image2.gif",
+              "media_type": "gif",
+              "source_label": "paired view of the cut-for-weight case",
+              "relation_rank": 1
+            },
+            {
+              "sample_id": "p3-static-corrected-a",
+              "media_url": "https://www.pricescope.com/files/images/journal/Performance_and_p3/page-23image1.gif",
+              "media_type": "gif",
+              "source_label": "corrected/deeper case; source describes materially higher light return",
+              "relation_rank": 2
+            },
+            {
+              "sample_id": "p3-static-corrected-b",
+              "media_url": "https://www.pricescope.com/files/images/journal/Performance_and_p3/page-23image2.gif",
+              "media_type": "gif",
+              "source_label": "paired view of the corrected/deeper case",
+              "relation_rank": 2
+            },
+            {
+              "sample_id": "p3-static-higher-performance-a",
+              "media_url": "https://www.pricescope.com/files/images/journal/Performance_and_p3/page-24image1.gif",
+              "media_type": "gif",
+              "source_label": "lighter case; source describes stronger light return again",
+              "relation_rank": 3
+            },
+            {
+              "sample_id": "p3-static-higher-performance-b",
+              "media_url": "https://www.pricescope.com/files/images/journal/Performance_and_p3/page-24image2.gif",
+              "media_type": "gif",
+              "source_label": "paired view of the higher-performance case",
+              "relation_rank": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "source_id": "pricescope-windmill-thread",
+      "source_url": "https://www.pricescope.com/community/threads/why-cut-asschers-with-small-corners-and-windmills.78433/",
+      "source_type": "forum_thread",
+      "author_display": "strmrdr / later Karl_K",
+      "groups": [
+        {
+          "group_id": "corner-windmill-controlled-sweep",
+          "interpretation_type": "controlled_geometry_character_sweep",
+          "fixed_design": {
+            "width_mm": 6.4,
+            "length_mm": 6.4,
+            "depth_percent": 68.3,
+            "table_percent": 60,
+            "crown_height_percent": 21.6
+          },
+          "changed_variable": "corner break / windmill size",
+          "source_interpretation": "The poster prefers 24%, would target about 20–22%, calls 16% too small and 14% strongly weight-saving, while also saying multiple sizes can still make attractive stones.",
+          "samples": [
+            {
+              "sample_id": "windmill-24",
+              "post_number": 1,
+              "corner_break_percent": 24,
+              "weight_ct": 1.44,
+              "source_label": "poster favourite; rare"
+            },
+            {
+              "sample_id": "windmill-22",
+              "post_number": 2,
+              "corner_break_percent": 22,
+              "weight_ct": 1.47,
+              "source_label": "within poster target zone"
+            },
+            {
+              "sample_id": "windmill-20",
+              "post_number": 3,
+              "corner_break_percent": 20,
+              "weight_ct": 1.51,
+              "source_label": "within poster target zone; reaches 1.50 ct magic weight"
+            },
+            {
+              "sample_id": "windmill-18",
+              "post_number": 4,
+              "corner_break_percent": 18,
+              "weight_ct": 1.52,
+              "source_label": "described as a common market size"
+            },
+            {
+              "sample_id": "windmill-16",
+              "post_number": 5,
+              "corner_break_percent": 16,
+              "weight_ct": 1.55,
+              "source_label": "described as common and on the too-small side"
+            },
+            {
+              "sample_id": "windmill-14",
+              "post_number": 6,
+              "corner_break_percent": 14,
+              "weight_ct": 1.56,
+              "source_label": "described as strongly weight-saving / pushing small corners"
+            }
+          ]
+        },
+        {
+          "group_id": "thread-secondary-labelled-designs",
+          "interpretation_type": "forum_explicit_positive_negative_examples",
+          "source_page": "https://www.pricescope.com/community/threads/why-cut-asschers-with-small-corners-and-windmills.78433/page-2",
+          "samples": [
+            {
+              "sample_id": "thread-leakage-negative",
+              "post_number": 32,
+              "source_label": "trade reviewer flags excessive leakage and movement-related problems",
+              "label_polarity": "negative"
+            },
+            {
+              "sample_id": "thread-low-contrast-mixed",
+              "post_number": 46,
+              "source_label": "designer ranks it highly among variants but says contrast is lacking",
+              "label_polarity": "mixed"
+            },
+            {
+              "sample_id": "thread-strong-positive",
+              "post_number": 54,
+              "source_label": "designer gives an unusually strong personal buy preference",
+              "label_polarity": "positive"
+            },
+            {
+              "sample_id": "thread-tilt-positive",
+              "post_number": 58,
+              "source_label": "trade reviewer describes the tilted view as surprisingly good",
+              "label_polarity": "positive"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "source_id": "pricescope-asscher-evaluation-thread",
+      "source_url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/",
+      "source_type": "forum_thread",
+      "author_display": "briggysmalls; expert review by Karl_K / strmrdr and other experienced members",
+      "groups": [
+        {
+          "group_id": "karl-initial-three-stone-ranking",
+          "interpretation_type": "expert_per_stone_technical_review",
+          "source_posts": [
+            1,
+            8,
+            9,
+            10,
+            11
+          ],
+          "samples": [
+            {
+              "sample_id": "asscher-eval-target-centre",
+              "alias": "1 / Target in the centre",
+              "viewer_url": "http://dasny.dyndns.org:81/Vision360/38125.html",
+              "original_listing_url": "http://www.adiamor.com/video-player.html?id=76710570",
+              "source_attributes": {
+                "carat": 3.03,
+                "color": "I",
+                "clarity": "VVS2",
+                "table_percent": 61
+              },
+              "expert_labels": [
+                {
+                  "reviewer": "Karl_K / strmrdr",
+                  "post_number": 9,
+                  "label": "very close; slightly over-dark in the centre; ASET needed to determine whether it is a real-world issue",
+                  "polarity": "mixed_positive"
+                },
+                {
+                  "reviewer": "Karl_K / strmrdr",
+                  "post_number": 10,
+                  "label": "very nice crown height",
+                  "polarity": "positive"
+                },
+                {
+                  "reviewer": "lovedogs",
+                  "post_number": 11,
+                  "label": "best of the first three, with concern about excessive centre darkness when static",
+                  "polarity": "mixed_positive"
+                }
+              ]
+            },
+            {
+              "sample_id": "asscher-eval-glittery",
+              "alias": "2 / Glittery",
+              "viewer_url": "https://d360.tech/view.html?d=79-BB-5159600",
+              "original_listing_url": "https://www.whiteflash.com/",
+              "expert_labels": [
+                {
+                  "reviewer": "Karl_K / strmrdr",
+                  "post_number": 9,
+                  "label": "tiny windmills; overall not horrible but off",
+                  "polarity": "mixed_negative"
+                }
+              ]
+            },
+            {
+              "sample_id": "asscher-eval-crispest",
+              "alias": "3 / Crispest",
+              "viewer_url": "https://d360.tech/view.html?d=79-BT-5165227",
+              "original_listing_url": "https://www.whiteflash.com/",
+              "expert_labels": [
+                {
+                  "reviewer": "Karl_K / strmrdr",
+                  "post_number": 9,
+                  "label": "p3 leakage at the top and bottom V in the centre between windmills when face-up; worst of the first three",
+                  "polarity": "negative"
+                },
+                {
+                  "reviewer": "Karl_K / strmrdr",
+                  "post_number": 10,
+                  "label": "crown height is on the low side",
+                  "polarity": "negative"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "group_id": "explicit-negative-controls",
+          "interpretation_type": "expert_or_thread_negative_examples",
+          "samples": [
+            {
+              "sample_id": "asscher-eval-royal-asscher-clone",
+              "original_listing_url": "https://www.jamesallen.com/",
+              "source_post": 1,
+              "expert_labels": [
+                {
+                  "reviewer": "Karl_K / strmrdr",
+                  "post_number": 12,
+                  "label": "facet arrangement resembles a Royal Asscher but light performance is well below the better Royal Asschers",
+                  "polarity": "negative"
+                }
+              ],
+              "archive_note": "Original 360 was already unavailable to the thread author."
+            },
+            {
+              "sample_id": "asscher-eval-messy-arrows",
+              "media_url": "https://www.kashiimports.com/video/22957.mp4",
+              "media_type": "mp4",
+              "source_post": 1,
+              "source_labels": [
+                {
+                  "reviewer": "thread author",
+                  "label": "many adjacent black facets and messy arrows; bright only off-centre",
+                  "polarity": "negative"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "group_id": "later-community-comparison-cases",
+          "interpretation_type": "community_consensus_and_real_world_followup",
+          "samples": [
+            {
+              "sample_id": "asscher-eval-small-positive",
+              "alias": "2.05 ct D VS1 / smaller contender",
+              "product_url": "https://www.whiteflash.com/loose-diamonds/2.05-carat-d-color-vs1-clarity-asscher-sku-4256451?a_aid=PS",
+              "certificate": "GIA2135242286",
+              "source_attributes": {
+                "carat": 2.05,
+                "color": "D",
+                "clarity": "VS1",
+                "table_percent": 58
+              },
+              "source_labels": [
+                {
+                  "reviewer": "multiple experienced PriceScope members",
+                  "label": "strongly favoured over the larger comparison stone; praised for small table, shape, windmills and attractive contrast framing the table",
+                  "polarity": "positive"
+                }
+              ],
+              "corroborating_thread_url": "https://www.pricescope.com/community/threads/is-this-a-good-asscher.281732/"
+            },
+            {
+              "sample_id": "asscher-eval-large-dark",
+              "alias": "3.19 ct I IF",
+              "product_url": "https://www.whiteflash.com/loose-diamonds/3.19-carat-i-color-if-clarity-emerald-sku-4646906?a_aid=PS",
+              "certificate": "GIA13534682",
+              "source_attributes": {
+                "carat": 3.19,
+                "color": "I",
+                "clarity": "IF",
+                "table_percent": 63,
+                "dimensions_mm": [
+                  8.64,
+                  8.48,
+                  5.53
+                ]
+              },
+              "source_labels": [
+                {
+                  "reviewer": "lovedogs",
+                  "post_number": 55,
+                  "label": "not a fan; large table looks flat and face-up becomes very dark because facets turn off together",
+                  "polarity": "negative"
+                },
+                {
+                  "reviewer": "thread author",
+                  "post_number": 59,
+                  "label": "large adjacent contrast/leakage area under table; pattern less defined face-up",
+                  "polarity": "negative_mixed"
+                }
+              ]
+            },
+            {
+              "sample_id": "asscher-eval-nice-dance",
+              "alias": "Nice dance",
+              "media_url": "https://www.kashiimports.com/video/27196.mp4",
+              "media_type": "mp4",
+              "source_post": 22,
+              "source_labels": [
+                {
+                  "reviewer": "thread author / community discussion",
+                  "label": "nice contrast and table dance; small windmills and possible darkness under table remain concerns",
+                  "polarity": "mixed_positive"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "group_id": "expert-general-360-rules",
+          "interpretation_type": "expert_principles",
+          "source_posts": [
+            18
+          ],
+          "principles": [
+            {
+              "reviewer": "Karl_K / strmrdr",
+              "label": "The most important information in 360 video is the dance once the diamond moves."
+            },
+            {
+              "reviewer": "Karl_K / strmrdr",
+              "label": "Avoid very large areas going dark together or areas remaining dark through substantial movement."
+            },
+            {
+              "reviewer": "Karl_K / strmrdr",
+              "label": "Grey in vendor video is ambiguous: leakage, lower-angle/dimmer source return, or inefficient light return."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
