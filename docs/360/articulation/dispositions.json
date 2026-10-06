@@ -37,7 +37,20 @@
         "annotation": "pale_inner",
         "raw_spread": 0.5235396921634674
       }
-    ]
+    ],
+    "matched_brightness_counterexample": {
+      "certificate": "IGI-LG756580087",
+      "source_indices": [
+        252,
+        0
+      ],
+      "whole_log_brightness_gap": 0.006759529236088052,
+      "raw_spread": [
+        0.25040611028671267,
+        0.4596833854913712
+      ],
+      "interpretation": "Similar whole-stone brightness but materially different within-inner tonal spread; exposure alone does not explain the primitive."
+    }
   },
   "next_direction": "Revise toward spatial organization/coverage of tonal contrast within the inner region; do not add another global spread statistic."
 }
