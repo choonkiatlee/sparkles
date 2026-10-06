@@ -123,6 +123,33 @@ class AsscherStepTests(unittest.TestCase):
             s.boundary_strip_masks(mask, np.full(8, .60), width=0)
         with self.assertRaises(ValueError):
             s.boundary_strip_masks(mask, np.full(7, .60), width=.04)
+    def test_missing_outer_edge_preserves_supported_inner_boundaries(self):
+        u = np.linspace(0, 1, 160)
+        profile = (
+            np.exp(-0.5 * ((u - .50) / .012) ** 2)
+            + .8 * np.exp(-0.5 * ((u - .75) / .012) ** 2)
+        )
+        profile[u >= .82] = 0.0
+        frames = np.stack([
+            np.stack([profile * (1 + .01 * frame + .005 * sector)
+                      for sector in range(8)])
+            for frame in range(6)
+        ])
+        result = s.discover_template(frames, u)
+        self.assertEqual(result["status"], "unavailable")
+        self.assertEqual(result["reason"], "no_supported_middle_outer_edge")
+        self.assertEqual(
+            set(result["partial_controls"]),
+            {"centre_inner", "inner_middle"},
+        )
+        self.assertAlmostEqual(
+            result["partial_controls"]["centre_inner"]["global_u"],
+            .50, delta=.03,
+        )
+        self.assertAlmostEqual(
+            result["partial_controls"]["inner_middle"]["global_u"],
+            .75, delta=.03,
+        )
     def test_flat_evidence_surfaces_failure(self):
         u = np.linspace(0, 1, 160)
         result = s.discover_template(np.zeros((5, 8, len(u))), u)
