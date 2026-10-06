@@ -1,0 +1,328 @@
+{
+  "schema_version": "diamond360-activation-dispositions/1",
+  "scope": "Four complete #18 benchmark stones; 17-frame core is primary, 33-frame window is sensitivity only.",
+  "decision_semantics": {
+    "KEEP": "Sufficiently interpretable and robust for the activation descriptor schema.",
+    "REVISE": "Promising/useful but definition, support, or correspondence remains unresolved.",
+    "REJECT": "Not retained as a primary descriptor definition; may remain as audit/QC output."
+  },
+  "decisions": [
+    {
+      "representation": "whole_stone",
+      "region": "whole_stone",
+      "support_mode": "fixed",
+      "trace_type": "raw",
+      "disposition": "KEEP",
+      "role": "primary primitive",
+      "reason": "The four core panels show visibly different recorded whole-stone brightness states at selected extrema; it is a distinct observable from band-relative activation and remains directly auditable."
+    },
+    {
+      "representation": "coarse",
+      "region": "centre",
+      "support_mode": "fixed",
+      "trace_type": "raw",
+      "disposition": "KEEP",
+      "role": "audit primitive",
+      "reason": "Preserve the raw regional median so the relative trace can be audited and broad exposure/stone-wide movement is not hidden."
+    },
+    {
+      "representation": "coarse",
+      "region": "centre",
+      "support_mode": "fixed",
+      "trace_type": "relative",
+      "disposition": "KEEP",
+      "role": "primary local descriptor",
+      "reason": "Fixed coarse support is effectively complete in the benchmark and the log-relative trace isolates local change from the shared stone-wide baseline."
+    },
+    {
+      "representation": "coarse",
+      "region": "inner",
+      "support_mode": "fixed",
+      "trace_type": "raw",
+      "disposition": "KEEP",
+      "role": "audit primitive",
+      "reason": "Preserve the raw regional median so the relative trace can be audited and broad exposure/stone-wide movement is not hidden."
+    },
+    {
+      "representation": "coarse",
+      "region": "inner",
+      "support_mode": "fixed",
+      "trace_type": "relative",
+      "disposition": "KEEP",
+      "role": "primary local descriptor",
+      "reason": "Fixed coarse support is effectively complete in the benchmark and the log-relative trace isolates local change from the shared stone-wide baseline."
+    },
+    {
+      "representation": "coarse",
+      "region": "middle",
+      "support_mode": "fixed",
+      "trace_type": "raw",
+      "disposition": "KEEP",
+      "role": "audit primitive",
+      "reason": "Preserve the raw regional median so the relative trace can be audited and broad exposure/stone-wide movement is not hidden."
+    },
+    {
+      "representation": "coarse",
+      "region": "middle",
+      "support_mode": "fixed",
+      "trace_type": "relative",
+      "disposition": "KEEP",
+      "role": "primary local descriptor",
+      "reason": "Fixed coarse support is effectively complete in the benchmark and the log-relative trace isolates local change from the shared stone-wide baseline."
+    },
+    {
+      "representation": "coarse",
+      "region": "outer",
+      "support_mode": "fixed",
+      "trace_type": "raw",
+      "disposition": "REVISE",
+      "role": "audit primitive",
+      "reason": "Outer fixed support is pose-sensitive: benchmark support can fall below half in the core and falls further in the wide window; LG836619414 coarse-outer raw excursion changes from 0.050 to 0.178 as support falls from 0.427 to 0.199."
+    },
+    {
+      "representation": "coarse",
+      "region": "outer",
+      "support_mode": "fixed",
+      "trace_type": "relative",
+      "disposition": "REVISE",
+      "role": "candidate local descriptor",
+      "reason": "Outer fixed support is pose-sensitive: benchmark support can fall below half in the core and falls further in the wide window; LG836619414 coarse-outer raw excursion changes from 0.050 to 0.178 as support falls from 0.427 to 0.199."
+    },
+    {
+      "representation": "semantic",
+      "region": "centre",
+      "support_mode": "fixed",
+      "trace_type": "raw",
+      "disposition": "REVISE",
+      "role": "audit primitive",
+      "reason": "Semantic centre is sometimes visually coherent, but semantic correspondence is not robust enough across all four stones/windows: LG756580087 becomes unavailable in the wide window and geometry disagreement remains material."
+    },
+    {
+      "representation": "semantic",
+      "region": "centre",
+      "support_mode": "fixed",
+      "trace_type": "relative",
+      "disposition": "REVISE",
+      "role": "candidate local descriptor",
+      "reason": "Semantic centre is sometimes visually coherent, but semantic correspondence is not robust enough across all four stones/windows: LG756580087 becomes unavailable in the wide window and geometry disagreement remains material."
+    },
+    {
+      "representation": "semantic",
+      "region": "inner",
+      "support_mode": "fixed",
+      "trace_type": "raw",
+      "disposition": "REVISE",
+      "role": "audit primitive",
+      "reason": "Semantic inner often measures a materially different temporal pattern from coarse inner; several relative traces are negatively correlated, so the representation is not yet interchangeable or demonstrably superior."
+    },
+    {
+      "representation": "semantic",
+      "region": "inner",
+      "support_mode": "fixed",
+      "trace_type": "relative",
+      "disposition": "REVISE",
+      "role": "candidate local descriptor",
+      "reason": "Semantic inner often measures a materially different temporal pattern from coarse inner; several relative traces are negatively correlated, so the representation is not yet interchangeable or demonstrably superior."
+    },
+    {
+      "representation": "semantic",
+      "region": "middle",
+      "support_mode": "fixed",
+      "trace_type": "raw",
+      "disposition": "REVISE",
+      "role": "audit primitive",
+      "reason": "Semantic middle is highly support-sensitive in some stones; LG836619414 fixed support is 0.084 in the core and 0.0076 wide, with large fixed/dynamic disagreement."
+    },
+    {
+      "representation": "semantic",
+      "region": "middle",
+      "support_mode": "fixed",
+      "trace_type": "relative",
+      "disposition": "REVISE",
+      "role": "candidate local descriptor",
+      "reason": "Semantic middle is highly support-sensitive in some stones; LG836619414 fixed support is 0.084 in the core and 0.0076 wide, with large fixed/dynamic disagreement."
+    },
+    {
+      "representation": "semantic",
+      "region": "outer",
+      "support_mode": "fixed",
+      "trace_type": "raw",
+      "disposition": "REVISE",
+      "role": "audit primitive",
+      "reason": "Semantic outer has the weakest persistent support and the strongest support-mode disagreements; fixed support reaches 0.037 in the core and 0.0017 wide for LG836619414."
+    },
+    {
+      "representation": "semantic",
+      "region": "outer",
+      "support_mode": "fixed",
+      "trace_type": "relative",
+      "disposition": "REVISE",
+      "role": "candidate local descriptor",
+      "reason": "Semantic outer has the weakest persistent support and the strongest support-mode disagreements; fixed support reaches 0.037 in the core and 0.0017 wide for LG836619414."
+    },
+    {
+      "representation": "coarse",
+      "region": "centre",
+      "support_mode": "dynamic",
+      "trace_type": "raw",
+      "disposition": "REJECT",
+      "role": "QC diagnostic",
+      "reason": "Dynamic support is redundant with fixed support for well-supported coarse bands in this benchmark, so it adds no primary descriptor information."
+    },
+    {
+      "representation": "coarse",
+      "region": "centre",
+      "support_mode": "dynamic",
+      "trace_type": "relative",
+      "disposition": "REJECT",
+      "role": "QC diagnostic",
+      "reason": "Dynamic support is redundant with fixed support for well-supported coarse bands in this benchmark, so it adds no primary descriptor information."
+    },
+    {
+      "representation": "coarse",
+      "region": "inner",
+      "support_mode": "dynamic",
+      "trace_type": "raw",
+      "disposition": "REJECT",
+      "role": "QC diagnostic",
+      "reason": "Dynamic support is redundant with fixed support for well-supported coarse bands in this benchmark, so it adds no primary descriptor information."
+    },
+    {
+      "representation": "coarse",
+      "region": "inner",
+      "support_mode": "dynamic",
+      "trace_type": "relative",
+      "disposition": "REJECT",
+      "role": "QC diagnostic",
+      "reason": "Dynamic support is redundant with fixed support for well-supported coarse bands in this benchmark, so it adds no primary descriptor information."
+    },
+    {
+      "representation": "coarse",
+      "region": "middle",
+      "support_mode": "dynamic",
+      "trace_type": "raw",
+      "disposition": "REJECT",
+      "role": "QC diagnostic",
+      "reason": "Dynamic support is redundant with fixed support for well-supported coarse bands in this benchmark, so it adds no primary descriptor information."
+    },
+    {
+      "representation": "coarse",
+      "region": "middle",
+      "support_mode": "dynamic",
+      "trace_type": "relative",
+      "disposition": "REJECT",
+      "role": "QC diagnostic",
+      "reason": "Dynamic support is redundant with fixed support for well-supported coarse bands in this benchmark, so it adds no primary descriptor information."
+    },
+    {
+      "representation": "coarse",
+      "region": "outer",
+      "support_mode": "dynamic",
+      "trace_type": "raw",
+      "disposition": "REJECT",
+      "role": "QC diagnostic",
+      "reason": "Pixels entering/leaving the frame-local region can materially change the measured trace; retain dynamic support to diagnose mask/support motion, not as the primary descriptor."
+    },
+    {
+      "representation": "coarse",
+      "region": "outer",
+      "support_mode": "dynamic",
+      "trace_type": "relative",
+      "disposition": "REJECT",
+      "role": "QC diagnostic",
+      "reason": "Pixels entering/leaving the frame-local region can materially change the measured trace; retain dynamic support to diagnose mask/support motion, not as the primary descriptor."
+    },
+    {
+      "representation": "semantic",
+      "region": "centre",
+      "support_mode": "dynamic",
+      "trace_type": "raw",
+      "disposition": "REJECT",
+      "role": "QC diagnostic",
+      "reason": "Pixels entering/leaving the frame-local region can materially change the measured trace; retain dynamic support to diagnose mask/support motion, not as the primary descriptor."
+    },
+    {
+      "representation": "semantic",
+      "region": "centre",
+      "support_mode": "dynamic",
+      "trace_type": "relative",
+      "disposition": "REJECT",
+      "role": "QC diagnostic",
+      "reason": "Pixels entering/leaving the frame-local region can materially change the measured trace; retain dynamic support to diagnose mask/support motion, not as the primary descriptor."
+    },
+    {
+      "representation": "semantic",
+      "region": "inner",
+      "support_mode": "dynamic",
+      "trace_type": "raw",
+      "disposition": "REJECT",
+      "role": "QC diagnostic",
+      "reason": "Pixels entering/leaving the frame-local region can materially change the measured trace; retain dynamic support to diagnose mask/support motion, not as the primary descriptor."
+    },
+    {
+      "representation": "semantic",
+      "region": "inner",
+      "support_mode": "dynamic",
+      "trace_type": "relative",
+      "disposition": "REJECT",
+      "role": "QC diagnostic",
+      "reason": "Pixels entering/leaving the frame-local region can materially change the measured trace; retain dynamic support to diagnose mask/support motion, not as the primary descriptor."
+    },
+    {
+      "representation": "semantic",
+      "region": "middle",
+      "support_mode": "dynamic",
+      "trace_type": "raw",
+      "disposition": "REJECT",
+      "role": "QC diagnostic",
+      "reason": "Pixels entering/leaving the frame-local region can materially change the measured trace; retain dynamic support to diagnose mask/support motion, not as the primary descriptor."
+    },
+    {
+      "representation": "semantic",
+      "region": "middle",
+      "support_mode": "dynamic",
+      "trace_type": "relative",
+      "disposition": "REJECT",
+      "role": "QC diagnostic",
+      "reason": "Pixels entering/leaving the frame-local region can materially change the measured trace; retain dynamic support to diagnose mask/support motion, not as the primary descriptor."
+    },
+    {
+      "representation": "semantic",
+      "region": "outer",
+      "support_mode": "dynamic",
+      "trace_type": "raw",
+      "disposition": "REJECT",
+      "role": "QC diagnostic",
+      "reason": "Pixels entering/leaving the frame-local region can materially change the measured trace; retain dynamic support to diagnose mask/support motion, not as the primary descriptor."
+    },
+    {
+      "representation": "semantic",
+      "region": "outer",
+      "support_mode": "dynamic",
+      "trace_type": "relative",
+      "disposition": "REJECT",
+      "role": "QC diagnostic",
+      "reason": "Pixels entering/leaving the frame-local region can materially change the measured trace; retain dynamic support to diagnose mask/support motion, not as the primary descriptor."
+    }
+  ],
+  "summary_candidates": [
+    {
+      "candidate": "Q10/Q50/Q90 directional excursions",
+      "disposition": "KEEP",
+      "reason": "Bright and dark excursions preserve directionality, are source-frame auditable, and p90-p10 ordering is more stable from core to wide than MAD in the four-stone comparison."
+    },
+    {
+      "candidate": "MAD_scale",
+      "disposition": "REJECT",
+      "role": "retained audit field",
+      "reason": "It is largely redundant with excursion (about 0.91 average cross-stone rank agreement in complete coarse configurations) while core-to-wide rank consistency is lower (about 0.80 versus about 0.90 for total excursion)."
+    }
+  ],
+  "global_constraints": [
+    "Whole-stone and band-relative activation remain separate observables.",
+    "No numeric winner score or quality grade is defined.",
+    "No hard support cutoff is introduced from this four-stone sample.",
+    "Dynamic-support outputs remain committed for QC/falsification.",
+    "Semantic bands remain recorded-image correspondence approximations, not exact physical facet identities."
+  ]
+}

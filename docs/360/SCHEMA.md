@@ -112,3 +112,40 @@ local edge matches as QC only; these matches do not move the sequence template.
 with legacy fixed radii 0.20/0.45/0.70. `edge-profile.png` and `overlays.jpg`
 are derived QC. The schema does not imply exact physical facet identity, a
 windmill label, crown/pavilion separation, 3-D geometry or cut quality.
+
+
+## Activation descriptors: `diamond360-activation/1`
+
+`activation.json` records one exact requested source-index interval, accepted/excluded
+frames, the encoded-brightness definition, upstream validity, whole-stone activation,
+and coarse/semantic regional activation.
+
+Whole-stone activation is the median encoded brightness on the fixed common registered
+stone support over accepted frames. Regional outputs preserve both:
+
+- `raw_values`: regional median encoded brightness;
+- `relative_values`: `log(regional median) - log(whole-stone median)`.
+
+Each regional representation is evaluated with both `fixed` support (the interval
+intersection of that region and valid photometric support) and `dynamic` support
+(the frame-local region intersected with valid support). Coarse masks are loaded from
+each frame's own preprocessing region file; semantic masks come from
+`diamond360-asscher-steps/1`.
+
+Each trace summary contains Q10/Q50/Q90, bright excursion `Q90-Q50`, dark excursion
+`Q50-Q10`, total excursion `Q90-Q10`, and `1.4826 * MAD`. Fewer than three
+finite observations make the scalar summary unavailable. Non-positive regional or
+whole-stone medians are never logged; affected relative observations are null.
+
+Validity is `ok`/`review`/`unavailable`, composed monotonically from relevant
+upstream, representation and local measurement states. Semantic warnings apply only
+to semantic measurements. Coarse and whole-stone activation do not inherit #19
+semantic status. Support fractions remain diagnostics; this schema defines no
+support-quality threshold.
+
+Evidence metadata selects source frames nearest Q10/Q50/Q90 plus the largest positive
+and negative observed-adjacent moves. Missing/excluded frames break adjacency and are
+never interpolated. CSV and evidence PNGs are derived audit products.
+
+All activation quantities describe recorded-image behavior. They are not calibrated
+radiance, light return, fire, leakage, physical facet identity or a quality grade.

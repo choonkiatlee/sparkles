@@ -136,3 +136,14 @@ sequence, with eight side/corner control points, and writes per-frame
 Per-frame edge matches are confidence diagnostics only; they do not claim
 individual-facet identity or move the sequence template. See
 [step-band method and validation](step-bands/README.md).
+
+
+## Activation descriptor validation
+
+Issue #26's four-stone activation benchmark is documented in
+[activation/README.md](activation/README.md). It preserves whole-stone and
+band-relative activation separately, runs the exact 17-frame core plus 33-frame
+sensitivity window, compares coarse/semantic × fixed/dynamic support, and records
+explicit KEEP/REVISE/REJECT dispositions without turning the measurements into a
+quality score. Machine-readable results and per-trace evidence panels live under
+[activation/](activation/).
