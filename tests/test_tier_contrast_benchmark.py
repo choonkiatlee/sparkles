@@ -118,11 +118,90 @@ class TierContrastBenchmarkTests(unittest.TestCase):
             self.assertEqual(payload["schema_version"], tb.SCHEMA)
             self.assertTrue((out / "tier-contrast.csv").exists())
 
+
+    def test_committed_region_trace_reconstruction_matches_log_ratio(self):
+        trace = {
+            "schema_version": tb.REGION_TRACE_SCHEMA,
+            "requested_indices": [0, 1, 2],
+            "accepted_indices": [0, 1, 2],
+            "excluded": [],
+            "wrap_explicit": False,
+            "regions": {
+                "centre": {"median_brightness": [4.0, 8.0, 16.0]},
+                "inner": {"median_brightness": [2.0, 4.0, 8.0]},
+                "middle": {"median_brightness": [1.0, 8.0, 4.0]},
+            },
+        }
+        result = tb.measure_primary_from_region_trace(trace)
+        centre_inner = result["pairs"]["centre__inner"]["simple"]
+        self.assertTrue(
+            all(abs(value - 0.6931471805599453) < 1e-12
+                for value in centre_inner["separation_values"])
+        )
+        self.assertEqual(
+            result["reconstruction_source_schema"],
+            tb.REGION_TRACE_SCHEMA,
+        )
+
     def test_rejects_wrong_activation_schema(self):
         fixture = activation_fixture()
         fixture["schema_version"] = "other/1"
         with self.assertRaises(ValueError):
             tb.measure_from_activation(fixture)
+
+
+class CommittedTierContrastArtifactTests(unittest.TestCase):
+    ROOT = Path(__file__).resolve().parents[1]
+
+    def test_primary_summary_reconstructs_from_committed_region_traces(self):
+        summary_path = self.ROOT / "docs" / "360" / "tier-contrast" / "summary.json"
+        summary = json.loads(summary_path.read_text())
+        self.assertEqual(
+            summary["schema_version"],
+            "diamond360-tier-contrast-primary-benchmark/1",
+        )
+        self.assertEqual(summary["provisional_disposition"], "REVISE")
+        self.assertEqual(len(summary["rows"]), 16)
+
+        for row in summary["rows"]:
+            trace_path = self.ROOT / row["source_trace"]
+            trace = json.loads(trace_path.read_text())
+            rebuilt = tb.measure_primary_from_region_trace(trace)
+            simple = rebuilt["pairs"][row["pair"]]["simple"]
+            self.assertAlmostEqual(simple["summary"]["q10"], row["q10"])
+            self.assertAlmostEqual(simple["summary"]["q50"], row["q50"])
+            self.assertAlmostEqual(simple["summary"]["q90"], row["q90"])
+            evidence = rebuilt["pairs"][row["pair"]]["evidence"]
+            self.assertEqual(
+                evidence["weakest"]["source_index"],
+                row["weakest"]["source_index"],
+            )
+            self.assertEqual(
+                evidence["strongest"]["source_index"],
+                row["strongest"]["source_index"],
+            )
+
+    def test_summary_preserves_window_sensitivity_warning(self):
+        summary = json.loads(
+            (self.ROOT / "docs" / "360" / "tier-contrast" / "summary.json").read_text()
+        )
+        sensitivity = summary["core_wide_sensitivity"]
+        self.assertEqual(
+            sensitivity["centre__inner"]["q10"]["core_wide_rank_spearman"],
+            0.0,
+        )
+        self.assertEqual(
+            sensitivity["inner__middle"]["q50"]["core_wide_rank_spearman"],
+            0.0,
+        )
+        self.assertEqual(
+            sensitivity["centre__inner"]["q90"]["core_wide_rank_spearman"],
+            0.8,
+        )
+        self.assertEqual(
+            sensitivity["inner__middle"]["q90"]["core_wide_rank_spearman"],
+            0.8,
+        )
 
 
 if __name__ == "__main__":
