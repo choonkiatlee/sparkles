@@ -1,4 +1,4 @@
-name: tier-readability-b
+name: tier-readability-c
 
 on:
   pull_request:
@@ -6,16 +6,16 @@ on:
       - "diamond360/asscher_steps.py"
       - "diamond360/regions.py"
       - "diamond360/tier_contrast.py"
-      - "diamond360/tier_contrast_benchmark.py"
+      - "diamond360/tier_contrast_benchmark.py"\n      - "diamond360/tier_readability_calibration.py"\n      - "docs/360/tier-readability/**"
       - "tests/test_asscher_steps.py"
       - "tests/test_regions.py"
       - "tests/test_tier_contrast.py"
-      - "tests/test_tier_contrast_benchmark.py"
+      - "tests/test_tier_contrast_benchmark.py"\n      - "tests/test_tier_readability_calibration.py"
       - ".github/workflows/tier-readability-a.yml"
   workflow_dispatch:
 
 concurrency:
-  group: tier-readability-b-${{ github.event.pull_request.number || github.ref }}
+  group: tier-readability-c-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -32,7 +32,7 @@ jobs:
       - name: Install package
         run: python -m pip install -e .
 
-      - name: Run issue 57 PR B tests
+      - name: Run issue 57 PR C tests
         run: |
           python -m unittest \
             tests.test_asscher_steps \
@@ -71,19 +71,19 @@ jobs:
                   bundle.extractall(destination)
           PY
 
-      - name: Run four-stone PR B benchmark
+      - name: Run four-stone PR C measurement benchmark
         run: |
           python -m diamond360.tier_contrast_benchmark \
             --source-root outputs/tier-readability-sources \
-            --output outputs/tier-readability-b
-          cat outputs/tier-readability-b/comparison.csv
+            --output outputs/tier-readability-c
+          cat outputs/tier-readability-c/comparison.csv
           echo "--- PR B profile ---"
-          cat outputs/tier-readability-b/readability-profile.csv
+          cat outputs/tier-readability-c/readability-profile.csv
 
-      - name: Upload PR B benchmark
+      - name: Upload PR C benchmark and label packet
         uses: actions/upload-artifact@v4
         with:
-          name: tier-readability-b-benchmark
-          path: outputs/tier-readability-b
+          name: tier-readability-c-calibration
+          path: outputs/tier-readability-c
           if-no-files-found: error
           retention-days: 90
