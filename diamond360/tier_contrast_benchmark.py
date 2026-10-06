@@ -374,9 +374,14 @@ def _boundary_local_inputs(
         full_semantic_control = boundaries.get(spec["semantic"])
         partial_semantic_control = partial_boundaries.get(spec["semantic"])
         semantic_control = full_semantic_control or partial_semantic_control
+        template_reason = str(step_qc.get("template_reason") or "")
         partial_semantic = (
-            full_semantic_control is None and partial_semantic_control is not None
+            full_semantic_control is None
+            and partial_semantic_control is not None
+            and template_reason.startswith("no_supported_")
         )
+        if full_semantic_control is None and not partial_semantic:
+            semantic_control = None
         pair_out = {
             "widths": {},
             "semantic_boundary_source": (
