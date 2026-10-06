@@ -153,6 +153,10 @@ class TierReadabilityCalibrationTests(unittest.TestCase):
             self.assertEqual(manifest["schema_version"], trc.PACKET_SCHEMA)
             self.assertEqual(len(manifest["items"]), 20)
             self.assertTrue((out / "contact-sheet.jpg").exists())
+            self.assertEqual(
+                len(list((out / "frames").glob("T*.jpg"))),
+                20,
+            )
             text = json.dumps(template)
             self.assertNotIn("certificate", text)
             self.assertNotIn("boundary_q25", text)
