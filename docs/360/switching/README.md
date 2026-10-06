@@ -60,7 +60,7 @@ The scalar rankings are highly correlated with occupancy in this four-stone samp
 
 That does **not** make the temporal trace redundant. For those same 12 traces, about 47%–84% of switching (mean ≈64%) is bidirectional state churn that cancels in the net occupancy change. Occupancy says **how much is dark**; switching says **how much of the spatial state reconfigured between adjacent steps**.
 
-Disposition: retain switching as a complementary temporal/motion descriptor, but do not treat its scalar ranking as an independent quality axis to be naively added to occupancy. Redundancy with #30 contrast mobility remains for #30 to resolve.
+Disposition: retain switching as a complementary temporal/motion descriptor, but do not treat its scalar ranking as an independent quality axis to be naively added to occupancy. Issue #30 now resolves the contrast-mobility comparison: pooled core coarse-fixed centre/inner/middle median mobility versus switching rate has Spearman rho ≈0.41, with strong rank disagreements. Mobility therefore survives as continuous regional contrast-change intensity, distinct from thresholded pixel-state reconfiguration; the two should still not be naively summed into a quality score.
 
 ## Evidence
 

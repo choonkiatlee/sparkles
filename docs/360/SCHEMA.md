@@ -236,3 +236,48 @@ are image coordinates, not tracked physical facets.
 Switching is descriptive recorded-image reconfiguration. It is not sparkle
 frequency, fire, leakage, calibrated light return, physical facet identity or a
 quality grade.
+
+
+## Contrast mobility: `diamond360-contrast-mobility/1`
+
+`mobility.json` is derived directly from an existing
+`diamond360-activation/1` result. It does not recompute photometry, regional
+masks, normalization, or support.
+
+For a retained activation trace `a_t`, contrast mobility for an observed
+adjacent source-step pair is:
+
+`m_t = |a_t - a_(t-1)|`.
+
+The signed delta is retained beside the absolute mobility for audit. Missing,
+rejected, non-finite, or non-adjacent source observations break the pair; no
+interpolation is permitted. Explicit wrapped adjacency such as `255 -> 0` is
+accepted only when the upstream interval declares wrapping.
+
+The primary local inputs inherited from #26 are coarse-fixed centre/inner/middle
+`relative_values`, where activation is
+`log(regional median) - log(fixed-support whole-stone median)`. Whole-stone
+fixed raw activation is also measurable as a separate upstream observable, while
+outer and semantic fixed traces preserve their upstream REVISE status. Dynamic
+support is not re-derived because #26 rejected it as a primary activation
+definition.
+
+Each trace output includes:
+
+- exact upstream activation schema/disposition/summary/support provenance;
+- the full adjacent-pair trace with source indices, signed delta and mobility;
+- requested and observed adjacent-pair counts;
+- median mobility and Q90 mobility;
+- monotone inherited validity plus mobility-specific availability reasons;
+- deterministic evidence references for largest, median-nearest, Q90-nearest and
+  lowest-nonzero events.
+
+The retained primary scalar is median mobility for coarse-fixed
+centre/inner/middle relative activation. Q90 remains an upper-tail audit field.
+Whole-stone mobility remains auditable but is not retained as a separate primary
+scalar.
+
+Source-step units are ordinal observations, not seconds or calibrated degrees.
+Contrast mobility is descriptive recorded-image behavior and is not sparkle
+frequency, fire, leakage, calibrated light return, physical facet identity or a
+quality grade.
