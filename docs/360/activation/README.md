@@ -6,7 +6,7 @@ This directory completes the real-stone validation for issue #26. It measures **
 
 The primary benchmark is the exact wrapped 17-frame interval `248..255,0..8` on the four complete #18 stones: IGI-LG756580087, IGI-LG756520111, IGI-LG818659722 and IGI-LG836619414. The 33-frame interval `240..255,0..16` is sensitivity only. All stones use the committed `diamond360-source/1` manifests, gain 1.0, review-mask opt-in where required, #19 defaults, and identical source indices inside every coarse/semantic × fixed/dynamic A/B.
 
-Each per-stone/window folder contains `activation.json`, `activation.csv`, and standardized evidence panels for Q10/Q50/Q90 and the largest observed adjacent moves. `summary.json` and `summary.csv` collect cross-stone measurements; [dispositions.json](dispositions.json) is the explicit KEEP/REVISE/REJECT record.
+Each per-stone/window run produces `activation.json`, `activation.csv`, and standardized evidence panels for Q10/Q50/Q90 and the largest observed adjacent moves. Those full generated outputs are intentionally **not committed**. The repository keeps only the aggregate `summary.json` / `summary.csv`, [dispositions.json](dispositions.json), and the four comparison pairs (eight PNGs) linked below as representative evidence.
 
 ## What the benchmark says
 
@@ -57,6 +57,8 @@ The sample is only four stones and mixes source pipelines. These results establi
 ## Reproduce
 
 The original 256-frame sources are GitHub Release assets indexed by [../benchmark/source-bundles.json](../benchmark/source-bundles.json). Follow [../benchmark/README.md](../benchmark/README.md) to download and verify them, preprocess with gain 1.0 and `accept_review=True`, run `diamond360.asscher_steps` on the same requested interval, then call `diamond360.activation_benchmark.measure_stone` / `write_stone_outputs`.
+
+Generated per-stone outputs under `docs/360/activation/per-stone/` are ignored by Git except for the small set of already-tracked representative panels. For full reruns, prefer `outputs/` or another local/artifact directory rather than Git history.
 
 Run repository validation with:
 
