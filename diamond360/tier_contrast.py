@@ -560,12 +560,15 @@ def joint_nested_tier_readability(centre_inner_trace, inner_middle_trace):
             if state is not None:
                 counts[state] += 1
                 total_counts[state] += 1
-            spreads = [
-                _finite(first_spread.get(sector)),
-                _finite(second_spread.get(sector)),
-            ]
-            spreads = [value for value in spreads if value is not None]
-            max_scale_spread[sector] = max(spreads) if spreads else None
+            if joint[sector] is None:
+                max_scale_spread[sector] = None
+            else:
+                spreads = [
+                    _finite(first_spread.get(sector)),
+                    _finite(second_spread.get(sector)),
+                ]
+                spreads = [value for value in spreads if value is not None]
+                max_scale_spread[sector] = max(spreads) if spreads else None
 
         coverage = _sector_distribution(joint.values())
         finite_spread = [
