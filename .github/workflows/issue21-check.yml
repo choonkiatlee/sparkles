@@ -6,12 +6,70 @@ on:
       - issue-21-evidence-normalization-v2
 
 jobs:
-  test:
+  validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - run: python -m pip install -e .
-      - run: python -m unittest tests.test_evidence_packet tests.test_descriptor_profile
+      - name: Unit and profile tests
+        run: python -m unittest tests.test_evidence_packet tests.test_descriptor_profile
+      - name: Download verified benchmark source bundles
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import urllib.request
+          import zipfile
+          from pathlib import Path
+
+          manifest = json.loads(Path("docs/360/benchmark/source-bundles.json").read_text())
+          downloads = Path("outputs/benchmark-downloads")
+          sources = Path("outputs/benchmark-sources")
+          downloads.mkdir(parents=True, exist_ok=True)
+          sources.mkdir(parents=True, exist_ok=True)
+          for item in manifest["bundles"]:
+              archive = downloads / item["filename"]
+              urllib.request.urlretrieve(item["download_url"], archive)
+              assert archive.stat().st_size == item["bytes"]
+              assert hashlib.sha256(archive.read_bytes()).hexdigest() == item["sha256"]
+              destination = sources / item["certificate"]
+              destination.mkdir(parents=True, exist_ok=True)
+              with zipfile.ZipFile(archive) as bundle:
+                  bundle.extractall(destination)
+          PY
+      - name: Build real four-stone evidence packets
+        run: |
+          python -m diamond360.evidence_benchmark \
+            --repository-root . \
+            --source-root outputs/benchmark-sources \
+            --output outputs/evidence-packet
+      - name: Validate compact benchmark output
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from diamond360 import evidence_packet as ep
+
+          root = Path("outputs/evidence-packet")
+          summary = json.loads((root / "summary.json").read_text())
+          assert len(summary["stones"]) == 4
+          for stone in summary["stones"]:
+              packet = json.loads((root / stone["packet"]).read_text())
+              assert packet["schema_version"] == ep.PACKET_SCHEMA
+              assert packet["selected_count"] <= 6
+              assert packet["selected_count"] >= 1
+              assert not packet["uncovered_available_families"], packet
+              sheet = root / stone["contact_sheet"]
+              assert sheet.is_file() and sheet.stat().st_size > 1000
+              for item in packet["items"]:
+                  assert item["original_frames"]
+                  assert item["render_source_indices"]
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: issue21-evidence-packet
+          path: outputs/evidence-packet
