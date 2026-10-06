@@ -22,6 +22,7 @@ REGION_TRACE_SCHEMA = "diamond360-region-traces/1"
 PAIRS = (("centre", "inner"), ("inner", "middle"))
 BOUNDARY_WIDTHS = (.025, .040, .055)
 BOUNDARY_GUARD = .010
+MIN_STRIP_PIXELS = 8
 BOUNDARY_SPECS = {
     "centre__inner": {"semantic": "centre_inner", "coarse_radius": .20},
     "inner__middle": {"semantic": "inner_middle", "coarse_radius": .45},
@@ -285,7 +286,7 @@ def _fixed_spread_inputs(processed, activation):
     }
 
 
-def _strip_trace(brightness, valid_masks, masks, observed):
+def _strip_trace(brightness, valid_masks, masks, observed, min_pixels=MIN_STRIP_PIXELS):
     """Measure fixed-normalised geometry on each frame's valid strip support.
 
     Boundary controls stay fixed for the sequence, but the silhouette-normalised
@@ -308,7 +309,7 @@ def _strip_trace(brightness, valid_masks, masks, observed):
         )
         values.append(
             float(np.median(frame[support]))
-            if ok and support.any() else None
+            if ok and count >= int(min_pixels) else None
         )
     finite_pixels = [
         value for value in support_pixels if value is not None
@@ -318,6 +319,7 @@ def _strip_trace(brightness, valid_masks, masks, observed):
     ]
     return values, {
         "support_mode": "per_frame_valid_with_fixed_normalised_geometry",
+        "minimum_pixels": int(min_pixels),
         "per_frame_support_pixels": support_pixels,
         "per_frame_support_fraction": support_fractions,
         "min_support_pixels": min(finite_pixels) if finite_pixels else None,
