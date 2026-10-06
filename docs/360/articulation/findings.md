@@ -18,6 +18,7 @@ measured on the exact #26 coarse-fixed inner support.
 - Synthetic counterexamples behave correctly: flat support gives zero spread, equal-median regions with different structure separate, and gaps remain gaps.
 - Exposure controls behave sensibly. Within each stone, `raw_spread` has ~0.98–0.99 Spearman rank agreement with both whole-median-normalized and log-spread variants.
 - The evidence panels visibly track tonal range: low-spread frames look relatively uniform; high-spread frames contain strong light/dark separation.
+- The fixed 2% matched-brightness counterexample works on the real sources. For LG756580087, sources 252 and 0 differ by only ~0.7% in whole-stone median brightness, yet raw inner spread changes from 0.250 to 0.460. The primitive is therefore not merely an exposure proxy.
 - LG818659722, the grouped-dark control, has the highest core median raw spread (0.494), confirming that the metric is measuring real internal tonal range rather than simple brightness.
 
 ## Why it is not KEEP
