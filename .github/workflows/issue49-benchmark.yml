@@ -13,12 +13,181 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  benchmark:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
       - run: python -m pip install -e .
-      - run: python -m unittest tests.test_tier_contrast tests.test_tier_contrast_benchmark
+
+      - name: Unit tests
+        run: python -m unittest tests.test_tier_contrast tests.test_tier_contrast_benchmark
+
+      - name: Recover versioned benchmark sources
+        run: |
+          python - <<'PY'
+          import json
+          import urllib.request
+          import zipfile
+          from pathlib import Path
+
+          bundles = json.loads(Path("docs/360/benchmark/source-bundles.json").read_text())
+          root = Path("/tmp/sparkles-issue49-sources")
+          root.mkdir(parents=True, exist_ok=True)
+          for bundle in bundles["bundles"]:
+              archive = root / bundle["filename"]
+              target = root / bundle["certificate"]
+              target.mkdir(parents=True, exist_ok=True)
+              print("download", bundle["certificate"])
+              urllib.request.urlretrieve(bundle["download_url"], archive)
+              with zipfile.ZipFile(archive) as handle:
+                  handle.extractall(target)
+          PY
+
+      - name: Four-stone raw-pixel benchmark
+        run: |
+          python - <<'PY'
+          import json
+          import tempfile
+          from pathlib import Path
+
+          from diamond360 import benchmark as benchmark
+          from diamond360.pipeline import run as preprocess
+          from diamond360 import tier_contrast_benchmark as tier
+
+          repo = Path(".").resolve()
+          sources = Path("/tmp/sparkles-issue49-sources")
+          out = Path("issue49-raw-pixel")
+          out.mkdir()
+          manifest = json.loads((repo / "docs/360/benchmark/benchmark.json").read_text())
+          rows = []
+          core_results = {}
+
+          def source_dir(certificate):
+              root = sources / certificate
+              matches = list(root.rglob("source-manifest.json"))
+              if len(matches) != 1:
+                  raise RuntimeError(f"{certificate}: expected one source-manifest.json, found {len(matches)}")
+              return matches[0].parent, matches[0]
+
+          with tempfile.TemporaryDirectory(prefix="issue49-") as tmp:
+              work = Path(tmp)
+              for stone in manifest["stones"]:
+                  if stone.get("source_status") != "complete":
+                      continue
+                  cert = stone["certificate"]
+                  source, order_manifest = source_dir(cert)
+                  processed = work / cert / "processed"
+                  processed.parent.mkdir(parents=True, exist_ok=True)
+                  wide = benchmark.cyclic_window(
+                      stone["faceup_center"],
+                      manifest["wide_window"],
+                      stone["source_frame_count"],
+                  )
+                  preprocess(
+                      source,
+                      processed,
+                      order_manifest=order_manifest,
+                      gain=1.0,
+                      diagnostic_indices=wide,
+                      accept_review=True,
+                  )
+                  for window, size in (("core", manifest["core_window"]), ("wide", manifest["wide_window"])):
+                      indices = benchmark.cyclic_window(
+                          stone["faceup_center"], size, stone["source_frame_count"]
+                      )
+                      wrap = any(right < left for left, right in zip(indices, indices[1:]))
+                      steps = work / cert / f"steps-{window}"
+                      steps.mkdir()
+                      (steps / "steps.json").write_text(json.dumps({
+                          "template_status": "unavailable",
+                          "template_reason": "semantic_not_required_for_issue_49",
+                          "frames": [],
+                      }))
+                      result = tier.measure_stone(processed, steps, indices, wrap=wrap)
+                      target = out / "per-stone" / cert / window
+                      tier.write_stone_outputs(
+                          result,
+                          target,
+                          processed=processed if window == "core" else None,
+                      )
+                      if window == "core":
+                          core_results[cert] = result
+                      for pair_id, pair in result["pairs"].items():
+                          localized = pair["localized"]
+                          rows.append({
+                              "certificate": cert,
+                              "window": window,
+                              "pair": pair_id,
+                              "status": pair["simple"]["validity"]["status"],
+                              "simple_q10": pair["simple"]["summary"]["q10"],
+                              "simple_q50": pair["simple"]["summary"]["q50"],
+                              "simple_q90": pair["simple"]["summary"]["q90"],
+                              "standardized_status": pair["standardized"]["validity"]["status"],
+                              "standardized_q10": pair["standardized"]["summary"]["q10"],
+                              "standardized_q50": pair["standardized"]["summary"]["q50"],
+                              "standardized_q90": pair["standardized"]["summary"]["q90"],
+                              "localized_status": localized["validity"]["status"],
+                              "localized_q10": localized["median_summary"]["q10"],
+                              "localized_q50": localized["median_summary"]["q50"],
+                              "localized_q90": localized["median_summary"]["q90"],
+                              "localized_q75_q50": localized["q75_summary"]["q50"],
+                          })
+
+          observations = json.loads(
+              (repo / "docs/360/calibration/human-observations.json").read_text()
+          )
+          human = []
+          for observation in observations["observations"]:
+              cert = observation["certificate"]
+              if cert not in core_results:
+                  continue
+              result = core_results[cert]
+              for pair_id, pair in result["pairs"].items():
+                  simple_by_index = {
+                      item["source_index"]: item
+                      for item in pair["simple"]["frame_trace"]
+                  }
+                  standard_by_index = {
+                      item["source_index"]: item
+                      for item in pair["standardized"]["frame_trace"]
+                  }
+                  local_by_index = {
+                      item["source_index"]: item
+                      for item in pair["localized"]["frame_trace"]
+                  }
+                  for source_index in observation["source_frames"]:
+                      if source_index not in simple_by_index:
+                          continue
+                      human.append({
+                          "observation_id": observation["id"],
+                          "certificate": cert,
+                          "concept": observation["concept"],
+                          "role": observation["role"],
+                          "pair": pair_id,
+                          "source_index": source_index,
+                          "simple": simple_by_index[source_index]["separation"],
+                          "standardized": standard_by_index[source_index]["standardized_separation"],
+                          "localized_median": local_by_index[source_index]["median_separation"],
+                          "localized_q75": local_by_index[source_index]["q75_separation"],
+                          "strongest_sector": local_by_index[source_index]["strongest_sector"],
+                          "strongest_sector_separation": local_by_index[source_index]["strongest_sector_separation"],
+                      })
+
+          (out / "raw-pixel-summary.json").write_text(
+              json.dumps({"rows": rows, "human_frame_checks": human}, indent=2, allow_nan=False) + "\n"
+          )
+          print(f"wrote {len(rows)} rows and {len(human)} human-frame checks")
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: issue49-raw-pixel
+          path: issue49-raw-pixel
+          if-no-files-found: error
+          retention-days: 7
