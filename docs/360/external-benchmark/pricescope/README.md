@@ -116,6 +116,45 @@ remain pending; every sample's `analysis_status` is `not_run`. The normalized
 manifest is versioned in Git alongside the catalog and archive manifest; release
 v3 remains the unchanged raw-media bundle.
 
+## Blind benchmark runner
+
+Issue #64 steps 3–5 are executed by \`diamond360.external_benchmark\`. The runner
+does not read source labels until after all measurements for a sample have been
+computed.
+
+Source handling is deliberately conservative:
+
+- complete archived vendor 360s use the frozen #45 \`core17\` window
+  (\`248..255,0..8\`) with canonical \`wide33\` step geometry;
+- records explicitly declared \`direct_mp4\` are decoded losslessly to PNG and
+  use one label-blind centred contiguous window of at most 97 decoded frames;
+  these are **research projections**, not #45-production-compatible runs;
+- still images, forum previews and locator-only records remain explicit
+  \`pipeline/source mismatch\` cases. Frames are never duplicated to manufacture
+  motion.
+
+For every technically runnable source the artifact records the retained #45
+field vocabulary, #55 crispness candidates and current #57 tier-readability
+candidates. No quality thresholds, weights or aesthetic scores are fitted.
+Tier readability remains research-only with no declared quality direction.
+
+Reproduce against the pinned recovery ZIP after extracting it:
+
+\`\`\`bash
+python -m diamond360.external_benchmark \
+  --manifest docs/360/external-benchmark/pricescope/benchmark-manifest.json \
+  --archive-root /tmp/pricescope-archive \
+  --source-root /tmp/pricescope-sources \
+  --output /tmp/pricescope-results \
+  --prepare-sources
+\`\`\`
+
+The CI workflow uploads only derived benchmark results/evidence, not recovered
+third-party source media. Descriptor-level \`supports external case\`,
+\`contradicts external case\`, \`not applicable / measuring different percept\`
+and \`pipeline/source mismatch\` dispositions are made from the blind output;
+the runner itself does not infer a quality direction from labels.
+
 ## Reproduce the byte probe
 
 ```bash
