@@ -77,6 +77,24 @@ Tests cover:
 - a narrow high-intensity edge spike excluded by the guard;
 - support motion across frames without requiring persistent identical pixels.
 
+## Interpretation caveat
+
+The #19 semantic boundary is itself inferred from persistent radial edge evidence.
+That makes a direct magnitude comparison such as `semantic L > coarse L`
+partly selection-driven: the semantic geometry is intentionally placed where
+persistent edge evidence exists.
+
+PR A therefore does **not** treat a larger semantic-strip number as evidence of
+superiority by itself. The useful tests are:
+
+- whether the strip is supported and auditable on the original source frame;
+- whether width 0.025 / 0.040 / 0.055 tells the same qualitative story;
+- whether core and wide windows remain reasonably stable;
+- whether boundary-local measurements repair concrete broad-band cancellation
+  cases rather than merely amplifying the selected edge.
+
+Formal human calibration and held-out discrimination remain PR C.
+
 ## Benchmark
 
 The PR workflow downloads the canonical four full-sequence source bundles and
