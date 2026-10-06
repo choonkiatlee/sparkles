@@ -21,6 +21,7 @@ from . import asscher_steps
 from . import coordination_benchmark as coordination_b
 from . import crispness_benchmark as crispness_b
 from . import diagonal_arms
+from . import descriptor_profile as retained_profile
 from . import mobility_benchmark as mobility_b
 from . import morphology_benchmark as morphology_b
 from . import occupancy_benchmark as occupancy_b
@@ -174,6 +175,16 @@ def _compact_retained(
         role="context",
         relevance="context only",
     )
+    expected = set(retained_profile.PRODUCTION_FIELD_IDS) | set(
+        retained_profile.CONTEXT_FIELD_IDS
+    )
+    if set(out) != expected:
+        missing = sorted(expected - set(out))
+        extra = sorted(set(out) - expected)
+        raise ValueError(
+            f"external benchmark retained profile drifted from #45: "
+            f"missing={missing}, extra={extra}"
+        )
     return out
 
 
@@ -272,6 +283,7 @@ def _run_dynamic(source, output, work, *, faceup):
         "source_frame_count": count,
         "ordered_video_sampling": sampling,
         "requested_indices": indices,
+        "retained_profile_schema": retained_profile.PROFILE_SCHEMA,
         "retained_profile": _compact_retained(
             activation,
             occupancy,
