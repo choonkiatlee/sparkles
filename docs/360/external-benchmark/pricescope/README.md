@@ -56,23 +56,29 @@ to Git; the manifest preserves exact source URLs, sizes and hashes.
 The **Glittery** d360 sequence is now archived: 256 unique original 758 × 597
 JPEGs, imported from the saved verified source bundle. Every image decodes and
 matches its recorded byte count, SHA-256 and contiguous frame index. Source
-manifest and labelled derived previews are included in release bundle v2.
+manifest and labelled derived previews are included in release bundle v3.
 Visual inspection was sampled; timing and calibrated viewing angles are unknown.
 
-**Crispest** remains missing. No saved extract was found, and further source
-requests were not attempted after this session's earlier explicit scraping block.
+**Crispest** is also archived: 256 unique original 648 × 511 JPEGs, recovered
+from the saved exact-viewer artifact in [Actions run 37536103420](https://github.com/choonkiatlee/sparkles/actions/runs/37536103420).
+A new live extraction stopped at batch 1 HTTP 403. The saved sequence was checked
+for image decoding, dimensions, contiguous indices, byte counts, unique hashes
+and frame 0/still agreement. Its original source manifest and recovery provenance
+are retained in v3. Visual inspection covered the ordered 16-frame overview and
+original frames 252, 0 and 4; it did not cover every frame.
 Historical partial-recovery evidence is retained separately in the bundle.
 
 ## Persistent recovered bundle
 
-[Download recovery bundle v2](https://github.com/choonkiatlee/sparkles/releases/download/pricescope-research-2026-10-06-v1/pricescope-media-recovery-2026-10-06-v2.zip):
+[Download recovery bundle v3](https://github.com/choonkiatlee/sparkles/releases/download/pricescope-research-2026-10-06-v1/pricescope-media-recovery-2026-10-06-v3.zip):
 14 article originals, 2 Kashi original videos, 10 public forum inline previews,
-and the complete 256-frame Glittery d360 sequence.
+and both complete d360 sequences: Glittery and Crispest, 512 original frames total.
 The ZIP includes source URLs, SHA-256, byte counts and post associations.
 It is preserved as a [GitHub release asset](https://github.com/choonkiatlee/sparkles/releases/tag/pricescope-research-2026-10-06-v1)
 for future agents and research workflows. Raw
 media remain out of Git. All images and complete MP4s were decoded; archive
-integrity and per-file hashes were verified.
+integrity and per-file hashes were verified. Release v3 is 36,567,890 bytes;
+SHA-256: `379f411098e4d96df78d7c00fea5bb9fd18d5f37d890b873928c4003ba126da5`.
 
 ## Reproduce the byte probe
 
