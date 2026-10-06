@@ -365,7 +365,34 @@ def _summary_delta(base, test):
                         "median_straightness_mad_radius"
                     ],
                 ),
-            "frame_stability_absolute_deg":
+            "visibility_stability_absolute":
+                _absolute_change(
+                    left[
+                        "visibility_frame_mad"
+                    ],
+                    right[
+                        "visibility_frame_mad"
+                    ],
+                ),
+            "orientation_stability_absolute":
+                _absolute_change(
+                    left[
+                        "orientation_frame_mad"
+                    ],
+                    right[
+                        "orientation_frame_mad"
+                    ],
+                ),
+            "straightness_stability_absolute":
+                _absolute_change(
+                    left[
+                        "straightness_frame_mad_radius"
+                    ],
+                    right[
+                        "straightness_frame_mad_radius"
+                    ],
+                ),
+            "angular_stability_absolute_deg":
                 _absolute_change(
                     left[
                         "angular_offset_frame_mad_deg"
