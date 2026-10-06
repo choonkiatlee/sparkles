@@ -798,7 +798,7 @@ class CommittedEvidencePacketTests(unittest.TestCase):
             self.assertGreater(path.stat().st_size, 10_000)
             self.assertLess(path.stat().st_size, 500_000)
             with path.open("rb") as handle:
-                self.assertEqual(handle.read(2), b"\\xff\\xd8")
+                self.assertEqual(handle.read(2), bytes((0xFF, 0xD8)))
 
 
 if __name__ == "__main__":
