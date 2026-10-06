@@ -239,6 +239,39 @@ def select_evidence(simple_trace, standardized=None):
     return evidence
 
 
+def strongest_rank_disagreement(left_trace, left_key, right_trace, right_key):
+    """Return the aligned frame whose two formulations disagree most in rank."""
+    if len(left_trace) != len(right_trace):
+        raise ValueError("compared traces must have equal length")
+    aligned = []
+    for position, (left, right) in enumerate(zip(left_trace, right_trace)):
+        if left.get("source_index") != right.get("source_index"):
+            raise ValueError("compared traces must share source-index alignment")
+        left_value = _finite(left.get(left_key))
+        right_value = _finite(right.get(right_key))
+        if left_value is None or right_value is None:
+            continue
+        aligned.append((
+            position, left["source_index"], left_value, right_value
+        ))
+    if len(aligned) < 2:
+        return None
+    left_ranks = _average_ranks([row[2] for row in aligned])
+    right_ranks = _average_ranks([row[3] for row in aligned])
+    denom = max(1.0, len(aligned) - 1.0)
+    candidates = []
+    for index, row in enumerate(aligned):
+        disagreement = abs(left_ranks[index] - right_ranks[index]) / denom
+        candidates.append((disagreement, -row[0], row))
+    disagreement, _, row = max(candidates)
+    return {
+        "position": row[0],
+        "source_index": row[1],
+        "left_value": row[2],
+        "right_value": row[3],
+        "rank_disagreement": float(disagreement),
+    }
+
 def compose_validity(component_validities, local_summary):
     """Monotone validity composition; usefulness/disposition stays separate."""
     worst = "ok"
