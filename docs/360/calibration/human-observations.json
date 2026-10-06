@@ -1,0 +1,425 @@
+{
+  "schema_version": "diamond360-human-observations/1",
+  "purpose": "Curated human-observation labels from the current four complete Asscher evaluations for issue #22 calibration. These are annotations of the existing reviews, not new optical measurements or ground-truth quality labels.",
+  "concept_catalog": {
+    "layered_tier_readability": "Nested tiers are visually separated/readable as layers. This is partly static architecture and partly dynamic contrast behaviour.",
+    "grouped_darkness": "Broad regions enter or remain in a dark/grey state together, creating a grouped dark stack rather than independent local contrast.",
+    "regional_recovery": "A region visibly changes away from a dark/grey state across nearby source views.",
+    "independent_layer_motion": "Nested or adjacent regions change separately or in opposing directions rather than moving as one block.",
+    "directional_opposition": "Opposing spatial regions show materially different or opposite temporal behaviour.",
+    "broad_flash_scale": "Visible changes are dominated by relatively broad connected apparent flash regions rather than only small fragmented patches.",
+    "fragmented_flash_scale": "Visible changes include relatively small/fine disconnected apparent regions rather than one dominant broad connected flash.",
+    "quiet_or_pale_inner_region": "Inner panels/tiers remain pale, muted or less articulated in the inspected supplier views.",
+    "rim_vs_inner_activity": "Recorded change is more obvious away from the inner table than in the inner region.",
+    "static_geometric_crispness": "Tier/diagonal geometry is visually crisp, orderly and legible in still views."
+  },
+  "stone_reviews": [
+    {
+      "certificate": "IGI-LG756520111",
+      "outcome": "Shortlist",
+      "evaluation_path": "evaluations/Sparkles IGI-LG756520111 evaluation 2026-10-05-140217.md",
+      "summary": "Readable nested tiers and lower-band recovery; pale inner side definition remains the main check."
+    },
+    {
+      "certificate": "IGI-LG756580087",
+      "outcome": "Shortlist",
+      "evaluation_path": "evaluations/Sparkles IGI-LG756580087 evaluation 2026-10-05-140217.md",
+      "summary": "Clean broad tiers with separately changing layers/diagonals; pale inner side activity remains unresolved."
+    },
+    {
+      "certificate": "IGI-LG818659722",
+      "outcome": "Reserve",
+      "evaluation_path": "evaluations/Sparkles IGI-LG818659722 evaluation 2026-10-05-144629.md",
+      "summary": "Crisp geometry but broad upper/lower darkness groups near face-up and dominates the visual rhythm."
+    },
+    {
+      "certificate": "IGI-LG836619414",
+      "outcome": "Shortlist",
+      "evaluation_path": "evaluations/Sparkles IGI-LG836619414 evaluation 2026-10-05-140217.md",
+      "summary": "Crisp layered tiers and coherent diagonals with a quieter inner table and more active-looking rim."
+    }
+  ],
+  "observations": [
+    {
+      "id": "LG756520111-tier-readability",
+      "certificate": "IGI-LG756520111",
+      "concept": "layered_tier_readability",
+      "hypothesis_family": "nested_step",
+      "role": "strength",
+      "profile_explanation": "partial",
+      "summary": "Separated nested tiers remain readable while several lower bands visibly change together.",
+      "source_frames": [
+        248,
+        252,
+        0,
+        4
+      ],
+      "descriptor_links": [
+        {
+          "field_id": "nested_step.centre_inner_pearson",
+          "assessment": "partial",
+          "rationale": "Positive centre-inner coordination is consistent with grouped nested movement, but correlation does not measure static tier separation or crispness."
+        },
+        {
+          "field_id": "nested_step.inner_middle_pearson",
+          "assessment": "partial",
+          "rationale": "Positive inner-middle coordination is consistent with several bands moving together, but does not by itself establish hall-of-mirrors quality."
+        }
+      ]
+    },
+    {
+      "id": "LG756520111-directional-opposition",
+      "certificate": "IGI-LG756520111",
+      "concept": "directional_opposition",
+      "hypothesis_family": "directional",
+      "role": "mixed",
+      "profile_explanation": "partial",
+      "summary": "The review notes unequal directional light/dark behaviour and grouped lower-band movement rather than uniform opposing-region balance.",
+      "source_frames": [
+        248,
+        254,
+        0,
+        4
+      ],
+      "descriptor_links": [
+        {
+          "field_id": "directional.side_N_S_pearson",
+          "assessment": "supports",
+          "rationale": "Strongly negative north-south correlation is consistent with opposing upper/lower temporal behaviour rather than coordinated movement."
+        },
+        {
+          "field_id": "directional.corner_NE_SW_pearson",
+          "assessment": "partial",
+          "rationale": "Negative diagonal correlation supports directional independence in some corner behaviour, although the human review is not a pair-specific motion annotation."
+        }
+      ]
+    },
+    {
+      "id": "LG756520111-pale-inner-panels",
+      "certificate": "IGI-LG756520111",
+      "concept": "quiet_or_pale_inner_region",
+      "hypothesis_family": "unexplained_static",
+      "role": "check",
+      "profile_explanation": "unexplained",
+      "summary": "Inner side wedges, especially the right, remain comparatively pale and less articulated in the inspected views.",
+      "source_frames": [
+        248,
+        254,
+        0,
+        4
+      ],
+      "descriptor_links": []
+    },
+    {
+      "id": "LG756520111-flash-scale",
+      "certificate": "IGI-LG756520111",
+      "concept": "broad_flash_scale",
+      "hypothesis_family": "morphology",
+      "role": "neutral",
+      "profile_explanation": "partial",
+      "summary": "Broad apparent step bands coexist with smaller diagonal/corner patches, so static broad architecture does not imply consistently broad dynamic flashes.",
+      "source_frames": [
+        248,
+        254,
+        0,
+        4
+      ],
+      "descriptor_links": [
+        {
+          "field_id": "flash_morphology.median_largest_component_fraction",
+          "assessment": "partial",
+          "rationale": "The relatively small retained component fraction fits a mixed broad-plus-finer dynamic character and cautions against equating broad static tiers with broad flash morphology."
+        }
+      ]
+    },
+    {
+      "id": "LG756580087-broad-flashes",
+      "certificate": "IGI-LG756580087",
+      "concept": "broad_flash_scale",
+      "hypothesis_family": "morphology",
+      "role": "strength",
+      "profile_explanation": "explained",
+      "summary": "Clean broad horizontal tiers dominate the visual character, with large directional apparent flashes.",
+      "source_frames": [
+        248,
+        254,
+        0,
+        4
+      ],
+      "descriptor_links": [
+        {
+          "field_id": "flash_morphology.median_largest_component_fraction",
+          "assessment": "supports",
+          "rationale": "The stone is the clear high-end morphology case in the current sample, matching the review's broad deliberate flash/tier character."
+        }
+      ]
+    },
+    {
+      "id": "LG756580087-independent-layers",
+      "certificate": "IGI-LG756580087",
+      "concept": "independent_layer_motion",
+      "hypothesis_family": "nested_step",
+      "role": "strength",
+      "profile_explanation": "explained",
+      "summary": "Horizontal tiers and adjacent inner/middle regions change separately rather than behaving as one synchronized block.",
+      "source_frames": [
+        254,
+        0,
+        4,
+        8
+      ],
+      "descriptor_links": [
+        {
+          "field_id": "nested_step.inner_middle_pearson",
+          "assessment": "supports",
+          "rationale": "Strong negative inner-middle correlation directly matches the observed alternating/separately changing nested layers."
+        }
+      ]
+    },
+    {
+      "id": "LG756580087-no-central-blackout",
+      "certificate": "IGI-LG756580087",
+      "concept": "regional_recovery",
+      "hypothesis_family": "dark_state",
+      "role": "strength",
+      "profile_explanation": "partial",
+      "summary": "The central convergence stays defined and the inspected views do not show a large persistent central blackout.",
+      "source_frames": [
+        250,
+        254,
+        0,
+        8
+      ],
+      "descriptor_links": [
+        {
+          "field_id": "dark_state.occupancy.centre_mean",
+          "assessment": "supports",
+          "rationale": "Low centre relative-dark occupancy is consistent with the absence of a persistent large central dark state in the inspected core window."
+        },
+        {
+          "field_id": "dark_state.persistence.inner_dark_q90_window_fraction",
+          "assessment": "partial",
+          "rationale": "Moderate inner persistence provides temporal context, but the retained persistence field is inner-region rather than centre-specific."
+        }
+      ]
+    },
+    {
+      "id": "LG756580087-pale-inner-panels",
+      "certificate": "IGI-LG756580087",
+      "concept": "quiet_or_pale_inner_region",
+      "hypothesis_family": "unexplained_static",
+      "role": "check",
+      "profile_explanation": "unexplained",
+      "summary": "Broad inner side panels often look pale and less articulated than the horizontal tiers.",
+      "source_frames": [
+        254,
+        0,
+        8
+      ],
+      "descriptor_links": []
+    },
+    {
+      "id": "LG818659722-grouped-dark-stack",
+      "certificate": "IGI-LG818659722",
+      "concept": "grouped_darkness",
+      "hypothesis_family": "dark_state",
+      "role": "drawback",
+      "profile_explanation": "explained",
+      "summary": "Broad upper/lower inner sectors darken together through the near-face-up interval while the sides remain brighter.",
+      "source_frames": [
+        252,
+        0,
+        6
+      ],
+      "descriptor_links": [
+        {
+          "field_id": "dark_state.occupancy.inner_mean",
+          "assessment": "supports",
+          "rationale": "High inner relative-dark occupancy matches the unusually large amount of dark inner-region state in the core interval."
+        },
+        {
+          "field_id": "dark_state.persistence.inner_dark_q90_window_fraction",
+          "assessment": "supports",
+          "rationale": "The longest retained inner dark persistence in the sample matches the human concern that the grouped dark state persists across nearby views."
+        },
+        {
+          "field_id": "directional.side_N_S_pearson",
+          "assessment": "supports",
+          "rationale": "Near-perfect positive north-south coordination matches the upper/lower sectors darkening together as a directional pair."
+        },
+        {
+          "field_id": "temporal_reconfiguration.switching.inner_rate",
+          "assessment": "partial",
+          "rationale": "High switching confirms substantial inner-state reconfiguration, but it is redundant with occupancy and does not independently identify whether that motion is attractive."
+        }
+      ]
+    },
+    {
+      "id": "LG818659722-recovery-activity",
+      "certificate": "IGI-LG818659722",
+      "concept": "regional_recovery",
+      "hypothesis_family": "activity_motion",
+      "role": "mixed",
+      "profile_explanation": "explained",
+      "summary": "The central/inner region is not simply dead: it changes strongly and recovers toward paler states around the dark-stack interval.",
+      "source_frames": [
+        248,
+        252,
+        0,
+        6,
+        10
+      ],
+      "descriptor_links": [
+        {
+          "field_id": "activity.activation.inner_relative_total_excursion",
+          "assessment": "supports",
+          "rationale": "Very large inner activation excursion matches the visible transition into and away from the grouped dark state."
+        },
+        {
+          "field_id": "activity.mobility.inner_median",
+          "assessment": "supports",
+          "rationale": "High inner local mobility confirms that the concern is uneven/grouped activity rather than an absence of change."
+        }
+      ]
+    },
+    {
+      "id": "LG818659722-static-crispness",
+      "certificate": "IGI-LG818659722",
+      "concept": "static_geometric_crispness",
+      "hypothesis_family": "unexplained_static",
+      "role": "strength",
+      "profile_explanation": "unexplained",
+      "summary": "The review finds clean square geometry, legible diagonal arms and distinct mirror tiers despite the grouped dark-state concern.",
+      "source_frames": [
+        252,
+        0
+      ],
+      "descriptor_links": []
+    },
+    {
+      "id": "LG818659722-flash-scale",
+      "certificate": "IGI-LG818659722",
+      "concept": "broad_flash_scale",
+      "hypothesis_family": "morphology",
+      "role": "neutral",
+      "profile_explanation": "partial",
+      "summary": "Long band reflections dominate parts of the sequence while smaller corner reflections continue to change.",
+      "source_frames": [
+        252,
+        0,
+        6
+      ],
+      "descriptor_links": [
+        {
+          "field_id": "flash_morphology.median_largest_component_fraction",
+          "assessment": "supports",
+          "rationale": "The second-largest morphology value in the sample is consistent with relatively broad connected changes, but broadness itself is not a quality verdict."
+        }
+      ]
+    },
+    {
+      "id": "LG836619414-rim-vs-inner",
+      "certificate": "IGI-LG836619414",
+      "concept": "rim_vs_inner_activity",
+      "hypothesis_family": "activity_motion",
+      "role": "mixed",
+      "profile_explanation": "partial",
+      "summary": "The rim looks more active while the inner table remains comparatively quiet/pale.",
+      "source_frames": [
+        248,
+        252,
+        0,
+        8
+      ],
+      "descriptor_links": [
+        {
+          "field_id": "activity.activation.middle_relative_total_excursion",
+          "assessment": "partial",
+          "rationale": "Elevated middle-region activation is consistent with activity away from the centre, but the coarse middle band is not an exact rim measurement."
+        },
+        {
+          "field_id": "temporal_reconfiguration.switching.middle_rate",
+          "assessment": "partial",
+          "rationale": "High middle switching supports strong reconfiguration outside the inner table, but the retained geometry cannot isolate the visual rim precisely."
+        }
+      ]
+    },
+    {
+      "id": "LG836619414-independent-layers",
+      "certificate": "IGI-LG836619414",
+      "concept": "independent_layer_motion",
+      "hypothesis_family": "nested_step",
+      "role": "strength",
+      "profile_explanation": "partial",
+      "summary": "Adjacent bands and smaller rim regions change independently while the tier architecture remains readable.",
+      "source_frames": [
+        248,
+        252,
+        0,
+        8
+      ],
+      "descriptor_links": [
+        {
+          "field_id": "nested_step.inner_middle_pearson",
+          "assessment": "supports",
+          "rationale": "Negative inner-middle correlation is consistent with separately changing nested regions, although the magnitude is modest."
+        },
+        {
+          "field_id": "nested_step.centre_inner_pearson",
+          "assessment": "partial",
+          "rationale": "Near-zero/negative centre-inner coordination adds evidence for independence but is too weak to carry the interpretation alone."
+        }
+      ]
+    },
+    {
+      "id": "LG836619414-finer-flash-structure",
+      "certificate": "IGI-LG836619414",
+      "concept": "fragmented_flash_scale",
+      "hypothesis_family": "morphology",
+      "role": "neutral",
+      "profile_explanation": "explained",
+      "summary": "The review notes broad step bands alongside smaller rim reflections; the dynamic pattern is finer and less dominated by one broad connected flash than LG756580087.",
+      "source_frames": [
+        248,
+        252,
+        8
+      ],
+      "descriptor_links": [
+        {
+          "field_id": "flash_morphology.median_largest_component_fraction",
+          "assessment": "supports",
+          "rationale": "The lowest morphology value in the current sample matches the comparatively finer/fragmented dynamic flash structure without implying worse cut quality."
+        }
+      ]
+    },
+    {
+      "id": "LG836619414-static-crispness",
+      "certificate": "IGI-LG836619414",
+      "concept": "static_geometric_crispness",
+      "hypothesis_family": "unexplained_static",
+      "role": "strength",
+      "profile_explanation": "unexplained",
+      "summary": "Crisp nested tiers and coherent diagonal arms remain an obvious static strength despite weak/negative nested-step temporal correlations.",
+      "source_frames": [
+        0,
+        8
+      ],
+      "descriptor_links": []
+    },
+    {
+      "id": "LG836619414-pale-inner-tiers",
+      "certificate": "IGI-LG836619414",
+      "concept": "quiet_or_pale_inner_region",
+      "hypothesis_family": "unexplained_static",
+      "role": "check",
+      "profile_explanation": "unexplained",
+      "summary": "The inner tiers remain relatively pale beside the active rim and complete inner-panel recovery is not established.",
+      "source_frames": [
+        248,
+        0,
+        8
+      ],
+      "descriptor_links": []
+    }
+  ]
+}
