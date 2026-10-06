@@ -1,9 +1,17 @@
 name: issue21 validation
 
+permissions:
+  contents: write
+
 on:
   push:
     branches:
       - issue-21-evidence-normalization-v2
+    paths:
+      - "diamond360/evidence_packet.py"
+      - "diamond360/evidence_benchmark.py"
+      - "tests/test_evidence_packet.py"
+      - ".github/workflows/issue21-check.yml"
 
 jobs:
   validate:
@@ -43,10 +51,7 @@ jobs:
           PY
       - name: Build real four-stone evidence packets
         run: |
-          python -m diamond360.evidence_benchmark \
-            --repository-root . \
-            --source-root outputs/benchmark-sources \
-            --output outputs/evidence-packet
+          python -m diamond360.evidence_benchmark             --repository-root .             --source-root outputs/benchmark-sources             --output outputs/evidence-packet
       - name: Validate compact benchmark output
         run: |
           python - <<'PY'
@@ -69,7 +74,20 @@ jobs:
                   assert item["original_frames"]
                   assert item["render_source_indices"]
           PY
-      - uses: actions/upload-artifact@v4
-        with:
-          name: issue21-evidence-packet
-          path: outputs/evidence-packet
+      - name: Stage compact benchmark artifacts
+        run: |
+          mkdir -p docs/360/evidence-packet
+          cp outputs/evidence-packet/summary.json docs/360/evidence-packet/summary.json
+          rm -rf docs/360/evidence-packet/per-stone
+          cp -R outputs/evidence-packet/per-stone docs/360/evidence-packet/per-stone
+      - name: Commit compact benchmark artifacts
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/360/evidence-packet/summary.json docs/360/evidence-packet/per-stone
+          if git diff --cached --quiet; then
+            echo "Artifacts already current"
+          else
+            git commit -m "Add four-stone evidence packet benchmark"
+            git push
+          fi
