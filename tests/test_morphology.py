@@ -77,7 +77,7 @@ class MorphologyTests(unittest.TestCase):
 
     def test_threshold_perturbation_changes_marginal_connectivity(self):
         brightness = np.array([[
-            [9.0, 9.0, 14.0, 9.0, 9.0],
+            [9.0, 9.0, 9.0, 9.0, 9.0],
             [14.0, 14.0, 11.7, 14.0, 14.0],
             [11.0, 11.0, 10.0, 11.0, 11.0],
         ]])
