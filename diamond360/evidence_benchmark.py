@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import tempfile
 from pathlib import Path
 
@@ -79,6 +80,36 @@ def _manifest_ref(certificate):
     )
 
 
+def _prepare_core_source(source, source_manifest, indices, destination):
+    """Copy only the canonical core originals into a temporary sparse source."""
+    source = Path(source)
+    destination = Path(destination)
+    wanted = set(indices)
+    selected = [
+        frame for frame in source_manifest.get("frames", [])
+        if frame.get("source_index") in wanted
+    ]
+    if {frame.get("source_index") for frame in selected} != wanted:
+        raise ValueError("benchmark source is missing canonical core frames")
+    destination.mkdir(parents=True, exist_ok=True)
+    for frame in selected:
+        relative = Path(frame["path"])
+        target = destination / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source / relative, target)
+    sparse_manifest = dict(source_manifest)
+    sparse_manifest["frames"] = selected
+    sparse_manifest["sequence_complete"] = False
+    sparse_manifest["selection"] = {
+        "window_contract": dp.WINDOW_ID,
+        "source_indices": list(indices),
+        "reason": "temporary preprocessing subset for evidence packet generation",
+    }
+    path = destination / "source-manifest.json"
+    path.write_text(json.dumps(sparse_manifest, indent=2) + "\n")
+    return path
+
+
 def run(
     repository_root,
     source_root,
@@ -140,10 +171,17 @@ def run(
             work = Path(temporary)
             processed = work / "processed"
             steps = work / "steps"
-            pipeline.run(
+            core_source = work / "source"
+            core_manifest = _prepare_core_source(
                 source,
+                source_manifest,
+                indices,
+                core_source,
+            )
+            pipeline.run(
+                core_source,
                 processed,
-                order_manifest=source_manifest_path,
+                order_manifest=core_manifest,
                 gain=1.0,
                 diagnostic_indices=indices,
                 accept_review=True,
