@@ -76,6 +76,8 @@ jobs:
           PY
       - name: Stage compact benchmark artifacts
         run: |
+          git fetch origin "$GITHUB_REF_NAME"
+          git reset --hard "origin/$GITHUB_REF_NAME"
           mkdir -p docs/360/evidence-packet
           cp outputs/evidence-packet/summary.json docs/360/evidence-packet/summary.json
           rm -rf docs/360/evidence-packet/per-stone
