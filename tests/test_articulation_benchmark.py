@@ -127,7 +127,7 @@ class ArticulationBenchmarkTests(unittest.TestCase):
             "activity.activation.inner_relative_total_excursion",
             summary["redundancy_diagnostics"]["retained_profile"],
         )
-        self.assertEqual(len(summary["human_observation_checks"]), 1)
+        self.assertEqual(len(summary["evaluation_observation_checks"]), 1)
         self.assertEqual(
             summary["redundancy_diagnostics"]["adjacent_tier_status"],
             "pending_sibling_49",
