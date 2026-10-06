@@ -15,8 +15,9 @@ Every already-registered frame is mapped onto one declared transfer function
 before either experiment:
 
 - effective diamond diameter: area-equivalent silhouette diameter;
-- target diameter: 256 px;
+- target diameter: 160 px (conservative common resolution; no benchmark source is upsampled);
 - fixed output canvas and isotropic resampling;
+- support-weighted Gaussian anti-aliasing before any downsample;
 - fixed Gaussian low-pass: sigma 1.0 normalized output px;
 - no sharpening, deconvolution or contrast enhancement.
 
