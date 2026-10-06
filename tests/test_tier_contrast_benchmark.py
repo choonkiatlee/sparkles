@@ -88,6 +88,41 @@ class TierContrastBenchmarkTests(unittest.TestCase):
             pair["evidence"]["strongest_formulation_disagreement"]
         )
 
+    def test_localized_sector_challenger_is_optional_and_aligned(self):
+        localized = {
+            band: {
+                "side_E": values,
+                "side_W": list(reversed(values)),
+            }
+            for band, values in {
+                "centre": [1.0, 1.1, 1.2, 1.3],
+                "inner": [1.3, 1.2, 1.1, 1.0],
+                "middle": [0.9, 1.0, 1.1, 1.2],
+            }.items()
+        }
+        support = {
+            band: {"side_E": 12, "side_W": 11}
+            for band in localized
+        }
+        result = tb.measure_from_activation(
+            activation_fixture(),
+            localized_band_values=localized,
+            localized_support_pixels=support,
+        )
+        pair = result["pairs"]["centre__inner"]["localized"]
+        self.assertEqual(pair["validity"]["status"], "ok")
+        self.assertEqual(pair["sectors"], ["side_E", "side_W"])
+        self.assertEqual(pair["support_pixels"]["left"]["side_E"], 12)
+        self.assertIsNotNone(pair["median_summary"]["q50"])
+        self.assertIsNotNone(pair["evidence"]["strongest"])
+
+    def test_localized_sector_challenger_is_unavailable_without_raw_pixels(self):
+        result = tb.measure_from_activation(activation_fixture())
+        self.assertEqual(
+            result["pairs"]["centre__inner"]["localized"]["status"],
+            "unavailable",
+        )
+
     def test_upstream_review_propagates_without_upgrade(self):
         fixture = activation_fixture()
         fixture["representations"]["coarse"]["regions"]["inner"]["fixed"][
