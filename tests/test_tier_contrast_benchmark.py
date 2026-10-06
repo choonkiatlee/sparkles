@@ -360,7 +360,9 @@ class TierContrastBenchmarkTests(unittest.TestCase):
             rows = (out / "tier-readability-profile.csv").read_text().splitlines()
             self.assertEqual(len(rows), 4)
             self.assertIn("q25_frame_q50", rows[0])
+            self.assertIn("max_coverage_gap_source_index", rows[0])
             self.assertIn("ordering_inner_local_minimum_fraction", rows[0])
+            self.assertIn("max_joint_median_penalty", rows[0])
             self.assertIn("joint_weakest_link", rows[-1])
 
     def test_consumes_only_retained_coarse_fixed_pairs(self):
