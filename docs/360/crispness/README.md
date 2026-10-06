@@ -94,3 +94,9 @@ A primitive should only be retained if it:
 With only one Workshop stone, the current benchmark can falsify bad vendor-sensitive definitions but cannot establish strong cross-vendor invariance or aesthetic thresholds.
 
 Possible outcomes are **KEEP**, **REVISE** or **REJECT**. A successful issue may end in REJECT.
+
+## Result
+
+The four-stone benchmark disposition is **REVISE**. See [findings](findings.md) and the compact [exact-core comparison](core-comparison.csv).
+
+The experiment found measurable boundary structure, but source resolution/sharpening materially changes the primitive levels and one exact-core cross-fit exposes template instability. No #45 production-profile field is added by this issue.
