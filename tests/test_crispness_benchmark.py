@@ -124,6 +124,10 @@ class CrispnessBenchmarkTests(unittest.TestCase):
                 set(result["pipeline_sensitivity"]),
                 set(b.c.PERTURBATIONS),
             )
+            for cell in result["baseline"]["summary"].values():
+                self.assertEqual(cell["validity"]["status"], "ok")
+                self.assertEqual(cell["requested_frame_count"], 8)
+                self.assertEqual(cell["scored_frame_count"], 8)
             self.assertEqual(
                 len(result["crossfit_templates"]),
                 2,
