@@ -1,0 +1,54 @@
+name: Issue 28 temporary validation
+
+on:
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e .
+      - name: Run repository tests
+        run: python -m unittest discover -s tests -v
+      - name: Inspect public viewer payload shapes
+        shell: python
+        run: |
+          import json
+          import urllib.request
+
+          urls = [
+              "https://vision.diajewel360.com/imaged/VL-131355/1.json?version=1",
+              "https://data1.360view.link/data/1/imaged/2612250-YK-808/1.json?version=2",
+          ]
+
+          def describe(value, depth=0):
+              if depth >= 3:
+                  return type(value).__name__
+              if isinstance(value, dict):
+                  return {
+                      key: describe(item, depth + 1)
+                      for key, item in list(value.items())[:12]
+                  }
+              if isinstance(value, list):
+                  return {
+                      "type": "list",
+                      "length": len(value),
+                      "sample": describe(value[0], depth + 1) if value else None,
+                  }
+              if isinstance(value, str):
+                  return {"type": "str", "length": len(value), "prefix": value[:80]}
+              return {"type": type(value).__name__, "value": value}
+
+          for url in urls:
+              print("URL", url)
+              with urllib.request.urlopen(url, timeout=30) as response:
+                  payload = json.load(response)
+              print(json.dumps(describe(payload), indent=2))
