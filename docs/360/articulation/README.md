@@ -80,6 +80,10 @@ The runner:
 7. pulls the three #22 pale-inner observations and the LG818659722 grouped-dark
    control into the benchmark summary.
 
+The canonical four-stone run has been completed. Compact results are committed
+as `summary.csv`; the reviewed interpretation is in `findings.md` and the
+machine-readable decision is in `dispositions.json`.
+
 ## Synthetic falsification tests
 
 The unit tests require:
@@ -92,18 +96,21 @@ The unit tests require:
 - the matched-brightness evidence pair to prioritize brightness similarity;
 - upstream `review` validity never to be upgraded.
 
-## Disposition rule
+## Empirical disposition: REVISE
 
-Do **not** promote this descriptor to #23 or the retained #45 feature contract
-merely because the implementation exists.
+The simple scalar is a useful tonal-range audit primitive, but it does **not**
+reliably explain the pale/flat/quiet-inner observation.
 
-KEEP only if the canonical source evidence shows that low articulation
-repeatedly corresponds to the pale/flat/quiet-inner observations, survives
-normalization, and adds information beyond #26/#27/#30 and #49.
+In particular, labelled pale-inner frames can have medium or high Q90-Q10
+spread, so the statistic confounds distributed articulation with cases such as a
+mostly pale inner region plus a narrow dark band. The core median ranking is
+also window-sensitive, and the four-stone diagnostic shows strong redundancy
+with retained inner occupancy/mobility and #49 inner-middle contrast.
 
-Otherwise REVISE the spatial primitive or REJECT it.
+The next research step should therefore add **spatial organization / coverage**
+inside the inner region rather than another global spread statistic.
 
-The benchmark writer therefore emits
-`PENDING_SOURCE_EVIDENCE_REVIEW` until the source-frame evidence has actually
-been inspected. No quality direction, leakage claim or four-stone threshold is
-encoded.
+The benchmark writer itself continues to emit
+`PENDING_SOURCE_EVIDENCE_REVIEW` because automated measurement must not make a
+quality/research-retention decision. The reviewed decision is recorded
+separately in `dispositions.json`.
