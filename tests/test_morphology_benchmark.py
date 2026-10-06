@@ -73,13 +73,13 @@ class MorphologyBenchmarkTests(unittest.TestCase):
             processed = build_synthetic(Path(td))
             result = b.measure_stone(processed, [0, 1, 2])
             self.assertEqual(result["schema_version"], b.SCHEMA)
-            self.assertEqual(result["thresholds"], [0.75, 1.00, 1.25])
+            self.assertEqual(result["thresholds"], [0.90, 1.00, 1.10])
             self.assertEqual(result["baseline_threshold"], 1.00)
             self.assertEqual(result["connectivity"], 8)
             self.assertEqual(result["representation_policy"]["radial_partition_axis"], "omitted")
             for mode in ("fixed", "dynamic"):
                 wrapper = result["supports"][mode]
-                self.assertEqual(list(wrapper["thresholds"]), ["0.75", "1.00", "1.25"])
+                self.assertEqual(list(wrapper["thresholds"]), ["0.90", "1.00", "1.10"])
                 for cell in wrapper["thresholds"].values():
                     self.assertEqual(len(cell["frames"]), 3)
                     self.assertIn("validity", cell)
@@ -127,7 +127,7 @@ class MorphologyBenchmarkTests(unittest.TestCase):
             processed = build_synthetic(Path(td))
             with self.assertRaises(ValueError):
                 b.measure_stone(
-                    processed, [0, 1, 2], thresholds=(0.50, 1.00, 1.50)
+                    processed, [0, 1, 2], thresholds=(0.80, 1.00, 1.20)
                 )
             with self.assertRaises(ValueError):
                 b.measure_stone(processed, [0, 1, 2], connectivity=4)

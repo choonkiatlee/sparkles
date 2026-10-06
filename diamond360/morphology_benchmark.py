@@ -15,7 +15,7 @@ from . import activation_benchmark as ab
 from . import morphology as m
 
 SCHEMA = "diamond360-flash-morphology/1"
-THRESHOLDS = (0.75, 1.00, 1.25)
+THRESHOLDS = (0.90, 1.00, 1.10)
 BASELINE_THRESHOLD = 1.00
 CONNECTIVITY = 8
 

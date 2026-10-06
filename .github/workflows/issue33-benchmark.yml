@@ -197,15 +197,15 @@ jobs:
           for key in ("median_largest_component_fraction", "median_effective_component_count"):
               core = [metric(s, "core", "fixed", "1.00", key) for s in compact_stones]
               wide = [metric(s, "wide", "fixed", "1.00", key) for s in compact_stones]
-              low = [metric(s, "core", "fixed", "0.75", key) for s in compact_stones]
-              high = [metric(s, "core", "fixed", "1.25", key) for s in compact_stones]
+              low = [metric(s, "core", "fixed", "0.90", key) for s in compact_stones]
+              high = [metric(s, "core", "fixed", "1.10", key) for s in compact_stones]
               dynamic = [metric(s, "core", "dynamic", "1.00", key) for s in compact_stones]
               analyses[key] = {
                   "core_values": dict(zip(certs, core)),
                   "wide_values": dict(zip(certs, wide)),
                   "core_to_wide_spearman": finite_spearman(core, wide),
-                  "threshold_rank_spearman_0.75_vs_1.00": finite_spearman(low, core),
-                  "threshold_rank_spearman_1.25_vs_1.00": finite_spearman(high, core),
+                  "threshold_rank_spearman_0.90_vs_1.00": finite_spearman(low, core),
+                  "threshold_rank_spearman_1.10_vs_1.00": finite_spearman(high, core),
                   "fixed_vs_dynamic_core_spearman": finite_spearman(core, dynamic),
               }
 
@@ -271,7 +271,7 @@ jobs:
               "schema_version": "diamond360-flash-morphology-benchmark/1",
               "core_indices": CORE,
               "wide_indices": WIDE,
-              "thresholds": [0.75, 1.00, 1.25],
+              "thresholds": [0.90, 1.00, 1.10],
               "baseline_threshold": 1.00,
               "connectivity": 8,
               "stones": compact_stones,

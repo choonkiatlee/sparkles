@@ -260,7 +260,7 @@ def threshold_sweep(
     whole_stone_values,
     observed,
     support_mode,
-    thresholds=(0.75, 1.00, 1.25),
+    thresholds=(0.90, 1.00, 1.10),
     connectivity=8,
 ):
     thresholds = tuple(float(value) for value in thresholds)

@@ -78,7 +78,7 @@ class MorphologyTests(unittest.TestCase):
     def test_threshold_perturbation_changes_marginal_connectivity(self):
         brightness = np.array([[
             [9.0, 9.0, 9.0, 9.0, 9.0],
-            [14.0, 14.0, 11.7, 14.0, 14.0],
+            [14.0, 14.0, 11.5, 14.0, 14.0],
             [11.0, 11.0, 10.0, 11.0, 11.0],
         ]])
         valid = np.ones_like(brightness, dtype=bool)
@@ -86,8 +86,8 @@ class MorphologyTests(unittest.TestCase):
         sweep = m.threshold_sweep(
             brightness, valid, stone, [10.0], [True], "fixed"
         )
-        self.assertEqual(sweep["0.75"]["frames"][0]["component_count"], 1)
-        self.assertEqual(sweep["1.25"]["frames"][0]["component_count"], 2)
+        self.assertEqual(sweep["0.90"]["frames"][0]["component_count"], 1)
+        self.assertEqual(sweep["1.10"]["frames"][0]["component_count"], 2)
         sensitivity = m.select_threshold_sensitivity(sweep, [7])
         self.assertEqual(sensitivity["source_index"], 7)
         self.assertGreater(sensitivity["largest_component_fraction_range"], 0)
