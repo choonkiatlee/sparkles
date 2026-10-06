@@ -822,3 +822,520 @@ def write_inventory(payload, path):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2, allow_nan=False) + "\n")
+
+
+PACKET_SCHEMA = "diamond360-evidence-packet/1"
+COVERAGE_ORDER = (
+    "activity_motion",
+    "relative_dark_state",
+    "dark_persistence",
+    "nested_step",
+    "directional",
+    "flash_morphology",
+)
+_FAMILY_COVERAGE = {
+    "activation": "activity_motion",
+    "mobility": "activity_motion",
+    "occupancy": "relative_dark_state",
+    "switching": "relative_dark_state",
+    "persistence": "dark_persistence",
+    "coordination": "nested_step",
+    "opposing": "directional",
+    "morphology": "flash_morphology",
+}
+
+
+@dataclass(frozen=True)
+class SelectedEvidence:
+    item: EvidenceItem
+    coverage_families: tuple[str, ...]
+    selected_for: str
+    near_group_id: int | None
+    selection_rationale: str
+
+    def to_dict(self):
+        return {
+            "location": self.item.location.to_dict(),
+            "coverage_families": list(self.coverage_families),
+            "selected_for": self.selected_for,
+            "near_group_id": self.near_group_id,
+            "selection_rationale": self.selection_rationale,
+            "claims": [claim.to_dict() for claim in self.item.claims],
+        }
+
+
+def item_coverage(item: EvidenceItem):
+    return tuple(sorted({
+        _FAMILY_COVERAGE[claim.descriptor_family]
+        for claim in item.claims
+        if claim.descriptor_family in _FAMILY_COVERAGE
+    }, key=COVERAGE_ORDER.index))
+
+
+def _item_status_rank(item):
+    return max(
+        (_STATUS_RANK[claim.validity_status] for claim in item.claims),
+        default=_STATUS_RANK["unavailable"],
+    )
+
+
+def _profile_value(profile, field_id):
+    value = profile.get("measurements", {}).get(field_id, {}).get("value")
+    return float(value) if isinstance(value, (int, float)) else None
+
+
+def _sign_event_rank(claim, profile):
+    values = [
+        _profile_value(profile, field_id)
+        for field_id in claim.profile_field_ids
+    ]
+    values = [value for value in values if value is not None]
+    expected = None
+    if values:
+        expected = "strongest_divergent" if sum(values) / len(values) < 0 else "strongest_coordinated"
+    if claim.event_type == expected:
+        return 0
+    if claim.event_type in {"strongest_coordinated", "strongest_divergent"}:
+        return 1
+    return 2
+
+
+def _claim_role_rank(claim, role, profile):
+    """Role-specific preference; no cross-family numeric importance score."""
+    if _FAMILY_COVERAGE.get(claim.descriptor_family) != role:
+        return (99, 99, claim.native_id, claim.event_type, 0.0)
+
+    if role == "activity_motion":
+        family_rank = 0 if claim.descriptor_family == "mobility" else 1
+        event_order = {
+            "largest": 0,
+            "q90": 1,
+            "largest_positive_move": 2,
+            "largest_negative_move": 2,
+            "q10": 3,
+            "median": 4,
+            "q50": 5,
+            "lowest_nonzero": 6,
+        }
+        event_rank = event_order.get(claim.event_type, 20)
+    elif role == "relative_dark_state":
+        family_rank = 0 if claim.descriptor_family == "switching" else 1
+        event_order = {
+            "highest": 0,
+            "q90": 1,
+            "lowest_nonzero": 2,
+            "q50": 3,
+            "q10": 4,
+        }
+        event_rank = event_order.get(claim.event_type, 20)
+    elif role == "dark_persistence":
+        family_rank = 0
+        event_rank = 0 if claim.event_type == "dark_q90_run" else 10
+    elif role in {"nested_step", "directional"}:
+        family_rank = 0
+        event_rank = _sign_event_rank(claim, profile)
+    elif role == "flash_morphology":
+        family_rank = 0
+        event_rank = {
+            "matched_active_area_pair": 0,
+            "broadest": 1,
+            "most_fragmented": 2,
+        }.get(claim.event_type, 20)
+    else:
+        family_rank = event_rank = 20
+
+    # Importance is intentionally after native_id: it can only break ties among
+    # events emitted by the same native measurement/event kind.
+    importance = -float(claim.importance) if claim.importance is not None else 0.0
+    return (
+        family_rank,
+        event_rank,
+        claim.native_id,
+        claim.event_type,
+        importance,
+    )
+
+
+def _item_role_rank(item, role, profile):
+    claims = [
+        claim for claim in item.claims
+        if _FAMILY_COVERAGE.get(claim.descriptor_family) == role
+    ]
+    if not claims:
+        return (99, 99, 99, "", "", 0.0, item.sort_key())
+    best = min(_claim_role_rank(claim, role, profile) for claim in claims)
+    role_claim_count = len(claims)
+    return (
+        _item_status_rank(item),
+        -role_claim_count,
+        *best,
+        item.sort_key(),
+    )
+
+
+def _near_group_lookup(items, groups):
+    by_key = {}
+    for group_id, group in enumerate(groups):
+        for item in group.items:
+            by_key[item.location.key] = group_id
+    for item in items:
+        by_key.setdefault(item.location.key, None)
+    return by_key
+
+
+def _contrast_rank(item, selected, profile):
+    """Prefer a visibly distinct native counterexample only as a fill policy."""
+    selected_events = {
+        (claim.descriptor_family, claim.native_id, claim.event_type)
+        for chosen in selected
+        for claim in chosen.item.claims
+    }
+    complement = {
+        "broadest": "most_fragmented",
+        "most_fragmented": "broadest",
+        "strongest_coordinated": "strongest_divergent",
+        "strongest_divergent": "strongest_coordinated",
+        "highest": "lowest_nonzero",
+        "lowest_nonzero": "highest",
+        "q90": "q10",
+        "q10": "q90",
+    }
+    best = 20
+    for claim in item.claims:
+        wanted = complement.get(claim.event_type)
+        if wanted is None:
+            continue
+        if (
+            claim.descriptor_family,
+            claim.native_id,
+            wanted,
+        ) in selected_events:
+            best = 0
+            break
+    return (_item_status_rank(item), best, item.sort_key())
+
+
+def select_compact_evidence(
+    items: Iterable[EvidenceItem],
+    profile,
+    near_groups: Iterable[NearDuplicateGroup] | None = None,
+    min_items=4,
+    max_items=6,
+):
+    """Select a compact deterministic visual fingerprint.
+
+    Selection is coverage-first. It never sums descriptor magnitudes across
+    families. Native importance is only a final tie-break inside one native
+    measurement/event kind.
+    """
+    if profile.get("schema_version") != dp.PROFILE_SCHEMA:
+        raise ValueError(f"expected profile schema {dp.PROFILE_SCHEMA}")
+    if type(min_items) is not int or type(max_items) is not int:
+        raise ValueError("min_items and max_items must be integers")
+    if min_items < 1 or max_items < min_items:
+        raise ValueError("require 1 <= min_items <= max_items")
+
+    items = sorted(items, key=lambda item: item.sort_key())
+    groups = list(near_groups or group_near_duplicates(items))
+    group_lookup = _near_group_lookup(items, groups)
+    selected: list[SelectedEvidence] = []
+    covered = set()
+
+    for role in COVERAGE_ORDER:
+        if len(selected) >= max_items:
+            break
+        if role in covered:
+            continue
+        candidates = [
+            item for item in items
+            if role in item_coverage(item)
+            and item.location.key not in {chosen.item.location.key for chosen in selected}
+        ]
+        if not candidates:
+            continue
+        chosen = min(candidates, key=lambda item: _item_role_rank(item, role, profile))
+        coverage = item_coverage(chosen)
+        selected.append(SelectedEvidence(
+            item=chosen,
+            coverage_families=coverage,
+            selected_for=role,
+            near_group_id=group_lookup.get(chosen.location.key),
+            selection_rationale=(
+                f"coverage-first representative for {role}; "
+                f"also covers {', '.join(x for x in coverage if x != role) or 'no additional family'}"
+            ),
+        ))
+        covered.update(coverage)
+
+    # Only if broad coverage produced fewer than the requested minimum, add
+    # deterministic native contrasts. Nearness alone never deletes a distinct
+    # behavioural claim.
+    selected_keys = {chosen.item.location.key for chosen in selected}
+    while len(selected) < min_items and len(selected) < max_items:
+        remaining = [item for item in items if item.location.key not in selected_keys]
+        if not remaining:
+            break
+        chosen = min(
+            remaining,
+            key=lambda item: _contrast_rank(item, selected, profile),
+        )
+        coverage = item_coverage(chosen)
+        selected.append(SelectedEvidence(
+            item=chosen,
+            coverage_families=coverage,
+            selected_for="contrast_fill",
+            near_group_id=group_lookup.get(chosen.location.key),
+            selection_rationale=(
+                "contrast fill after distinct-family coverage; retained because "
+                "the packet would otherwise fall below the minimum"
+            ),
+        ))
+        selected_keys.add(chosen.location.key)
+        covered.update(coverage)
+
+    return selected
+
+
+def _source_manifest_payload(source_manifest):
+    if isinstance(source_manifest, (str, Path)):
+        return json.loads(Path(source_manifest).read_text())
+    return dict(source_manifest)
+
+
+def _source_frame_lookup(source_manifest):
+    payload = _source_manifest_payload(source_manifest)
+    if payload.get("schema_version") != "diamond360-source/1":
+        raise ValueError("expected diamond360-source/1 source manifest")
+    lookup = {}
+    for frame in payload.get("frames", []):
+        index = frame.get("source_index")
+        if type(index) is not int or index < 0 or index in lookup:
+            raise ValueError("source manifest requires unique nonnegative source indices")
+        lookup[index] = frame
+    return payload, lookup
+
+
+def _render_indices(location):
+    values = list(location.source_indices)
+    if location.kind != "run" or len(values) <= 3:
+        return values
+    return [values[0], values[len(values) // 2], values[-1]]
+
+
+def _source_refs(location, lookup):
+    refs = []
+    for index in location.source_indices:
+        frame = lookup.get(index)
+        if frame is None:
+            raise ValueError(f"source index {index} missing from source manifest")
+        refs.append({
+            key: frame.get(key)
+            for key in (
+                "source_index",
+                "path",
+                "sha256",
+                "bytes",
+                "source_url",
+                "batch",
+                "stored_position",
+            )
+            if frame.get(key) is not None
+        })
+    return refs
+
+
+def build_packet(
+    results,
+    profile,
+    source_manifest,
+    source_manifest_ref=None,
+    min_items=4,
+    max_items=6,
+    near_distance=1,
+):
+    manifest, source_lookup = _source_frame_lookup(source_manifest)
+    frame_count = manifest.get("source_frame_count")
+    if type(frame_count) is not int or frame_count <= 0:
+        raise ValueError("source manifest requires source_frame_count")
+    candidates = apply_profile_contract(collect_candidates(results), profile)
+    items = merge_exact_duplicates(candidates)
+    groups = group_near_duplicates(
+        items,
+        frame_count=frame_count,
+        max_distance=near_distance,
+    )
+    selected = select_compact_evidence(
+        items,
+        profile,
+        groups,
+        min_items=min_items,
+        max_items=max_items,
+    )
+    selected_payload = []
+    covered = set()
+    for rank, chosen in enumerate(selected, start=1):
+        payload = chosen.to_dict()
+        payload["rank"] = rank
+        payload["original_frames"] = _source_refs(chosen.item.location, source_lookup)
+        payload["render_source_indices"] = _render_indices(chosen.item.location)
+        selected_payload.append(payload)
+        covered.update(chosen.coverage_families)
+
+    available = {
+        role
+        for item in items
+        for role in item_coverage(item)
+    }
+    certificate = profile.get("certificate") or manifest.get("certificate")
+    if (
+        profile.get("certificate")
+        and manifest.get("certificate")
+        and profile["certificate"] != manifest["certificate"]
+    ):
+        raise ValueError("profile/source certificate mismatch")
+
+    return {
+        "schema_version": PACKET_SCHEMA,
+        "profile_schema": dp.PROFILE_SCHEMA,
+        "certificate": certificate,
+        "window_contract": dp.WINDOW_ID,
+        "source": {
+            "manifest_schema": manifest["schema_version"],
+            "manifest_ref": source_manifest_ref,
+            "source_pipeline": manifest.get("source_pipeline"),
+            "viewer": manifest.get("viewer"),
+            "retrieved_at": manifest.get("retrieved_at"),
+            "source_frame_count": frame_count,
+        },
+        "selection_policy": {
+            "coverage_order": list(COVERAGE_ORDER),
+            "min_items": min_items,
+            "max_items": max_items,
+            "near_distance_source_steps": near_distance,
+            "global_numeric_score": False,
+            "near_groups_are_suppressive": False,
+        },
+        "inventory": {
+            "native_candidate_count": len(candidates),
+            "exact_item_count": len(items),
+            "near_group_count": len(groups),
+            "available_coverage_families": [
+                role for role in COVERAGE_ORDER if role in available
+            ],
+        },
+        "selected_count": len(selected_payload),
+        "covered_families": [
+            role for role in COVERAGE_ORDER if role in covered
+        ],
+        "uncovered_available_families": [
+            role for role in COVERAGE_ORDER
+            if role in available and role not in covered
+        ],
+        "items": selected_payload,
+        "contact_sheet": "contact-sheet.jpg",
+    }
+
+
+def _verify_source_frame(path, frame_ref):
+    import hashlib
+
+    raw = Path(path).read_bytes()
+    expected = frame_ref.get("sha256")
+    if expected and hashlib.sha256(raw).hexdigest() != expected:
+        raise ValueError(
+            f"source hash mismatch for source index {frame_ref['source_index']}"
+        )
+
+
+def render_contact_sheet(packet, source_root, destination, verify_hashes=True):
+    """Render only original supplier frames; no registered/derived substitute."""
+    from PIL import Image, ImageDraw
+
+    if packet.get("schema_version") != PACKET_SCHEMA:
+        raise ValueError(f"expected packet schema {PACKET_SCHEMA}")
+    source_root = Path(source_root)
+    destination = Path(destination)
+    columns = 2
+    tile_w, tile_h = 590, 390
+    rows = max(1, (len(packet.get("items", [])) + columns - 1) // columns)
+    canvas = Image.new("RGB", (columns * tile_w, 55 + rows * tile_h), "white")
+    draw = ImageDraw.Draw(canvas)
+    draw.text(
+        (15, 15),
+        f"{packet.get('certificate') or 'diamond'} · compact original-source evidence",
+        fill="black",
+    )
+
+    for slot, item in enumerate(packet.get("items", [])):
+        x0 = (slot % columns) * tile_w
+        y0 = 55 + (slot // columns) * tile_h
+        render_indices = item.get("render_source_indices", [])
+        frame_lookup = {
+            frame["source_index"]: frame
+            for frame in item.get("original_frames", [])
+        }
+        frames = []
+        for source_index in render_indices:
+            frame_ref = frame_lookup[source_index]
+            path = source_root / frame_ref["path"]
+            if not path.is_file():
+                raise ValueError(f"source frame missing: {path}")
+            if verify_hashes:
+                _verify_source_frame(path, frame_ref)
+            with Image.open(path) as image:
+                frame = image.convert("RGB")
+                frame.load()
+            frames.append((source_index, frame.copy()))
+
+        coverage = ", ".join(item.get("coverage_families", []))
+        draw.text(
+            (x0 + 10, y0 + 8),
+            f"{item['rank']}. {item['selected_for']} · {coverage}",
+            fill="black",
+        )
+        draw.text(
+            (x0 + 10, y0 + 27),
+            f"{item['location']['kind']} source {item['location']['source_indices']}",
+            fill="black",
+        )
+        event_labels = []
+        for claim in item.get("claims", []):
+            label = f"{claim['descriptor_family']}:{claim['event_type']}"
+            if label not in event_labels:
+                event_labels.append(label)
+        draw.text(
+            (x0 + 10, y0 + 46),
+            ", ".join(event_labels[:3]),
+            fill="black",
+        )
+
+        n = max(1, len(frames))
+        frame_w = (tile_w - 20 - (n - 1) * 8) // n
+        for j, (source_index, frame) in enumerate(frames):
+            frame.thumbnail((frame_w, 285))
+            px = x0 + 10 + j * (frame_w + 8) + (frame_w - frame.width) // 2
+            py = y0 + 78
+            canvas.paste(frame, (px, py))
+            draw.text(
+                (x0 + 10 + j * (frame_w + 8), y0 + 365),
+                f"src {source_index}",
+                fill="black",
+            )
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    canvas.save(destination, quality=90)
+    return destination
+
+
+def write_packet(packet, output, source_root=None, verify_hashes=True):
+    output = Path(output)
+    output.mkdir(parents=True, exist_ok=True)
+    packet_path = output / "evidence.json"
+    packet_path.write_text(json.dumps(packet, indent=2, allow_nan=False) + "\n")
+    if source_root is not None:
+        render_contact_sheet(
+            packet,
+            source_root,
+            output / packet["contact_sheet"],
+            verify_hashes=verify_hashes,
+        )
+    return packet_path
