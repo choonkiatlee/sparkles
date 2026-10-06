@@ -355,6 +355,7 @@ def _boundary_local_inputs(
     step_payload = json.loads((step_output / "steps.json").read_text())
     _, step_qc = activation.load_semantic_masks(step_output, selected)
     boundaries = step_payload.get("boundaries") or {}
+    partial_boundaries = step_payload.get("partial_boundaries") or {}
     shape = brightness.shape[1:]
     zero = np.zeros(shape, bool)
 
@@ -370,15 +371,30 @@ def _boundary_local_inputs(
     for left, right in PAIRS:
         pair_id = _pair_id(left, right)
         spec = BOUNDARY_SPECS[pair_id]
-        semantic_control = boundaries.get(spec["semantic"])
-        pair_out = {"widths": {}}
+        full_semantic_control = boundaries.get(spec["semantic"])
+        partial_semantic_control = partial_boundaries.get(spec["semantic"])
+        semantic_control = full_semantic_control or partial_semantic_control
+        partial_semantic = (
+            full_semantic_control is None and partial_semantic_control is not None
+        )
+        pair_out = {
+            "widths": {},
+            "semantic_boundary_source": (
+                "partial_boundary" if partial_semantic
+                else "full_template" if full_semantic_control is not None
+                else "unavailable"
+            ),
+        }
         for width in widths:
             width_key = f"{float(width):.3f}"
             by_geometry = {}
             for geometry in ("coarse", "semantic"):
                 if geometry == "semantic" and (
-                    step_qc.get("template_status") == "unavailable"
-                    or semantic_control is None
+                    semantic_control is None
+                    or (
+                        step_qc.get("template_status") == "unavailable"
+                        and not partial_semantic
+                    )
                 ):
                     by_geometry[geometry] = {
                         "status": "unavailable",
@@ -431,7 +447,21 @@ def _boundary_local_inputs(
                 measured = tc.sectorized_contrast_trace(
                     inside_values, outside_values, indices
                 )
-                if geometry == "semantic":
+                if geometry == "semantic" and partial_semantic:
+                    validity = tc.compose_validity(
+                        [
+                            activation_result["upstream_validity"],
+                            {
+                                "status": "review",
+                                "reason": (
+                                    "partial_step_boundary:"
+                                    + str(step_qc.get("template_reason") or "full_template_unavailable")
+                                ),
+                            },
+                        ],
+                        measured["median_summary"],
+                    )
+                elif geometry == "semantic":
                     validity = activation.activation_validity(
                         "semantic",
                         activation_result["upstream_validity"],
@@ -451,6 +481,11 @@ def _boundary_local_inputs(
                     {
                         "type": "semantic",
                         "boundary_name": spec["semantic"],
+                        "boundary_source": (
+                            "partial_boundary" if partial_semantic else "full_template"
+                        ),
+                        "template_status": step_qc.get("template_status"),
+                        "template_reason": step_qc.get("template_reason"),
                         "sector_u": [float(value) for value in semantic_control["sector_u"]],
                     }
                     if geometry == "semantic"
