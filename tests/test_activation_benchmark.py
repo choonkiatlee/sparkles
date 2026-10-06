@@ -132,60 +132,32 @@ class CommittedActivationArtifactTests(unittest.TestCase):
         "IGI-LG818659722",
         "IGI-LG836619414",
     )
+    REPRESENTATIVE_PANELS = {
+        "per-stone/IGI-LG756520111/core/evidence/coarse-centre-fixed-relative.png",
+        "per-stone/IGI-LG756520111/core/evidence/semantic-centre-fixed-relative.png",
+        "per-stone/IGI-LG818659722/core/evidence/coarse-inner-fixed-relative.png",
+        "per-stone/IGI-LG818659722/core/evidence/semantic-inner_step-fixed-relative.png",
+        "per-stone/IGI-LG836619414/core/evidence/semantic-middle_step-fixed-relative.png",
+        "per-stone/IGI-LG836619414/core/evidence/semantic-middle_step-dynamic-relative.png",
+        "per-stone/IGI-LG756580087/core/evidence/semantic-outer_step-fixed-relative.png",
+        "per-stone/IGI-LG756580087/core/evidence/semantic-outer_step-dynamic-relative.png",
+    }
 
-    def _activation(self, certificate, window):
-        path = self.ROOT / "per-stone" / certificate / window / "activation.json"
-        encoded = path.read_text()
-        self.assertNotIn("NaN", encoded)
-        self.assertNotIn("Infinity", encoded)
-        return json.loads(encoded)
-
-    def test_committed_windows_and_ab_indices_are_exact(self):
+    def test_committed_summary_pins_benchmark_scope(self):
         summary = json.loads((self.ROOT / "summary.json").read_text())
         self.assertEqual(summary["core_indices"], self.CORE)
         self.assertEqual(summary["wide_indices"], self.WIDE)
         self.assertEqual(summary["stones"], list(self.STONES))
 
-        for certificate in self.STONES:
-            for window, indices in (("core", self.CORE), ("wide", self.WIDE)):
-                result = self._activation(certificate, window)
-                self.assertEqual(result["requested_indices"], indices)
-                self.assertEqual(result["accepted_indices"], indices)
-                self.assertEqual(result["excluded"], [])
-                self.assertEqual(result["representations"]["coarse"]["source_indices"], indices)
-                self.assertEqual(result["representations"]["semantic"]["source_indices"], indices)
-
-    def test_committed_validity_is_machine_readable_and_semantic_scoped(self):
-        for certificate in self.STONES:
-            for window in ("core", "wide"):
-                result = self._activation(certificate, window)
-                self.assertIn(result["whole_stone"]["validity"]["status"], {"ok", "review", "unavailable"})
-                self.assertIsInstance(result["whole_stone"]["validity"]["reasons"], list)
-                for representation in ("coarse", "semantic"):
-                    rep = result["representations"][representation]
-                    for modes in rep.get("regions", {}).values():
-                        self.assertEqual(set(modes), {"fixed", "dynamic"})
-                        for cell in modes.values():
-                            for key in ("raw_validity", "relative_validity"):
-                                self.assertIn(cell[key]["status"], {"ok", "review", "unavailable"})
-                                self.assertIsInstance(cell[key]["reasons"], list)
-
-        review = self._activation("IGI-LG818659722", "core")
-        semantic_reasons = review["representations"]["semantic"]["regions"]["inner_step"]["fixed"]["relative_validity"]["reasons"]
-        coarse_reasons = review["representations"]["coarse"]["regions"]["inner"]["fixed"]["relative_validity"]["reasons"]
-        self.assertIn("semantic_window_edge", semantic_reasons)
-        self.assertNotIn("semantic_window_edge", coarse_reasons)
-
-        unavailable = self._activation("IGI-LG756580087", "wide")
-        semantic = unavailable["representations"]["semantic"]
-        self.assertEqual(semantic["qc"]["template_status"], "unavailable")
-        self.assertEqual(semantic["validity"]["status"], "unavailable")
-        self.assertIn("no_supported_middle_outer_edge", semantic["validity"]["reasons"])
-        self.assertEqual(unavailable["whole_stone"]["validity"]["status"], "ok")
-        self.assertEqual(
-            unavailable["representations"]["coarse"]["regions"]["centre"]["fixed"]["raw_validity"]["status"],
-            "ok",
-        )
+    def test_committed_artifacts_are_curated(self):
+        per_stone = self.ROOT / "per-stone"
+        self.assertEqual(list(per_stone.rglob("activation.json")), [])
+        self.assertEqual(list(per_stone.rglob("activation.csv")), [])
+        panels = {
+            path.relative_to(self.ROOT).as_posix()
+            for path in per_stone.rglob("*.png")
+        }
+        self.assertEqual(panels, self.REPRESENTATIVE_PANELS)
 
     def test_committed_dispositions_cover_candidate_axes(self):
         payload = json.loads((self.ROOT / "dispositions.json").read_text())

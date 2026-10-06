@@ -4,3 +4,7 @@ __pycache__/
 .venv/
 outputs/
 .work-360/
+# Generated activation benchmark artifacts. Curated tracked examples are intentional.
+docs/360/activation/per-stone/**/activation.json
+docs/360/activation/per-stone/**/activation.csv
+docs/360/activation/per-stone/**/evidence/*.png
