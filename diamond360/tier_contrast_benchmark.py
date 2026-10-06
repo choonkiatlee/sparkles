@@ -793,6 +793,7 @@ def _draw_same_frame_boundary_comparison(
         ("weak", evidence.get("weakest")),
         ("typical", evidence.get("median")),
         ("strong", evidence.get("strongest")),
+        ("vs broad disagreement", semantic.get("strongest_disagreement_vs_broad")),
     ]
     rows = [(label, event) for label, event in ordered if event is not None]
     if not rows:
@@ -819,9 +820,9 @@ def _draw_same_frame_boundary_comparison(
 
     for row_index, (label, event) in enumerate(rows):
         position = event["position"]
-        sector = event.get("strongest_sector")
         semantic_row = semantic["frame_trace"][position]
         coarse_row = coarse["frame_trace"][position]
+        sector = event.get("strongest_sector") or semantic_row.get("strongest_sector")
         simple_value = (
             simple_trace[position].get("separation")
             if position < len(simple_trace) else None
@@ -837,6 +838,10 @@ def _draw_same_frame_boundary_comparison(
                 f"{label}: source {event['source_index']} · whole={fmt(simple_value)} · "
                 f"broad-sector={fmt(broad_value)} · coarse-strip={fmt(coarse_row.get('median_separation'))} · "
                 f"semantic-strip={fmt(semantic_row.get('median_separation'))} · sector={sector or 'n/a'}"
+                + (
+                    f" · rank-disagreement={event['rank_disagreement']:.2f}"
+                    if event.get("rank_disagreement") is not None else ""
+                )
             ),
             fill="black",
         )
