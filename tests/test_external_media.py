@@ -39,6 +39,27 @@ class ExternalMediaTests(unittest.TestCase):
             saved = json.loads((out / "source-manifest.json").read_text())
             self.assertEqual(saved, result)
 
+
+    def test_build_source_accepts_predecoded_frames_directory(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            output = root / "source"
+            frame_dir = output / "frames"
+            frame_dir.mkdir(parents=True)
+            frames = []
+            for i in range(2):
+                path = frame_dir / f"decoded-{i:06d}.png"
+                Image.new("RGB", (32, 32), (i * 40, i * 40, i * 40)).save(path)
+                frames.append(path)
+            result = build_source(
+                frames,
+                output,
+                provenance={"sample_id": "decoded"},
+                copy_frames=False,
+            )
+            self.assertEqual(result["source_frame_count"], 2)
+            self.assertTrue((output / "source-manifest.json").is_file())
+
     def test_adapt_still_is_explicit_one_frame_contract(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
