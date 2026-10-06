@@ -191,6 +191,7 @@ def measure_frame(ray_edge, ray_support, u, angles, controls, **kwargs):
 def summarise_frames(frames):
     """Keep strength, continuity and positional consistency as separate primitives."""
     result = {}
+    requested = len(frames)
     for name in BOUNDARIES:
         rows = [
             frame[name]
@@ -208,9 +209,14 @@ def summarise_frames(frames):
         offsets = vals("offset_mad_u")
         gap_values = _finite(gaps)
         result[name] = {
-            "frame_count": len(rows),
+            "requested_frame_count": requested,
+            "scored_frame_count": len(rows),
             "usable_frame_count": len(usable),
+            "coverage_fraction": (
+                float(len(rows) / requested) if requested else None
+            ),
             "status": "ok" if len(usable) >= 3 else "unavailable",
+            "reasons": [],
             "strength_median_peak_z": _median(strength),
             "strength_q10_peak_z": _quantile(strength, .1),
             "continuity_median_supported_fraction": _median(continuity),
@@ -279,10 +285,35 @@ def score_crossfit(
                 **kwargs,
             )
             frame_status[pos] = template.get("status", "unavailable")
+
+    summary = summarise_frames(frames)
+    template_statuses = [t.get("status", "unavailable") for t in templates]
+    scored = sum(frame is not None for frame in frames)
+    reasons = []
+    if "unavailable" in template_statuses or scored < len(frames):
+        reasons.append("crossfit_template_unavailable")
+    if "review" in template_statuses:
+        reasons.append("crossfit_template_review")
+    crossfit_status = (
+        "unavailable"
+        if scored < 3
+        else "review"
+        if reasons
+        else "ok"
+    )
+    for cell in summary.values():
+        if cell["status"] == "unavailable":
+            continue
+        if crossfit_status == "review":
+            cell["status"] = "review"
+        cell["reasons"] = list(reasons)
+
     return {
         "frames": frames,
         "frame_template_status": frame_status,
-        "summary": summarise_frames(frames),
+        "crossfit_status": crossfit_status,
+        "crossfit_reasons": reasons,
+        "summary": summary,
     }
 
 
