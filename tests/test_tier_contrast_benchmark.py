@@ -138,20 +138,20 @@ def boundary_local_fixture(root, edge_spike=False):
 class TierContrastBenchmarkTests(unittest.TestCase):
     def test_strip_trace_follows_fixed_normalised_geometry_without_pixel_intersection(self):
         brightness = np.stack([
-            np.full((5, 5), 1.0),
-            np.full((5, 5), 2.0),
-            np.full((5, 5), 3.0),
+            np.full((10, 10), 1.0),
+            np.full((10, 10), 2.0),
+            np.full((10, 10), 3.0),
         ])
         valid = np.ones_like(brightness, dtype=bool)
         masks = np.zeros_like(brightness, dtype=bool)
-        masks[0, 1, 1] = True
-        masks[1, 2, 2] = True
-        masks[2, 3, 3] = True
+        masks[0, 0:3, 0:3] = True
+        masks[1, 3:6, 3:6] = True
+        masks[2, 6:9, 6:9] = True
         values, support = tb._strip_trace(
             brightness, valid, masks, np.array([True, True, True])
         )
         self.assertEqual(values, [1.0, 2.0, 3.0])
-        self.assertEqual(support["min_support_pixels"], 1)
+        self.assertEqual(support["min_support_pixels"], 9)
         self.assertEqual(
             support["support_mode"],
             "per_frame_valid_with_fixed_normalised_geometry",
