@@ -114,5 +114,34 @@ class CoordinationBenchmarkTests(unittest.TestCase):
             cb.measure_from_activation(fixture)
 
 
+class CommittedCoordinationArtifactTests(unittest.TestCase):
+    ROOT = Path(__file__).resolve().parents[1] / "docs" / "360" / "coordination"
+    CORE = [248, 249, 250, 251, 252, 253, 254, 255, 0, 1, 2, 3, 4, 5, 6, 7, 8]
+    WIDE = list(range(240, 256)) + list(range(0, 17))
+
+    def test_summary_pins_benchmark_scope(self):
+        summary = json.loads((self.ROOT / "summary.json").read_text())
+        self.assertEqual(summary["core_indices"], self.CORE)
+        self.assertEqual(summary["wide_indices"], self.WIDE)
+        self.assertEqual(summary["upstream_activation_schema"], ab.SCHEMA)
+        self.assertEqual(len(summary["stones"]), 4)
+
+    def test_dispositions_cover_retained_and_rejected_candidates(self):
+        payload = json.loads((self.ROOT / "dispositions.json").read_text())
+        decisions = {item["candidate"]: item["disposition"] for item in payload["decisions"]}
+        self.assertEqual(
+            decisions["coarse-fixed centre__inner Pearson level correlation"], "KEEP"
+        )
+        self.assertEqual(
+            decisions["coarse-fixed inner__middle Pearson level correlation"], "KEEP"
+        )
+        self.assertEqual(
+            decisions["coarse-fixed middle__outer Pearson level correlation"], "REVISE"
+        )
+        self.assertEqual(
+            decisions["adjacent-change same-direction fraction"], "REJECT"
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
