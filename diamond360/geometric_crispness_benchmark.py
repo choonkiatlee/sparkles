@@ -356,6 +356,15 @@ def _summary_delta(base, test):
                         "median_orientation_alignment"
                     ],
                 ),
+            "longest_gap_absolute":
+                _absolute_change(
+                    left[
+                        "median_longest_gap_fraction"
+                    ],
+                    right[
+                        "median_longest_gap_fraction"
+                    ],
+                ),
             "straightness_relative":
                 _relative_change(
                     left[
