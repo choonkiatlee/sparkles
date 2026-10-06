@@ -364,6 +364,65 @@ def boundary_strip_masks(mask, sector_u, width, guard=.01, sector_mask=None):
     outside = support & (u > outer_lo) & (u <= outer_hi)
     return {"inside": inside, "outside": outside}
 
+def relative_boundary_strip_masks(
+    mask, inner_sector_u, boundary_sector_u, outer_sector_u, fraction,
+    guard=.01, sector_mask=None,
+):
+    """Build guarded strips spanning a fixed fraction of adjacent tier widths.
+
+    Geometry is entirely supplied by an existing sequence-level template.
+    The boundary is never re-estimated from the current frame. Each side may
+    have a different width because the neighbouring semantic tiers may have
+    different radial spans.
+    """
+    mask = np.asarray(mask, bool)
+    inner = np.asarray(inner_sector_u, float)
+    boundary_values = np.asarray(boundary_sector_u, float)
+    outer = np.asarray(outer_sector_u, float)
+    for name, values in (
+        ("inner_sector_u", inner),
+        ("boundary_sector_u", boundary_values),
+        ("outer_sector_u", outer),
+    ):
+        if values.shape != (8,) or not np.all(np.isfinite(values)):
+            raise ValueError(f"{name} must contain eight finite controls")
+    if np.any(inner < 0) or np.any(outer > 1):
+        raise ValueError("reference controls must lie within the silhouette")
+    if np.any(inner >= boundary_values) or np.any(boundary_values >= outer):
+        raise ValueError("reference controls must strictly bracket the boundary")
+    fraction = float(fraction)
+    guard = float(guard)
+    if not np.isfinite(fraction) or not (0 < fraction < 1):
+        raise ValueError("fraction must lie strictly between zero and one")
+    if not np.isfinite(guard) or guard < 0:
+        raise ValueError("strip guard must be finite and nonnegative")
+
+    u, theta = normalised_radius_map(mask)
+    inner_map = _periodic_boundary(theta, inner)
+    boundary = _periodic_boundary(theta, boundary_values)
+    outer_map = _periodic_boundary(theta, outer)
+    inside_width = fraction * (boundary - inner_map)
+    outside_width = fraction * (outer_map - boundary)
+    support = mask.copy()
+    if sector_mask is not None:
+        sector_mask = np.asarray(sector_mask, bool)
+        if sector_mask.shape != mask.shape:
+            raise ValueError("sector mask must match the silhouette shape")
+        support &= sector_mask
+
+    inner_hi = boundary - guard
+    inner_lo = inner_hi - inside_width
+    outer_lo = boundary + guard
+    outer_hi = outer_lo + outside_width
+    inside = support & (u >= inner_lo) & (u < inner_hi)
+    outside = support & (u > outer_lo) & (u <= outer_hi)
+    return {
+        "inside": inside,
+        "outside": outside,
+        "inside_width_u": inside_width,
+        "outside_width_u": outside_width,
+    }
+
 def build_masks(mask, controls):
     if len(controls) != 3:
         raise ValueError("Exactly three nested boundaries are required for four step bands")
