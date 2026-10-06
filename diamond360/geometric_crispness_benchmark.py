@@ -309,6 +309,15 @@ def _summary_delta(base, test):
                         "median_longest_gap_fraction"
                     ],
                 ),
+            "fragment_count_absolute":
+                _absolute_change(
+                    left[
+                        "median_fragment_count"
+                    ],
+                    right[
+                        "median_fragment_count"
+                    ],
+                ),
             "position_residual_relative":
                 _relative_change(
                     left[
@@ -366,9 +375,32 @@ def _summary_delta(base, test):
                     ],
                 ),
         }
+    geometry_delta = {
+        "opposing_axis_misalignment_absolute_deg": {
+            pair: _absolute_change(
+                base["arm_summary"][
+                    "opposing_axis_misalignment_deg"
+                ].get(pair),
+                test["arm_summary"][
+                    "opposing_axis_misalignment_deg"
+                ].get(pair),
+            )
+            for pair in ("SE_NW", "SW_NE")
+        },
+        "four_arm_spacing_error_absolute_deg":
+            _absolute_change(
+                base["arm_summary"].get(
+                    "median_four_arm_spacing_error_mad_deg"
+                ),
+                test["arm_summary"].get(
+                    "median_four_arm_spacing_error_mad_deg"
+                ),
+            ),
+    }
     return {
         "tier": tier_delta,
         "arms": arm_delta,
+        "arm_geometry": geometry_delta,
     }
 
 
