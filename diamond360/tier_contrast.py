@@ -357,6 +357,98 @@ def sectorized_contrast_trace(left_sector_values, right_sector_values, source_in
     }
 
 
+def multiscale_sector_consensus(scale_results):
+    """Median a small declared scale family while preserving sector/frame detail.
+
+    ``scale_results`` maps a scale label to a sectorized_contrast_trace result.
+    This aggregates only over measurement scale; it does not collapse the eight
+    spatial sectors into a production descriptor.
+    """
+    if not scale_results:
+        raise ValueError("at least one scale result is required")
+    labels = tuple(sorted(scale_results))
+    first = scale_results[labels[0]]
+    sectors = tuple(first.get("sectors") or [])
+    frame_count = len(first.get("frame_trace") or [])
+    if not sectors or frame_count == 0:
+        raise ValueError("scale results must contain sectorized frame traces")
+    for label in labels[1:]:
+        item = scale_results[label]
+        if tuple(item.get("sectors") or []) != sectors:
+            raise ValueError("scale results must share sectors")
+        if len(item.get("frame_trace") or []) != frame_count:
+            raise ValueError("scale results must share frame alignment")
+
+    frame_trace = []
+    median_values = []
+    q75_values = []
+    scale_spread_values = []
+    for position in range(frame_count):
+        source_index = first["frame_trace"][position]["source_index"]
+        sector_sep = {}
+        sector_signed = {}
+        sector_scale_spread = {}
+        for sector in sectors:
+            separations = []
+            signed = []
+            for label in labels:
+                row = scale_results[label]["frame_trace"][position]
+                if row["source_index"] != source_index:
+                    raise ValueError("scale results must share source-index alignment")
+                value = _finite((row.get("sector_separations") or {}).get(sector))
+                if value is not None:
+                    separations.append(float(value))
+                signed_value = _finite(
+                    (row.get("sector_signed_log_contrasts") or {}).get(sector)
+                )
+                if signed_value is not None:
+                    signed.append(float(signed_value))
+            sector_sep[sector] = float(np.median(separations)) if separations else None
+            sector_signed[sector] = float(np.median(signed)) if signed else None
+            sector_scale_spread[sector] = (
+                float(max(separations) - min(separations))
+                if len(separations) >= 2 else None
+            )
+
+        finite = {k: v for k, v in sector_sep.items() if v is not None}
+        finite_spread = [v for v in sector_scale_spread.values() if v is not None]
+        row = {
+            "position": position,
+            "source_index": source_index,
+            "status": "ok" if finite else "gap",
+            "sector_separations": sector_sep,
+            "sector_signed_log_contrasts": sector_signed,
+            "sector_scale_spread": sector_scale_spread,
+            "finite_sectors": len(finite),
+            "median_separation": None,
+            "q75_separation": None,
+            "median_scale_spread": (
+                float(np.median(finite_spread)) if finite_spread else None
+            ),
+            "strongest_sector": None,
+            "strongest_sector_separation": None,
+        }
+        if finite:
+            data = np.asarray(list(finite.values()), float)
+            row["median_separation"] = float(np.median(data))
+            row["q75_separation"] = float(np.quantile(data, .75))
+            strongest = max(finite, key=lambda sector: (finite[sector], sector))
+            row["strongest_sector"] = strongest
+            row["strongest_sector_separation"] = finite[strongest]
+        frame_trace.append(row)
+        median_values.append(row["median_separation"])
+        q75_values.append(row["q75_separation"])
+        scale_spread_values.append(row["median_scale_spread"])
+
+    return {
+        "scale_labels": list(labels),
+        "sectors": list(sectors),
+        "frame_trace": frame_trace,
+        "median_summary": summarise(median_values),
+        "q75_summary": summarise(q75_values),
+        "scale_spread_summary": summarise(scale_spread_values),
+    }
+
 def select_sectorized_evidence(frame_trace):
     """Weak/typical/strong frames using median matched-sector separation."""
     pseudo = [
