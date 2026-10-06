@@ -1073,10 +1073,14 @@ def select_compact_evidence(
     selected_keys = {chosen.item.location.key for chosen in selected}
     while len(selected) < min_items and len(selected) < max_items:
         remaining = [item for item in items if item.location.key not in selected_keys]
-        if not remaining:
+        meaningful = [
+            item for item in remaining
+            if _contrast_rank(item, selected, profile)[1] == 0
+        ]
+        if not meaningful:
             break
         chosen = min(
-            remaining,
+            meaningful,
             key=lambda item: _contrast_rank(item, selected, profile),
         )
         coverage = item_coverage(chosen)
@@ -1086,8 +1090,8 @@ def select_compact_evidence(
             selected_for="contrast_fill",
             near_group_id=group_lookup.get(chosen.location.key),
             selection_rationale=(
-                "contrast fill after distinct-family coverage; retained because "
-                "the packet would otherwise fall below the minimum"
+                "meaningful native contrast retained after distinct-family "
+                "coverage; the soft minimum is never padded with repetition"
             ),
         ))
         selected_keys.add(chosen.location.key)
@@ -1209,7 +1213,7 @@ def build_packet(
         },
         "selection_policy": {
             "coverage_order": list(COVERAGE_ORDER),
-            "min_items": min_items,
+            "soft_min_items": min_items,
             "max_items": max_items,
             "near_distance_source_steps": near_distance,
             "global_numeric_score": False,
