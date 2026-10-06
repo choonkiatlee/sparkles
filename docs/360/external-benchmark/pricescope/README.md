@@ -149,9 +149,10 @@ Media are handled by explicit source class:
 
 - complete vendor 360 sequences -> normal 256-frame `diamond360-source/1` and
   the frozen wrapped face-up core `248..255,0..8`;
-- MP4/GIF -> every decoded source frame in file order through a benchmark-only
-  adapter, analyzed as an ordered full sequence because no face-up index is
-  invented;
+- MP4/GIF -> decoded in source order through a benchmark-only adapter; clips
+  up to 99 frames keep every frame, while longer clips use a fixed uniform
+  full-clip sample capped at 99 frames. The original decoded indices are
+  preserved in provenance and no face-up index is invented;
 - JPEG/PNG preview -> one-frame static geometry only; no synthetic motion;
 - missing/unsupported media -> `pipeline_source_mismatch`.
 
