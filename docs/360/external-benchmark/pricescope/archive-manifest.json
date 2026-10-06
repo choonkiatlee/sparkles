@@ -36,7 +36,7 @@
   },
   "storage_policy": {
     "git": "Source catalog, manifest and retrieval tooling only.",
-    "raw_third_party_media": "Persistent external bundle; raw bytes excluded from Git.",
+    "raw_third_party_media": "Persistent GitHub release asset; raw bytes excluded from Git.",
     "substitutes": "Do not silently substitute screenshots, thumbnails or recompressed copies for originals."
   },
   "explicit_media": [
@@ -513,10 +513,12 @@
   "storage_bundle": {
     "filename": "pricescope-media-recovery-2026-10-06.zip",
     "library_file_id": "libfile_a2fd6a1be6888191ab540158c3265490",
-    "download_url": "https://chatgpt.com/api/library/files/libfile_a2fd6a1be6888191ab540158c3265490/download",
+    "download_url": "https://github.com/choonkiatlee/sparkles/releases/download/pricescope-research-2026-10-06-v1/pricescope-media-recovery-2026-10-06.zip",
     "bytes": 11342416,
     "sha256": "d5aa5bdacf7aa4cdfabf289eb0504d88389126b87c71b9bc8b6c3e684aff4063",
-    "current_version_number": 1
+    "current_version_number": 1,
+    "github_release_url": "https://github.com/choonkiatlee/sparkles/releases/tag/pricescope-research-2026-10-06-v1",
+    "github_asset_id": 616739817
   },
   "d360_recovery": {
     "sample_id": "asscher-eval-glittery",
