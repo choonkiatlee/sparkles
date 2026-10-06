@@ -697,9 +697,12 @@ def _draw_boundary_local_panel(
         position = event["position"]
         source_index = event["source_index"]
         value = event.get("median_separation")
+        if value is None:
+            value = event.get("separation")
         strongest = event.get("strongest_sector")
         strongest_value = event.get("strongest_sector_separation")
-        detail = f"{label}: source {source_index}; median={value:.5f}"
+        value_text = f"{value:.5f}" if value is not None else "n/a"
+        detail = f"{label}: source {source_index}; median={value_text}"
         if strongest is not None and strongest_value is not None:
             detail += f"; strongest={strongest} {strongest_value:.5f}"
         y = 60 + index * 235
