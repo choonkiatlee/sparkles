@@ -166,7 +166,7 @@ def explicit_samples(catalog: dict) -> list[tuple[str, str]]:
     return found
 
 
-def discover_thread_media(catalog: dict) -> tuple[dict[int, list[str]], dict]:
+def discover_thread_media(catalog: dict) -> tuple[dict[int, list[str]], list[dict]]:
     target_posts = {}
     for source in catalog["sources"]:
         if source["source_id"] != "pricescope-windmill-thread":
@@ -175,29 +175,45 @@ def discover_thread_media(catalog: dict) -> tuple[dict[int, list[str]], dict]:
             for sample in group["samples"]:
                 target_posts[sample["post_number"]] = sample["sample_id"]
 
-    page_data, headers = fetch(THREAD_URL)
-    parser = ThreadMediaParser(THREAD_URL)
-    parser.feed(page_data.decode("utf-8", errors="replace"))
+    target_pages = sorted({((post - 1) // 30) + 1 for post in target_posts})
+    selected: dict[int, list[str]] = {post: [] for post in target_posts}
+    page_records = []
 
-    selected: dict[int, list[str]] = {}
-    for post_number in target_posts:
-        urls = []
-        seen = set()
-        for url in parser.by_post.get(post_number, []):
-            if url not in seen:
-                seen.add(url)
-                urls.append(url)
-        selected[post_number] = urls
+    for page_number in target_pages:
+        page_url = THREAD_URL if page_number == 1 else f"{THREAD_URL}page-{page_number}"
+        page_data, headers = fetch(page_url)
+        parser = ThreadMediaParser(page_url)
+        parser.feed(page_data.decode("utf-8", errors="replace"))
+        offset = (page_number - 1) * 30
 
-    page_record = {
-        "source_url": THREAD_URL,
-        "bytes": len(page_data),
-        "sha256": hashlib.sha256(page_data).hexdigest(),
-        "content_type": headers.get("content-type"),
-        "target_post_count": len(target_posts),
-        "parsed_post_count": len(parser.by_post),
-    }
-    return selected, page_record
+        for local_post, media_urls in parser.by_post.items():
+            post_number = offset + local_post
+            if post_number not in selected:
+                continue
+            seen = set()
+            urls = []
+            for url in media_urls:
+                if url not in seen:
+                    seen.add(url)
+                    urls.append(url)
+            selected[post_number] = urls
+
+        page_records.append(
+            {
+                "page_number": page_number,
+                "source_url": page_url,
+                "bytes": len(page_data),
+                "sha256": hashlib.sha256(page_data).hexdigest(),
+                "content_type": headers.get("content-type"),
+                "target_post_count": sum(
+                    1 for post in target_posts
+                    if ((post - 1) // 30) + 1 == page_number
+                ),
+                "parsed_post_count": len(parser.by_post),
+            }
+        )
+
+    return selected, page_records
 
 
 def main() -> int:
@@ -220,9 +236,9 @@ def main() -> int:
 
     thread_discovery_error = None
     try:
-        thread_media, thread_page = discover_thread_media(catalog)
+        thread_media, thread_pages = discover_thread_media(catalog)
     except Exception as exc:
-        thread_media, thread_page = {}, None
+        thread_media, thread_pages = {}, []
         thread_discovery_error = f"{type(exc).__name__}: {exc}"
 
     sample_id_by_post = {}
@@ -252,7 +268,7 @@ def main() -> int:
         "benchmark_id": catalog["benchmark_id"],
         "raw_media_policy": "downloaded into CI artifact only; not committed to git",
         "explicit_media": records,
-        "thread_page": thread_page,
+        "thread_pages": thread_pages,
         "thread_discovery_error": thread_discovery_error,
         "thread_samples": thread_records,
     }
