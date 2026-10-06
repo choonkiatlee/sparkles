@@ -149,8 +149,20 @@ def _nearest(frame_trace, key, target):
     return min(rows, key=lambda row: (abs(float(row[key]) - target), row["position"]))
 
 
-def matched_brightness_pair(frame_trace, key="raw_spread"):
-    """Select the closest whole-brightness neighbours and report articulation gap."""
+def matched_brightness_pair(
+    frame_trace,
+    key="raw_spread",
+    max_brightness_ratio=1.02,
+):
+    """Find a brightness-matched counterexample with maximally different articulation.
+
+    A pair is considered brightness-matched when the larger whole-stone median is
+    no more than `max_brightness_ratio` times the smaller one. Within that fixed
+    tolerance, choose the largest articulation gap. If no pair meets the tolerance,
+    fall back to the closest-brightness pair and mark the fallback explicitly.
+    """
+    if max_brightness_ratio <= 1:
+        raise ValueError("max_brightness_ratio must be greater than 1")
     rows = [
         row for row in frame_trace
         if _finite(row.get(key)) is not None
@@ -159,33 +171,64 @@ def matched_brightness_pair(frame_trace, key="raw_spread"):
     ]
     if len(rows) < 2:
         return None
-    rows = sorted(rows, key=lambda row: (float(row["whole_median"]), row["position"]))
+
+    tolerance = math.log(float(max_brightness_ratio))
     candidates = []
-    for left, right in zip(rows, rows[1:]):
-        brightness_gap = abs(
-            math.log(float(right["whole_median"])) - math.log(float(left["whole_median"]))
-        )
-        articulation_gap = abs(float(right[key]) - float(left[key]))
-        candidates.append(
-            (
-                articulation_gap,
-                -brightness_gap,
-                -min(left["position"], right["position"]),
-                left,
-                right,
-                brightness_gap,
+    for left_index, left in enumerate(rows):
+        for right in rows[left_index + 1:]:
+            brightness_gap = abs(
+                math.log(float(right["whole_median"]))
+                - math.log(float(left["whole_median"]))
             )
+            articulation_gap = abs(float(right[key]) - float(left[key]))
+            candidates.append(
+                {
+                    "first": left,
+                    "second": right,
+                    "articulation_gap": float(articulation_gap),
+                    "whole_log_brightness_gap": float(brightness_gap),
+                }
+            )
+
+    matched = [
+        item for item in candidates
+        if item["whole_log_brightness_gap"] <= tolerance
+    ]
+    if matched:
+        chosen = max(
+            matched,
+            key=lambda item: (
+                item["articulation_gap"],
+                -item["whole_log_brightness_gap"],
+                -min(item["first"]["position"], item["second"]["position"]),
+            ),
         )
-    articulation_gap, _, _, left, right, brightness_gap = min(
-        candidates,
-        key=lambda item: (-item[1], -item[0], -item[2]),
-    )
+        selection = (
+            f"largest articulation gap among pairs within "
+            f"{(max_brightness_ratio - 1.0) * 100:.1f}% whole-stone median brightness"
+        )
+        fallback = False
+    else:
+        chosen = min(
+            candidates,
+            key=lambda item: (
+                item["whole_log_brightness_gap"],
+                -item["articulation_gap"],
+                min(item["first"]["position"], item["second"]["position"]),
+            ),
+        )
+        selection = (
+            f"no pair within {(max_brightness_ratio - 1.0) * 100:.1f}% brightness; "
+            "closest whole-brightness pair used"
+        )
+        fallback = True
+
     return {
-        "first": left,
-        "second": right,
-        "articulation_gap": float(articulation_gap),
-        "whole_log_brightness_gap": float(brightness_gap),
-        "selection": "closest whole-brightness neighbours; articulation gap reported, not optimized",
+        **chosen,
+        "max_brightness_ratio": float(max_brightness_ratio),
+        "brightness_matched": not fallback,
+        "matched_candidate_count": len(matched),
+        "selection": selection,
     }
 
 
