@@ -1,0 +1,95 @@
+{
+  "schema_version": "diamond360-spatial-articulation-dispositions/1",
+  "issue": 59,
+  "validation_target": "source_evidence_and_incremental_measurement_value",
+  "human_ground_truth": false,
+  "candidates": {
+    "spatial_participation": {
+      "decision": "KEEP",
+      "primary_measure": "distributed_contrast",
+      "retained_role": "descriptive spatial-organization research primitive",
+      "quality_direction": null,
+      "reason": "Source evidence tracks spatially distributed inner contrast; core/wide rank stability is 0.8 for Q10/Q50/Q90 and core-Q50 redundancy is materially lower than #51 spread or balanced coverage. The measure also separates high global tonal range from broad spatial participation in LG836619414 source 8.",
+      "core_q50": {
+        "IGI-LG756520111": 0.08605356418950777,
+        "IGI-LG756580087": 0.06315196984774901,
+        "IGI-LG818659722": 0.22709289103473,
+        "IGI-LG836619414": 0.06128307831507481
+      },
+      "core_wide_spearman": {
+        "q10": 0.8,
+        "q50": 0.8,
+        "q90": 0.8
+      },
+      "redundancy_spearman_core_q50": {
+        "inner_activation": 0.8,
+        "inner_occupancy": 0.4,
+        "inner_mobility": 0.4,
+        "issue51_global_raw_spread": 0.4,
+        "balanced_coverage": 0.4,
+        "tier_contrast_centre_inner": 0.8,
+        "tier_contrast_inner_middle": 0.4
+      }
+    },
+    "contrast_coverage": {
+      "decision": "REJECT",
+      "primary_measure": "balanced_coverage_1p15",
+      "retained_role": "audit challenger only",
+      "quality_direction": null,
+      "reason": "The primitive is visually interpretable, but the natural Q50 summary is core/wide unstable, threshold-sensitive, and fully rank-redundant with several retained/existing measures in the n=4 diagnostic.",
+      "core_q50": {
+        "IGI-LG756520111": 0.13491263440860216,
+        "IGI-LG756580087": 0.11508736559139784,
+        "IGI-LG818659722": 0.30073924731182794,
+        "IGI-LG836619414": 0.13928091397849462
+      },
+      "core_wide_spearman_q50": {
+        "ratio_1p10": 0.4,
+        "ratio_1p15": 0,
+        "ratio_1p20": -0.21081851067789195
+      },
+      "redundancy_spearman_core_q50": {
+        "inner_activation": 0.8,
+        "inner_occupancy": 1,
+        "inner_mobility": 1,
+        "issue51_global_raw_spread": 1,
+        "tier_contrast_centre_inner": 0.8,
+        "tier_contrast_inner_middle": 1
+      }
+    }
+  },
+  "future_human_label_pairs": {
+    "purpose": "blinded perceptual check of inner spatial articulation; metric values must be hidden from the rater",
+    "pairs": [
+      {
+        "certificate": "IGI-LG756520111",
+        "source_indices": [
+          253,
+          254
+        ]
+      },
+      {
+        "certificate": "IGI-LG756580087",
+        "source_indices": [
+          253,
+          4
+        ]
+      },
+      {
+        "certificate": "IGI-LG818659722",
+        "source_indices": [
+          3,
+          5
+        ]
+      },
+      {
+        "certificate": "IGI-LG836619414",
+        "source_indices": [
+          0,
+          6
+        ]
+      }
+    ]
+  },
+  "next_direction": "Do not add another metric automatically. Test the fixed-sector candidate with a small human-labelled pair set first; pursue Asscher-specific panel partitioning only if that reveals a repeatable miss. Hold temporal spatial participation."
+}
