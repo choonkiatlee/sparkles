@@ -71,7 +71,7 @@ The exact-core and wide windows therefore tell broadly similar stories for conti
 
 Yes, but not enough yet for retention.
 
-Across the 12 exact-core stone × boundary rows, #19 edge-ratio ordering is moderately associated with the new **strength** and **supported-fraction continuity** measurements. In contrast, longest-gap and positional-MAD behaviour are much less aligned with #19 edge ratio, so they are not merely renamed #19 outputs.
+Across the 12 exact-core stone × boundary rows, Spearman rank correlation with #19 edge ratio is about **0.65** for the new edge-strength primitive and **0.72** for supported-fraction continuity. The relationship is much weaker for longest unsupported gap (**−0.23**) and positional MAD (**−0.10**). The latter two therefore are not merely renamed #19 edge-strength outputs.
 
 That extra information comes with weaker stability, however. The current experiment therefore does not justify adding another production field merely because it is non-redundant.
 
