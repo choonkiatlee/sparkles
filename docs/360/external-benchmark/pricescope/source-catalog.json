@@ -1,0 +1,143 @@
+{
+  "schema_version": "sparkles-external-source-catalog/1",
+  "benchmark_id": "pricescope-asscher-external-v0",
+  "purpose": "External falsification/archive inputs only; source commentary is not ground truth and must not be used for metric tuning.",
+  "sources": [
+    {
+      "source_id": "pricescope-p3-article",
+      "source_url": "https://www.pricescope.com/blog/performance-and-p3-facets-discussion-about-step-cut-diamonds",
+      "source_type": "article",
+      "author_display": "Karl K.",
+      "groups": [
+        {
+          "group_id": "p3-static-labelled",
+          "interpretation_type": "source_explicit_performance_label",
+          "samples": [
+            {
+              "sample_id": "p3-extremely-off",
+              "media_url": "https://www.pricescope.com/files/images/journal/Performance_and_p3/page3image2.gif",
+              "media_type": "gif",
+              "source_label": "p3 facets described as extremely far from proper angles"
+            },
+            {
+              "sample_id": "p3-slightly-off",
+              "media_url": "https://www.pricescope.com/files/images/journal/Performance_and_p3/page3image3.gif",
+              "media_type": "gif",
+              "source_label": "p3 facets described as only a little off"
+            },
+            {
+              "sample_id": "p3-acceptable-1",
+              "media_url": "https://www.pricescope.com/files/images/journal/Performance_and_p3/page4image1.gif",
+              "media_type": "gif",
+              "source_label": "example described as having acceptable p3 angles"
+            },
+            {
+              "sample_id": "p3-acceptable-2",
+              "media_url": "https://www.pricescope.com/files/images/journal/Performance_and_p3/page4image2.gif",
+              "media_type": "gif",
+              "source_label": "example described as having acceptable p3 angles"
+            },
+            {
+              "sample_id": "p3-acceptable-3",
+              "media_url": "https://www.pricescope.com/files/images/journal/Performance_and_p3/page4image3.gif",
+              "media_type": "gif",
+              "source_label": "example described as having acceptable p3 angles"
+            }
+          ]
+        },
+        {
+          "group_id": "p3-controlled-video-progression",
+          "interpretation_type": "source_explicit_performance_progression",
+          "samples": [
+            {
+              "sample_id": "p3-video-cut-for-weight",
+              "media_url": "https://www.pricescope.com/wp-content/uploads/2008/08/karl_video1.mp4",
+              "media_type": "mp4",
+              "source_label": "cut-for-weight example with bad p3 angle",
+              "relation_rank": 1
+            },
+            {
+              "sample_id": "p3-video-corrected",
+              "media_url": "https://www.pricescope.com/wp-content/uploads/2008/08/karl_video2.mp4",
+              "media_type": "mp4",
+              "source_label": "same basic example with proper p3 angle",
+              "relation_rank": 2
+            },
+            {
+              "sample_id": "p3-video-higher-performance",
+              "media_url": "https://www.pricescope.com/wp-content/uploads/2008/08/karl_video3.mp4",
+              "media_type": "mp4",
+              "source_label": "lighter example described as having higher performance",
+              "relation_rank": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "source_id": "pricescope-windmill-thread",
+      "source_url": "https://www.pricescope.com/community/threads/why-cut-asschers-with-small-corners-and-windmills.78433/",
+      "source_type": "forum_thread",
+      "author_display": "strmrdr / later Karl_K",
+      "groups": [
+        {
+          "group_id": "corner-windmill-controlled-sweep",
+          "interpretation_type": "controlled_geometry_character_sweep",
+          "fixed_design": {
+            "width_mm": 6.4,
+            "length_mm": 6.4,
+            "depth_percent": 68.3,
+            "table_percent": 60,
+            "crown_height_percent": 21.6
+          },
+          "changed_variable": "corner break / windmill size",
+          "source_interpretation": "The poster prefers 24%, would target about 20–22%, calls 16% too small and 14% strongly weight-saving, while also saying multiple sizes can still make attractive stones.",
+          "samples": [
+            {
+              "sample_id": "windmill-24",
+              "post_number": 1,
+              "corner_break_percent": 24,
+              "weight_ct": 1.44,
+              "source_label": "poster favourite; rare"
+            },
+            {
+              "sample_id": "windmill-22",
+              "post_number": 2,
+              "corner_break_percent": 22,
+              "weight_ct": 1.47,
+              "source_label": "within poster target zone"
+            },
+            {
+              "sample_id": "windmill-20",
+              "post_number": 3,
+              "corner_break_percent": 20,
+              "weight_ct": 1.51,
+              "source_label": "within poster target zone; reaches 1.50 ct magic weight"
+            },
+            {
+              "sample_id": "windmill-18",
+              "post_number": 4,
+              "corner_break_percent": 18,
+              "weight_ct": 1.52,
+              "source_label": "described as a common market size"
+            },
+            {
+              "sample_id": "windmill-16",
+              "post_number": 5,
+              "corner_break_percent": 16,
+              "weight_ct": 1.55,
+              "source_label": "described as common and on the too-small side"
+            },
+            {
+              "sample_id": "windmill-14",
+              "post_number": 6,
+              "corner_break_percent": 14,
+              "weight_ct": 1.56,
+              "source_label": "described as strongly weight-saving / pushing small corners"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
