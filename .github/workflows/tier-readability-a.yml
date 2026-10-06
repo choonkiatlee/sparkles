@@ -6,11 +6,14 @@ on:
       - "diamond360/asscher_steps.py"
       - "diamond360/regions.py"
       - "diamond360/tier_contrast.py"
-      - "diamond360/tier_contrast_benchmark.py"\n      - "diamond360/tier_readability_calibration.py"\n      - "docs/360/tier-readability/**"
+      - "diamond360/tier_contrast_benchmark.py"
+      - "diamond360/tier_readability_calibration.py"
+      - "docs/360/tier-readability/**"
       - "tests/test_asscher_steps.py"
       - "tests/test_regions.py"
       - "tests/test_tier_contrast.py"
-      - "tests/test_tier_contrast_benchmark.py"\n      - "tests/test_tier_readability_calibration.py"
+      - "tests/test_tier_contrast_benchmark.py"
+      - "tests/test_tier_readability_calibration.py"
       - ".github/workflows/tier-readability-a.yml"
   workflow_dispatch:
 
@@ -39,6 +42,7 @@ jobs:
             tests.test_regions \
             tests.test_tier_contrast \
             tests.test_tier_contrast_benchmark \
+            tests.test_tier_readability_calibration \
             -v
 
       - name: Record full-suite status
@@ -76,9 +80,37 @@ jobs:
           python -m diamond360.tier_contrast_benchmark \
             --source-root outputs/tier-readability-sources \
             --output outputs/tier-readability-c
-          cat outputs/tier-readability-c/comparison.csv
-          echo "--- PR B profile ---"
+          echo "--- PR B descriptors consumed by PR C ---"
           cat outputs/tier-readability-c/readability-profile.csv
+
+      - name: Build blinded human-label packet
+        run: |
+          python -m diamond360.tier_readability_calibration packet \
+            --benchmark-root outputs/tier-readability-c \
+            --source-root outputs/tier-readability-sources \
+            --output outputs/tier-readability-c/label-packet
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          packet = json.loads(
+              Path("outputs/tier-readability-c/label-packet/manifest.json").read_text()
+          )
+          print("label packet items:", len(packet["items"]))
+          print("contact sheet: outputs/tier-readability-c/label-packet/contact-sheet.jpg")
+          PY
+
+      - name: Run human calibration when committed labels are complete
+        run: |
+          if [ -f docs/360/tier-readability/human-labels.json ]; then
+            python -m diamond360.tier_readability_calibration calibrate \
+              --benchmark-root outputs/tier-readability-c \
+              --manifest outputs/tier-readability-c/label-packet/manifest.json \
+              --labels docs/360/tier-readability/human-labels.json \
+              --output outputs/tier-readability-c/calibration
+            cat outputs/tier-readability-c/calibration/calibration.csv
+          else
+            echo "No committed human labels yet; packet generation is the current PR-C gate."
+          fi
 
       - name: Upload PR C benchmark and label packet
         uses: actions/upload-artifact@v4
