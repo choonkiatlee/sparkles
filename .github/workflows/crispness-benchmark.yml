@@ -1,0 +1,72 @@
+name: crispness-benchmark
+
+on:
+  pull_request:
+    paths:
+      - "diamond360/crispness.py"
+      - "diamond360/crispness_benchmark.py"
+      - "tests/test_crispness.py"
+      - "tests/test_crispness_benchmark.py"
+      - ".github/workflows/crispness-benchmark.yml"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: python -m pip install -e .
+
+      - name: Run issue 50 tests
+        run: python -m unittest discover -s tests -p "test_crispness*.py" -v
+
+      - name: Record full-suite status
+        continue-on-error: true
+        run: python -m unittest discover -s tests -v
+
+      - name: Download benchmark source bundles
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import urllib.request
+          import zipfile
+          from pathlib import Path
+
+          manifest = json.loads(
+              Path("docs/360/benchmark/source-bundles.json").read_text()
+          )
+          root = Path("outputs/crispness-sources")
+          root.mkdir(parents=True, exist_ok=True)
+
+          for item in manifest["bundles"]:
+              archive = root / item["filename"]
+              urllib.request.urlretrieve(item["download_url"], archive)
+              assert archive.stat().st_size == item["bytes"]
+              assert (
+                  hashlib.sha256(archive.read_bytes()).hexdigest()
+                  == item["sha256"]
+              )
+              destination = root / item["certificate"]
+              destination.mkdir(parents=True, exist_ok=True)
+              with zipfile.ZipFile(archive) as bundle:
+                  bundle.extractall(destination)
+          PY
+
+      - name: Run four-stone crispness benchmark
+        run: python -m diamond360.crispness_benchmark --source-root outputs/crispness-sources --output outputs/crispness-benchmark
+
+      - name: Upload benchmark outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: crispness-benchmark
+          path: outputs/crispness-benchmark
+          if-no-files-found: error
+          retention-days: 90

@@ -1,0 +1,13 @@
+certificate,pipeline,boundary,validity,validity_reasons,coverage_fraction,strength_median_peak_z,continuity_median_supported_fraction,continuity_worst_gap_fraction,position_median_mad_u
+IGI-LG756580087,Diajewel,centre_inner,review,crossfit_template_unavailable,0.47058823529411764,4.837160527499227,0.9583333333333333,0.09375,0.017172672955974827
+IGI-LG756580087,Diajewel,inner_middle,review,crossfit_template_unavailable,0.47058823529411764,5.020490433873264,0.9635416666666667,0.03125,0.022825668238993638
+IGI-LG756580087,Diajewel,middle_outer,review,crossfit_template_unavailable,0.47058823529411764,3.6355153179660693,0.9270833333333333,0.07291666666666667,0.02395238207547166
+IGI-LG756520111,Workshop,centre_inner,review,foreground_or_nonuniformity_on_border;outline_near_image_edge,1.0,2.6809945113159097,0.84375,0.21875,0.013598270440251583
+IGI-LG756520111,Workshop,inner_middle,review,foreground_or_nonuniformity_on_border;outline_near_image_edge,1.0,5.5207244258431185,0.9583333333333334,0.11458333333333333,0.019892327044025205
+IGI-LG756520111,Workshop,middle_outer,review,foreground_or_nonuniformity_on_border;outline_near_image_edge,1.0,4.096505151301106,0.9166666666666666,0.0625,0.020047735849056517
+IGI-LG818659722,Diajewel,centre_inner,review,foreground_or_nonuniformity_on_border;outline_near_image_edge;crossfit_template_review,1.0,3.8427258846531736,0.9166666666666666,0.15625,0.012898930817610114
+IGI-LG818659722,Diajewel,inner_middle,review,foreground_or_nonuniformity_on_border;outline_near_image_edge;crossfit_template_review,1.0,4.20804032451969,0.9270833333333334,0.0625,0.02424377358490557
+IGI-LG818659722,Diajewel,middle_outer,review,foreground_or_nonuniformity_on_border;outline_near_image_edge;crossfit_template_review,1.0,3.7821522622337,0.875,0.07291666666666667,0.02129100628930814
+IGI-LG836619414,Diajewel,centre_inner,ok,,1.0,3.309277775248022,0.9270833333333334,0.19791666666666666,0.024671147798742125
+IGI-LG836619414,Diajewel,inner_middle,ok,,1.0,4.1322722543593065,0.9479166666666666,0.041666666666666664,0.025797861635220062
+IGI-LG836619414,Diajewel,middle_outer,ok,,1.0,3.531568454530386,0.84375,0.1875,0.023544433962264102

@@ -1,0 +1,58 @@
+{
+  "schema_version": "diamond360-static-crispness-evidence-manifest/1",
+  "issue": 50,
+  "disposition": "REVISE",
+  "benchmark_run": {
+    "github_actions_run_id": 37511719011,
+    "head_sha": "9bf0db15b26531ee5a2945443d41274543e85da9",
+    "artifact_name": "crispness-benchmark",
+    "artifact_sha256": "63014c1d9005244e16c9f20a3a195a26fc2f0cec191a8f95689f32553f2971f1",
+    "source_bundles": "docs/360/benchmark/source-bundles.json",
+    "core_indices": [248,249,250,251,252,253,254,255,0,1,2,3,4,5,6,7,8]
+  },
+  "representation": "Each JPEG panel shows the original camera-space source first and a registered diagnostic second; white = expected #19-compatible boundary, black = supported local edge peaks.",
+  "representative_panels": [
+    {
+      "certificate": "IGI-LG756520111",
+      "artifact_path": "per-stone/IGI-LG756520111/core/evidence/continuity_failure.jpg",
+      "source_index": 8,
+      "boundary": "centre_inner",
+      "selected_for": "continuity_failure",
+      "note": "Workshop example with weak/fragmented centre-inner support.",
+      "bytes": 50007,
+      "sha256": "d3366a3a07ed5db2e390a20eb1d37b4b422f28dca1b10eba95046329ca2039bd"
+    },
+    {
+      "certificate": "IGI-LG756580087",
+      "artifact_path": "per-stone/IGI-LG756580087/core/evidence/pipeline_sensitivity.jpg",
+      "source_index": 7,
+      "boundary": "middle_outer",
+      "selected_for": "pipeline_sensitivity",
+      "perturbation": "downsample",
+      "note": "Largest automatically selected source-pipeline sensitivity event for this stone; the core cross-fit also exposes one unavailable training fold.",
+      "bytes": 70763,
+      "sha256": "4b39f62c6da61fb35fbfad9291640889bb884b77c1880d7cf185157a6a53cc70"
+    },
+    {
+      "certificate": "IGI-LG818659722",
+      "artifact_path": "per-stone/IGI-LG818659722/core/evidence/strongest_boundary.jpg",
+      "source_index": 249,
+      "boundary": "inner_middle",
+      "selected_for": "strongest_boundary",
+      "note": "Strong held-out boundary example from a stone with a #22 static-crispness human strength.",
+      "bytes": 64702,
+      "sha256": "2d78e93a093e62aaefc92fc9bf914c7ba59e0adb766f82e7c82e0bd6b92fb4ee"
+    },
+    {
+      "certificate": "IGI-LG836619414",
+      "artifact_path": "per-stone/IGI-LG836619414/core/evidence/weakest_or_ambiguous_boundary.jpg",
+      "source_index": 8,
+      "boundary": "middle_outer",
+      "selected_for": "human_counterexample",
+      "note": "Human-selected #22 crispness frame: only 0.708 supported fraction with a 0.177 longest gap on middle-outer, showing that tier-boundary continuity alone does not explain human geometric crispness.",
+      "bytes": 72061,
+      "sha256": "505241777543b51db244bd93e9f8931743ba3f40f0efa6a65fc0a5d8b4e5b6dc"
+    }
+  ],
+  "storage_policy": "The generated JPEGs are workflow artifacts rather than committed binaries to preserve the repository's small representative-asset policy. They are deterministic outputs of the versioned runner and source bundles; this manifest pins the evidence bytes used for the findings."
+}
