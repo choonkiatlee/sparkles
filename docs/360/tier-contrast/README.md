@@ -1,12 +1,12 @@
 # Adjacent-tier contrast / articulation (#49)
 
-This module tests whether adjacent Asscher regions remain tonally distinct in a
-given recorded view. It is a targeted follow-up to the #22 calibration gap, not
-a quality score.
+This research slice asks whether adjacent Asscher tiers remain tonally distinct in
+recorded views. It is a follow-up to the #22 calibration gap, not a cut grade or
+quality score.
 
-## Primary definition
+## 1. Coarse baseline
 
-The primary candidate consumes the retained #26 coarse-fixed relative activation
+The first candidate consumes the retained #26 coarse-fixed relative activation
 traces directly.
 
 For band i:
@@ -18,120 +18,98 @@ For adjacent bands i,j:
     C_ij,t = r_i,t - r_j,t
     D_ij,t = abs(C_ij,t)
 
-The common whole-stone term cancels, so D is exactly the absolute adjacent-band
-log brightness ratio. No new photometric normalization is introduced.
-
-Pairs under test:
-
-- centre ↔ inner;
-- inner ↔ middle.
-
-The full signed trace is retained for audit. Candidate summaries are Q10
-(weak-separation / near-collapse tail), Q50 (typical separation), and Q90
-(strongest available separation). There is deliberately no hand-tuned collapse
+The whole-stone term cancels exactly, so D is the absolute log brightness ratio
+between the two coarse bands. We test centre↔inner and inner↔middle, preserve
+signed contrast for audit, and summarize Q10/Q50/Q90 without a tuned collapse
 threshold.
 
-## Standardized challenger
+The four-stone committed-trace benchmark is in [summary.json](summary.json) and
+[summary.csv](summary.csv).
 
-A second formulation tests whether raw inter-band difference is misleading when
-one or both bands contain substantial within-region tonal variation.
+## 2. Standardized coarse challenger
 
-For each band/frame on the same #26 fixed support:
+To test whether a coarse brightness difference is misleading when either band is
+internally variable, the raw-pixel run also computes:
 
     R_i,t = 1.4826 * MAD(Y_i,t) / median(Y_i,t)
-
-Then:
-
     S_ij,t = D_ij,t / sqrt((R_i,t^2 + R_j,t^2) / 2)
 
-This is experimental. Zero spread is surfaced as unsupported; no epsilon is
-introduced. The within-band spread is not promoted as a #49 descriptor because
-that would overlap the separate #51 within-inner-articulation hypothesis.
+The same #26 fixed support is used. Zero spread is unsupported rather than
+epsilon-adjusted. This is a control only: within-band spread is not promoted as a
+#49 descriptor because that would overlap #51.
 
-## Evidence
+## 3. Localized matched-sector revision
 
-For each pair the implementation automatically selects:
+The coarse benchmark produced direct counterexamples: entire-band medians can be
+almost equal even while the eye clearly sees separated tiers. The revision keeps
+the same adjacent-tier question but changes only the spatial primitive.
 
-- weakest separation;
-- representative median separation;
-- strongest separation;
-- largest percentile-rank disagreement between simple and standardized
-  formulations.
+Each coarse radial band is intersected with the existing eight image-axis
+side/corner sectors. For each matched sector and frame:
 
-When processed frames are available, the evidence panel shows the copied
-camera-original frame beside a registered diagnostic overlay outlining both
-bands. Original imagery remains the primary evidence.
+    L_ij,s,t = abs(log(B_i,s,t) - log(B_j,s,t))
 
-## Benchmark protocol
+All eight local traces are retained. The experimental frame-level scalar is the
+median across matched sectors; Q75 is retained as audit context. Sector labels
+are image locations, not facet identities.
 
-Use the canonical #20 benchmark:
+This is intentionally simpler than introducing new semantic/facet segmentation:
+it tests whether spatial averaging was the actual failure mode while reusing
+existing masks and fixed-support rules.
+
+## Evidence and benchmark
+
+The benchmark remains the canonical #20 protocol:
 
 - core: 248..255,0..8 (17 frames), primary;
-- wide: 240..255,0..16 (33 frames), sensitivity only;
-- four complete #18 benchmark stones;
+- wide: 240..255,0..16 (33 frames), sensitivity;
+- four complete benchmark stones;
 - gain 1.0;
-- coarse fixed support;
-- no retuning of #19 or photometry.
+- fixed support;
+- no stone-specific tuning.
 
-Per-stone Python flow:
+The raw-pixel run uses the versioned release bundles listed in
+[../benchmark/source-bundles.json](../benchmark/source-bundles.json). It
+preprocesses only the 33 required source indices while preserving their original
+256-frame source indices/provenance.
 
-    from diamond360 import asscher_steps
-    from diamond360 import tier_contrast_benchmark as tb
+Generated per-stone evidence panels compare the camera-original frame with a
+registered overlay. For the localized formulation the overlay shows the
+strongest matched sector for that selected frame.
 
-    indices = list(range(248, 256)) + list(range(0, 9))
-    asscher_steps.run(processed, step_output, indices, wrap=True)
-    result = tb.measure_stone(processed, step_output, indices, wrap=True)
-    tb.write_stone_outputs(result, output, processed=processed)
+Committed aggregate outputs:
 
-Run the same flow on the wide interval only as sensitivity. Source bundles are
-the versioned release assets listed in docs/360/benchmark/source-bundles.json.
+- [raw-pixel-summary.csv](raw-pixel-summary.csv): all four stones, core + wide,
+  simple / standardized / localized Q10/Q50/Q90;
+- [raw-pixel-findings.json](raw-pixel-findings.json): sensitivity,
+  representative human-frame counterexamples, redundancy diagnostics and
+  candidate dispositions;
+- [findings.md](findings.md): interpretation.
 
-## Validation questions
+## Result
 
-The eventual benchmark/disposition must answer:
+**Issue disposition: REVISE.**
 
-1. Do low/high D frames visibly correspond to collapsed/distinct adjacent
-   layers?
-2. Does Q10/Q50/Q90 survive core/wide sensitivity?
-3. Does simple separation add information beyond #26 activation, #27 occupancy,
-   and #32 nested-step coordination?
-4. Does the standardized formulation correct concrete visible failures of the
-   simpler D, or merely add noise/complexity?
-5. Do pale/quiet inner-panel examples actually have low adjacent separation?
-   If not, that is evidence that #51 is a genuinely separate hypothesis rather
-   than a failure of #49.
+The three candidate outcomes are deliberately different:
 
-The final issue disposition remains KEEP / REVISE / REJECT after the four-stone
-source-frame audit. The implementation does not add #49 to the #45 production
-profile automatically.
+| candidate | disposition | reason |
+|---|---|---|
+| coarse simple separation | **REJECT as production descriptor; keep as baseline** | whole-band averaging erases visible local tier separation; Q10/Q50 are window-sensitive |
+| coarse standardized separation | **REJECT as fix; keep as control** | rescales the failed numerator but cannot recover spatial structure that has already been averaged away |
+| localized matched-sector separation | **REVISE / promising** | fixes the concrete cancellation counterexamples and improves Q50 core/wide rank stability, but incremental cross-stone information is not established at n=4 |
 
-## Current implementation status
+Localized Q50 has core/wide rank Spearman rho = **0.8 for both adjacent pairs**,
+versus **0.2** for coarse centre-inner Q50 and **0.0** for coarse inner-middle
+Q50. However, several localized summaries remain strongly rank-correlated with
+retained activation/occupancy/coordination fields in this four-stone sample.
 
-Implemented:
+Therefore #49 should **not** yet be added to #45/#23. The implementation and
+evidence are retained so a future larger calibration set can test whether the
+localized descriptor adds independent predictive value.
 
-- representation-neutral contrast kernel;
-- signed + absolute frame traces;
-- Q10/Q50/Q90 summaries;
-- robust standardized challenger;
-- deterministic source-indexed evidence selection;
-- exact #26 coarse-fixed adapter;
-- monotone validity propagation;
-- camera-original + registered-overlay evidence renderer;
-- JSON/CSV per-stone outputs;
-- synthetic/integration tests;
-- exact reconstruction of the simple candidate from the committed per-frame
-  fixed-support benchmark traces;
-- four-stone core/wide benchmark, redundancy diagnostics and #22 frame checks.
+## Boundary with #51
 
-See [summary.json](summary.json), [summary.csv](summary.csv) and
-[findings.md](findings.md).
-
-The current **provisional disposition is REVISE**: whole-band coarse medians
-erase local tier contrast in several human-selected readable/crisp frames, and
-Q10/Q50 are window-sensitive. The next #49 experiment should localize
-adjacent-tier contrast spatially before attempting to retain another scalar.
-
-The standardized challenger remains implemented but empirically pending because
-it requires the processed pixel arrays from the versioned release source
-bundles. It should be treated as a control/falsification test, not as an assumed
-fix for the failed coarse spatial primitive.
+A pale or internally flat inner region can still be strongly separated from its
+neighbors. #49 measures **between-tier separation**; #51 asks about
+**within-inner articulation**. The raw-pixel results reinforce that these should
+remain separate hypotheses.
