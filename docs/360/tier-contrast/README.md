@@ -118,9 +118,20 @@ Implemented:
 - monotone validity propagation;
 - camera-original + registered-overlay evidence renderer;
 - JSON/CSV per-stone outputs;
-- synthetic/integration tests.
+- synthetic/integration tests;
+- exact reconstruction of the simple candidate from the committed per-frame
+  fixed-support benchmark traces;
+- four-stone core/wide benchmark, redundancy diagnostics and #22 frame checks.
 
-The four-stone empirical result and final disposition should be committed only
-after running against the release source bundles. Do not infer those results
-from existing scalar #26 summaries because framewise adjacent differences cannot
-be reconstructed from marginal quantiles alone.
+See [summary.json](summary.json), [summary.csv](summary.csv) and
+[findings.md](findings.md).
+
+The current **provisional disposition is REVISE**: whole-band coarse medians
+erase local tier contrast in several human-selected readable/crisp frames, and
+Q10/Q50 are window-sensitive. The next #49 experiment should localize
+adjacent-tier contrast spatially before attempting to retain another scalar.
+
+The standardized challenger remains implemented but empirically pending because
+it requires the processed pixel arrays from the versioned release source
+bundles. It should be treated as a control/falsification test, not as an assumed
+fix for the failed coarse spatial primitive.
