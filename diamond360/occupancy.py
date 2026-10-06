@@ -67,6 +67,27 @@ def _valid_reference(value):
     return value if math.isfinite(value) and value > 0 else None
 
 
+def validate_relative_dark_threshold(threshold):
+    """Validate the shared #27 relative-dark threshold."""
+    threshold = float(threshold)
+    if not math.isfinite(threshold) or threshold <= 0:
+        raise ValueError("threshold must be finite and positive")
+    return threshold
+
+
+def relative_dark_state(brightness, whole_stone_value, threshold):
+    """Return the #27 relative-dark state field, or None for an invalid reference.
+
+    Support is deliberately not applied here. Callers must intersect this state field
+    with their declared fixed/frame/pair support so mask motion cannot become state.
+    """
+    reference = _valid_reference(whole_stone_value)
+    if reference is None:
+        return None
+    threshold = validate_relative_dark_threshold(threshold)
+    return np.asarray(brightness, float) < threshold * reference
+
+
 def occupancy_trace(
     brightness,
     valid_masks,
@@ -76,7 +97,7 @@ def occupancy_trace(
     support_mode,
     threshold,
 ):
-    """Measure the fraction of supported pixels strictly below ``threshold * G_t``.
+    """Measure the fraction of supported pixels strictly below threshold * G_t.
 
     Missing/unobserved frames remain null. Fixed support is the intersection over
     observed frames only; dynamic support uses each frame's valid regional support.
@@ -86,9 +107,7 @@ def occupancy_trace(
     )
     if support_mode not in {"fixed", "dynamic"}:
         raise ValueError('support_mode must be "fixed" or "dynamic"')
-    threshold = float(threshold)
-    if not math.isfinite(threshold) or threshold <= 0:
-        raise ValueError("threshold must be finite and positive")
+    threshold = validate_relative_dark_threshold(threshold)
     if len(whole_stone_values) != len(brightness):
         raise ValueError("whole-stone values must match frames")
 
@@ -114,13 +133,13 @@ def occupancy_trace(
 
         denominator = int(support.sum())
         support_counts.append(denominator)
-        reference = _valid_reference(whole)
-        if denominator == 0 or reference is None:
+        state = relative_dark_state(frame, whole, threshold)
+        if denominator == 0 or state is None:
             values.append(None)
             dark_counts.append(None)
             continue
 
-        dark = int(np.count_nonzero(frame[support] < threshold * reference))
+        dark = int(np.count_nonzero(state & support))
         dark_counts.append(dark)
         values.append(float(dark / denominator))
 

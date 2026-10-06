@@ -183,3 +183,56 @@ auditable against source imagery. Gaps break adjacency and are never interpolate
 
 Occupancy is a descriptive recorded-image state fraction. It is not leakage, calibrated
 light return, fire, physical facet identity, or a quality grade.
+
+
+## Bright/dark switching: `diamond360-bright-dark-switching/1`
+
+`switching.json` reuses the exact relative-dark state from
+`diamond360-relative-dark-occupancy/1`:
+
+`D_(p,t)(k) = 1[Y_t(p) < k * G_t]`.
+
+The comparison remains strict `<`; `G_t` is the same fixed-support whole-stone
+median used by #27. The benchmark threshold set is fixed globally at
+`0.60, 0.65, 0.70`, with `0.65` as the operational baseline. No threshold is
+retuned by stone, region or representation.
+
+For each adjacent requested source-step pair, a switch is:
+
+`W_(p,t) = 1[D_(p,t) != D_(p,t-1)]`.
+
+A pixel is eligible only when it is supported on both sides of that pair.
+`fixed` support uses the interval-wide persistent region/valid-support
+intersection. `pair_local` support uses the intersection of the two frame-local
+supports for that pair. Entering or leaving support is therefore never counted as
+a bright↔dark switch.
+
+Missing/rejected frames and invalid whole-stone references break adjacency. Pairs
+across gaps are not interpolated. Explicit wrapped source order such as
+`255 -> 0` is allowed only through the same validated requested-index contract
+used by the activation/occupancy runners.
+
+The primary regional scalar is:
+
+`regional_switch_rate = sum(switched_pixel_pairs) / sum(eligible_pixel_pairs)`.
+
+This pair-normalized rate is the primary cross-window candidate. Raw transition
+count and the fraction of pixels that ever switch are not primary descriptors.
+Each cell also records the full adjacent-pair switching trace, numerator and
+denominator counts, per-pixel switch-rate Q10/Q50/Q90/max, the fraction of
+eligible pixels with non-zero rate as a diagnostic, and per-pixel eligible-pair
+coverage.
+
+Every coarse and semantic region is emitted for both `fixed` and
+`pair_local` support. Semantic QC propagates only to semantic measurements.
+Validity is monotone `ok` / `review` / `unavailable` with machine-readable
+reasons.
+
+Baseline evidence panels show the two source frames defining selected transition
+pairs, with support, relative-dark state and switched pixels overlaid. Source
+steps are ordinal samples, not seconds or calibrated degrees. Registered pixels
+are image coordinates, not tracked physical facets.
+
+Switching is descriptive recorded-image reconfiguration. It is not sparkle
+frequency, fire, leakage, calibrated light return, physical facet identity or a
+quality grade.

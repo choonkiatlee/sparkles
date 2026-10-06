@@ -159,3 +159,18 @@ support and the 33-frame sensitivity window. The surviving state handed to #28
 is fixed coarse centre/inner/middle occupancy with mean occupancy as the primary
 scalar; outer and semantic formulations remain revised/QC-only rather than
 quality claims.
+
+
+## Bright/dark switching descriptor validation
+
+Issue #28's four-stone switching benchmark is documented in
+[switching/README.md](switching/README.md). It reuses #27's relative-dark state,
+measures adjacent-pair state reconfiguration, compares fixed/pair-local and
+coarse/semantic support, and tests the exact 17-frame core plus 33-frame
+sensitivity window. The surviving primary scalar is coarse-fixed regional
+switching rate in the inner/middle bands; centre/outer and semantic variants
+remain revised/QC-only. Per-pixel Q90 is retained as a secondary diagnostic.
+
+The canonical inputs are the four `benchmark-sources-v1` GitHub Release assets
+indexed by [benchmark/source-bundles.json](benchmark/source-bundles.json); source
+ZIP and frame hashes are verified before preprocessing.

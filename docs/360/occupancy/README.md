@@ -58,7 +58,7 @@ The wide window changes occupancy **levels** materially because it samples a wid
 
 The surviving state definition handed to #28 is therefore: **coarse fixed centre/inner/middle pixels, dark iff `Y_t(p) < 0.65 * G_t`, preserving the full per-frame occupancy trace and using its mean over the exact 17-frame core as the primary scalar.**
 
-`redundancy_with_switching: pending_issue_28`. #27 does not decide whether occupancy and switching both deserve to survive; #28 should test whether switching adds distinct visible temporal information on top of this state definition.
+`redundancy_with_switching: resolved_issue_28`. #28 finds the coarse-fixed switching scalar highly correlated with occupancy across these four stones (pooled core centre/inner/middle Spearman ρ≈0.92), so the two should not be treated as independent ranking axes. Switching still retains distinct temporal information: opposing bright→dark and dark→bright changes often cancel in net occupancy, so #28 keeps the adjacent-pair switching trace as a complementary motion descriptor.
 
 ## Validity and limits
 

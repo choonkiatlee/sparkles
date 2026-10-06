@@ -1,0 +1,252 @@
+{
+  "schema_version": "sparkles-bright-dark-switching-dispositions/1",
+  "issue": 28,
+  "source_release_tag": "benchmark-sources-v1",
+  "baseline_threshold": 0.65,
+  "sensitivity_thresholds": [
+    0.6,
+    0.65,
+    0.7
+  ],
+  "surviving_definition": {
+    "state_definition": "encoded brightness Y_t(p) < 0.65 * same-frame fixed-support whole-stone median G_t",
+    "representation": "coarse",
+    "regions": [
+      "inner",
+      "middle"
+    ],
+    "support_mode": "fixed",
+    "primitive": "adjacent-pair bright/dark state switch on pixels supported on both sides",
+    "primary_scalar": "sum switched pixel-pairs / sum eligible pixel-pairs over the exact 17-frame core",
+    "retained_secondary": "per-pixel Q90 switch rate",
+    "wide_window_role": "sensitivity only"
+  },
+  "summary_candidates": [
+    {
+      "candidate": "regional_switch_rate",
+      "disposition": "KEEP",
+      "role": "primary scalar for coarse-fixed inner/middle"
+    },
+    {
+      "candidate": "regional_switch_rate_centre",
+      "disposition": "REVISE",
+      "role": "trace/QC retained; primary scalar not promoted because core-to-wide rank persistence is weak"
+    },
+    {
+      "candidate": "regional_switch_rate_outer",
+      "disposition": "REVISE",
+      "role": "candidate/QC only because support choice materially changes the answer"
+    },
+    {
+      "candidate": "per_pixel_q90",
+      "disposition": "KEEP",
+      "role": "secondary active-tail diagnostic"
+    },
+    {
+      "candidate": "per_pixel_q50",
+      "disposition": "REJECT",
+      "role": "not primary; too tied/quantized in 16-pair core"
+    },
+    {
+      "candidate": "fraction_nonzero",
+      "disposition": "REJECT",
+      "role": "diagnostic only; still grows with observation opportunity"
+    },
+    {
+      "candidate": "raw_transition_count",
+      "disposition": "REJECT",
+      "role": "mechanically window-length dependent"
+    }
+  ],
+  "threshold_disposition": {
+    "k_0_65": "KEEP as the fixed operational baseline inherited from #27, not a calibrated truth",
+    "k_0_60_and_0_70": "KEEP as mandatory sensitivity probes only; no per-stone/region tuning"
+  },
+  "primary_metrics": {
+    "centre": {
+      "regional_rate_core_to_wide_rank_rho": 0.4,
+      "q90_core_to_wide_rank_rho": 0.8164965809277261,
+      "regional_rate_rank_rho_k060_vs_k065": 1,
+      "regional_rate_rank_rho_k070_vs_k065": 1,
+      "median_threshold_range_over_baseline_cross_stone_range": 0.581979891724671
+    },
+    "inner": {
+      "regional_rate_core_to_wide_rank_rho": 0.8,
+      "q90_core_to_wide_rank_rho": 0.8944271909999159,
+      "regional_rate_rank_rho_k060_vs_k065": 1,
+      "regional_rate_rank_rho_k070_vs_k065": 1,
+      "median_threshold_range_over_baseline_cross_stone_range": 0.21706864564007422
+    },
+    "middle": {
+      "regional_rate_core_to_wide_rank_rho": 0.8,
+      "q90_core_to_wide_rank_rho": 0.9486832980505139,
+      "regional_rate_rank_rho_k060_vs_k065": 1,
+      "regional_rate_rank_rho_k070_vs_k065": 1,
+      "median_threshold_range_over_baseline_cross_stone_range": 0.24510189902686685
+    },
+    "outer": {
+      "regional_rate_core_to_wide_rank_rho": 0.8,
+      "q90_core_to_wide_rank_rho": 0.8333333333333335,
+      "regional_rate_rank_rho_k060_vs_k065": 1,
+      "regional_rate_rank_rho_k070_vs_k065": 1,
+      "median_threshold_range_over_baseline_cross_stone_range": 0.3014382973569909
+    }
+  },
+  "support_diagnostics": {
+    "coarse_centre": {
+      "maximum_fixed_pair_local_rate_difference": 0
+    },
+    "coarse_inner": {
+      "maximum_fixed_pair_local_rate_difference": 0
+    },
+    "coarse_middle": {
+      "maximum_fixed_pair_local_rate_difference": 0.0011623143663794938,
+      "fixed_pair_local_rate_correlation": 0.9999169299665561,
+      "minimum_persistent_support_fraction": 0.9389204545454546
+    },
+    "coarse_outer": {
+      "minimum_persistent_support_fraction": 0.1988424197162061,
+      "maximum_fixed_pair_local_rate_difference": 0.0461222071467884,
+      "fixed_pair_local_rate_correlation": 0.9078122221362042
+    },
+    "semantic": {
+      "minimum_persistent_support_fraction": 0.001725673569360944,
+      "wide_unavailable_stone": "IGI-LG756580087",
+      "wide_unavailable_reason": "no_supported_middle_outer_edge",
+      "example_negative_or_near_zero_coarse_semantic_trace_correlations": [
+        {
+          "stone": "IGI-LG836619414",
+          "window": "wide",
+          "region": "outer",
+          "trace_correlation": -0.08813374544621182
+        },
+        {
+          "stone": "IGI-LG756580087",
+          "window": "core",
+          "region": "middle",
+          "trace_correlation": -0.0283452070592129
+        }
+      ]
+    }
+  },
+  "window_diagnostics": {
+    "normalized_rate_behavior": "does not mechanically increase with the wider window; wider-window rates usually fall because additional poses are less active",
+    "median_absolute_relative_core_to_wide_change": {
+      "centre": 0.32584755721973707,
+      "inner": 0.32347895541392424,
+      "middle": 0.2476543813986778
+    },
+    "fraction_nonzero_median_absolute_core_to_wide_increase": {
+      "centre": 0.07963988919667592,
+      "inner": 0.06594422043010756,
+      "middle": 0.10036015179197955,
+      "outer": 0.1806028919362325
+    }
+  },
+  "redundancy_with_occupancy": {
+    "disposition": "KEEP switching as complementary temporal trace, but do not treat its scalar ranking as an independent quality axis",
+    "pooled_core_coarse_fixed_spearman_rho": 0.916083916083916,
+    "per_region_spearman_rho": {
+      "centre": 0.8,
+      "inner": 1,
+      "middle": 1
+    },
+    "bidirectional_churn_share": {
+      "mean": 0.6400309128194571,
+      "minimum": 0.47352024922118385,
+      "maximum": 0.8434102463824795,
+      "definition": "share of pair switching not explained by absolute net occupancy change; represents opposing bright-to-dark and dark-to-bright changes that cancel in occupancy"
+    },
+    "interpretation": "occupancy measures amount dark; switching measures adjacent-step spatial reconfiguration"
+  },
+  "redundancy_with_contrast_mobility": "pending_issue_30",
+  "decisions": [
+    {
+      "representation": "coarse",
+      "region": "centre",
+      "support_mode": "fixed",
+      "candidate": "regional_switch_rate",
+      "disposition": "REVISE",
+      "reason": "Threshold ordering is stable, but core-to-wide cross-stone rank rho is only 0.4."
+    },
+    {
+      "representation": "coarse",
+      "region": "inner",
+      "support_mode": "fixed",
+      "candidate": "regional_switch_rate",
+      "disposition": "KEEP",
+      "reason": "Window rank rho 0.8, perfect threshold rank stability, complete fixed support, and pair-local gives the same rate."
+    },
+    {
+      "representation": "coarse",
+      "region": "middle",
+      "support_mode": "fixed",
+      "candidate": "regional_switch_rate",
+      "disposition": "KEEP",
+      "reason": "Window rank rho 0.8, perfect threshold rank stability, and fixed/pair-local disagreement is negligible."
+    },
+    {
+      "representation": "coarse",
+      "region": "outer",
+      "support_mode": "fixed",
+      "candidate": "regional_switch_rate",
+      "disposition": "REVISE",
+      "reason": "Persistent support can fall below 0.20 and fixed/pair-local disagreement reaches about 0.046."
+    },
+    {
+      "representation": "coarse",
+      "regions": [
+        "centre",
+        "inner",
+        "middle"
+      ],
+      "support_mode": "pair_local",
+      "candidate": "regional_switch_rate",
+      "disposition": "REJECT",
+      "reason": "Reject as a separate primary definition: centre/inner are identical to fixed and middle is effectively duplicated; retain as QC."
+    },
+    {
+      "representation": "coarse",
+      "region": "outer",
+      "support_mode": "pair_local",
+      "candidate": "regional_switch_rate",
+      "disposition": "REVISE",
+      "reason": "Useful support-sensitivity QC, but not a stable primary outer descriptor."
+    },
+    {
+      "representation": "semantic",
+      "regions": [
+        "centre",
+        "inner_step",
+        "middle_step",
+        "outer_step"
+      ],
+      "support_mode": "fixed_or_pair_local",
+      "candidate": "regional_switch_rate",
+      "disposition": "REVISE",
+      "reason": "Semantic geometry can be unavailable, collapse persistent support, or materially change pair traces; keep as localisation/QC experiment."
+    },
+    {
+      "candidate": "per_pixel_q90",
+      "disposition": "KEEP",
+      "reason": "Retain as a secondary active-tail diagnostic; core-to-wide rank persistence is stronger than the regional centre rate and strong in inner/middle."
+    },
+    {
+      "candidate": "per_pixel_q50",
+      "disposition": "REJECT",
+      "reason": "Too many ties at zero/one switch per core interval to serve as a useful primary scalar."
+    },
+    {
+      "candidate": "fraction_nonzero",
+      "disposition": "REJECT",
+      "reason": "Despite normalized per-pixel rates underneath, the any-switch indicator still increases with observation opportunity and therefore remains window-length sensitive."
+    }
+  ],
+  "limitations": [
+    "Four stones only; no population quality threshold is inferred.",
+    "Source steps are ordinal observations, not seconds or calibrated degrees.",
+    "Registered pixels are image coordinates, not tracked physical facets.",
+    "Switching is recorded-image behavior, not sparkle frequency, leakage, fire, calibrated light return, facet identity or cut quality.",
+    "Cross-stone values are comparable only under the same declared source-step window and measurement contract."
+  ]
+}
