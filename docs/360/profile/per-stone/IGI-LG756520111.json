@@ -1,0 +1,712 @@
+{
+  "schema_version": "diamond360-descriptor-profile/1",
+  "certificate": "IGI-LG756520111",
+  "window_contract": {
+    "id": "core17",
+    "source_indices": [
+      248,
+      249,
+      250,
+      251,
+      252,
+      253,
+      254,
+      255,
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "wrap_explicit": true,
+    "source_step_semantics": "ordinal samples; not seconds or calibrated degrees"
+  },
+  "measurements": {
+    "activity.activation.whole_stone_total_excursion": {
+      "value": 0.11018902063369751,
+      "status": "review",
+      "reasons": [
+        "foreground_or_nonuniformity_on_border",
+        "outline_near_image_edge"
+      ],
+      "source_refs": [
+        "docs/360/activation/summary.json",
+        "docs/360/activation/dispositions.json"
+      ]
+    },
+    "activity.activation.centre_relative_total_excursion": {
+      "value": 0.05962840099786483,
+      "status": "review",
+      "reasons": [
+        "foreground_or_nonuniformity_on_border",
+        "outline_near_image_edge"
+      ],
+      "source_refs": [
+        "docs/360/activation/summary.json",
+        "docs/360/activation/dispositions.json"
+      ]
+    },
+    "activity.activation.inner_relative_total_excursion": {
+      "value": 0.07962734198553362,
+      "status": "review",
+      "reasons": [
+        "foreground_or_nonuniformity_on_border",
+        "outline_near_image_edge"
+      ],
+      "source_refs": [
+        "docs/360/activation/summary.json",
+        "docs/360/activation/dispositions.json"
+      ]
+    },
+    "activity.activation.middle_relative_total_excursion": {
+      "value": 0.020733704704706646,
+      "status": "review",
+      "reasons": [
+        "foreground_or_nonuniformity_on_border",
+        "outline_near_image_edge"
+      ],
+      "source_refs": [
+        "docs/360/activation/summary.json",
+        "docs/360/activation/dispositions.json"
+      ]
+    },
+    "activity.mobility.centre_median": {
+      "value": 0.011099420627681059,
+      "status": "review",
+      "reasons": [
+        "foreground_or_nonuniformity_on_border",
+        "outline_near_image_edge"
+      ],
+      "source_refs": [
+        "docs/360/mobility/summary.json",
+        "docs/360/mobility/dispositions.json"
+      ]
+    },
+    "activity.mobility.inner_median": {
+      "value": 0.009986337360752516,
+      "status": "review",
+      "reasons": [
+        "foreground_or_nonuniformity_on_border",
+        "outline_near_image_edge"
+      ],
+      "source_refs": [
+        "docs/360/mobility/summary.json",
+        "docs/360/mobility/dispositions.json"
+      ]
+    },
+    "activity.mobility.middle_median": {
+      "value": 0.004622994864987434,
+      "status": "review",
+      "reasons": [
+        "foreground_or_nonuniformity_on_border",
+        "outline_near_image_edge"
+      ],
+      "source_refs": [
+        "docs/360/mobility/summary.json",
+        "docs/360/mobility/dispositions.json"
+      ]
+    },
+    "dark_state.occupancy.centre_mean": {
+      "value": 0.04277334202379013,
+      "status": "review",
+      "reasons": [
+        "foreground_or_nonuniformity_on_border",
+        "outline_near_image_edge"
+      ],
+      "source_refs": [
+        "docs/360/occupancy/summary.json",
+        "docs/360/occupancy/dispositions.json"
+      ]
+    },
+    "dark_state.occupancy.inner_mean": {
+      "value": 0.08233515180265655,
+      "status": "review",
+      "reasons": [
+        "foreground_or_nonuniformity_on_border",
+        "outline_near_image_edge"
+      ],
+      "source_refs": [
+        "docs/360/occupancy/summary.json",
+        "docs/360/occupancy/dispositions.json"
+      ]
+    },
+    "dark_state.occupancy.middle_mean": {
+      "value": 0.09286987522281641,
+      "status": "review",
+      "reasons": [
+        "foreground_or_nonuniformity_on_border",
+        "outline_near_image_edge"
+      ],
+      "source_refs": [
+        "docs/360/occupancy/summary.json",
+        "docs/360/occupancy/dispositions.json"
+      ]
+    },
+    "dark_state.persistence.inner_dark_q90_window_fraction": {
+      "value": 0.17647058823529413,
+      "status": "review",
+      "reasons": [
+        "foreground_or_nonuniformity_on_border",
+        "outline_near_image_edge"
+      ],
+      "source_refs": [
+        "docs/360/persistence/summary.json",
+        "docs/360/persistence/dispositions.json"
+      ]
+    },
+    "temporal_reconfiguration.switching.inner_rate": {
+      "value": 0.06979796706989247,
+      "status": "review",
+      "reasons": [
+        "foreground_or_nonuniformity_on_border",
+        "outline_near_image_edge"
+      ],
+      "source_refs": [
+        "docs/360/switching/summary.json",
+        "docs/360/switching/dispositions.json"
+      ]
+    },
+    "temporal_reconfiguration.switching.middle_rate": {
+      "value": 0.06686789772727272,
+      "status": "review",
+      "reasons": [
+        "foreground_or_nonuniformity_on_border",
+        "outline_near_image_edge"
+      ],
+      "source_refs": [
+        "docs/360/switching/summary.json",
+        "docs/360/switching/dispositions.json"
+      ]
+    },
+    "nested_step.centre_inner_pearson": {
+      "value": 0.4860299445,
+      "status": "review",
+      "reasons": [
+        "foreground_or_nonuniformity_on_border",
+        "outline_near_image_edge"
+      ],
+      "source_refs": [
+        "docs/360/coordination/summary.json",
+        "docs/360/coordination/dispositions.json",
+        "docs/360/activation/summary.json"
+      ]
+    },
+    "nested_step.inner_middle_pearson": {
+      "value": 0.49059073,
+      "status": "review",
+      "reasons": [
+        "foreground_or_nonuniformity_on_border",
+        "outline_near_image_edge"
+      ],
+      "source_refs": [
+        "docs/360/coordination/summary.json",
+        "docs/360/coordination/dispositions.json",
+        "docs/360/activation/summary.json"
+      ]
+    },
+    "directional.side_E_W_pearson": {
+      "value": 0.014666301957435974,
+      "status": "review",
+      "reasons": [
+        "foreground_or_nonuniformity_on_border",
+        "outline_near_image_edge"
+      ],
+      "source_refs": [
+        "docs/360/opposing-symmetry/summary.json",
+        "docs/360/opposing-symmetry/dispositions.json"
+      ]
+    },
+    "directional.side_N_S_pearson": {
+      "value": -0.9146084182603903,
+      "status": "review",
+      "reasons": [
+        "foreground_or_nonuniformity_on_border",
+        "outline_near_image_edge"
+      ],
+      "source_refs": [
+        "docs/360/opposing-symmetry/summary.json",
+        "docs/360/opposing-symmetry/dispositions.json"
+      ]
+    },
+    "directional.corner_NE_SW_pearson": {
+      "value": -0.7074131838565342,
+      "status": "review",
+      "reasons": [
+        "foreground_or_nonuniformity_on_border",
+        "outline_near_image_edge"
+      ],
+      "source_refs": [
+        "docs/360/opposing-symmetry/summary.json",
+        "docs/360/opposing-symmetry/dispositions.json"
+      ]
+    },
+    "directional.corner_NW_SE_pearson": {
+      "value": 0.4781102364393397,
+      "status": "review",
+      "reasons": [
+        "foreground_or_nonuniformity_on_border",
+        "outline_near_image_edge"
+      ],
+      "source_refs": [
+        "docs/360/opposing-symmetry/summary.json",
+        "docs/360/opposing-symmetry/dispositions.json"
+      ]
+    },
+    "flash_morphology.median_largest_component_fraction": {
+      "value": 0.12614789753504108,
+      "status": "review",
+      "reasons": [
+        "foreground_or_nonuniformity_on_border",
+        "outline_near_image_edge"
+      ],
+      "source_refs": [
+        "docs/360/morphology/summary.json",
+        "docs/360/morphology/dispositions.json"
+      ]
+    }
+  },
+  "context": {
+    "flash_morphology.active_frame_fraction": {
+      "value": 0.7647058823529411,
+      "status": "review",
+      "reasons": [
+        "foreground_or_nonuniformity_on_border",
+        "outline_near_image_edge"
+      ],
+      "source_refs": [
+        "docs/360/morphology/summary.json",
+        "docs/360/morphology/dispositions.json"
+      ]
+    }
+  },
+  "field_catalog": {
+    "measurements": {
+      "activity.activation.whole_stone_total_excursion": {
+        "role": "descriptor",
+        "descriptor_provenance": {
+          "issue": 26,
+          "descriptor_schema": "diamond360-activation/1",
+          "benchmark_schema": "diamond360-activation-benchmark/1",
+          "summary_path": "docs/360/activation/summary.json",
+          "dispositions_path": "docs/360/activation/dispositions.json"
+        },
+        "window_contract": "core17",
+        "representation": "whole_stone",
+        "support_policy": "fixed",
+        "statistic": "total_excursion",
+        "units": "encoded_brightness",
+        "region": "whole_stone",
+        "trace_type": "raw",
+        "redundancy_group": "activity_motion"
+      },
+      "activity.activation.centre_relative_total_excursion": {
+        "role": "descriptor",
+        "descriptor_provenance": {
+          "issue": 26,
+          "descriptor_schema": "diamond360-activation/1",
+          "benchmark_schema": "diamond360-activation-benchmark/1",
+          "summary_path": "docs/360/activation/summary.json",
+          "dispositions_path": "docs/360/activation/dispositions.json"
+        },
+        "window_contract": "core17",
+        "representation": "coarse",
+        "support_policy": "fixed",
+        "statistic": "total_excursion",
+        "units": "log_brightness_ratio",
+        "region": "centre",
+        "trace_type": "relative",
+        "redundancy_group": "activity_motion"
+      },
+      "activity.activation.inner_relative_total_excursion": {
+        "role": "descriptor",
+        "descriptor_provenance": {
+          "issue": 26,
+          "descriptor_schema": "diamond360-activation/1",
+          "benchmark_schema": "diamond360-activation-benchmark/1",
+          "summary_path": "docs/360/activation/summary.json",
+          "dispositions_path": "docs/360/activation/dispositions.json"
+        },
+        "window_contract": "core17",
+        "representation": "coarse",
+        "support_policy": "fixed",
+        "statistic": "total_excursion",
+        "units": "log_brightness_ratio",
+        "region": "inner",
+        "trace_type": "relative",
+        "redundancy_group": "activity_motion"
+      },
+      "activity.activation.middle_relative_total_excursion": {
+        "role": "descriptor",
+        "descriptor_provenance": {
+          "issue": 26,
+          "descriptor_schema": "diamond360-activation/1",
+          "benchmark_schema": "diamond360-activation-benchmark/1",
+          "summary_path": "docs/360/activation/summary.json",
+          "dispositions_path": "docs/360/activation/dispositions.json"
+        },
+        "window_contract": "core17",
+        "representation": "coarse",
+        "support_policy": "fixed",
+        "statistic": "total_excursion",
+        "units": "log_brightness_ratio",
+        "region": "middle",
+        "trace_type": "relative",
+        "redundancy_group": "activity_motion"
+      },
+      "activity.mobility.centre_median": {
+        "role": "descriptor",
+        "descriptor_provenance": {
+          "issue": 30,
+          "descriptor_schema": "diamond360-contrast-mobility/1",
+          "benchmark_schema": "sparkles-contrast-mobility-benchmark/1",
+          "summary_path": "docs/360/mobility/summary.json",
+          "dispositions_path": "docs/360/mobility/dispositions.json"
+        },
+        "window_contract": "core17",
+        "representation": "coarse",
+        "support_policy": "fixed",
+        "statistic": "median_mobility",
+        "units": "log_brightness_ratio_per_source_step",
+        "region": "centre",
+        "trace_type": "relative",
+        "redundancy_group": "activity_motion"
+      },
+      "activity.mobility.inner_median": {
+        "role": "descriptor",
+        "descriptor_provenance": {
+          "issue": 30,
+          "descriptor_schema": "diamond360-contrast-mobility/1",
+          "benchmark_schema": "sparkles-contrast-mobility-benchmark/1",
+          "summary_path": "docs/360/mobility/summary.json",
+          "dispositions_path": "docs/360/mobility/dispositions.json"
+        },
+        "window_contract": "core17",
+        "representation": "coarse",
+        "support_policy": "fixed",
+        "statistic": "median_mobility",
+        "units": "log_brightness_ratio_per_source_step",
+        "region": "inner",
+        "trace_type": "relative",
+        "redundancy_group": "activity_motion"
+      },
+      "activity.mobility.middle_median": {
+        "role": "descriptor",
+        "descriptor_provenance": {
+          "issue": 30,
+          "descriptor_schema": "diamond360-contrast-mobility/1",
+          "benchmark_schema": "sparkles-contrast-mobility-benchmark/1",
+          "summary_path": "docs/360/mobility/summary.json",
+          "dispositions_path": "docs/360/mobility/dispositions.json"
+        },
+        "window_contract": "core17",
+        "representation": "coarse",
+        "support_policy": "fixed",
+        "statistic": "median_mobility",
+        "units": "log_brightness_ratio_per_source_step",
+        "region": "middle",
+        "trace_type": "relative",
+        "redundancy_group": "activity_motion"
+      },
+      "dark_state.occupancy.centre_mean": {
+        "role": "descriptor",
+        "descriptor_provenance": {
+          "issue": 27,
+          "descriptor_schema": "diamond360-relative-dark-occupancy/1",
+          "benchmark_schema": "sparkles-relative-dark-occupancy-benchmark/1",
+          "summary_path": "docs/360/occupancy/summary.json",
+          "dispositions_path": "docs/360/occupancy/dispositions.json"
+        },
+        "window_contract": "core17",
+        "representation": "coarse",
+        "support_policy": "fixed",
+        "statistic": "mean",
+        "units": "fraction",
+        "region": "centre",
+        "threshold": 0.65,
+        "redundancy_group": "relative_dark_state"
+      },
+      "dark_state.occupancy.inner_mean": {
+        "role": "descriptor",
+        "descriptor_provenance": {
+          "issue": 27,
+          "descriptor_schema": "diamond360-relative-dark-occupancy/1",
+          "benchmark_schema": "sparkles-relative-dark-occupancy-benchmark/1",
+          "summary_path": "docs/360/occupancy/summary.json",
+          "dispositions_path": "docs/360/occupancy/dispositions.json"
+        },
+        "window_contract": "core17",
+        "representation": "coarse",
+        "support_policy": "fixed",
+        "statistic": "mean",
+        "units": "fraction",
+        "region": "inner",
+        "threshold": 0.65,
+        "redundancy_group": "relative_dark_state"
+      },
+      "dark_state.occupancy.middle_mean": {
+        "role": "descriptor",
+        "descriptor_provenance": {
+          "issue": 27,
+          "descriptor_schema": "diamond360-relative-dark-occupancy/1",
+          "benchmark_schema": "sparkles-relative-dark-occupancy-benchmark/1",
+          "summary_path": "docs/360/occupancy/summary.json",
+          "dispositions_path": "docs/360/occupancy/dispositions.json"
+        },
+        "window_contract": "core17",
+        "representation": "coarse",
+        "support_policy": "fixed",
+        "statistic": "mean",
+        "units": "fraction",
+        "region": "middle",
+        "threshold": 0.65,
+        "redundancy_group": "relative_dark_state"
+      },
+      "dark_state.persistence.inner_dark_q90_window_fraction": {
+        "role": "descriptor",
+        "descriptor_provenance": {
+          "issue": 29,
+          "descriptor_schema": "diamond360-bright-dark-persistence/1",
+          "benchmark_schema": "sparkles-bright-dark-persistence-benchmark/1",
+          "summary_path": "docs/360/persistence/summary.json",
+          "dispositions_path": "docs/360/persistence/dispositions.json"
+        },
+        "window_contract": "core17",
+        "representation": "coarse",
+        "support_policy": "fixed",
+        "statistic": "q90_window_fraction",
+        "units": "fraction_of_requested_source_steps",
+        "region": "inner",
+        "threshold": 0.65,
+        "state": "dark"
+      },
+      "temporal_reconfiguration.switching.inner_rate": {
+        "role": "descriptor",
+        "descriptor_provenance": {
+          "issue": 28,
+          "descriptor_schema": "diamond360-bright-dark-switching/1",
+          "benchmark_schema": "sparkles-bright-dark-switching-benchmark/1",
+          "summary_path": "docs/360/switching/summary.json",
+          "dispositions_path": "docs/360/switching/dispositions.json"
+        },
+        "window_contract": "core17",
+        "representation": "coarse",
+        "support_policy": "fixed",
+        "statistic": "regional_switch_rate",
+        "units": "switched_pixel_pairs_per_eligible_pixel_pair",
+        "region": "inner",
+        "threshold": 0.65,
+        "redundancy_group": "relative_dark_state"
+      },
+      "temporal_reconfiguration.switching.middle_rate": {
+        "role": "descriptor",
+        "descriptor_provenance": {
+          "issue": 28,
+          "descriptor_schema": "diamond360-bright-dark-switching/1",
+          "benchmark_schema": "sparkles-bright-dark-switching-benchmark/1",
+          "summary_path": "docs/360/switching/summary.json",
+          "dispositions_path": "docs/360/switching/dispositions.json"
+        },
+        "window_contract": "core17",
+        "representation": "coarse",
+        "support_policy": "fixed",
+        "statistic": "regional_switch_rate",
+        "units": "switched_pixel_pairs_per_eligible_pixel_pair",
+        "region": "middle",
+        "threshold": 0.65,
+        "redundancy_group": "relative_dark_state"
+      },
+      "nested_step.centre_inner_pearson": {
+        "role": "descriptor",
+        "descriptor_provenance": {
+          "issue": 32,
+          "descriptor_schema": "diamond360-concentric-coordination/1",
+          "benchmark_schema": "diamond360-concentric-coordination-summary/1",
+          "summary_path": "docs/360/coordination/summary.json",
+          "dispositions_path": "docs/360/coordination/dispositions.json"
+        },
+        "window_contract": "core17",
+        "representation": "coarse",
+        "support_policy": "fixed",
+        "statistic": "pearson_r",
+        "units": "correlation",
+        "pair": "centre__inner"
+      },
+      "nested_step.inner_middle_pearson": {
+        "role": "descriptor",
+        "descriptor_provenance": {
+          "issue": 32,
+          "descriptor_schema": "diamond360-concentric-coordination/1",
+          "benchmark_schema": "diamond360-concentric-coordination-summary/1",
+          "summary_path": "docs/360/coordination/summary.json",
+          "dispositions_path": "docs/360/coordination/dispositions.json"
+        },
+        "window_contract": "core17",
+        "representation": "coarse",
+        "support_policy": "fixed",
+        "statistic": "pearson_r",
+        "units": "correlation",
+        "pair": "inner__middle"
+      },
+      "directional.side_E_W_pearson": {
+        "role": "descriptor",
+        "descriptor_provenance": {
+          "issue": 31,
+          "descriptor_schema": "diamond360-opposing-region-symmetry/1",
+          "benchmark_schema": "diamond360-opposing-region-symmetry-benchmark/1",
+          "summary_path": "docs/360/opposing-symmetry/summary.json",
+          "dispositions_path": "docs/360/opposing-symmetry/dispositions.json"
+        },
+        "window_contract": "core17",
+        "representation": "coarse",
+        "support_policy": "fixed",
+        "statistic": "correlation",
+        "units": "correlation",
+        "pair": "side_E_W",
+        "surface_id": "coarse_whole"
+      },
+      "directional.side_N_S_pearson": {
+        "role": "descriptor",
+        "descriptor_provenance": {
+          "issue": 31,
+          "descriptor_schema": "diamond360-opposing-region-symmetry/1",
+          "benchmark_schema": "diamond360-opposing-region-symmetry-benchmark/1",
+          "summary_path": "docs/360/opposing-symmetry/summary.json",
+          "dispositions_path": "docs/360/opposing-symmetry/dispositions.json"
+        },
+        "window_contract": "core17",
+        "representation": "coarse",
+        "support_policy": "fixed",
+        "statistic": "correlation",
+        "units": "correlation",
+        "pair": "side_N_S",
+        "surface_id": "coarse_whole"
+      },
+      "directional.corner_NE_SW_pearson": {
+        "role": "descriptor",
+        "descriptor_provenance": {
+          "issue": 31,
+          "descriptor_schema": "diamond360-opposing-region-symmetry/1",
+          "benchmark_schema": "diamond360-opposing-region-symmetry-benchmark/1",
+          "summary_path": "docs/360/opposing-symmetry/summary.json",
+          "dispositions_path": "docs/360/opposing-symmetry/dispositions.json"
+        },
+        "window_contract": "core17",
+        "representation": "coarse",
+        "support_policy": "fixed",
+        "statistic": "correlation",
+        "units": "correlation",
+        "pair": "corner_NE_SW",
+        "surface_id": "coarse_whole"
+      },
+      "directional.corner_NW_SE_pearson": {
+        "role": "descriptor",
+        "descriptor_provenance": {
+          "issue": 31,
+          "descriptor_schema": "diamond360-opposing-region-symmetry/1",
+          "benchmark_schema": "diamond360-opposing-region-symmetry-benchmark/1",
+          "summary_path": "docs/360/opposing-symmetry/summary.json",
+          "dispositions_path": "docs/360/opposing-symmetry/dispositions.json"
+        },
+        "window_contract": "core17",
+        "representation": "coarse",
+        "support_policy": "fixed",
+        "statistic": "correlation",
+        "units": "correlation",
+        "pair": "corner_NW_SE",
+        "surface_id": "coarse_whole"
+      },
+      "flash_morphology.median_largest_component_fraction": {
+        "role": "descriptor",
+        "descriptor_provenance": {
+          "issue": 33,
+          "descriptor_schema": "diamond360-flash-morphology/1",
+          "benchmark_schema": "diamond360-flash-morphology-benchmark/1",
+          "summary_path": "docs/360/morphology/summary.json",
+          "dispositions_path": "docs/360/morphology/dispositions.json"
+        },
+        "window_contract": "core17",
+        "representation": "whole_stone",
+        "support_policy": "fixed",
+        "statistic": "median_largest_component_fraction",
+        "units": "fraction_of_active_area",
+        "threshold": 1.0,
+        "connectivity": 8
+      }
+    },
+    "context": {
+      "flash_morphology.active_frame_fraction": {
+        "role": "context",
+        "descriptor_provenance": {
+          "issue": 33,
+          "descriptor_schema": "diamond360-flash-morphology/1",
+          "benchmark_schema": "diamond360-flash-morphology-benchmark/1",
+          "summary_path": "docs/360/morphology/summary.json",
+          "dispositions_path": "docs/360/morphology/dispositions.json"
+        },
+        "window_contract": "core17",
+        "representation": "whole_stone",
+        "support_policy": "fixed",
+        "statistic": "active_frame_fraction",
+        "units": "fraction_of_observed_frames",
+        "threshold": 1.0,
+        "connectivity": 8
+      }
+    }
+  },
+  "redundancy_groups": {
+    "activity_motion": {
+      "relationship": "related_not_additive",
+      "description": "Activation excursion and contrast mobility describe related recorded-image movement and must not be added as independent quality points."
+    },
+    "relative_dark_state": {
+      "relationship": "shared_state_redundant",
+      "description": "Relative-dark occupancy and switching share the same k=0.65 pixel-state definition; their scalar rankings are redundant enough that downstream code must not count them as independent votes."
+    }
+  },
+  "audit_refs": {
+    "activation": {
+      "summary": "docs/360/activation/summary.json",
+      "dispositions": "docs/360/activation/dispositions.json",
+      "role": "upstream descriptor evidence/QC; not an additional production feature source"
+    },
+    "occupancy": {
+      "summary": "docs/360/occupancy/summary.json",
+      "dispositions": "docs/360/occupancy/dispositions.json",
+      "role": "upstream descriptor evidence/QC; not an additional production feature source"
+    },
+    "switching": {
+      "summary": "docs/360/switching/summary.json",
+      "dispositions": "docs/360/switching/dispositions.json",
+      "role": "upstream descriptor evidence/QC; not an additional production feature source"
+    },
+    "persistence": {
+      "summary": "docs/360/persistence/summary.json",
+      "dispositions": "docs/360/persistence/dispositions.json",
+      "role": "upstream descriptor evidence/QC; not an additional production feature source"
+    },
+    "mobility": {
+      "summary": "docs/360/mobility/summary.json",
+      "dispositions": "docs/360/mobility/dispositions.json",
+      "role": "upstream descriptor evidence/QC; not an additional production feature source"
+    },
+    "opposing": {
+      "summary": "docs/360/opposing-symmetry/summary.json",
+      "dispositions": "docs/360/opposing-symmetry/dispositions.json",
+      "role": "upstream descriptor evidence/QC; not an additional production feature source"
+    },
+    "coordination": {
+      "summary": "docs/360/coordination/summary.json",
+      "dispositions": "docs/360/coordination/dispositions.json",
+      "role": "upstream descriptor evidence/QC; not an additional production feature source"
+    },
+    "morphology": {
+      "summary": "docs/360/morphology/summary.json",
+      "dispositions": "docs/360/morphology/dispositions.json",
+      "role": "upstream descriptor evidence/QC; not an additional production feature source"
+    }
+  }
+}

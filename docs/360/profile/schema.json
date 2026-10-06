@@ -1,0 +1,270 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "diamond360-descriptor-profile/1",
+  "title": "Diamond360 retained descriptor profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "certificate",
+    "window_contract",
+    "measurements",
+    "context",
+    "field_catalog",
+    "redundancy_groups",
+    "audit_refs"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "diamond360-descriptor-profile/1"
+    },
+    "certificate": {
+      "type": "string",
+      "minLength": 1
+    },
+    "window_contract": {
+      "$ref": "#/$defs/window"
+    },
+    "measurements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "activity.activation.whole_stone_total_excursion",
+        "activity.activation.centre_relative_total_excursion",
+        "activity.activation.inner_relative_total_excursion",
+        "activity.activation.middle_relative_total_excursion",
+        "activity.mobility.centre_median",
+        "activity.mobility.inner_median",
+        "activity.mobility.middle_median",
+        "dark_state.occupancy.centre_mean",
+        "dark_state.occupancy.inner_mean",
+        "dark_state.occupancy.middle_mean",
+        "dark_state.persistence.inner_dark_q90_window_fraction",
+        "temporal_reconfiguration.switching.inner_rate",
+        "temporal_reconfiguration.switching.middle_rate",
+        "nested_step.centre_inner_pearson",
+        "nested_step.inner_middle_pearson",
+        "directional.side_E_W_pearson",
+        "directional.side_N_S_pearson",
+        "directional.corner_NE_SW_pearson",
+        "directional.corner_NW_SE_pearson",
+        "flash_morphology.median_largest_component_fraction"
+      ],
+      "properties": {
+        "activity.activation.whole_stone_total_excursion": {
+          "$ref": "#/$defs/valueCell"
+        },
+        "activity.activation.centre_relative_total_excursion": {
+          "$ref": "#/$defs/valueCell"
+        },
+        "activity.activation.inner_relative_total_excursion": {
+          "$ref": "#/$defs/valueCell"
+        },
+        "activity.activation.middle_relative_total_excursion": {
+          "$ref": "#/$defs/valueCell"
+        },
+        "activity.mobility.centre_median": {
+          "$ref": "#/$defs/valueCell"
+        },
+        "activity.mobility.inner_median": {
+          "$ref": "#/$defs/valueCell"
+        },
+        "activity.mobility.middle_median": {
+          "$ref": "#/$defs/valueCell"
+        },
+        "dark_state.occupancy.centre_mean": {
+          "$ref": "#/$defs/valueCell"
+        },
+        "dark_state.occupancy.inner_mean": {
+          "$ref": "#/$defs/valueCell"
+        },
+        "dark_state.occupancy.middle_mean": {
+          "$ref": "#/$defs/valueCell"
+        },
+        "dark_state.persistence.inner_dark_q90_window_fraction": {
+          "$ref": "#/$defs/valueCell"
+        },
+        "temporal_reconfiguration.switching.inner_rate": {
+          "$ref": "#/$defs/valueCell"
+        },
+        "temporal_reconfiguration.switching.middle_rate": {
+          "$ref": "#/$defs/valueCell"
+        },
+        "nested_step.centre_inner_pearson": {
+          "$ref": "#/$defs/valueCell"
+        },
+        "nested_step.inner_middle_pearson": {
+          "$ref": "#/$defs/valueCell"
+        },
+        "directional.side_E_W_pearson": {
+          "$ref": "#/$defs/valueCell"
+        },
+        "directional.side_N_S_pearson": {
+          "$ref": "#/$defs/valueCell"
+        },
+        "directional.corner_NE_SW_pearson": {
+          "$ref": "#/$defs/valueCell"
+        },
+        "directional.corner_NW_SE_pearson": {
+          "$ref": "#/$defs/valueCell"
+        },
+        "flash_morphology.median_largest_component_fraction": {
+          "$ref": "#/$defs/valueCell"
+        }
+      }
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "flash_morphology.active_frame_fraction"
+      ],
+      "properties": {
+        "flash_morphology.active_frame_fraction": {
+          "$ref": "#/$defs/valueCell"
+        }
+      }
+    },
+    "field_catalog": {
+      "type": "object",
+      "required": [
+        "measurements",
+        "context"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "measurements": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "context": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "redundancy_groups": {
+      "type": "object"
+    },
+    "audit_refs": {
+      "type": "object"
+    }
+  },
+  "$defs": {
+    "window": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "source_indices",
+        "wrap_explicit",
+        "source_step_semantics"
+      ],
+      "properties": {
+        "id": {
+          "const": "core17"
+        },
+        "source_indices": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "const": 248
+            },
+            {
+              "const": 249
+            },
+            {
+              "const": 250
+            },
+            {
+              "const": 251
+            },
+            {
+              "const": 252
+            },
+            {
+              "const": 253
+            },
+            {
+              "const": 254
+            },
+            {
+              "const": 255
+            },
+            {
+              "const": 0
+            },
+            {
+              "const": 1
+            },
+            {
+              "const": 2
+            },
+            {
+              "const": 3
+            },
+            {
+              "const": 4
+            },
+            {
+              "const": 5
+            },
+            {
+              "const": 6
+            },
+            {
+              "const": 7
+            },
+            {
+              "const": 8
+            }
+          ],
+          "items": false
+        },
+        "wrap_explicit": {
+          "const": true
+        },
+        "source_step_semantics": {
+          "type": "string"
+        }
+      }
+    },
+    "valueCell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "status",
+        "reasons",
+        "source_refs"
+      ],
+      "properties": {
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "status": {
+          "enum": [
+            "ok",
+            "review",
+            "unavailable"
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "source_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

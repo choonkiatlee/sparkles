@@ -452,3 +452,49 @@ coordination summary. Median absolute pair difference remains audit evidence; ad
 sign agreement is not a separate primary scalar. The descriptor remains four pairwise
 observations: no aggregate symmetry score, exact physical-facet identity, cut-quality
 grade, calibrated light-return claim or purchase score is defined.
+
+
+## Retained descriptor profile: `diamond360-descriptor-profile/1`
+
+The retained descriptor profile is the versioned consolidation boundary between
+the #20 measurement programme and #22 calibration. It introduces no new optical
+measurement, threshold, weight, quality category or composite score.
+
+Every profile uses the exact wrapped 17-source-step core
+`248,249,250,251,252,253,254,255,0,1,2,3,4,5,6,7,8`. Each declared field
+retains descriptor/benchmark schema provenance, issue number, representation,
+region or pair, support policy, statistic, threshold/state where applicable,
+units, validity (`ok | review | unavailable`), machine-readable reasons and
+source references.
+
+The production vocabulary is an explicit whitelist in
+`diamond360.descriptor_profile.FIELD_SPECS`; the builder never discovers new
+fields merely because an upstream disposition later says KEEP. Outer,
+semantic, dynamic/pair-local, REVISE and REJECT variants therefore cannot enter
+the profile silently.
+
+Version 1 exposes:
+
+- #26 whole-stone fixed raw activation total excursion;
+- #26 coarse-fixed centre/inner/middle relative activation total excursion;
+- #30 coarse-fixed centre/inner/middle relative median mobility;
+- #27 coarse-fixed centre/inner/middle mean relative-dark occupancy at `k=0.65`;
+- #29 coarse-fixed inner dark Q90 longest-run fraction;
+- #28 coarse-fixed inner/middle switching rate at `k=0.65`;
+- #32 coarse-fixed centre↔inner and inner↔middle Pearson coordination;
+- #31 fixed coarse-whole E↔W, N↔S, NE↔SW and NW↔SE Pearson coordination;
+- #33 fixed-support median largest-component fraction.
+
+Morphology active-frame fraction is emitted under `context`, not
+`measurements`.
+
+`activity_motion` marks activation and mobility as related/non-additive.
+`relative_dark_state` marks occupancy and switching as sharing the same
+state definition and unsuitable for naive independent-vote aggregation.
+
+One JSON profile is written per stone. `comparison.json` carries the same
+field catalogue and compact per-stone cells; `comparison.csv` emits value,
+status and reasons columns for every field. Upstream QC/sensitivity remains
+linked through `audit_refs` rather than being flattened into production
+features. The machine-readable envelope is documented in
+`docs/360/profile/schema.json`.
