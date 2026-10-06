@@ -137,7 +137,7 @@ jobs:
                   result = measure_stone(processed, indices, wrap=True)
                   out = result_root / cert / window
                   write_stone_outputs(result, out, processed)
-                  fixed_baseline = result["supports"]["fixed"]["thresholds"]["1.25"]
+                  fixed_baseline = result["supports"]["fixed"]["thresholds"]["1.00"]
                   for frame in fixed_baseline["frames"]:
                       if frame["status"] == "ok":
                           frame_rows.append({
@@ -195,17 +195,17 @@ jobs:
           certs = [stone["certificate"] for stone in compact_stones]
           analyses = {}
           for key in ("median_largest_component_fraction", "median_effective_component_count"):
-              core = [metric(s, "core", "fixed", "1.25", key) for s in compact_stones]
-              wide = [metric(s, "wide", "fixed", "1.25", key) for s in compact_stones]
-              low = [metric(s, "core", "fixed", "1.20", key) for s in compact_stones]
-              high = [metric(s, "core", "fixed", "1.30", key) for s in compact_stones]
-              dynamic = [metric(s, "core", "dynamic", "1.25", key) for s in compact_stones]
+              core = [metric(s, "core", "fixed", "1.00", key) for s in compact_stones]
+              wide = [metric(s, "wide", "fixed", "1.00", key) for s in compact_stones]
+              low = [metric(s, "core", "fixed", "0.75", key) for s in compact_stones]
+              high = [metric(s, "core", "fixed", "1.25", key) for s in compact_stones]
+              dynamic = [metric(s, "core", "dynamic", "1.00", key) for s in compact_stones]
               analyses[key] = {
                   "core_values": dict(zip(certs, core)),
                   "wide_values": dict(zip(certs, wide)),
                   "core_to_wide_spearman": finite_spearman(core, wide),
-                  "threshold_rank_spearman_1.20_vs_1.25": finite_spearman(low, core),
-                  "threshold_rank_spearman_1.30_vs_1.25": finite_spearman(high, core),
+                  "threshold_rank_spearman_0.75_vs_1.00": finite_spearman(low, core),
+                  "threshold_rank_spearman_1.25_vs_1.00": finite_spearman(high, core),
                   "fixed_vs_dynamic_core_spearman": finite_spearman(core, dynamic),
               }
 
@@ -271,8 +271,8 @@ jobs:
               "schema_version": "diamond360-flash-morphology-benchmark/1",
               "core_indices": CORE,
               "wide_indices": WIDE,
-              "thresholds": [1.20, 1.25, 1.30],
-              "baseline_threshold": 1.25,
+              "thresholds": [0.75, 1.00, 1.25],
+              "baseline_threshold": 1.00,
               "connectivity": 8,
               "stones": compact_stones,
               "analysis": analyses,
@@ -304,7 +304,7 @@ jobs:
                   row for row in csv_rows
                   if row["window"] == "core"
                   and row["support_mode"] == "fixed"
-                  and row["threshold"] == "1.25"
+                  and row["threshold"] == "1.00"
               ],
           }, indent=2))
           PY

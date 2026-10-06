@@ -6,24 +6,43 @@ import math
 import numpy as np
 from scipy import ndimage
 
+MAD_SCALE = 1.4826
+
 
 def validate_bright_threshold(threshold):
-    """Validate a global bright-flash multiplier relative to whole-stone median G_t."""
+    """Validate a global threshold in robust fixed-support contrast units."""
     threshold = float(threshold)
-    if not math.isfinite(threshold) or threshold <= 1.0:
-        raise ValueError("bright threshold must be finite and greater than 1")
+    if not math.isfinite(threshold) or threshold <= 0:
+        raise ValueError("bright threshold must be finite and positive")
     return threshold
 
 
-def relative_bright_state(brightness, whole_stone_value, threshold):
-    """Return pixels strictly brighter than threshold * G_t, or None for an invalid reference."""
-    threshold = validate_bright_threshold(threshold)
-    if whole_stone_value is None:
+def robust_bright_scale(brightness, support, whole_stone_value):
+    """Return 1.4826*MAD around G_t on the fixed reference support."""
+    brightness = np.asarray(brightness, float)
+    support = np.asarray(support, bool) & np.isfinite(brightness)
+    if brightness.shape != support.shape:
+        raise ValueError("brightness and support must have matching shapes")
+    if whole_stone_value is None or not support.any():
         return None
     reference = float(whole_stone_value)
-    if not math.isfinite(reference) or reference <= 0:
+    if not math.isfinite(reference):
         return None
-    return np.asarray(brightness, float) > threshold * reference
+    values = brightness[support]
+    scale = float(MAD_SCALE * np.median(np.abs(values - reference)))
+    return scale if math.isfinite(scale) and scale > 1e-12 else None
+
+
+def relative_bright_state(brightness, whole_stone_value, robust_scale, threshold):
+    """Return pixels strictly above G_t + k*S_t, or None for an invalid reference."""
+    threshold = validate_bright_threshold(threshold)
+    if whole_stone_value is None or robust_scale is None:
+        return None
+    reference = float(whole_stone_value)
+    scale = float(robust_scale)
+    if not math.isfinite(reference) or not math.isfinite(scale) or scale <= 0:
+        return None
+    return np.asarray(brightness, float) > reference + threshold * scale
 
 
 def _structure(connectivity):
@@ -123,6 +142,7 @@ def _summary(frames):
         "median_effective_component_count": None,
         "q90_effective_component_count": None,
         "median_boundary_active_fraction": None,
+        "median_reference_scale": None,
     }
     observed = result["observed_frames"]
     if observed:
@@ -137,6 +157,7 @@ def _summary(frames):
     lcf = values("largest_component_fraction")
     eff = values("effective_component_count")
     baf = values("boundary_active_fraction")
+    scales = values("reference_scale")
     result.update(
         median_active_fraction=float(np.median(af)),
         median_largest_component_fraction=float(np.median(lcf)),
@@ -145,6 +166,7 @@ def _summary(frames):
         median_effective_component_count=float(np.median(eff)),
         q90_effective_component_count=float(np.quantile(eff, 0.9)),
         median_boundary_active_fraction=float(np.median(baf)),
+        median_reference_scale=float(np.median(scales)),
     )
     return result
 
@@ -196,22 +218,32 @@ def morphology_trace(
                 "boundary_active_pixels": None,
                 "boundary_active_fraction": None,
                 "components_touching_support_boundary": None,
+                "reference_scale": None,
+                "active_threshold_value": None,
             })
             continue
         support = common if support_mode == "fixed" else (valid & stone)
-        state = relative_bright_state(frame, whole, threshold)
+        scale = robust_bright_scale(frame, common, whole)
+        state = relative_bright_state(frame, whole, scale, threshold)
         if state is None:
             item = frame_morphology(np.zeros_like(support), support, connectivity)
             item["status"] = "unavailable"
-            item["reason"] = "invalid_whole_stone_reference"
+            item["reason"] = "no_support" if not common.any() else "invalid_or_zero_reference_scale"
         else:
             item = frame_morphology(state & support, support, connectivity)
+        item["reference_scale"] = scale
+        item["active_threshold_value"] = (
+            float(whole) + threshold * scale
+            if whole is not None and scale is not None and math.isfinite(float(whole))
+            else None
+        )
         item["position"] = position
         frames.append(item)
 
     return {
         "threshold": threshold,
         "threshold_boundary": "strict_greater_than",
+        "normalization": "G_t + k * (1.4826 * MAD(Y_t - G_t) on fixed common support)",
         "support_mode": support_mode,
         "connectivity": connectivity,
         "persistent_support_pixels": int(common.sum()),
@@ -228,7 +260,7 @@ def threshold_sweep(
     whole_stone_values,
     observed,
     support_mode,
-    thresholds=(1.20, 1.25, 1.30),
+    thresholds=(0.75, 1.00, 1.25),
     connectivity=8,
 ):
     thresholds = tuple(float(value) for value in thresholds)
@@ -309,7 +341,7 @@ def select_frame_evidence(frames, source_indices, matched_area_tolerance=0.02):
     }
 
 
-def select_threshold_sensitivity(sweep, source_indices, baseline="1.25"):
+def select_threshold_sensitivity(sweep, source_indices, baseline="1.00"):
     """Select the frame whose largest-component fraction moves most across thresholds."""
     if baseline not in sweep:
         raise ValueError("baseline threshold missing from sweep")

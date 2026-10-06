@@ -16,7 +16,8 @@ def build_synthetic(root: Path):
 
     records = []
     for pos in range(3):
-        brightness = np.ones((7, 7), float) * 10.0
+        y, x = np.indices((7, 7))
+        brightness = 10.0 + ((x + y) % 3 - 1).astype(float)
         if pos == 0:
             brightness[2:5, 2:5] = 14.0
         elif pos == 1:
@@ -72,13 +73,13 @@ class MorphologyBenchmarkTests(unittest.TestCase):
             processed = build_synthetic(Path(td))
             result = b.measure_stone(processed, [0, 1, 2])
             self.assertEqual(result["schema_version"], b.SCHEMA)
-            self.assertEqual(result["thresholds"], [1.20, 1.25, 1.30])
-            self.assertEqual(result["baseline_threshold"], 1.25)
+            self.assertEqual(result["thresholds"], [0.75, 1.00, 1.25])
+            self.assertEqual(result["baseline_threshold"], 1.00)
             self.assertEqual(result["connectivity"], 8)
             self.assertEqual(result["representation_policy"]["radial_partition_axis"], "omitted")
             for mode in ("fixed", "dynamic"):
                 wrapper = result["supports"][mode]
-                self.assertEqual(list(wrapper["thresholds"]), ["1.20", "1.25", "1.30"])
+                self.assertEqual(list(wrapper["thresholds"]), ["0.75", "1.00", "1.25"])
                 for cell in wrapper["thresholds"].values():
                     self.assertEqual(len(cell["frames"]), 3)
                     self.assertIn("validity", cell)
@@ -91,7 +92,7 @@ class MorphologyBenchmarkTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             processed = build_synthetic(Path(td))
             result = b.measure_stone(processed, [0, 1, 2])
-            frames = result["supports"]["fixed"]["thresholds"]["1.25"]["frames"]
+            frames = result["supports"]["fixed"]["thresholds"]["1.00"]["frames"]
             self.assertEqual(frames[0]["active_pixels"], frames[1]["active_pixels"])
             self.assertEqual(frames[0]["largest_component_fraction"], 1.0)
             self.assertAlmostEqual(frames[1]["largest_component_fraction"], 1 / 3)
@@ -126,7 +127,7 @@ class MorphologyBenchmarkTests(unittest.TestCase):
             processed = build_synthetic(Path(td))
             with self.assertRaises(ValueError):
                 b.measure_stone(
-                    processed, [0, 1, 2], thresholds=(1.10, 1.25, 1.40)
+                    processed, [0, 1, 2], thresholds=(0.50, 1.00, 1.50)
                 )
             with self.assertRaises(ValueError):
                 b.measure_stone(processed, [0, 1, 2], connectivity=4)

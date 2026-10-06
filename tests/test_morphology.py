@@ -50,11 +50,12 @@ class MorphologyTests(unittest.TestCase):
         self.assertIsNone(result["largest_component_fraction"])
 
     def test_relative_bright_threshold_is_strict(self):
-        state = m.relative_bright_state(np.array([12.49, 12.50, 12.51]), 10.0, 1.25)
+        state = m.relative_bright_state(np.array([12.49, 12.50, 12.51]), 10.0, 2.0, 1.25)
         self.assertEqual(state.tolist(), [False, False, True])
-        self.assertIsNone(m.relative_bright_state(np.array([13.0]), None, 1.25))
+        self.assertIsNone(m.relative_bright_state(np.array([13.0]), None, 2.0, 1.25))
+        self.assertIsNone(m.relative_bright_state(np.array([13.0]), 10.0, None, 1.25))
         with self.assertRaises(ValueError):
-            m.relative_bright_state(np.array([13.0]), 10.0, 1.0)
+            m.relative_bright_state(np.array([13.0]), 10.0, 2.0, 0.0)
 
     def test_fixed_and_dynamic_support_are_distinct(self):
         brightness = np.array([
@@ -75,17 +76,18 @@ class MorphologyTests(unittest.TestCase):
         self.assertEqual(dynamic["frames"][1]["support_pixels"], 3)
 
     def test_threshold_perturbation_changes_marginal_connectivity(self):
-        brightness = np.ones((1, 3, 5), float) * 10.0
-        brightness[0, 1, 0:2] = 14.0
-        brightness[0, 1, 3:5] = 14.0
-        brightness[0, 1, 2] = 12.7
+        brightness = np.array([[
+            [9.0, 9.0, 14.0, 9.0, 9.0],
+            [14.0, 14.0, 11.7, 14.0, 14.0],
+            [11.0, 11.0, 10.0, 11.0, 11.0],
+        ]])
         valid = np.ones_like(brightness, dtype=bool)
         stone = np.ones_like(brightness, dtype=bool)
         sweep = m.threshold_sweep(
             brightness, valid, stone, [10.0], [True], "fixed"
         )
-        self.assertEqual(sweep["1.20"]["frames"][0]["component_count"], 1)
-        self.assertEqual(sweep["1.30"]["frames"][0]["component_count"], 2)
+        self.assertEqual(sweep["0.75"]["frames"][0]["component_count"], 1)
+        self.assertEqual(sweep["1.25"]["frames"][0]["component_count"], 2)
         sensitivity = m.select_threshold_sensitivity(sweep, [7])
         self.assertEqual(sensitivity["source_index"], 7)
         self.assertGreater(sensitivity["largest_component_fraction_range"], 0)

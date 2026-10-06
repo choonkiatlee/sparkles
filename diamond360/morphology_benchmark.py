@@ -15,8 +15,8 @@ from . import activation_benchmark as ab
 from . import morphology as m
 
 SCHEMA = "diamond360-flash-morphology/1"
-THRESHOLDS = (1.20, 1.25, 1.30)
-BASELINE_THRESHOLD = 1.25
+THRESHOLDS = (0.75, 1.00, 1.25)
+BASELINE_THRESHOLD = 1.00
 CONNECTIVITY = 8
 
 
@@ -37,7 +37,7 @@ def _summary_reasons(cell):
         return []
     if cell.get("persistent_support_pixels", 0) == 0:
         return ["no_support"]
-    return ["no_active_frames_at_threshold"]
+    return ["no_active_frames_or_reference_scale"]
 
 
 def _enrich_source_indices(cell, source_indices):
@@ -120,9 +120,11 @@ def measure_stone(
         "wrap_explicit": bool(wrap),
         "brightness_definition": metadata.get("brightness_definition"),
         "active_field_definition": (
-            "Y_t(p) > k * G_t on declared whole-stone support; "
-            "G_t is #26 median encoded brightness on fixed common registered stone support"
+            "Y_t(p) > G_t + k*S_t on declared whole-stone support; "
+            "G_t is #26 median encoded brightness and S_t is 1.4826*MAD about G_t, "
+            "both measured on fixed common registered stone support"
         ),
+        "contrast_scale_definition": "S_t = 1.4826 * median(|Y_t(p)-G_t|) on fixed common support",
         "threshold_boundary": "strict_greater_than",
         "thresholds": list(thresholds),
         "baseline_threshold": BASELINE_THRESHOLD,
@@ -205,8 +207,13 @@ def _render_tile(
     support = _support_for_frame(
         valid_masks, stone_masks, observed, support_mode, position
     )
+    common = (
+        np.all((valid_masks & stone_masks)[observed], axis=0)
+        if observed.any() else np.zeros(stone_masks.shape[1:], bool)
+    )
+    scale = m.robust_bright_scale(brightness[position], common, whole_values[position])
     state = m.relative_bright_state(
-        brightness[position], whole_values[position], threshold
+        brightness[position], whole_values[position], scale, threshold
     )
     active = np.zeros_like(support) if state is None else state & support
     with Image.open(processed / path) as source:
@@ -267,6 +274,7 @@ def write_stone_outputs(result, output, processed):
         "median_effective_component_count",
         "q90_effective_component_count",
         "median_boundary_active_fraction",
+        "median_reference_scale",
         "persistent_support_fraction",
     ]
     rows = []
