@@ -1,5 +1,9 @@
 name: geometric-crispness-benchmark
 
+concurrency:
+  group: geometric-crispness-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   pull_request:
     paths:
