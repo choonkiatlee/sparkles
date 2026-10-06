@@ -55,10 +55,17 @@ def build_source(
         raise ValueError("external source frames must be unique paths")
 
     output = Path(output).resolve()
-    if output.exists() and any(output.iterdir()):
-        raise ValueError("output directory must be empty or absent")
     frame_dir = output / "frames"
-    frame_dir.mkdir(parents=True, exist_ok=True)
+    if copy_frames:
+        if output.exists() and any(output.iterdir()):
+            raise ValueError("output directory must be empty or absent")
+        frame_dir.mkdir(parents=True, exist_ok=True)
+    else:
+        if not frame_dir.is_dir():
+            raise ValueError("copy_frames=False requires an existing output/frames directory")
+        unexpected = [path for path in output.iterdir() if path.name != "frames"]
+        if unexpected:
+            raise ValueError("copy_frames=False output may contain only the frames directory")
 
     records = []
     dimensions = set()
