@@ -560,7 +560,7 @@ def build_benchmark_summary(
                 "available" if tier_contrast else "pending_sibling_49"
             ),
         },
-        "human_observation_checks": observation_rows,
+        "evaluation_observation_checks": observation_rows,
         "disposition": "PENDING_SOURCE_EVIDENCE_REVIEW",
         "disposition_rule": (
             "KEEP only if low articulation visibly matches pale/flat inner observations, "
