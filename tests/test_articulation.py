@@ -49,7 +49,7 @@ class ArticulationTests(unittest.TestCase):
         )
         self.assertEqual(result["summaries"]["raw_spread"]["status"], "unavailable")
 
-    def test_matched_brightness_pair_matches_brightness_before_articulation(self):
+    def test_matched_brightness_pair_maximizes_articulation_within_fixed_tolerance(self):
         trace = ar.articulation_trace(
             [
                 [0.45, 0.50, 0.55],
@@ -58,15 +58,35 @@ class ArticulationTests(unittest.TestCase):
                 [0.20, 0.50, 0.80],
             ],
             [0, 1, 2, 3],
-            whole_medians=[0.80, 0.81, 0.90, 1.20],
+            whole_medians=[0.80, 0.81, 0.805, 1.20],
+        )
+        pair = ar.matched_brightness_pair(trace["frame_trace"])
+        self.assertEqual(
+            {pair["first"]["source_index"], pair["second"]["source_index"]},
+            {1, 2},
+        )
+        self.assertGreater(pair["articulation_gap"], 0.6)
+        self.assertLess(pair["whole_log_brightness_gap"], 0.02)
+        self.assertTrue(pair["brightness_matched"])
+        self.assertEqual(pair["matched_candidate_count"], 3)
+
+    def test_matched_brightness_pair_marks_closest_pair_fallback(self):
+        trace = ar.articulation_trace(
+            [
+                [0.45, 0.50, 0.55],
+                [0.10, 0.50, 0.90],
+                [0.20, 0.50, 0.80],
+            ],
+            [0, 1, 2],
+            whole_medians=[0.80, 1.00, 1.40],
         )
         pair = ar.matched_brightness_pair(trace["frame_trace"])
         self.assertEqual(
             {pair["first"]["source_index"], pair["second"]["source_index"]},
             {0, 1},
         )
-        self.assertGreater(pair["articulation_gap"], 0.5)
-        self.assertLess(pair["whole_log_brightness_gap"], 0.02)
+        self.assertFalse(pair["brightness_matched"])
+        self.assertEqual(pair["matched_candidate_count"], 0)
 
     def test_evidence_uses_low_median_high_and_matched_pair(self):
         trace = ar.articulation_trace(
