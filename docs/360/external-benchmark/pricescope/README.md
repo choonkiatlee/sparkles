@@ -137,3 +137,40 @@ Reviewer type matters:
 - purchaser/thread author: useful observation or preference, not expert ground truth.
 
 Keep these layers separate during downstream calibration.
+
+
+## Blind benchmark runner
+
+Issue #64 steps 3–5 are executed by `diamond360.external_benchmark`. The runner
+uses the normalized manifest above plus the pinned v3 release archive; it does
+not change any Sparkles production threshold or descriptor definition.
+
+Media are handled by explicit source class:
+
+- complete vendor 360 sequences -> normal 256-frame `diamond360-source/1` and
+  the frozen wrapped face-up core `248..255,0..8`;
+- MP4/GIF -> every decoded source frame in file order through a benchmark-only
+  adapter, analyzed as an ordered full sequence because no face-up index is
+  invented;
+- JPEG/PNG preview -> one-frame static geometry only; no synthetic motion;
+- missing/unsupported media -> `pipeline_source_mismatch`.
+
+The predeclared falsification directions are deliberately narrow. The P3
+progression tests grouped/persistent darkness and research tier readability;
+the Kashi pair tests inner dark persistence and switching; Glittery vs Crispest
+uses research tier readability because the expert criticism is P3/tier-related.
+Activation, mobility, flash scale and coordination remain descriptive unless a
+source label directly claims the corresponding percept.
+
+Reproduce from an unpacked v3 archive:
+
+```bash
+python -m diamond360.external_benchmark \
+  --archive-root /path/to/pricescope-media-recovery-2026-10-06-v3 \
+  --output /tmp/pricescope-external-results
+```
+
+CI workflow `.github/workflows/pricescope-external-benchmark.yml` downloads the
+pinned release asset, runs the adapter tests and blind benchmark, and uploads
+the detailed per-sample evidence as an artifact. Compact comparison findings
+are intended to be versioned here after the run has been inspected.
