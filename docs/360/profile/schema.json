@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "diamond360-descriptor-profile/1",
+  "title": "Diamond360 retained descriptor profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "certificate",
+    "window_contract",
+    "measurements",
+    "context",
+    "field_catalog",
+    "redundancy_groups",
+    "audit_refs"
+  ],
+  "properties": {
+    "schema_version": {"const": "diamond360-descriptor-profile/1"},
+    "certificate": {"type": "string", "minLength": 1},
+    "window_contract": {"$ref": "#/$defs/window"},
+    "measurements": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {"$ref": "#/$defs/valueCell"}
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": {"$ref": "#/$defs/valueCell"}
+    },
+    "field_catalog": {
+      "type": "object",
+      "required": ["measurements", "context"],
+      "additionalProperties": false,
+      "properties": {
+        "measurements": {"type": "object"},
+        "context": {"type": "object"}
+      }
+    },
+    "redundancy_groups": {"type": "object"},
+    "audit_refs": {"type": "object"}
+  },
+  "$defs": {
+    "window": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "source_indices", "wrap_explicit", "source_step_semantics"],
+      "properties": {
+        "id": {"const": "core17"},
+        "source_indices": {
+          "type": "array",
+          "prefixItems": [
+            {"const": 248}, {"const": 249}, {"const": 250}, {"const": 251},
+            {"const": 252}, {"const": 253}, {"const": 254}, {"const": 255},
+            {"const": 0}, {"const": 1}, {"const": 2}, {"const": 3},
+            {"const": 4}, {"const": 5}, {"const": 6}, {"const": 7}, {"const": 8}
+          ],
+          "items": false
+        },
+        "wrap_explicit": {"const": true},
+        "source_step_semantics": {"type": "string"}
+      }
+    },
+    "valueCell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "status", "reasons", "source_refs"],
+      "properties": {
+        "value": {"type": ["number", "null"]},
+        "status": {"enum": ["ok", "review", "unavailable"]},
+        "reasons": {"type": "array", "items": {"type": "string"}},
+        "source_refs": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}
