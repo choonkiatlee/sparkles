@@ -1,0 +1,69 @@
+name: Issue 51 benchmark validation
+
+on:
+  pull_request:
+    paths:
+      - "diamond360/articulation.py"
+      - "diamond360/articulation_benchmark.py"
+      - "tests/test_articulation.py"
+      - "tests/test_articulation_benchmark.py"
+      - "docs/360/articulation/**"
+      - ".github/workflows/issue-51-validation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install
+        run: pip install -e .
+
+      - name: Unit tests
+        run: python -m unittest -v tests.test_articulation tests.test_articulation_benchmark
+
+      - name: Recover canonical benchmark sources
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p /tmp/bundles /tmp/sources /tmp/extract
+          gh release download benchmark-sources-v1 --repo "${{ github.repository }}" --pattern "*benchmark-full-sequence.zip" --dir /tmp/bundles
+          for archive in /tmp/bundles/*-benchmark-full-sequence.zip; do
+            name="$(basename "$archive" -benchmark-full-sequence.zip)"
+            scratch="/tmp/extract/$name"
+            destination="/tmp/sources/$name"
+            mkdir -p "$scratch" "$destination"
+            unzip -q "$archive" -d "$scratch"
+            manifest="$(find "$scratch" -name source-manifest.json -print -quit)"
+            test -n "$manifest"
+            root="$(dirname "$manifest")"
+            cp -a "$root"/. "$destination"/
+          done
+
+      - name: Load current issue 49 comparison
+        run: |
+          git fetch origin issue-49-tier-contrast
+          git show origin/issue-49-tier-contrast:docs/360/tier-contrast/summary.json > /tmp/tier-contrast.json
+
+      - name: Four-stone benchmark
+        run: |
+          python -m diamond360.articulation_benchmark \
+            docs/360/benchmark/benchmark.json \
+            --source-root /tmp/sources \
+            --output /tmp/issue51-benchmark \
+            --tier-contrast-summary /tmp/tier-contrast.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: issue51-benchmark
+          path: /tmp/issue51-benchmark
+          if-no-files-found: error
