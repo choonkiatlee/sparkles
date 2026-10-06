@@ -24,18 +24,24 @@ jobs:
           import json
           import urllib.request
 
-          urls = [
-              "https://vision.diajewel360.com/imaged/VL-131355/1.json?version=1",
-              "https://data1.360view.link/data/1/imaged/2612250-YK-808/1.json?version=2",
+          cases = [
+              (
+                  "https://vision.diajewel360.com/imaged/VL-131355/1.json?version=1",
+                  "https://vision.diajewel360.com/Vision360.html?d=VL-131355",
+              ),
+              (
+                  "https://data1.360view.link/data/1/imaged/2612250-YK-808/1.json?version=2",
+                  "https://workshop.360view.link/view/2612250-YK-808",
+              ),
           ]
 
           def describe(value, depth=0):
-              if depth >= 3:
+              if depth >= 4:
                   return type(value).__name__
               if isinstance(value, dict):
                   return {
                       key: describe(item, depth + 1)
-                      for key, item in list(value.items())[:12]
+                      for key, item in list(value.items())[:16]
                   }
               if isinstance(value, list):
                   return {
@@ -44,11 +50,22 @@ jobs:
                       "sample": describe(value[0], depth + 1) if value else None,
                   }
               if isinstance(value, str):
-                  return {"type": "str", "length": len(value), "prefix": value[:80]}
+                  return {"type": "str", "length": len(value), "prefix": value[:120]}
               return {"type": type(value).__name__, "value": value}
 
-          for url in urls:
+          for url, referer in cases:
               print("URL", url)
-              with urllib.request.urlopen(url, timeout=30) as response:
+              request = urllib.request.Request(
+                  url,
+                  headers={
+                      "User-Agent": (
+                          "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                          "(KHTML, like Gecko) Chrome/140.0 Safari/537.36"
+                      ),
+                      "Accept": "application/json,text/plain,*/*",
+                      "Referer": referer,
+                  },
+              )
+              with urllib.request.urlopen(request, timeout=30) as response:
                   payload = json.load(response)
               print(json.dumps(describe(payload), indent=2))
