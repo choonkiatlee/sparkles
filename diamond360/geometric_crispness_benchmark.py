@@ -466,6 +466,24 @@ def _upstream_validity(records):
     }
 
 
+def _normalization_validity(transforms):
+    upsampled = [
+        index
+        for index, row in enumerate(transforms)
+        if row.get("sampling_direction") == "upsample"
+    ]
+    reasons = (
+        ["source_resolution_below_common_transfer"]
+        if upsampled
+        else []
+    )
+    return {
+        "status": "review" if reasons else "ok",
+        "reasons": reasons,
+        "upsampled_frame_positions": upsampled,
+    }
+
+
 def _event_candidates(result):
     events = {
         "tier": [],
@@ -681,6 +699,10 @@ def measure_stone(
         "excluded": excluded,
         "upstream_validity":
             _upstream_validity(records),
+        "normalization_validity":
+            _normalization_validity(
+                baseline["transforms"]
+            ),
         "baseline": {
             key: value
             for key, value
@@ -1345,6 +1367,10 @@ def _compact(result):
         "upstream_validity":
             result[
                 "upstream_validity"
+            ],
+        "normalization_validity":
+            result[
+                "normalization_validity"
             ],
     }
 
