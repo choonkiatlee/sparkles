@@ -170,14 +170,17 @@ The calibration workflow therefore has two stages.
 CI regenerates the four-stone PR-B measurement field, then selects exactly five
 informative wide-window frames per stone before any human labels exist:
 
-- lowest boundary-local Q25 coverage floor;
-- highest boundary-local median separation;
-- largest median-vs-Q25 coverage gap;
-- largest joint weakest-link penalty;
-- one typical joint-readability frame.
+- consensus-low separation across all six candidate separation formulations;
+- consensus-high separation across all six candidate separation formulations;
+- maximum rank disagreement across those formulations;
+- largest joint weakest-link penalty as a targeted nested-collapse stress case;
+- a fixed near-face-up phase anchor independent of descriptor magnitude.
 
-Duplicate source frames are replaced by the next candidate for that selection
-role. The resulting 20 frames are shuffled into stable opaque IDs
+The consensus/disagreement roles use coarse whole-band, #49 broad-sector,
+boundary-local median/Q25 and joint median/Q25 together, so PR-B candidates do
+not define the evaluation set they are later compared on. Duplicate source
+frames are replaced by the next candidate for that selection role. The
+resulting 20 frames are shuffled into stable opaque IDs
 (`T01 ... T20`) using a hash of certificate + source index.
 
 The human-facing contact sheet exposes only the source image and opaque ID.
