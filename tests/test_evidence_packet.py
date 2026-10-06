@@ -711,5 +711,95 @@ class CompactSelectionTests(unittest.TestCase):
                     self.assertIn("sha256", frame)
 
 
+class CommittedEvidencePacketTests(unittest.TestCase):
+    ROOT = (
+        Path(__file__).resolve().parents[1]
+        / "docs"
+        / "360"
+        / "evidence-packet"
+    )
+    CERTS = {
+        "IGI-LG756520111",
+        "IGI-LG756580087",
+        "IGI-LG818659722",
+        "IGI-LG836619414",
+    }
+
+    def test_committed_packets_cover_all_visual_roles_compactly(self):
+        summary = json.loads((self.ROOT / "summary.json").read_text())
+        self.assertEqual(
+            summary["schema_version"],
+            "diamond360-evidence-packet-benchmark/1",
+        )
+        self.assertEqual(summary["profile_schema"], dp.PROFILE_SCHEMA)
+        self.assertEqual(summary["packet_schema"], ep.PACKET_SCHEMA)
+        self.assertEqual(summary["window_contract"], dp.WINDOW_ID)
+        self.assertEqual(
+            {stone["certificate"] for stone in summary["stones"]},
+            self.CERTS,
+        )
+        for stone in summary["stones"]:
+            self.assertGreaterEqual(stone["selected_count"], 4)
+            self.assertLessEqual(stone["selected_count"], 6)
+            self.assertEqual(
+                set(stone["covered_families"]),
+                set(ep.COVERAGE_ORDER),
+            )
+            self.assertEqual(
+                stone["uncovered_available_families"],
+                [],
+            )
+
+    def test_committed_packet_provenance_and_profile_mapping_are_auditable(self):
+        import re
+
+        sha256 = re.compile(r"^[0-9a-f]{64}$")
+        for certificate in self.CERTS:
+            root = self.ROOT / "per-stone" / certificate
+            packet = json.loads((root / "evidence.json").read_text())
+            self.assertEqual(packet["schema_version"], ep.PACKET_SCHEMA)
+            self.assertEqual(packet["profile_schema"], dp.PROFILE_SCHEMA)
+            self.assertEqual(packet["window_contract"], dp.WINDOW_ID)
+            self.assertEqual(packet["certificate"], certificate)
+            self.assertGreaterEqual(packet["selected_count"], 4)
+            self.assertLessEqual(packet["selected_count"], 6)
+            self.assertFalse(packet["uncovered_available_families"])
+            self.assertFalse(
+                packet["selection_policy"]["global_numeric_score"]
+            )
+            self.assertFalse(
+                packet["selection_policy"]["near_groups_are_suppressive"]
+            )
+            for item in packet["items"]:
+                self.assertTrue(item["original_frames"])
+                self.assertTrue(item["render_source_indices"])
+                for frame in item["original_frames"]:
+                    self.assertIsInstance(frame["source_index"], int)
+                    self.assertTrue(frame["path"])
+                    self.assertRegex(frame["sha256"], sha256)
+                for claim in item["claims"]:
+                    self.assertTrue(claim["profile_field_ids"])
+                    for field_id in claim["profile_field_ids"]:
+                        self.assertIn(field_id, dp.PRODUCTION_FIELD_IDS)
+                    self.assertNotIn(
+                        "flash_morphology.active_frame_fraction",
+                        claim["profile_field_ids"],
+                    )
+
+    def test_committed_contact_sheets_are_small_real_images(self):
+        for certificate in self.CERTS:
+            path = (
+                self.ROOT
+                / "per-stone"
+                / certificate
+                / "contact-sheet.jpg"
+            )
+            self.assertTrue(path.is_file(), path)
+            self.assertGreater(path.stat().st_size, 10_000)
+            self.assertLess(path.stat().st_size, 500_000)
+            with path.open("rb") as handle:
+                self.assertEqual(handle.read(2), b"\\xff\\xd8")
+
+
 if __name__ == "__main__":
     unittest.main()
