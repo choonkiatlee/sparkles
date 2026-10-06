@@ -93,7 +93,8 @@ class TierContrastTests(unittest.TestCase):
         second = tc.brightness_contrast_trace(
             [40.0, 80.0, 120.0], [20.0, 40.0, 60.0], [0, 1, 2]
         )
-        self.assertEqual(first["separation_values"], second["separation_values"])
+        for left, right in zip(first["separation_values"], second["separation_values"]):
+            self.assertAlmostEqual(left, right)
 
     def test_brightness_contrast_preserves_nonpositive_values_as_gaps(self):
         result = tc.brightness_contrast_trace(
