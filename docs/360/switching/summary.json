@@ -67,6 +67,33 @@
     0.7
   ],
   "baseline_threshold": 0.65,
+  "source_release_tag": "benchmark-sources-v1",
+  "source_bundles": [
+    {
+      "certificate": "IGI-LG756580087",
+      "filename": "IGI-LG756580087-benchmark-full-sequence.zip",
+      "sha256": "d3a0ed93af5e2a089d2bf108a01fceafe21edf191f3bb79f6fc627718ec23016",
+      "bytes": 8963440
+    },
+    {
+      "certificate": "IGI-LG756520111",
+      "filename": "IGI-LG756520111-benchmark-full-sequence.zip",
+      "sha256": "b45647292c207d46fab8871b66ff62c3aa4a7652c910c5cd975fce10f3c5fc90",
+      "bytes": 5504096
+    },
+    {
+      "certificate": "IGI-LG818659722",
+      "filename": "IGI-LG818659722-benchmark-full-sequence.zip",
+      "sha256": "dbee1b288573d425c8f487a4e8b5965bf69d460e5c259ca63017abb202738939",
+      "bytes": 8121970
+    },
+    {
+      "certificate": "IGI-LG836619414",
+      "filename": "IGI-LG836619414-benchmark-full-sequence.zip",
+      "sha256": "8de35bbc0193a18c183c037b3b8f3a61ace503a23d8ee4e0953d45399f9bf596",
+      "bytes": 8519867
+    }
+  ],
   "rows": [
     {
       "certificate": "IGI-LG756580087",
