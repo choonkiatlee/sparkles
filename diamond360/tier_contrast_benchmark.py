@@ -8,12 +8,21 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw
 
+from . import activation as activation
 from . import activation_benchmark as ab
+from . import asscher_steps as steps
+from . import regions as coarse_regions
 from . import tier_contrast as tc
 
 SCHEMA = "diamond360-tier-contrast/1"
 REGION_TRACE_SCHEMA = "diamond360-region-traces/1"
 PAIRS = (("centre", "inner"), ("inner", "middle"))
+BOUNDARY_WIDTHS = (.025, .040, .055)
+BOUNDARY_GUARD = .010
+BOUNDARY_SPECS = {
+    "centre__inner": {"semantic": "centre_inner", "coarse_radius": .20},
+    "inner__middle": {"semantic": "inner_middle", "coarse_radius": .45},
+}
 
 
 def _cell(activation, band):
@@ -266,15 +275,175 @@ def _fixed_spread_inputs(processed, activation):
     }
 
 
+def _fixed_strip_trace(brightness, valid_masks, masks, observed):
+    common = activation._persistent_support(valid_masks, masks, observed)
+    values = [
+        float(np.median(frame[common])) if ok and common.any() else None
+        for frame, ok in zip(brightness, observed)
+    ]
+    union = np.any(masks[observed], axis=0) if observed.any() else np.zeros(masks.shape[1:], bool)
+    return values, {
+        "persistent_support_pixels": int(common.sum()),
+        "persistent_support_fraction": (
+            float(common.sum() / union.sum()) if union.any() else None
+        ),
+    }
+
+
+def _boundary_local_inputs(
+    processed,
+    step_output,
+    activation_result,
+    widths=BOUNDARY_WIDTHS,
+    guard=BOUNDARY_GUARD,
+):
+    """Measure guarded local strips using fixed #19 and legacy coarse geometry."""
+    processed = Path(processed)
+    step_output = Path(step_output)
+    metadata = json.loads((processed / "sequence.json").read_text())
+    indices = list(activation_result["requested_indices"])
+    selected, _ = ab._select_records(
+        metadata, indices, bool(activation_result.get("wrap_explicit"))
+    )
+    observed = np.asarray([record is not None for record in selected], bool)
+    brightness, valid_masks, stone_masks, _ = ab._load_frame_arrays(processed, selected)
+    region_paths = [
+        processed / record["regions_path"] if record is not None else None
+        for record in selected
+    ]
+    sector_masks = activation._stack_masks(region_paths, coarse_regions.SECTORS)
+    if not sector_masks:
+        return {"status": "unavailable", "reason": "sector_masks_unavailable"}
+
+    step_payload = json.loads((step_output / "steps.json").read_text())
+    _, step_qc = activation.load_semantic_masks(step_output, selected)
+    boundaries = step_payload.get("boundaries") or {}
+    shape = brightness.shape[1:]
+    zero = np.zeros(shape, bool)
+
+    output = {
+        "guard_u": float(guard),
+        "widths_u": [float(width) for width in widths],
+        "support_mode": "fixed persistent pixel support within each strip/sector",
+        "semantic_geometry": "#19 sequence-level eight-sector boundary controls; no per-frame boundary motion",
+        "coarse_geometry": "legacy coarse square-radius boundary control",
+        "pairs": {},
+    }
+
+    for left, right in PAIRS:
+        pair_id = _pair_id(left, right)
+        spec = BOUNDARY_SPECS[pair_id]
+        semantic_control = boundaries.get(spec["semantic"])
+        pair_out = {"widths": {}}
+        for width in widths:
+            width_key = f"{float(width):.3f}"
+            by_geometry = {}
+            for geometry in ("coarse", "semantic"):
+                if geometry == "semantic" and (
+                    step_qc.get("template_status") == "unavailable"
+                    or semantic_control is None
+                ):
+                    by_geometry[geometry] = {
+                        "status": "unavailable",
+                        "reason": step_qc.get("template_reason") or "semantic_boundary_unavailable",
+                    }
+                    continue
+
+                inside_values = {sector: [] for sector in coarse_regions.SECTORS}
+                outside_values = {sector: [] for sector in coarse_regions.SECTORS}
+                support = {
+                    "inside": {sector: {} for sector in coarse_regions.SECTORS},
+                    "outside": {sector: {} for sector in coarse_regions.SECTORS},
+                }
+                for sector in coarse_regions.SECTORS:
+                    inside_masks = []
+                    outside_masks = []
+                    for position, ok in enumerate(observed):
+                        if not ok:
+                            inside_masks.append(zero)
+                            outside_masks.append(zero)
+                            continue
+                        sector_mask = sector_masks[sector][position]
+                        if geometry == "semantic":
+                            strips = steps.boundary_strip_masks(
+                                stone_masks[position],
+                                semantic_control["sector_u"],
+                                width=float(width),
+                                guard=float(guard),
+                                sector_mask=sector_mask,
+                            )
+                        else:
+                            strips = coarse_regions.boundary_strip_masks(
+                                stone_masks[position],
+                                spec["coarse_radius"],
+                                width=float(width),
+                                guard=float(guard),
+                                sector_mask=sector_mask,
+                            )
+                        inside_masks.append(strips["inside"])
+                        outside_masks.append(strips["outside"])
+                    inside_masks = np.stack(inside_masks)
+                    outside_masks = np.stack(outside_masks)
+                    inside_values[sector], support["inside"][sector] = _fixed_strip_trace(
+                        brightness, valid_masks, inside_masks, observed
+                    )
+                    outside_values[sector], support["outside"][sector] = _fixed_strip_trace(
+                        brightness, valid_masks, outside_masks, observed
+                    )
+
+                measured = tc.sectorized_contrast_trace(
+                    inside_values, outside_values, indices
+                )
+                if geometry == "semantic":
+                    validity = activation.activation_validity(
+                        "semantic",
+                        activation_result["upstream_validity"],
+                        step_qc,
+                        measured["median_summary"]["status"],
+                        measured["median_summary"].get("reasons", []),
+                    )
+                else:
+                    validity = activation.activation_validity(
+                        "coarse",
+                        activation_result["upstream_validity"],
+                        None,
+                        measured["median_summary"]["status"],
+                        measured["median_summary"].get("reasons", []),
+                    )
+                by_geometry[geometry] = {
+                    **measured,
+                    "validity": validity,
+                    "evidence": tc.select_sectorized_evidence(measured["frame_trace"]),
+                    "strip_support": support,
+                }
+            pair_out["widths"][width_key] = by_geometry
+        output["pairs"][pair_id] = pair_out
+    return output
+
 def measure_stone(processed, step_output, indices, wrap=False):
-    activation = ab.measure_stone(processed, step_output, indices, wrap=wrap)
-    spread_inputs = _fixed_spread_inputs(processed, activation)
+    activation_result = ab.measure_stone(processed, step_output, indices, wrap=wrap)
+    spread_inputs = _fixed_spread_inputs(processed, activation_result)
     result = measure_from_activation(
-        activation,
+        activation_result,
         spread_inputs["spreads"],
         spread_inputs["localized_band_values"],
         spread_inputs["localized_support_pixels"],
     )
+    boundary_local = _boundary_local_inputs(
+        processed,
+        step_output,
+        activation_result,
+    )
+    for pair_id, pair in result["pairs"].items():
+        pair["boundary_local"] = (
+            boundary_local.get("pairs", {}).get(
+                pair_id,
+                {"status": "unavailable", "reason": boundary_local.get("reason")},
+            )
+        )
+    result["boundary_local_definition"] = {
+        key: value for key, value in boundary_local.items() if key != "pairs"
+    }
     result["frame_camera_paths"] = spread_inputs["camera_paths"]
     result["frame_region_paths"] = spread_inputs["region_paths"]
     return result
