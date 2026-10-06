@@ -225,7 +225,7 @@ def _copy_representatives(source, manifest, output, faceup=False):
     return copied
 
 
-def _run_dynamic(source, output, *, faceup):
+def _run_dynamic(source, output, work, *, faceup):
     manifest = json.loads((Path(source) / "source-manifest.json").read_text())
     count = manifest["source_frame_count"]
     if faceup and count != 256:
@@ -234,7 +234,9 @@ def _run_dynamic(source, output, *, faceup):
     wrap = bool(faceup)
     step_indices = WIDE_INDICES if faceup else list(range(count))
 
-    processed = output / "processed"
+    work = Path(work)
+    work.mkdir(parents=True, exist_ok=True)
+    processed = work / "processed"
     pipeline.run(
         source,
         processed,
@@ -243,7 +245,7 @@ def _run_dynamic(source, output, *, faceup):
         diagnostic_indices=indices,
         accept_review=True,
     )
-    steps = output / "steps"
+    steps = work / "steps"
     asscher_steps.run(processed, steps, step_indices, wrap=wrap)
 
     activation = activation_b.measure_stone(processed, steps, indices, wrap=wrap)
@@ -282,9 +284,11 @@ def _run_dynamic(source, output, *, faceup):
     }
 
 
-def _run_static(source, output):
+def _run_static(source, output, work):
     manifest = json.loads((Path(source) / "source-manifest.json").read_text())
-    processed = output / "processed"
+    work = Path(work)
+    work.mkdir(parents=True, exist_ok=True)
+    processed = work / "processed"
     metadata = pipeline.run(
         source,
         processed,
@@ -653,12 +657,14 @@ def run(manifest_path, archive_root, output, sample_ids=PRIMARY_SAMPLE_IDS):
                     sample, archive_root, source
                 )
                 sample_output = output / "per-sample" / sample_id
+                sample_work = work / sample_id / "analysis"
                 if planned == "static":
-                    measured = _run_static(source, sample_output)
+                    measured = _run_static(source, sample_output, sample_work)
                 else:
                     measured = _run_dynamic(
                         source,
                         sample_output,
+                        sample_work,
                         faceup=(planned == "dynamic_faceup"),
                     )
                 row.update(status="measured", **measured)
