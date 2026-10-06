@@ -47,6 +47,19 @@ calibration frames:
 So averaging an entire coarse band can erase local adjacent-tier contrast that
 the eye still reads clearly.
 
+## Validity inheritance
+
+The reconstructed benchmark values retain the #26 interpretation status rather
+than treating numeric reconstruction as a validity upgrade:
+
+- **LG756580087** and **LG836619414** remain `ok` for the primary coarse-fixed
+  component traces;
+- **LG756520111** and **LG818659722** remain `review`, carrying
+  `foreground_or_nonuniformity_on_border` and `outline_near_image_edge`.
+
+These statuses and reasons are now stored on every row in
+[summary.json](summary.json) and [summary.csv](summary.csv).
+
 ## Redundancy
 
 At n=4 these are diagnostics only, but they reinforce the concern:
