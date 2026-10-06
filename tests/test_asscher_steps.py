@@ -94,6 +94,35 @@ class AsscherStepTests(unittest.TestCase):
         self.assertTrue(np.all(total[~mask] == 0))
         self.assertGreater(regions["outer_step"].sum(), 0)
 
+    def test_boundary_strip_masks_are_disjoint_and_respect_guard(self):
+        mask = octagon_mask()
+        controls = np.full(8, .60)
+        strips = s.boundary_strip_masks(mask, controls, width=.05, guard=.02)
+        self.assertFalse(np.any(strips["inside"] & strips["outside"]))
+        self.assertGreater(strips["inside"].sum(), 0)
+        self.assertGreater(strips["outside"].sum(), 0)
+
+        u, _ = s.normalised_radius_map(mask)
+        self.assertLess(float(np.max(u[strips["inside"]])), .60 - .02 + .01)
+        self.assertGreater(float(np.min(u[strips["outside"]])), .60 + .02 - .01)
+
+    def test_boundary_strip_masks_can_be_clipped_to_one_sector(self):
+        mask = octagon_mask()
+        controls = np.full(8, .60)
+        _, theta = s.normalised_radius_map(mask)
+        east = mask & ((theta < np.pi / 8) | (theta >= 15 * np.pi / 8))
+        strips = s.boundary_strip_masks(
+            mask, controls, width=.04, guard=.01, sector_mask=east
+        )
+        self.assertTrue(np.all(~strips["inside"] | east))
+        self.assertTrue(np.all(~strips["outside"] | east))
+
+    def test_boundary_strip_masks_reject_invalid_geometry(self):
+        mask = octagon_mask()
+        with self.assertRaises(ValueError):
+            s.boundary_strip_masks(mask, np.full(8, .60), width=0)
+        with self.assertRaises(ValueError):
+            s.boundary_strip_masks(mask, np.full(7, .60), width=.04)
     def test_flat_evidence_surfaces_failure(self):
         u = np.linspace(0, 1, 160)
         result = s.discover_template(np.zeros((5, 8, len(u))), u)
