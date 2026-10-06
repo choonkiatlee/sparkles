@@ -75,6 +75,36 @@ class TierContrastTests(unittest.TestCase):
         )
         self.assertEqual(result["summary"]["status"], "unavailable")
 
+    def test_brightness_contrast_recovers_log_ratio_and_sign(self):
+        result = tc.brightness_contrast_trace(
+            [4.0, 2.0, 8.0],
+            [2.0, 4.0, 8.0],
+            [0, 1, 2],
+        )
+        expected = math.log(2.0)
+        self.assertAlmostEqual(result["frame_trace"][0]["signed_log_contrast"], expected)
+        self.assertAlmostEqual(result["frame_trace"][1]["signed_log_contrast"], -expected)
+        self.assertEqual(result["frame_trace"][2]["separation"], 0.0)
+
+    def test_brightness_contrast_is_invariant_to_common_scale(self):
+        first = tc.brightness_contrast_trace(
+            [4.0, 8.0, 12.0], [2.0, 4.0, 6.0], [0, 1, 2]
+        )
+        second = tc.brightness_contrast_trace(
+            [40.0, 80.0, 120.0], [20.0, 40.0, 60.0], [0, 1, 2]
+        )
+        for left, right in zip(first["separation_values"], second["separation_values"]):
+            self.assertAlmostEqual(left, right)
+
+    def test_brightness_contrast_preserves_nonpositive_values_as_gaps(self):
+        result = tc.brightness_contrast_trace(
+            [1.0, 0.0, None], [2.0, 2.0, 2.0], [0, 1, 2]
+        )
+        self.assertEqual(
+            [row["status"] for row in result["frame_trace"]],
+            ["ok", "gap", "gap"],
+        )
+        self.assertIsNone(result["frame_trace"][1]["inside_brightness"])
     def test_robust_fractional_spread_is_scale_invariant(self):
         first = tc.robust_fractional_spread([1, 2, 2, 3, 100])
         second = tc.robust_fractional_spread([10, 20, 20, 30, 1000])
@@ -170,9 +200,56 @@ class TierContrastTests(unittest.TestCase):
         result = tc.sectorized_contrast_trace(left, right, [10, 11, 12])
         self.assertEqual(set(result["per_sector"]), {"a", "b"})
         self.assertEqual(result["frame_trace"][2]["finite_sectors"], 1)
+        self.assertEqual(
+            set(result["frame_trace"][0]["sector_signed_log_contrasts"]),
+            {"a", "b"},
+        )
         evidence = tc.select_sectorized_evidence(result["frame_trace"])
         self.assertIsNotNone(evidence["strongest"])
 
+    def test_multiscale_sector_consensus_medians_scale_without_collapsing_sectors(self):
+        low = tc.sectorized_contrast_trace(
+            {"a": [2.0, 2.0, 2.0], "b": [4.0, 4.0, 4.0]},
+            {"a": [1.0, 1.0, 1.0], "b": [1.0, 1.0, 1.0]},
+            [0, 1, 2],
+        )
+        high = tc.sectorized_contrast_trace(
+            {"a": [4.0, 4.0, 4.0], "b": [8.0, 8.0, 8.0]},
+            {"a": [1.0, 1.0, 1.0], "b": [1.0, 1.0, 1.0]},
+            [0, 1, 2],
+        )
+        result = tc.multiscale_sector_consensus({"0.25": low, "0.55": high})
+        row = result["frame_trace"][0]
+        self.assertEqual(set(row["sector_separations"]), {"a", "b"})
+        self.assertAlmostEqual(
+            row["sector_separations"]["a"],
+            (math.log(2.0) + math.log(4.0)) / 2,
+        )
+        self.assertGreater(row["sector_scale_spread"]["a"], 0)
+        self.assertEqual(result["scale_labels"], ["0.25", "0.55"])
+
+    def test_strongest_rank_disagreement_uses_aligned_frame_ranks(self):
+        left = [
+            {"position": 0, "source_index": 10, "median_separation": .1},
+            {"position": 1, "source_index": 11, "median_separation": .2},
+            {"position": 2, "source_index": 12, "median_separation": .3},
+        ]
+        right = [
+            {"position": 0, "source_index": 10, "median_separation": .3},
+            {"position": 1, "source_index": 11, "median_separation": .2},
+            {"position": 2, "source_index": 12, "median_separation": .1},
+        ]
+        event = tc.strongest_rank_disagreement(
+            left, "median_separation", right, "median_separation"
+        )
+        self.assertIn(event["source_index"], {10, 12})
+        self.assertEqual(event["rank_disagreement"], 1.0)
+
+    def test_rank_disagreement_rejects_misaligned_sources(self):
+        left = [{"source_index": 1, "x": 1.0}, {"source_index": 2, "x": 2.0}]
+        right = [{"source_index": 1, "x": 1.0}, {"source_index": 3, "x": 2.0}]
+        with self.assertRaises(ValueError):
+            tc.strongest_rank_disagreement(left, "x", right, "x")
     def test_validity_is_monotone(self):
         result = tc.compose_validity(
             [{"status": "review", "reasons": ["upstream_review"]}],

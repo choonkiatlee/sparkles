@@ -1,0 +1,87 @@
+name: tier-readability-a
+
+on:
+  pull_request:
+    paths:
+      - "diamond360/asscher_steps.py"
+      - "diamond360/regions.py"
+      - "diamond360/tier_contrast.py"
+      - "diamond360/tier_contrast_benchmark.py"
+      - "tests/test_asscher_steps.py"
+      - "tests/test_regions.py"
+      - "tests/test_tier_contrast.py"
+      - "tests/test_tier_contrast_benchmark.py"
+      - ".github/workflows/tier-readability-a.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: tier-readability-a-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: python -m pip install -e .
+
+      - name: Run issue 57 PR A tests
+        run: |
+          python -m unittest \
+            tests.test_asscher_steps \
+            tests.test_regions \
+            tests.test_tier_contrast \
+            tests.test_tier_contrast_benchmark \
+            -v
+
+      - name: Record full-suite status
+        continue-on-error: true
+        run: python -m unittest discover -s tests -v
+
+      - name: Download benchmark source bundles
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import urllib.request
+          import zipfile
+          from pathlib import Path
+
+          manifest = json.loads(
+              Path("docs/360/benchmark/source-bundles.json").read_text()
+          )
+          root = Path("outputs/tier-readability-sources")
+          root.mkdir(parents=True, exist_ok=True)
+
+          for item in manifest["bundles"]:
+              archive = root / item["filename"]
+              urllib.request.urlretrieve(item["download_url"], archive)
+              assert archive.stat().st_size == item["bytes"]
+              assert hashlib.sha256(archive.read_bytes()).hexdigest() == item["sha256"]
+              destination = root / item["certificate"]
+              destination.mkdir(parents=True, exist_ok=True)
+              with zipfile.ZipFile(archive) as bundle:
+                  bundle.extractall(destination)
+          PY
+
+      - name: Run four-stone PR A benchmark
+        run: |
+          python -m diamond360.tier_contrast_benchmark \
+            --source-root outputs/tier-readability-sources \
+            --output outputs/tier-readability-a
+          cat outputs/tier-readability-a/comparison.csv
+
+      - name: Upload PR A benchmark
+        uses: actions/upload-artifact@v4
+        with:
+          name: tier-readability-a-benchmark
+          path: outputs/tier-readability-a
+          if-no-files-found: error
+          retention-days: 90

@@ -151,6 +151,33 @@ def _local_peak(profile, u, centre, radius=.055):
                 z=float(z[idx]) if np.isfinite(z[idx]) else None)
 
 
+def _control_from_candidate(boundary, window, u):
+    """Convert one supported semantic-boundary candidate into sector controls."""
+    global_u = boundary["u"]
+    radial_spacing = float(np.median(np.diff(u)))
+    margin = float(min(global_u - window[0], window[1] - global_u))
+    vals = np.full(8, global_u, float)
+    observed = np.zeros(8, bool)
+    zscores = np.full(8, np.nan)
+    for s, peak in enumerate(boundary["sector_peaks"]):
+        if peak is not None and peak["z"] is not None and peak["z"] >= .8:
+            vals[s] = peak["u"]
+            observed[s] = True
+            zscores[s] = peak["z"]
+    for s in range(4):
+        t = s + 4
+        if observed[s] and observed[t]:
+            mean = (vals[s] + vals[t]) / 2
+            vals[s] = .8 * vals[s] + .2 * mean
+            vals[t] = .8 * vals[t] + .2 * mean
+    return dict(
+        global_u=global_u, sector_u=vals, observed=observed, zscores=zscores,
+        sector_support=float(observed.mean()), prominence=boundary["prominence"],
+        semantic_window=window, window_margin=margin,
+        window_margin_samples=margin / radial_spacing,
+        near_window_edge=bool(margin <= radial_spacing),
+    )
+
 def discover_template(frame_sector_evidence, u):
     """Discover three ordered persistent boundaries and 8-sector control points."""
     data = np.asarray(frame_sector_evidence, float)
@@ -194,43 +221,40 @@ def discover_template(frame_sector_evidence, u):
     prom_values = np.array([c["prominence"] for c in candidates])
     prom_scale = max(float(np.median(prom_values[prom_values > 0])) if np.any(prom_values > 0) else 0.0, 1e-6)
     selected = []
+    missing = []
     for name, (lo, hi) in zip(BOUNDARIES, BOUNDARY_WINDOWS):
         options = [c for c in candidates
                    if lo <= c["u"] <= hi and c["sector_support"] >= .25]
         if not options:
-            return dict(status="unavailable", reason=f"no_supported_{name}_edge",
-                        consensus=consensus, sectors=sectors, candidates=candidates)
+            selected.append(None)
+            missing.append(name)
+            continue
         selected.append(max(
             options,
             key=lambda c: np.log1p(c["prominence"] / prom_scale) + 1.25 * c["sector_support"],
         ))
+    partial_controls = {
+        name: _control_from_candidate(boundary, window, u)
+        for name, boundary, window in zip(BOUNDARIES, selected, BOUNDARY_WINDOWS)
+        if boundary is not None
+    }
+    if missing:
+        return dict(
+            status="unavailable",
+            reason=f"no_supported_{missing[0]}_edge",
+            consensus=consensus,
+            sectors=sectors,
+            candidates=candidates,
+            partial_controls=partial_controls,
+        )
     if np.min(np.diff([c["u"] for c in selected])) < .075:
         return dict(status="unavailable", reason="semantic_boundaries_not_separable",
-                    consensus=consensus, sectors=sectors, candidates=candidates)
-    controls = []
-    radial_spacing = float(np.median(np.diff(u)))
-    for boundary, window in zip(selected, BOUNDARY_WINDOWS):
-        global_u = boundary["u"]
-        margin = float(min(global_u - window[0], window[1] - global_u))
-        vals = np.full(8, global_u, float)
-        observed = np.zeros(8, bool)
-        zscores = np.full(8, np.nan)
-        for s, peak in enumerate(boundary["sector_peaks"]):
-            if peak is not None and peak["z"] is not None and peak["z"] >= .8:
-                vals[s] = peak["u"]
-                observed[s] = True
-                zscores[s] = peak["z"]
-        for s in range(4):
-            t = s + 4
-            if observed[s] and observed[t]:
-                mean = (vals[s] + vals[t]) / 2
-                vals[s] = .8 * vals[s] + .2 * mean
-                vals[t] = .8 * vals[t] + .2 * mean
-        controls.append(dict(global_u=global_u, sector_u=vals, observed=observed,
-                             zscores=zscores, sector_support=float(observed.mean()),
-                             prominence=boundary["prominence"], semantic_window=window,
-                             window_margin=margin, window_margin_samples=margin / radial_spacing,
-                             near_window_edge=bool(margin <= radial_spacing)))
+                    consensus=consensus, sectors=sectors, candidates=candidates,
+                    partial_controls=partial_controls)
+    controls = [
+        _control_from_candidate(boundary, window, u)
+        for boundary, window in zip(selected, BOUNDARY_WINDOWS)
+    ]
 
     global_u = np.array([c["global_u"] for c in controls])
     for s in range(8):
@@ -301,6 +325,103 @@ def normalised_radius_map(mask, angle_count=192):
     u[good] = radius[good] / outline[good]
     return u, theta
 
+
+def boundary_strip_masks(mask, sector_u, width, guard=.01, sector_mask=None):
+    """Build fixed strips just inside/outside an existing radial boundary.
+
+    ``sector_u`` is the existing eight-sector boundary control in the same
+    silhouette-normalised radial coordinate used by #19. The boundary is not
+    re-estimated per frame. ``guard`` deliberately excludes the immediate edge
+    so downstream tonal contrast is less sensitive to sharpening/edge pixels.
+    """
+    mask = np.asarray(mask, bool)
+    controls = np.asarray(sector_u, float)
+    if controls.shape != (8,) or not np.all(np.isfinite(controls)):
+        raise ValueError("sector_u must contain eight finite boundary controls")
+    if np.any((controls <= 0) | (controls >= 1)):
+        raise ValueError("boundary controls must lie strictly inside the silhouette")
+    width = float(width)
+    guard = float(guard)
+    if not np.isfinite(width) or width <= 0:
+        raise ValueError("strip width must be finite and positive")
+    if not np.isfinite(guard) or guard < 0:
+        raise ValueError("strip guard must be finite and nonnegative")
+
+    u, theta = normalised_radius_map(mask)
+    boundary = _periodic_boundary(theta, controls)
+    support = mask.copy()
+    if sector_mask is not None:
+        sector_mask = np.asarray(sector_mask, bool)
+        if sector_mask.shape != mask.shape:
+            raise ValueError("sector mask must match the silhouette shape")
+        support &= sector_mask
+
+    inner_hi = boundary - guard
+    inner_lo = inner_hi - width
+    outer_lo = boundary + guard
+    outer_hi = outer_lo + width
+    inside = support & (u >= inner_lo) & (u < inner_hi)
+    outside = support & (u > outer_lo) & (u <= outer_hi)
+    return {"inside": inside, "outside": outside}
+
+def relative_boundary_strip_masks(
+    mask, inner_sector_u, boundary_sector_u, outer_sector_u, fraction,
+    guard=.01, sector_mask=None,
+):
+    """Build guarded strips spanning a fixed fraction of adjacent tier widths.
+
+    Geometry is entirely supplied by an existing sequence-level template.
+    The boundary is never re-estimated from the current frame. Each side may
+    have a different width because the neighbouring semantic tiers may have
+    different radial spans.
+    """
+    mask = np.asarray(mask, bool)
+    inner = np.asarray(inner_sector_u, float)
+    boundary_values = np.asarray(boundary_sector_u, float)
+    outer = np.asarray(outer_sector_u, float)
+    for name, values in (
+        ("inner_sector_u", inner),
+        ("boundary_sector_u", boundary_values),
+        ("outer_sector_u", outer),
+    ):
+        if values.shape != (8,) or not np.all(np.isfinite(values)):
+            raise ValueError(f"{name} must contain eight finite controls")
+    if np.any(inner < 0) or np.any(outer > 1):
+        raise ValueError("reference controls must lie within the silhouette")
+    if np.any(inner >= boundary_values) or np.any(boundary_values >= outer):
+        raise ValueError("reference controls must strictly bracket the boundary")
+    fraction = float(fraction)
+    guard = float(guard)
+    if not np.isfinite(fraction) or not (0 < fraction < 1):
+        raise ValueError("fraction must lie strictly between zero and one")
+    if not np.isfinite(guard) or guard < 0:
+        raise ValueError("strip guard must be finite and nonnegative")
+
+    u, theta = normalised_radius_map(mask)
+    inner_map = _periodic_boundary(theta, inner)
+    boundary = _periodic_boundary(theta, boundary_values)
+    outer_map = _periodic_boundary(theta, outer)
+    inside_width = fraction * (boundary - inner_map)
+    outside_width = fraction * (outer_map - boundary)
+    support = mask.copy()
+    if sector_mask is not None:
+        sector_mask = np.asarray(sector_mask, bool)
+        if sector_mask.shape != mask.shape:
+            raise ValueError("sector mask must match the silhouette shape")
+        support &= sector_mask
+
+    inner_hi = boundary - guard
+    inner_lo = inner_hi - inside_width
+    outer_lo = boundary + guard
+    outer_hi = outer_lo + outside_width
+    inside = support & (u >= inner_lo) & (u < inner_hi)
+    outside = support & (u > outer_lo) & (u <= outer_hi)
+    return {
+        "inside": inside,
+        "outside": outside,
+        "inside_width_u": inside_width,
+        "outside_width_u": outside_width,
+    }
 
 def build_masks(mask, controls):
     if len(controls) != 3:
@@ -484,6 +605,10 @@ def run(processed, output, indices, wrap=False, angle_count=96, radial_samples=1
         template_status=template["status"],
         template_reason=template.get("reason"),
         limitation="recorded-image step-band approximation, not crown/pavilion separation, windmill identity, 3-D reconstruction, leakage or cut grading",
+        partial_boundaries={
+            name: _json_control(control)
+            for name, control in (template.get("partial_controls") or {}).items()
+        },
         frames=[],
     )
     if template.get("controls"):

@@ -75,6 +75,34 @@ def contrast_trace(values_a, values_b, source_indices):
     }
 
 
+def brightness_contrast_trace(inside_values, outside_values, source_indices):
+    """Signed/absolute log contrast from positive brightness medians.
+
+    This is the boundary-local primitive used by issue #57. Invalid,
+    non-positive, or missing brightness values remain explicit gaps rather
+    than being epsilon-adjusted.
+    """
+    if len(inside_values) != len(outside_values) or len(inside_values) != len(source_indices):
+        raise ValueError("paired brightness traces and source indices must have equal length")
+
+    def _logs(values):
+        result = []
+        for value in values:
+            value = _finite(value)
+            result.append(
+                float(math.log(value))
+                if value is not None and value > 0 else None
+            )
+        return result
+
+    result = contrast_trace(_logs(inside_values), _logs(outside_values), source_indices)
+    for row, inside, outside in zip(result["frame_trace"], inside_values, outside_values):
+        inside = _finite(inside)
+        outside = _finite(outside)
+        row["inside_brightness"] = inside if inside is not None and inside > 0 else None
+        row["outside_brightness"] = outside if outside is not None and outside > 0 else None
+    return result
+
 def robust_fractional_spread(values):
     """1.4826*MAD/median on finite positive encoded-brightness samples."""
     data = np.asarray(values, float).ravel()
@@ -211,6 +239,39 @@ def select_evidence(simple_trace, standardized=None):
     return evidence
 
 
+def strongest_rank_disagreement(left_trace, left_key, right_trace, right_key):
+    """Return the aligned frame whose two formulations disagree most in rank."""
+    if len(left_trace) != len(right_trace):
+        raise ValueError("compared traces must have equal length")
+    aligned = []
+    for position, (left, right) in enumerate(zip(left_trace, right_trace)):
+        if left.get("source_index") != right.get("source_index"):
+            raise ValueError("compared traces must share source-index alignment")
+        left_value = _finite(left.get(left_key))
+        right_value = _finite(right.get(right_key))
+        if left_value is None or right_value is None:
+            continue
+        aligned.append((
+            position, left["source_index"], left_value, right_value
+        ))
+    if len(aligned) < 2:
+        return None
+    left_ranks = _average_ranks([row[2] for row in aligned])
+    right_ranks = _average_ranks([row[3] for row in aligned])
+    denom = max(1.0, len(aligned) - 1.0)
+    candidates = []
+    for index, row in enumerate(aligned):
+        disagreement = abs(left_ranks[index] - right_ranks[index]) / denom
+        candidates.append((disagreement, -row[0], row))
+    disagreement, _, row = max(candidates)
+    return {
+        "position": row[0],
+        "source_index": row[1],
+        "left_value": row[2],
+        "right_value": row[3],
+        "rank_disagreement": float(disagreement),
+    }
+
 def compose_validity(component_validities, local_summary):
     """Monotone validity composition; usefulness/disposition stays separate."""
     worst = "ok"
@@ -243,16 +304,9 @@ def sectorized_contrast_trace(left_sector_values, right_sector_values, source_in
         right = right_sector_values[sector]
         if len(left) != len(source_indices) or len(right) != len(source_indices):
             raise ValueError("sector traces must align with source indices")
-        left_log = []
-        right_log = []
-        for values, target in ((left, left_log), (right, right_log)):
-            for value in values:
-                value = _finite(value)
-                target.append(
-                    float(math.log(value))
-                    if value is not None and value > 0 else None
-                )
-        per_sector[sector] = contrast_trace(left_log, right_log, source_indices)
+        per_sector[sector] = brightness_contrast_trace(
+            left, right, source_indices
+        )
 
     frame_trace = []
     median_values = []
@@ -260,6 +314,10 @@ def sectorized_contrast_trace(left_sector_values, right_sector_values, source_in
     for position, source_index in enumerate(source_indices):
         values = {
             sector: per_sector[sector]["frame_trace"][position]["separation"]
+            for sector in sectors
+        }
+        signed_values = {
+            sector: per_sector[sector]["frame_trace"][position]["signed_log_contrast"]
             for sector in sectors
         }
         finite = {
@@ -272,6 +330,7 @@ def sectorized_contrast_trace(left_sector_values, right_sector_values, source_in
             "source_index": source_index,
             "status": "ok" if finite else "gap",
             "sector_separations": values,
+            "sector_signed_log_contrasts": signed_values,
             "finite_sectors": len(finite),
             "median_separation": None,
             "q75_separation": None,
@@ -297,6 +356,98 @@ def sectorized_contrast_trace(left_sector_values, right_sector_values, source_in
         "q75_summary": summarise(q75_values),
     }
 
+
+def multiscale_sector_consensus(scale_results):
+    """Median a small declared scale family while preserving sector/frame detail.
+
+    ``scale_results`` maps a scale label to a sectorized_contrast_trace result.
+    This aggregates only over measurement scale; it does not collapse the eight
+    spatial sectors into a production descriptor.
+    """
+    if not scale_results:
+        raise ValueError("at least one scale result is required")
+    labels = tuple(sorted(scale_results))
+    first = scale_results[labels[0]]
+    sectors = tuple(first.get("sectors") or [])
+    frame_count = len(first.get("frame_trace") or [])
+    if not sectors or frame_count == 0:
+        raise ValueError("scale results must contain sectorized frame traces")
+    for label in labels[1:]:
+        item = scale_results[label]
+        if tuple(item.get("sectors") or []) != sectors:
+            raise ValueError("scale results must share sectors")
+        if len(item.get("frame_trace") or []) != frame_count:
+            raise ValueError("scale results must share frame alignment")
+
+    frame_trace = []
+    median_values = []
+    q75_values = []
+    scale_spread_values = []
+    for position in range(frame_count):
+        source_index = first["frame_trace"][position]["source_index"]
+        sector_sep = {}
+        sector_signed = {}
+        sector_scale_spread = {}
+        for sector in sectors:
+            separations = []
+            signed = []
+            for label in labels:
+                row = scale_results[label]["frame_trace"][position]
+                if row["source_index"] != source_index:
+                    raise ValueError("scale results must share source-index alignment")
+                value = _finite((row.get("sector_separations") or {}).get(sector))
+                if value is not None:
+                    separations.append(float(value))
+                signed_value = _finite(
+                    (row.get("sector_signed_log_contrasts") or {}).get(sector)
+                )
+                if signed_value is not None:
+                    signed.append(float(signed_value))
+            sector_sep[sector] = float(np.median(separations)) if separations else None
+            sector_signed[sector] = float(np.median(signed)) if signed else None
+            sector_scale_spread[sector] = (
+                float(max(separations) - min(separations))
+                if len(separations) >= 2 else None
+            )
+
+        finite = {k: v for k, v in sector_sep.items() if v is not None}
+        finite_spread = [v for v in sector_scale_spread.values() if v is not None]
+        row = {
+            "position": position,
+            "source_index": source_index,
+            "status": "ok" if finite else "gap",
+            "sector_separations": sector_sep,
+            "sector_signed_log_contrasts": sector_signed,
+            "sector_scale_spread": sector_scale_spread,
+            "finite_sectors": len(finite),
+            "median_separation": None,
+            "q75_separation": None,
+            "median_scale_spread": (
+                float(np.median(finite_spread)) if finite_spread else None
+            ),
+            "strongest_sector": None,
+            "strongest_sector_separation": None,
+        }
+        if finite:
+            data = np.asarray(list(finite.values()), float)
+            row["median_separation"] = float(np.median(data))
+            row["q75_separation"] = float(np.quantile(data, .75))
+            strongest = max(finite, key=lambda sector: (finite[sector], sector))
+            row["strongest_sector"] = strongest
+            row["strongest_sector_separation"] = finite[strongest]
+        frame_trace.append(row)
+        median_values.append(row["median_separation"])
+        q75_values.append(row["q75_separation"])
+        scale_spread_values.append(row["median_scale_spread"])
+
+    return {
+        "scale_labels": list(labels),
+        "sectors": list(sectors),
+        "frame_trace": frame_trace,
+        "median_summary": summarise(median_values),
+        "q75_summary": summarise(q75_values),
+        "scale_spread_summary": summarise(scale_spread_values),
+    }
 
 def select_sectorized_evidence(frame_trace):
     """Weak/typical/strong frames using median matched-sector separation."""

@@ -22,6 +22,76 @@ def build(mask, target_extent=192):
     return result
 
 
+def boundary_strip_masks(mask, radius, width, guard=.01, sector_mask=None, target_extent=192):
+    """Build guarded strips around one legacy coarse radial boundary."""
+    mask = np.asarray(mask, bool)
+    h, w = mask.shape
+    if h != w or target_extent <= 0:
+        raise ValueError('Regions require a square canonical canvas and positive extent')
+    radius = float(radius)
+    width = float(width)
+    guard = float(guard)
+    if not np.isfinite(radius) or radius <= 0:
+        raise ValueError('boundary radius must be finite and positive')
+    if not np.isfinite(width) or width <= 0:
+        raise ValueError('strip width must be finite and positive')
+    if not np.isfinite(guard) or guard < 0:
+        raise ValueError('strip guard must be finite and nonnegative')
+    y, x = np.indices(mask.shape)
+    cx, cy = (w - 1) / 2, (h - 1) / 2
+    dx, dy = (x - cx) / (target_extent / 2), (y - cy) / (target_extent / 2)
+    r = np.maximum(abs(dx), abs(dy))
+    support = mask.copy()
+    if sector_mask is not None:
+        sector_mask = np.asarray(sector_mask, bool)
+        if sector_mask.shape != mask.shape:
+            raise ValueError('sector mask must match the silhouette shape')
+        support &= sector_mask
+    inside = support & (r >= radius - guard - width) & (r < radius - guard)
+    outside = support & (r > radius + guard) & (r <= radius + guard + width)
+    return {'inside': inside, 'outside': outside}
+
+def relative_boundary_strip_masks(
+    mask, inner_radius, boundary_radius, outer_radius, fraction, guard=.01,
+    sector_mask=None, target_extent=192,
+):
+    """Build guarded strips spanning a fraction of adjacent coarse-tier widths."""
+    mask = np.asarray(mask, bool)
+    h, w = mask.shape
+    if h != w or target_extent <= 0:
+        raise ValueError('Regions require a square canonical canvas and positive extent')
+    inner_radius = float(inner_radius)
+    boundary_radius = float(boundary_radius)
+    outer_radius = float(outer_radius)
+    fraction = float(fraction)
+    guard = float(guard)
+    if not (0 <= inner_radius < boundary_radius < outer_radius <= 1):
+        raise ValueError('coarse references must strictly bracket the boundary')
+    if not np.isfinite(fraction) or not (0 < fraction < 1):
+        raise ValueError('fraction must lie strictly between zero and one')
+    if not np.isfinite(guard) or guard < 0:
+        raise ValueError('strip guard must be finite and nonnegative')
+    y, x = np.indices(mask.shape)
+    cx, cy = (w - 1) / 2, (h - 1) / 2
+    dx, dy = (x - cx) / (target_extent / 2), (y - cy) / (target_extent / 2)
+    r = np.maximum(abs(dx), abs(dy))
+    support = mask.copy()
+    if sector_mask is not None:
+        sector_mask = np.asarray(sector_mask, bool)
+        if sector_mask.shape != mask.shape:
+            raise ValueError('sector mask must match the silhouette shape')
+        support &= sector_mask
+    inside_width = fraction * (boundary_radius - inner_radius)
+    outside_width = fraction * (outer_radius - boundary_radius)
+    inside = support & (r >= boundary_radius - guard - inside_width) & (r < boundary_radius - guard)
+    outside = support & (r > boundary_radius + guard) & (r <= boundary_radius + guard + outside_width)
+    return {
+        'inside': inside,
+        'outside': outside,
+        'inside_width_u': float(inside_width),
+        'outside_width_u': float(outside_width),
+    }
+
 def specification():
     return dict(radial_coordinate='max(abs(x-centre),abs(y-centre))/(target_extent/2)',
                 radial_edges=[.20,.45,.70],centre_definition='canonical canvas centre',

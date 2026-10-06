@@ -1,9 +1,15 @@
 import json
+import math
 import tempfile
 import unittest
 from pathlib import Path
 
+import numpy as np
+from PIL import Image
+
 from diamond360 import activation_benchmark as ab
+from diamond360 import asscher_steps as steps
+from diamond360 import regions
 from diamond360 import tier_contrast_benchmark as tb
 
 
@@ -40,7 +46,270 @@ def activation_fixture():
     }
 
 
+def boundary_local_fixture(root, edge_spike=False):
+    processed = root / "processed"
+    step_output = root / "steps"
+    (processed / "photometry").mkdir(parents=True)
+    (processed / "registered").mkdir()
+    (processed / "regions").mkdir()
+    (step_output / "regions").mkdir(parents=True)
+
+    size = 192
+    y, x = np.indices((size, size))
+    c = (size - 1) / 2
+    dx, dy = np.abs(x - c), np.abs(y - c)
+    mask = (np.maximum(dx, dy) <= 78) & ((dx + dy) <= 124)
+    u, _ = steps.normalised_radius_map(mask)
+    controls = [
+        {"sector_u": np.full(8, value)}
+        for value in (.50, .75, .87)
+    ]
+    semantic_masks = steps.build_masks(mask, controls)
+    coarse = regions.build(mask)
+
+    records = []
+    step_frames = []
+    for pos, scale in enumerate((1.0, 1.7, 2.6)):
+        brightness = np.where(
+            u < .50, 1.0,
+            np.where(u < .75, .5, np.where(u < .87, .8, .6)),
+        ) * scale
+        brightness[~mask] = np.nan
+        if edge_spike:
+            brightness[mask & (np.abs(u - .50) < .004)] = 20.0 * scale
+        valid = mask.copy()
+        np.savez_compressed(
+            processed / "photometry" / f"{pos:04d}.npz",
+            encoded_brightness=brightness,
+            valid_mask=valid,
+        )
+        Image.fromarray((mask.astype(np.uint8) * 255)).save(
+            processed / "registered" / f"{pos:04d}-mask.png"
+        )
+        rgb = np.zeros((size, size, 3), np.uint8)
+        Image.fromarray(rgb).save(processed / "registered" / f"{pos:04d}.png")
+        np.savez_compressed(
+            processed / "regions" / f"{pos:04d}.npz",
+            **coarse,
+        )
+        np.savez_compressed(
+            step_output / "regions" / f"{pos:04d}.npz",
+            **semantic_masks,
+        )
+        records.append({
+            "position": pos,
+            "source_index": pos,
+            "sha256": f"{pos + 1:064x}",
+            "photometry_path": f"photometry/{pos:04d}.npz",
+            "regions_path": f"regions/{pos:04d}.npz",
+            "registration": {
+                "mask_path": f"registered/{pos:04d}-mask.png",
+                "rgb_path": f"registered/{pos:04d}.png",
+            },
+        })
+        step_frames.append({
+            "source_index": pos,
+            "position": pos,
+            "status": "ok",
+            "region_path": f"regions/{pos:04d}.npz",
+            "boundary_support": [],
+        })
+
+    (processed / "sequence.json").write_text(json.dumps({
+        "source_frame_count": 3,
+        "frames": records,
+    }))
+    (step_output / "steps.json").write_text(json.dumps({
+        "template_status": "ok",
+        "template_reason": None,
+        "boundaries": {
+            name: {"sector_u": [float(v) for v in control["sector_u"]]}
+            for name, control in zip(steps.BOUNDARIES, controls)
+        },
+        "frames": step_frames,
+    }))
+    activation_result = {
+        "requested_indices": [0, 1, 2],
+        "wrap_explicit": False,
+        "upstream_validity": {"status": "ok", "reasons": []},
+    }
+    return processed, step_output, activation_result
+
 class TierContrastBenchmarkTests(unittest.TestCase):
+    def test_strip_trace_follows_fixed_normalised_geometry_without_pixel_intersection(self):
+        brightness = np.stack([
+            np.full((10, 10), 1.0),
+            np.full((10, 10), 2.0),
+            np.full((10, 10), 3.0),
+        ])
+        valid = np.ones_like(brightness, dtype=bool)
+        masks = np.zeros_like(brightness, dtype=bool)
+        masks[0, 0:3, 0:3] = True
+        masks[1, 3:6, 3:6] = True
+        masks[2, 6:9, 6:9] = True
+        values, support = tb._strip_trace(
+            brightness, valid, masks, np.array([True, True, True])
+        )
+        self.assertEqual(values, [1.0, 2.0, 3.0])
+        self.assertEqual(support["min_support_pixels"], 9)
+        self.assertEqual(
+            support["support_mode"],
+            "per_frame_valid_with_fixed_normalised_geometry",
+        )
+    def test_strip_trace_keeps_small_support_as_qc_not_hidden_threshold(self):
+        brightness = np.ones((3, 6, 6), float)
+        valid = np.ones_like(brightness, bool)
+        masks = np.zeros_like(brightness, bool)
+        masks[:, 2:4, 2:4] = True
+        values, support = tb._strip_trace(
+            brightness, valid, masks, np.ones(3, bool)
+        )
+        self.assertEqual(values, [1.0, 1.0, 1.0])
+        self.assertEqual(support["min_support_pixels"], 4)
+    def test_boundary_local_semantic_strips_recover_known_tier_jump(self):
+        with tempfile.TemporaryDirectory() as td:
+            processed, step_output, activation_result = boundary_local_fixture(Path(td))
+            result = tb._boundary_local_inputs(
+                processed, step_output, activation_result, fractions=(.40,), guard=.01
+            )
+            pair = result["pairs"]["centre__inner"]["scales"]["0.400"]
+            semantic = pair["semantic"]
+            coarse = pair["coarse"]
+            self.assertEqual(semantic["validity"]["status"], "ok")
+            self.assertAlmostEqual(
+                semantic["median_summary"]["q50"], math.log(2.0), delta=.03
+            )
+            self.assertLess(coarse["median_summary"]["q50"], .03)
+            signed = semantic["frame_trace"][0]["sector_signed_log_contrasts"]
+            self.assertTrue(all(value > 0 for value in signed.values() if value is not None))
+
+    def test_partial_semantic_boundary_is_review_not_unavailable(self):
+        with tempfile.TemporaryDirectory() as td:
+            processed, step_output, activation_result = boundary_local_fixture(Path(td))
+            step_path = step_output / "steps.json"
+            payload = json.loads(step_path.read_text())
+            payload["template_status"] = "unavailable"
+            payload["template_reason"] = "no_supported_middle_outer_edge"
+            payload["partial_boundaries"] = {
+                name: payload["boundaries"][name]
+                for name in ("centre_inner", "inner_middle")
+            }
+            payload["boundaries"] = {}
+            step_path.write_text(json.dumps(payload))
+
+            result = tb._boundary_local_inputs(
+                processed, step_output, activation_result, fractions=(.40,), guard=.01
+            )
+            pair = result["pairs"]["centre__inner"]
+            semantic = pair["scales"]["0.400"]["semantic"]
+            self.assertEqual(pair["semantic_geometry_status"], "review")
+            self.assertEqual(semantic["geometry"]["boundary_source"], "partial_boundary")
+            self.assertEqual(semantic["validity"]["status"], "review")
+            self.assertIn(
+                "partial_step_boundary:no_supported_middle_outer_edge",
+                semantic["validity"]["reasons"],
+            )
+            self.assertIsNotNone(semantic["median_summary"]["q50"])
+
+    def test_partial_semantic_boundary_does_not_rescue_ambiguous_geometry(self):
+        with tempfile.TemporaryDirectory() as td:
+            processed, step_output, activation_result = boundary_local_fixture(Path(td))
+            step_path = step_output / "steps.json"
+            payload = json.loads(step_path.read_text())
+            payload["template_status"] = "unavailable"
+            payload["template_reason"] = "semantic_boundaries_not_separable"
+            payload["partial_boundaries"] = {
+                name: payload["boundaries"][name]
+                for name in ("centre_inner", "inner_middle")
+            }
+            payload["boundaries"] = {}
+            step_path.write_text(json.dumps(payload))
+
+            result = tb._boundary_local_inputs(
+                processed, step_output, activation_result, fractions=(.40,), guard=.01
+            )
+            pair = result["pairs"]["centre__inner"]
+            semantic = pair["scales"]["0.400"]["semantic"]
+            self.assertEqual(pair["semantic_geometry_status"], "unavailable")
+            self.assertEqual(semantic["status"], "unavailable")
+            self.assertEqual(
+                semantic["reason"], "semantic_boundaries_not_separable"
+            )
+
+    def test_missing_outer_reference_is_mirrored_but_reviewed(self):
+        with tempfile.TemporaryDirectory() as td:
+            processed, step_output, activation_result = boundary_local_fixture(Path(td))
+            step_path = step_output / "steps.json"
+            payload = json.loads(step_path.read_text())
+            payload["template_status"] = "unavailable"
+            payload["template_reason"] = "no_supported_middle_outer_edge"
+            payload["partial_boundaries"] = {
+                name: payload["boundaries"][name]
+                for name in ("centre_inner", "inner_middle")
+            }
+            payload["boundaries"] = {}
+            step_path.write_text(json.dumps(payload))
+
+            result = tb._boundary_local_inputs(
+                processed, step_output, activation_result,
+                fractions=(.40,), guard=.01,
+            )
+            semantic = result["pairs"]["inner__middle"]["scales"]["0.400"]["semantic"]
+            geometry = semantic["geometry"]
+            self.assertEqual(semantic["validity"]["status"], "review")
+            self.assertEqual(
+                geometry["outer_reference_source"], "mirrored_inner_span"
+            )
+            self.assertIn(
+                "mirrored_outer_reference:middle_outer",
+                geometry["reasons"],
+            )
+
+    def test_geometry_diagnostic_reports_moved_ruler_without_using_it(self):
+        canonical = {
+            "template_status": "ok",
+            "template_reason": None,
+            "boundaries": {
+                "centre_inner": {"sector_u": [.60] * 8},
+                "inner_middle": {"sector_u": [.75] * 8},
+                "middle_outer": {"sector_u": [.88] * 8},
+            },
+        }
+        alternative = {
+            "template_status": "ok",
+            "template_reason": None,
+            "boundaries": {
+                "centre_inner": {"sector_u": [.51] * 8},
+                "inner_middle": {"sector_u": [.74] * 8},
+                "middle_outer": {"sector_u": [.88] * 8},
+            },
+        }
+        diagnostic = tb._geometry_diagnostic(canonical, alternative)
+        self.assertAlmostEqual(
+            diagnostic["centre_inner"]["median_abs_delta_u"], .09
+        )
+        self.assertAlmostEqual(
+            diagnostic["inner_middle"]["median_abs_delta_u"], .01
+        )
+
+    def test_guarded_strips_ignore_narrow_boundary_spike(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            base = root / "base"
+            spike = root / "spike"
+            p1, s1, a1 = boundary_local_fixture(base, edge_spike=False)
+            p2, s2, a2 = boundary_local_fixture(spike, edge_spike=True)
+            first = tb._boundary_local_inputs(
+                p1, s1, a1, fractions=(.40,), guard=.01
+            )["pairs"]["centre__inner"]["scales"]["0.400"]["semantic"]
+            second = tb._boundary_local_inputs(
+                p2, s2, a2, fractions=(.40,), guard=.01
+            )["pairs"]["centre__inner"]["scales"]["0.400"]["semantic"]
+            self.assertAlmostEqual(
+                first["median_summary"]["q50"],
+                second["median_summary"]["q50"],
+                places=10,
+            )
     def test_consumes_only_retained_coarse_fixed_pairs(self):
         result = tb.measure_from_activation(activation_fixture())
         self.assertEqual(

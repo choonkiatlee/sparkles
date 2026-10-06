@@ -1,19 +1,43 @@
 """Measure adjacent-tier tonal separation from retained #26 activation outputs."""
 from __future__ import annotations
 
+import argparse
 import csv
 import json
+import tempfile
 from pathlib import Path
 
 import numpy as np
 from PIL import Image, ImageDraw
 
+from . import activation as activation
 from . import activation_benchmark as ab
+from . import asscher_steps as steps
+from . import regions as coarse_regions
 from . import tier_contrast as tc
+from . import pipeline
 
-SCHEMA = "diamond360-tier-contrast/1"
+SCHEMA = "diamond360-tier-contrast/3"
 REGION_TRACE_SCHEMA = "diamond360-region-traces/1"
 PAIRS = (("centre", "inner"), ("inner", "middle"))
+BOUNDARY_FRACTIONS = (.25, .40, .55)
+BOUNDARY_GUARD = .010
+BOUNDARY_SPECS = {
+    "centre__inner": {
+        "semantic": "centre_inner",
+        "semantic_inner": None,
+        "semantic_outer": "inner_middle",
+        "coarse_triplet": (0.0, .20, .45),
+    },
+    "inner__middle": {
+        "semantic": "inner_middle",
+        "semantic_inner": "centre_inner",
+        "semantic_outer": "middle_outer",
+        "coarse_triplet": (.20, .45, .70),
+    },
+}
+CORE_INDICES = [248,249,250,251,252,253,254,255,0,1,2,3,4,5,6,7,8]
+WIDE_INDICES = list(range(240,256)) + list(range(0,17))
 
 
 def _cell(activation, band):
@@ -263,22 +287,452 @@ def _fixed_spread_inputs(processed, activation):
             record.get("regions_path") if record is not None else None
             for record in selected
         ],
+        "mask_paths": [
+            record.get("registration", {}).get("mask_path")
+            if record is not None else None
+            for record in selected
+        ],
     }
 
 
+def _strip_trace(brightness, valid_masks, masks, observed):
+    """Measure fixed-normalised geometry on each frame's valid strip support.
+
+    Boundary controls stay fixed for the sequence, but the silhouette-normalised
+    strip naturally maps to slightly different registered pixels as the outline
+    changes. Intersecting those pixels across the whole sequence can erase a
+    narrow strip entirely, so support is evaluated per frame and retained as QC.
+    """
+    values = []
+    support_pixels = []
+    support_fractions = []
+    for frame, valid, mask, ok in zip(
+        brightness, valid_masks, masks, observed
+    ):
+        nominal = int(mask.sum())
+        support = valid & mask
+        count = int(support.sum()) if ok else 0
+        support_pixels.append(count if ok else None)
+        support_fractions.append(
+            float(count / nominal) if ok and nominal else None
+        )
+        values.append(
+            float(np.median(frame[support]))
+            if ok and support.any() else None
+        )
+    finite_pixels = [
+        value for value in support_pixels if value is not None
+    ]
+    finite_fractions = [
+        value for value in support_fractions if value is not None
+    ]
+    return values, {
+        "support_mode": "per_frame_valid_with_fixed_normalised_geometry",
+        "per_frame_support_pixels": support_pixels,
+        "per_frame_support_fraction": support_fractions,
+        "min_support_pixels": min(finite_pixels) if finite_pixels else None,
+        "min_support_fraction": (
+            min(finite_fractions) if finite_fractions else None
+        ),
+    }
+
+
+
+def _boundary_control(payload, name):
+    if name is None:
+        return None, "endpoint"
+    boundaries = payload.get("boundaries") or {}
+    partial = payload.get("partial_boundaries") or {}
+    reason = str(payload.get("template_reason") or "")
+    if name in boundaries:
+        return boundaries[name], "full_template"
+    if reason.startswith("no_supported_") and name in partial:
+        return partial[name], "partial_boundary"
+    return None, "unavailable"
+
+
+def _semantic_geometry(payload, spec):
+    """Resolve one pair's boundary plus adjacent tier references.
+
+    A missing neighbouring boundary may be mirrored from the observed opposite
+    span, but only as review. Ambiguous/non-separable templates are never
+    rescued.
+    """
+    template_status = payload.get("template_status", "unavailable")
+    template_reason = str(payload.get("template_reason") or "")
+    if template_status == "unavailable" and not template_reason.startswith("no_supported_"):
+        return {
+            "status": "unavailable",
+            "reason": template_reason or "semantic_template_unavailable",
+        }
+
+    boundary, boundary_source = _boundary_control(payload, spec["semantic"])
+    if boundary is None:
+        return {
+            "status": "unavailable",
+            "reason": f"boundary_unavailable:{spec['semantic']}",
+        }
+
+    b = np.asarray(boundary["sector_u"], float)
+    if spec["semantic_inner"] is None:
+        inner = np.zeros(8, float)
+        inner_source = "centre_endpoint"
+    else:
+        inner_control, inner_source = _boundary_control(
+            payload, spec["semantic_inner"]
+        )
+        inner = (
+            np.asarray(inner_control["sector_u"], float)
+            if inner_control is not None else None
+        )
+
+    outer_control, outer_source = _boundary_control(
+        payload, spec["semantic_outer"]
+    )
+    outer = (
+        np.asarray(outer_control["sector_u"], float)
+        if outer_control is not None else None
+    )
+
+    reasons = []
+    if inner is None and outer is None:
+        return {
+            "status": "unavailable",
+            "reason": "adjacent_tier_references_unavailable",
+        }
+    if inner is None:
+        inner = np.maximum(.001, b - (outer - b))
+        inner_source = "mirrored_outer_span"
+        reasons.append(f"mirrored_inner_reference:{spec['semantic_inner']}")
+    if outer is None:
+        outer = np.minimum(.999, b + (b - inner))
+        outer_source = "mirrored_inner_span"
+        reasons.append(f"mirrored_outer_reference:{spec['semantic_outer']}")
+
+    if (
+        np.any(~np.isfinite(inner))
+        or np.any(~np.isfinite(b))
+        or np.any(~np.isfinite(outer))
+        or np.any(inner >= b)
+        or np.any(b >= outer)
+    ):
+        return {
+            "status": "unavailable",
+            "reason": "semantic_reference_order_invalid",
+        }
+
+    sources = [boundary_source, inner_source, outer_source]
+    if template_status == "review":
+        reasons.append(payload.get("template_reason") or "semantic_template_review")
+    if "partial_boundary" in sources:
+        reasons.append(
+            "partial_step_boundary:"
+            + (template_reason or "full_template_unavailable")
+        )
+    if any(source in {"partial_boundary", "mirrored_inner_span", "mirrored_outer_span"}
+           for source in sources):
+        reasons.append("semantic_geometry_partial")
+    status = "review" if reasons else "ok"
+    return {
+        "status": status,
+        "reasons": reasons,
+        "boundary_name": spec["semantic"],
+        "inner_reference_name": spec["semantic_inner"] or "centre_endpoint",
+        "outer_reference_name": spec["semantic_outer"],
+        "boundary_source": boundary_source,
+        "inner_reference_source": inner_source,
+        "outer_reference_source": outer_source,
+        "inner_sector_u": [float(value) for value in inner],
+        "boundary_sector_u": [float(value) for value in b],
+        "outer_sector_u": [float(value) for value in outer],
+        "template_status": template_status,
+        "template_reason": payload.get("template_reason"),
+    }
+
+
+def _boundary_local_inputs(
+    processed,
+    step_output,
+    activation_result,
+    fractions=BOUNDARY_FRACTIONS,
+    guard=BOUNDARY_GUARD,
+):
+    """Measure guarded tier-relative strips with one fixed sequence geometry."""
+    processed = Path(processed)
+    step_output = Path(step_output)
+    metadata = json.loads((processed / "sequence.json").read_text())
+    indices = list(activation_result["requested_indices"])
+    selected, _ = ab._select_records(
+        metadata, indices, bool(activation_result.get("wrap_explicit"))
+    )
+    observed = np.asarray([record is not None for record in selected], bool)
+    brightness, valid_masks, stone_masks, _ = ab._load_frame_arrays(
+        processed, selected
+    )
+    region_paths = [
+        processed / record["regions_path"] if record is not None else None
+        for record in selected
+    ]
+    sector_masks = activation._stack_masks(region_paths, coarse_regions.SECTORS)
+    if not sector_masks:
+        return {"status": "unavailable", "reason": "sector_masks_unavailable"}
+
+    step_payload = json.loads((step_output / "steps.json").read_text())
+    shape = brightness.shape[1:]
+    zero = np.zeros(shape, bool)
+    output = {
+        "guard_u": float(guard),
+        "scale_fractions": [float(value) for value in fractions],
+        "support_mode": (
+            "one fixed sequence-level boundary geometry; per-frame valid strip support"
+        ),
+        "semantic_geometry": (
+            "#19 canonical eight-sector boundary controls with adjacent-tier-relative "
+            "strip widths; no per-frame boundary motion"
+        ),
+        "coarse_geometry": (
+            "legacy coarse square-radius boundaries with adjacent-ring-relative widths"
+        ),
+        "pairs": {},
+    }
+
+    for left, right in PAIRS:
+        pair_id = _pair_id(left, right)
+        spec = BOUNDARY_SPECS[pair_id]
+        semantic_geometry = _semantic_geometry(step_payload, spec)
+        pair_out = {
+            "scales": {},
+            "semantic_geometry_status": semantic_geometry.get("status"),
+            "semantic_geometry_reason": semantic_geometry.get("reason"),
+        }
+        scale_results = {"coarse": {}, "semantic": {}}
+
+        for fraction in fractions:
+            scale_key = f"{float(fraction):.3f}"
+            by_geometry = {}
+            for geometry in ("coarse", "semantic"):
+                if geometry == "semantic" and semantic_geometry.get("status") == "unavailable":
+                    by_geometry[geometry] = {
+                        "status": "unavailable",
+                        "reason": semantic_geometry.get("reason"),
+                    }
+                    continue
+
+                inside_values = {
+                    sector: [] for sector in coarse_regions.SECTORS
+                }
+                outside_values = {
+                    sector: [] for sector in coarse_regions.SECTORS
+                }
+                support = {
+                    "inside": {sector: {} for sector in coarse_regions.SECTORS},
+                    "outside": {sector: {} for sector in coarse_regions.SECTORS},
+                }
+                for sector in coarse_regions.SECTORS:
+                    inside_masks = []
+                    outside_masks = []
+                    for position, ok in enumerate(observed):
+                        if not ok:
+                            inside_masks.append(zero)
+                            outside_masks.append(zero)
+                            continue
+                        sector_mask = sector_masks[sector][position]
+                        if geometry == "semantic":
+                            strips = steps.relative_boundary_strip_masks(
+                                stone_masks[position],
+                                semantic_geometry["inner_sector_u"],
+                                semantic_geometry["boundary_sector_u"],
+                                semantic_geometry["outer_sector_u"],
+                                fraction=float(fraction),
+                                guard=float(guard),
+                                sector_mask=sector_mask,
+                            )
+                        else:
+                            inner_radius, boundary_radius, outer_radius = (
+                                spec["coarse_triplet"]
+                            )
+                            strips = coarse_regions.relative_boundary_strip_masks(
+                                stone_masks[position],
+                                inner_radius,
+                                boundary_radius,
+                                outer_radius,
+                                fraction=float(fraction),
+                                guard=float(guard),
+                                sector_mask=sector_mask,
+                            )
+                        inside_masks.append(strips["inside"])
+                        outside_masks.append(strips["outside"])
+                    inside_masks = np.stack(inside_masks)
+                    outside_masks = np.stack(outside_masks)
+                    inside_values[sector], support["inside"][sector] = _strip_trace(
+                        brightness, valid_masks, inside_masks, observed
+                    )
+                    outside_values[sector], support["outside"][sector] = _strip_trace(
+                        brightness, valid_masks, outside_masks, observed
+                    )
+
+                measured = tc.sectorized_contrast_trace(
+                    inside_values, outside_values, indices
+                )
+                if geometry == "semantic":
+                    geometry_validity = {
+                        "status": semantic_geometry["status"],
+                        "reasons": list(semantic_geometry.get("reasons") or []),
+                    }
+                    validity = tc.compose_validity(
+                        [
+                            activation_result["upstream_validity"],
+                            geometry_validity,
+                        ],
+                        measured["median_summary"],
+                    )
+                    geometry_meta = {
+                        "type": "semantic_relative",
+                        **semantic_geometry,
+                    }
+                else:
+                    validity = tc.compose_validity(
+                        [activation_result["upstream_validity"]],
+                        measured["median_summary"],
+                    )
+                    geometry_meta = {
+                        "type": "coarse_relative",
+                        "boundary_name": pair_id,
+                        "inner_radius": float(spec["coarse_triplet"][0]),
+                        "boundary_radius": float(spec["coarse_triplet"][1]),
+                        "outer_radius": float(spec["coarse_triplet"][2]),
+                    }
+
+                candidate = {
+                    **measured,
+                    "validity": validity,
+                    "evidence": tc.select_sectorized_evidence(
+                        measured["frame_trace"]
+                    ),
+                    "strip_support": support,
+                    "geometry": geometry_meta,
+                    "scale_fraction": float(fraction),
+                }
+                by_geometry[geometry] = candidate
+                scale_results[geometry][scale_key] = candidate
+            pair_out["scales"][scale_key] = by_geometry
+
+        pair_out["multi_scale"] = {}
+        for geometry in ("coarse", "semantic"):
+            available = {
+                key: value
+                for key, value in scale_results[geometry].items()
+                if value.get("frame_trace")
+            }
+            if not available:
+                pair_out["multi_scale"][geometry] = {
+                    "status": "unavailable",
+                    "reason": "no_available_scales",
+                }
+                continue
+            consensus = tc.multiscale_sector_consensus(available)
+            validity = tc.compose_validity(
+                [value["validity"] for value in available.values()],
+                consensus["median_summary"],
+            )
+            pair_out["multi_scale"][geometry] = {
+                **consensus,
+                "validity": validity,
+                "evidence": tc.select_sectorized_evidence(
+                    consensus["frame_trace"]
+                ),
+                "geometry": next(iter(available.values()))["geometry"],
+            }
+        output["pairs"][pair_id] = pair_out
+    return output
+
+
 def measure_stone(processed, step_output, indices, wrap=False):
-    activation = ab.measure_stone(processed, step_output, indices, wrap=wrap)
-    spread_inputs = _fixed_spread_inputs(processed, activation)
+    activation_result = ab.measure_stone(
+        processed, step_output, indices, wrap=wrap
+    )
+    spread_inputs = _fixed_spread_inputs(processed, activation_result)
     result = measure_from_activation(
-        activation,
+        activation_result,
         spread_inputs["spreads"],
         spread_inputs["localized_band_values"],
         spread_inputs["localized_support_pixels"],
     )
+    boundary_local = _boundary_local_inputs(
+        processed,
+        step_output,
+        activation_result,
+    )
+    for pair_id, pair in result["pairs"].items():
+        pair["boundary_local"] = (
+            boundary_local.get("pairs", {}).get(
+                pair_id,
+                {
+                    "status": "unavailable",
+                    "reason": boundary_local.get("reason"),
+                },
+            )
+        )
+        broad_trace = (pair.get("localized") or {}).get("frame_trace") or []
+        for geometries in (
+            pair["boundary_local"].get("scales") or {}
+        ).values():
+            coarse = geometries.get("coarse") or {}
+            semantic = geometries.get("semantic") or {}
+            for candidate in (coarse, semantic):
+                if broad_trace and candidate.get("frame_trace"):
+                    candidate["strongest_disagreement_vs_broad"] = (
+                        tc.strongest_rank_disagreement(
+                            broad_trace,
+                            "median_separation",
+                            candidate["frame_trace"],
+                            "median_separation",
+                        )
+                    )
+            if coarse.get("frame_trace") and semantic.get("frame_trace"):
+                semantic["strongest_disagreement_vs_coarse_boundary"] = (
+                    tc.strongest_rank_disagreement(
+                        coarse["frame_trace"],
+                        "median_separation",
+                        semantic["frame_trace"],
+                        "median_separation",
+                    )
+                )
+
+        multi = pair["boundary_local"].get("multi_scale") or {}
+        coarse_multi = multi.get("coarse") or {}
+        semantic_multi = multi.get("semantic") or {}
+        for candidate in (coarse_multi, semantic_multi):
+            if broad_trace and candidate.get("frame_trace"):
+                candidate["strongest_disagreement_vs_broad"] = (
+                    tc.strongest_rank_disagreement(
+                        broad_trace,
+                        "median_separation",
+                        candidate["frame_trace"],
+                        "median_separation",
+                    )
+                )
+        if (
+            coarse_multi.get("frame_trace")
+            and semantic_multi.get("frame_trace")
+        ):
+            semantic_multi["strongest_disagreement_vs_coarse_boundary"] = (
+                tc.strongest_rank_disagreement(
+                    coarse_multi["frame_trace"],
+                    "median_separation",
+                    semantic_multi["frame_trace"],
+                    "median_separation",
+                )
+            )
+    result["boundary_local_definition"] = {
+        key: value
+        for key, value in boundary_local.items()
+        if key != "pairs"
+    }
     result["frame_camera_paths"] = spread_inputs["camera_paths"]
     result["frame_region_paths"] = spread_inputs["region_paths"]
+    result["frame_mask_paths"] = spread_inputs["mask_paths"]
     return result
-
 
 def _boundary(mask):
     mask = np.asarray(mask, bool)
@@ -429,6 +883,323 @@ def _draw_localized_panel(destination, pair_id, pair_result, result, processed):
         )
     canvas.save(destination)
 
+def _overlay_boundary_strips(
+    image, mask_path, region_path, geometry, fraction, guard, sector, processed
+):
+    image = image.convert("RGB")
+    if not mask_path or not region_path or not sector:
+        return image
+    processed = Path(processed)
+    mask = np.asarray(Image.open(processed / mask_path).convert("L")) > 0
+    with np.load(processed / region_path) as data:
+        sector_mask = np.asarray(data[sector], bool)
+    if geometry.get("type") == "semantic_relative":
+        strips = steps.relative_boundary_strip_masks(
+            mask,
+            geometry["inner_sector_u"],
+            geometry["boundary_sector_u"],
+            geometry["outer_sector_u"],
+            fraction=float(fraction),
+            guard=float(guard),
+            sector_mask=sector_mask,
+        )
+    elif geometry.get("type") == "coarse_relative":
+        strips = coarse_regions.relative_boundary_strip_masks(
+            mask,
+            geometry["inner_radius"],
+            geometry["boundary_radius"],
+            geometry["outer_radius"],
+            fraction=float(fraction),
+            guard=float(guard),
+            sector_mask=sector_mask,
+        )
+    else:
+        return image
+    array = np.asarray(image).copy()
+    inside = strips["inside"]
+    outside = strips["outside"]
+    if inside.any():
+        array[inside] = (
+            .65 * array[inside] + .35 * np.array([255, 70, 70])
+        ).astype(np.uint8)
+    if outside.any():
+        array[outside] = (
+            .65 * array[outside] + .35 * np.array([70, 130, 255])
+        ).astype(np.uint8)
+    return Image.fromarray(array)
+
+
+def _draw_boundary_local_panel(
+    destination,
+    pair_id,
+    pair_result,
+    result,
+    processed,
+    geometry_name,
+    display_fraction=.40,
+):
+    boundary = pair_result.get("boundary_local") or {}
+    candidate = (boundary.get("multi_scale") or {}).get(geometry_name, {})
+    evidence = candidate.get("evidence") or {}
+    if not candidate.get("frame_trace") or not evidence:
+        return False
+    ordered = [
+        ("weakest multiscale separation", evidence.get("weakest")),
+        ("median multiscale separation", evidence.get("median")),
+        ("strongest multiscale separation", evidence.get("strongest")),
+    ]
+    rows = [(label, event) for label, event in ordered if event is not None]
+    if not rows:
+        return False
+    canvas = Image.new("RGB", (1020, 65 + 235 * len(rows)), "white")
+    draw = ImageDraw.Draw(canvas)
+    draw.text(
+        (10, 10),
+        f"{pair_id}: {geometry_name} tier-relative multiscale contrast",
+        fill="black",
+    )
+    draw.text(
+        (10, 30),
+        (
+            f"consensus across alpha={result.get('boundary_local_definition', {}).get('scale_fractions')}; "
+            f"overlay alpha={display_fraction:.2f}; red=inside blue=outside"
+        ),
+        fill="black",
+    )
+    geometry = candidate.get("geometry") or {}
+    guard = result.get("boundary_local_definition", {}).get(
+        "guard_u", BOUNDARY_GUARD
+    )
+    for index, (label, event) in enumerate(rows):
+        position = event["position"]
+        source_index = event["source_index"]
+        value = event.get("median_separation")
+        strongest = event.get("strongest_sector")
+        strongest_value = event.get("strongest_sector_separation")
+        value_text = f"{value:.5f}" if value is not None else "n/a"
+        detail = f"{label}: source {source_index}; median={value_text}"
+        if strongest is not None and strongest_value is not None:
+            detail += f"; strongest={strongest} {strongest_value:.5f}"
+        if event.get("median_scale_spread") is not None:
+            detail += f"; scale-spread={event['median_scale_spread']:.5f}"
+        y = 60 + index * 235
+        draw.text((10, y), detail, fill="black")
+        camera_path = result.get("frame_camera_paths", [])[position]
+        registered_path = result.get("frame_rgb_paths", [])[position]
+        mask_path = result.get("frame_mask_paths", [])[position]
+        region_path = result.get("frame_region_paths", [])[position]
+        if camera_path:
+            with Image.open(Path(processed) / camera_path) as source:
+                source = source.convert("RGB")
+            source.thumbnail((480, 190))
+            canvas.paste(source, (10, y + 25))
+        if registered_path:
+            with Image.open(Path(processed) / registered_path) as registered:
+                registered = registered.convert("RGB")
+            registered = _overlay_boundary_strips(
+                registered,
+                mask_path,
+                region_path,
+                geometry,
+                display_fraction,
+                guard,
+                strongest,
+                processed,
+            )
+            registered.thumbnail((480, 190))
+            canvas.paste(registered, (520, y + 25))
+    canvas.save(destination)
+    return True
+
+
+def _draw_same_frame_boundary_comparison(
+    destination,
+    pair_id,
+    pair_result,
+    result,
+    processed,
+    display_fraction=.40,
+):
+    """Compare broad and revised multiscale formulations on aligned frames."""
+    boundary = pair_result.get("boundary_local") or {}
+    multi = boundary.get("multi_scale") or {}
+    semantic = multi.get("semantic") or {}
+    coarse = multi.get("coarse") or {}
+    evidence = semantic.get("evidence") or {}
+    if not semantic.get("frame_trace") or not coarse.get("frame_trace"):
+        return False
+    ordered = [
+        ("weak", evidence.get("weakest")),
+        ("typical", evidence.get("median")),
+        ("strong", evidence.get("strongest")),
+        (
+            "vs broad disagreement",
+            semantic.get("strongest_disagreement_vs_broad"),
+        ),
+    ]
+    rows = [(label, event) for label, event in ordered if event is not None]
+    if not rows:
+        return False
+
+    canvas = Image.new("RGB", (1510, 70 + 250 * len(rows)), "white")
+    draw = ImageDraw.Draw(canvas)
+    draw.text(
+        (10, 8),
+        f"{pair_id}: same-frame revised PR-A comparison",
+        fill="black",
+    )
+    draw.text(
+        (10, 28),
+        (
+            "camera source | coarse tier-relative strips | #19 tier-relative strips; "
+            f"values=multiscale consensus, overlays alpha={display_fraction:.2f}"
+        ),
+        fill="black",
+    )
+    guard = result.get("boundary_local_definition", {}).get(
+        "guard_u", BOUNDARY_GUARD
+    )
+    simple_trace = (pair_result.get("simple") or {}).get("frame_trace") or []
+    broad_trace = (pair_result.get("localized") or {}).get("frame_trace") or []
+
+    def fmt(value):
+        return "n/a" if value is None else f"{float(value):.5f}"
+
+    for row_index, (label, event) in enumerate(rows):
+        position = event["position"]
+        semantic_row = semantic["frame_trace"][position]
+        coarse_row = coarse["frame_trace"][position]
+        sector = (
+            event.get("strongest_sector")
+            or semantic_row.get("strongest_sector")
+        )
+        simple_value = (
+            simple_trace[position].get("separation")
+            if position < len(simple_trace) else None
+        )
+        broad_value = (
+            broad_trace[position].get("median_separation")
+            if position < len(broad_trace) else None
+        )
+        y = 58 + row_index * 250
+        detail = (
+            f"{label}: source {event['source_index']} · whole={fmt(simple_value)} · "
+            f"broad-sector={fmt(broad_value)} · coarse-multiscale={fmt(coarse_row.get('median_separation'))} · "
+            f"semantic-multiscale={fmt(semantic_row.get('median_separation'))} · sector={sector or 'n/a'}"
+        )
+        if event.get("rank_disagreement") is not None:
+            detail += f" · rank-disagreement={event['rank_disagreement']:.2f}"
+        draw.text((10, y), detail, fill="black")
+        camera_path = result.get("frame_camera_paths", [])[position]
+        registered_path = result.get("frame_rgb_paths", [])[position]
+        mask_path = result.get("frame_mask_paths", [])[position]
+        region_path = result.get("frame_region_paths", [])[position]
+        if camera_path:
+            with Image.open(Path(processed) / camera_path) as source:
+                source = source.convert("RGB")
+            source.thumbnail((480, 205))
+            canvas.paste(source, (10, y + 25))
+        if registered_path:
+            with Image.open(Path(processed) / registered_path) as base:
+                base = base.convert("RGB")
+            coarse_image = _overlay_boundary_strips(
+                base,
+                mask_path,
+                region_path,
+                coarse.get("geometry") or {},
+                display_fraction,
+                guard,
+                sector,
+                processed,
+            )
+            semantic_image = _overlay_boundary_strips(
+                base,
+                mask_path,
+                region_path,
+                semantic.get("geometry") or {},
+                display_fraction,
+                guard,
+                sector,
+                processed,
+            )
+            coarse_image.thumbnail((480, 205))
+            semantic_image.thumbnail((480, 205))
+            canvas.paste(coarse_image, (515, y + 25))
+            canvas.paste(semantic_image, (1010, y + 25))
+    canvas.save(destination)
+    return True
+
+
+def _write_boundary_local_csv(result, output):
+    rows = []
+    for pair_id, pair in result.get("pairs", {}).items():
+        boundary = pair.get("boundary_local") or {}
+        for scale_key, geometries in (boundary.get("scales") or {}).items():
+            for geometry_name, candidate in geometries.items():
+                summary = candidate.get("median_summary") or {}
+                q75 = candidate.get("q75_summary") or {}
+                support = candidate.get("strip_support") or {}
+                pixels = []
+                fractions = []
+                for side in ("inside", "outside"):
+                    for cell in (support.get(side) or {}).values():
+                        value = cell.get("min_support_pixels")
+                        if value is not None:
+                            pixels.append(int(value))
+                        value = cell.get("min_support_fraction")
+                        if value is not None:
+                            fractions.append(float(value))
+                rows.append({
+                    "pair": pair_id,
+                    "scale_fraction": scale_key,
+                    "geometry": geometry_name,
+                    "status": (candidate.get("validity") or {}).get(
+                        "status", candidate.get("status")
+                    ),
+                    "q10": summary.get("q10"),
+                    "q50": summary.get("q50"),
+                    "q90": summary.get("q90"),
+                    "q75_frame_median": q75.get("q50"),
+                    "scale_spread_q50": None,
+                    "finite_frames": summary.get("finite_frames"),
+                    "min_frame_support_pixels": min(pixels) if pixels else None,
+                    "min_frame_support_fraction": (
+                        min(fractions) if fractions else None
+                    ),
+                })
+        for geometry_name, candidate in (
+            boundary.get("multi_scale") or {}
+        ).items():
+            summary = candidate.get("median_summary") or {}
+            q75 = candidate.get("q75_summary") or {}
+            spread = candidate.get("scale_spread_summary") or {}
+            rows.append({
+                "pair": pair_id,
+                "scale_fraction": "consensus",
+                "geometry": geometry_name,
+                "status": (candidate.get("validity") or {}).get(
+                    "status", candidate.get("status")
+                ),
+                "q10": summary.get("q10"),
+                "q50": summary.get("q50"),
+                "q90": summary.get("q90"),
+                "q75_frame_median": q75.get("q50"),
+                "scale_spread_q50": spread.get("q50"),
+                "finite_frames": summary.get("finite_frames"),
+                "min_frame_support_pixels": None,
+                "min_frame_support_fraction": None,
+            })
+    if not rows:
+        return
+    fields = list(rows[0])
+    with (Path(output) / "boundary-local.csv").open(
+        "w", newline=""
+    ) as handle:
+        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer.writeheader()
+        writer.writerows(rows)
+
+
 def write_stone_outputs(result, output, processed=None):
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
@@ -460,32 +1231,30 @@ def write_stone_outputs(result, output, processed=None):
         localized = pair.get("localized") or {}
         localized_summary = localized.get("median_summary") or {}
         localized_q75 = localized.get("q75_summary") or {}
-        rows.append(
-            {
-                "pair": pair_id,
-                "simple_status": simple["validity"]["status"],
-                "simple_q10": simple["summary"]["q10"],
-                "simple_q50": simple["summary"]["q50"],
-                "simple_q90": simple["summary"]["q90"],
-                "standardized_status": standardized["validity"]["status"],
-                "standardized_q10": standardized["summary"]["q10"],
-                "standardized_q50": standardized["summary"]["q50"],
-                "standardized_q90": standardized["summary"]["q90"],
-                "left_support_fraction": pair["component_provenance"]["left"].get(
-                    "persistent_support_fraction"
-                ),
-                "right_support_fraction": pair["component_provenance"]["right"].get(
-                    "persistent_support_fraction"
-                ),
-                "localized_status": (localized.get("validity") or {}).get(
-                    "status", localized.get("status", "unavailable")
-                ),
-                "localized_q10": localized_summary.get("q10"),
-                "localized_q50": localized_summary.get("q50"),
-                "localized_q90": localized_summary.get("q90"),
-                "localized_q75_q50": localized_q75.get("q50"),
-            }
-        )
+        rows.append({
+            "pair": pair_id,
+            "simple_status": simple["validity"]["status"],
+            "simple_q10": simple["summary"]["q10"],
+            "simple_q50": simple["summary"]["q50"],
+            "simple_q90": simple["summary"]["q90"],
+            "standardized_status": standardized["validity"]["status"],
+            "standardized_q10": standardized["summary"]["q10"],
+            "standardized_q50": standardized["summary"]["q50"],
+            "standardized_q90": standardized["summary"]["q90"],
+            "left_support_fraction": pair["component_provenance"]["left"].get(
+                "persistent_support_fraction"
+            ),
+            "right_support_fraction": pair["component_provenance"]["right"].get(
+                "persistent_support_fraction"
+            ),
+            "localized_status": (localized.get("validity") or {}).get(
+                "status", localized.get("status", "unavailable")
+            ),
+            "localized_q10": localized_summary.get("q10"),
+            "localized_q50": localized_summary.get("q50"),
+            "localized_q90": localized_summary.get("q90"),
+            "localized_q75_q50": localized_q75.get("q50"),
+        })
         if processed is not None:
             evidence_dir = output / "evidence"
             evidence_dir.mkdir(exist_ok=True)
@@ -504,7 +1273,300 @@ def write_stone_outputs(result, output, processed=None):
                     result,
                     processed,
                 )
-    with (output / "tier-contrast.csv").open("w", newline="") as handle:
+            for geometry_name in ("semantic", "coarse"):
+                _draw_boundary_local_panel(
+                    evidence_dir
+                    / f"{pair_id}-boundary-{geometry_name}.png",
+                    pair_id,
+                    pair,
+                    result,
+                    processed,
+                    geometry_name,
+                )
+            _draw_same_frame_boundary_comparison(
+                evidence_dir / f"{pair_id}-boundary-comparison.png",
+                pair_id,
+                pair,
+                result,
+                processed,
+            )
+    with (output / "tier-contrast.csv").open(
+        "w", newline=""
+    ) as handle:
         writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()
         writer.writerows(rows)
+    _write_boundary_local_csv(result, output)
+
+
+def _comparison_rows(certificate, pipeline_name, window, result):
+    rows = []
+    for pair_id, pair in result.get("pairs", {}).items():
+        localized = pair.get("localized") or {}
+        base = {
+            "certificate": certificate,
+            "pipeline": pipeline_name,
+            "window": window,
+            "pair": pair_id,
+            "broad_localized_status": (localized.get("validity") or {}).get(
+                "status", localized.get("status")
+            ),
+            "broad_localized_q50": (
+                localized.get("median_summary") or {}
+            ).get("q50"),
+        }
+        boundary = pair.get("boundary_local") or {}
+        for scale_key, geometries in (
+            boundary.get("scales") or {}
+        ).items():
+            row = dict(base)
+            row["scale_fraction"] = scale_key
+            row["formulation"] = "single_scale"
+            for geometry_name in ("coarse", "semantic"):
+                candidate = geometries.get(geometry_name) or {}
+                summary = candidate.get("median_summary") or {}
+                row[f"{geometry_name}_status"] = (
+                    candidate.get("validity") or {}
+                ).get("status", candidate.get("status"))
+                row[f"{geometry_name}_q10"] = summary.get("q10")
+                row[f"{geometry_name}_q50"] = summary.get("q50")
+                row[f"{geometry_name}_q90"] = summary.get("q90")
+                row[f"{geometry_name}_scale_spread_q50"] = None
+            rows.append(row)
+
+        row = dict(base)
+        row["scale_fraction"] = "consensus"
+        row["formulation"] = "multiscale_consensus"
+        for geometry_name in ("coarse", "semantic"):
+            candidate = (
+                boundary.get("multi_scale") or {}
+            ).get(geometry_name, {})
+            summary = candidate.get("median_summary") or {}
+            spread = candidate.get("scale_spread_summary") or {}
+            row[f"{geometry_name}_status"] = (
+                candidate.get("validity") or {}
+            ).get("status", candidate.get("status"))
+            row[f"{geometry_name}_q10"] = summary.get("q10")
+            row[f"{geometry_name}_q50"] = summary.get("q50")
+            row[f"{geometry_name}_q90"] = summary.get("q90")
+            row[f"{geometry_name}_scale_spread_q50"] = spread.get("q50")
+        rows.append(row)
+    return rows
+
+
+def _diagnostic_control(payload, name):
+    control, source = _boundary_control(payload, name)
+    if control is None:
+        return None, source
+    return np.asarray(control["sector_u"], float), source
+
+
+def _geometry_diagnostic(canonical_payload, alternative_payload):
+    rows = {}
+    for name in steps.BOUNDARIES:
+        canonical, canonical_source = _diagnostic_control(
+            canonical_payload, name
+        )
+        alternative, alternative_source = _diagnostic_control(
+            alternative_payload, name
+        )
+        if canonical is None or alternative is None:
+            rows[name] = {
+                "status": "unavailable",
+                "canonical_source": canonical_source,
+                "alternative_source": alternative_source,
+            }
+            continue
+        delta = alternative - canonical
+        rows[name] = {
+            "status": "ok",
+            "canonical_source": canonical_source,
+            "alternative_source": alternative_source,
+            "canonical_median_u": float(np.median(canonical)),
+            "alternative_median_u": float(np.median(alternative)),
+            "median_signed_delta_u": float(np.median(delta)),
+            "median_abs_delta_u": float(np.median(np.abs(delta))),
+            "max_abs_delta_u": float(np.max(np.abs(delta))),
+        }
+    return rows
+
+
+def run_source_benchmark(source_root, output, bundle_manifest):
+    """Run revised PR-A comparisons with one canonical wide #19 ruler."""
+    source_root = Path(source_root).resolve()
+    output = Path(output).resolve()
+    manifest = json.loads(Path(bundle_manifest).read_text())
+    output.mkdir(parents=True, exist_ok=True)
+    rows = []
+    stones = []
+
+    with tempfile.TemporaryDirectory(
+        prefix="sparkles-tier-readability-"
+    ) as temporary:
+        work = Path(temporary)
+        for item in manifest["bundles"]:
+            certificate = item["certificate"]
+            source = source_root / certificate
+            order_manifest = source / "source-manifest.json"
+            processed = work / certificate / "processed"
+            processed.parent.mkdir(parents=True, exist_ok=True)
+            pipeline.run(
+                source,
+                processed,
+                order_manifest,
+                gain=1.0,
+                diagnostic_indices=CORE_INDICES,
+                accept_review=True,
+            )
+            pipeline_name = (
+                "Workshop"
+                if certificate == "IGI-LG756520111"
+                else "Diajewel"
+            )
+
+            canonical_step_output = (
+                work / certificate / "steps-canonical-wide"
+            )
+            steps.run(
+                processed,
+                canonical_step_output,
+                WIDE_INDICES,
+                wrap=True,
+            )
+            canonical_payload = json.loads(
+                (canonical_step_output / "steps.json").read_text()
+            )
+
+            core_diagnostic_output = (
+                work / certificate / "steps-diagnostic-core"
+            )
+            steps.run(
+                processed,
+                core_diagnostic_output,
+                CORE_INDICES,
+                wrap=True,
+            )
+            core_payload = json.loads(
+                (core_diagnostic_output / "steps.json").read_text()
+            )
+
+            stone_summary = {
+                "certificate": certificate,
+                "pipeline": pipeline_name,
+                "canonical_geometry": {
+                    "window": "wide",
+                    "requested_indices": WIDE_INDICES,
+                    "template_status": canonical_payload.get(
+                        "template_status"
+                    ),
+                    "template_reason": canonical_payload.get(
+                        "template_reason"
+                    ),
+                },
+                "geometry_diagnostics": {
+                    "core_only_vs_canonical_wide": _geometry_diagnostic(
+                        canonical_payload, core_payload
+                    ),
+                    "core_only_template_status": core_payload.get(
+                        "template_status"
+                    ),
+                    "core_only_template_reason": core_payload.get(
+                        "template_reason"
+                    ),
+                },
+                "windows": {},
+            }
+
+            for window, indices in (
+                ("core", CORE_INDICES),
+                ("wide", WIDE_INDICES),
+            ):
+                measured = measure_stone(
+                    processed,
+                    canonical_step_output,
+                    indices,
+                    wrap=True,
+                )
+                destination = (
+                    output / "per-stone" / certificate / window
+                )
+                write_stone_outputs(
+                    measured, destination, processed=processed
+                )
+                rows.extend(
+                    _comparison_rows(
+                        certificate,
+                        pipeline_name,
+                        window,
+                        measured,
+                    )
+                )
+                stone_summary["windows"][window] = {
+                    "measurement_geometry": "canonical_wide",
+                    "tier_contrast_json": str(
+                        destination.relative_to(output)
+                        / "tier-contrast.json"
+                    ),
+                    "boundary_local_csv": str(
+                        destination.relative_to(output)
+                        / "boundary-local.csv"
+                    ),
+                    "evidence_dir": str(
+                        destination.relative_to(output) / "evidence"
+                    ),
+                }
+            stones.append(stone_summary)
+
+    summary = {
+        "schema_version": (
+            "diamond360-tier-readability-pr-a-benchmark/2"
+        ),
+        "descriptor_schema": SCHEMA,
+        "core_indices": CORE_INDICES,
+        "wide_indices": WIDE_INDICES,
+        "canonical_geometry_window": "wide",
+        "boundary_scale_fractions": list(BOUNDARY_FRACTIONS),
+        "boundary_guard_u": BOUNDARY_GUARD,
+        "stones": stones,
+        "interpretation": (
+            "Research comparison only: one canonical wide #19 geometry is "
+            "reused for both core and wide measurements; tier-relative "
+            "multiscale strips are compared with #49 broad matched sectors "
+            "and a legacy coarse-geometry control."
+        ),
+        "non_goals": [
+            "no Q25/spatial-coverage production choice in PR A",
+            "no joint nested-tier score",
+            "no aesthetic threshold or higher-is-better claim",
+        ],
+    }
+    (output / "summary.json").write_text(
+        json.dumps(summary, indent=2, allow_nan=False) + "\n"
+    )
+    if rows:
+        fields = list(rows[0])
+        with (output / "comparison.csv").open(
+            "w", newline=""
+        ) as handle:
+            writer = csv.DictWriter(handle, fieldnames=fields)
+            writer.writeheader()
+            writer.writerows(rows)
+    return summary
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--source-root", type=Path, required=True)
+    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--bundle-manifest",
+        type=Path,
+        default=Path("docs/360/benchmark/source-bundles.json"),
+    )
+    args = parser.parse_args()
+    run_source_benchmark(args.source_root, args.output, args.bundle_manifest)
+    print(f"wrote tier readability PR-A benchmark -> {args.output}")
+
+
+if __name__ == "__main__":
+    main()
