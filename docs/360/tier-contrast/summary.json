@@ -87,7 +87,12 @@
         "separation": 0.09539558016032487,
         "signed_log_contrast": 0.09539558016032487
       },
-      "source_trace": "docs/360/benchmark/per-stone/IGI-LG756520111/core/traces.json"
+      "source_trace": "docs/360/benchmark/per-stone/IGI-LG756520111/core/traces.json",
+      "status": "review",
+      "reasons": [
+        "foreground_or_nonuniformity_on_border",
+        "outline_near_image_edge"
+      ]
     },
     {
       "certificate": "IGI-LG756520111",
@@ -111,7 +116,12 @@
         "separation": 0.0688151919309957,
         "signed_log_contrast": -0.0688151919309957
       },
-      "source_trace": "docs/360/benchmark/per-stone/IGI-LG756520111/core/traces.json"
+      "source_trace": "docs/360/benchmark/per-stone/IGI-LG756520111/core/traces.json",
+      "status": "review",
+      "reasons": [
+        "foreground_or_nonuniformity_on_border",
+        "outline_near_image_edge"
+      ]
     },
     {
       "certificate": "IGI-LG756520111",
@@ -135,7 +145,12 @@
         "separation": 0.09539558016032487,
         "signed_log_contrast": 0.09539558016032487
       },
-      "source_trace": "docs/360/benchmark/per-stone/IGI-LG756520111/wide/traces.json"
+      "source_trace": "docs/360/benchmark/per-stone/IGI-LG756520111/wide/traces.json",
+      "status": "review",
+      "reasons": [
+        "foreground_or_nonuniformity_on_border",
+        "outline_near_image_edge"
+      ]
     },
     {
       "certificate": "IGI-LG756520111",
@@ -159,7 +174,12 @@
         "separation": 0.0688151919309957,
         "signed_log_contrast": -0.0688151919309957
       },
-      "source_trace": "docs/360/benchmark/per-stone/IGI-LG756520111/wide/traces.json"
+      "source_trace": "docs/360/benchmark/per-stone/IGI-LG756520111/wide/traces.json",
+      "status": "review",
+      "reasons": [
+        "foreground_or_nonuniformity_on_border",
+        "outline_near_image_edge"
+      ]
     },
     {
       "certificate": "IGI-LG756580087",
@@ -183,7 +203,9 @@
         "separation": 0.1038403420094468,
         "signed_log_contrast": -0.1038403420094468
       },
-      "source_trace": "docs/360/benchmark/per-stone/IGI-LG756580087/core/traces.json"
+      "source_trace": "docs/360/benchmark/per-stone/IGI-LG756580087/core/traces.json",
+      "status": "ok",
+      "reasons": []
     },
     {
       "certificate": "IGI-LG756580087",
@@ -207,7 +229,9 @@
         "separation": 0.065289853387625,
         "signed_log_contrast": -0.065289853387625
       },
-      "source_trace": "docs/360/benchmark/per-stone/IGI-LG756580087/core/traces.json"
+      "source_trace": "docs/360/benchmark/per-stone/IGI-LG756580087/core/traces.json",
+      "status": "ok",
+      "reasons": []
     },
     {
       "certificate": "IGI-LG756580087",
@@ -231,7 +255,9 @@
         "separation": 0.1038403420094468,
         "signed_log_contrast": -0.1038403420094468
       },
-      "source_trace": "docs/360/benchmark/per-stone/IGI-LG756580087/wide/traces.json"
+      "source_trace": "docs/360/benchmark/per-stone/IGI-LG756580087/wide/traces.json",
+      "status": "ok",
+      "reasons": []
     },
     {
       "certificate": "IGI-LG756580087",
@@ -255,7 +281,9 @@
         "separation": 0.09724728197964305,
         "signed_log_contrast": -0.09724728197964305
       },
-      "source_trace": "docs/360/benchmark/per-stone/IGI-LG756580087/wide/traces.json"
+      "source_trace": "docs/360/benchmark/per-stone/IGI-LG756580087/wide/traces.json",
+      "status": "ok",
+      "reasons": []
     },
     {
       "certificate": "IGI-LG818659722",
@@ -279,7 +307,12 @@
         "separation": 0.18081073684485666,
         "signed_log_contrast": 0.18081073684485666
       },
-      "source_trace": "docs/360/benchmark/per-stone/IGI-LG818659722/core/traces.json"
+      "source_trace": "docs/360/benchmark/per-stone/IGI-LG818659722/core/traces.json",
+      "status": "review",
+      "reasons": [
+        "foreground_or_nonuniformity_on_border",
+        "outline_near_image_edge"
+      ]
     },
     {
       "certificate": "IGI-LG818659722",
@@ -303,7 +336,12 @@
         "separation": 0.31385127311759076,
         "signed_log_contrast": -0.31385127311759076
       },
-      "source_trace": "docs/360/benchmark/per-stone/IGI-LG818659722/core/traces.json"
+      "source_trace": "docs/360/benchmark/per-stone/IGI-LG818659722/core/traces.json",
+      "status": "review",
+      "reasons": [
+        "foreground_or_nonuniformity_on_border",
+        "outline_near_image_edge"
+      ]
     },
     {
       "certificate": "IGI-LG818659722",
@@ -327,7 +365,12 @@
         "separation": 0.18081073684485666,
         "signed_log_contrast": 0.18081073684485666
       },
-      "source_trace": "docs/360/benchmark/per-stone/IGI-LG818659722/wide/traces.json"
+      "source_trace": "docs/360/benchmark/per-stone/IGI-LG818659722/wide/traces.json",
+      "status": "review",
+      "reasons": [
+        "foreground_or_nonuniformity_on_border",
+        "outline_near_image_edge"
+      ]
     },
     {
       "certificate": "IGI-LG818659722",
@@ -351,7 +394,12 @@
         "separation": 0.31385127311759076,
         "signed_log_contrast": -0.31385127311759076
       },
-      "source_trace": "docs/360/benchmark/per-stone/IGI-LG818659722/wide/traces.json"
+      "source_trace": "docs/360/benchmark/per-stone/IGI-LG818659722/wide/traces.json",
+      "status": "review",
+      "reasons": [
+        "foreground_or_nonuniformity_on_border",
+        "outline_near_image_edge"
+      ]
     },
     {
       "certificate": "IGI-LG836619414",
@@ -375,7 +423,9 @@
         "separation": 0.07842183055574259,
         "signed_log_contrast": 0.07842183055574259
       },
-      "source_trace": "docs/360/benchmark/per-stone/IGI-LG836619414/core/traces.json"
+      "source_trace": "docs/360/benchmark/per-stone/IGI-LG836619414/core/traces.json",
+      "status": "ok",
+      "reasons": []
     },
     {
       "certificate": "IGI-LG836619414",
@@ -399,7 +449,9 @@
         "separation": 0.09666911735537603,
         "signed_log_contrast": -0.09666911735537603
       },
-      "source_trace": "docs/360/benchmark/per-stone/IGI-LG836619414/core/traces.json"
+      "source_trace": "docs/360/benchmark/per-stone/IGI-LG836619414/core/traces.json",
+      "status": "ok",
+      "reasons": []
     },
     {
       "certificate": "IGI-LG836619414",
@@ -423,7 +475,9 @@
         "separation": 0.07842183055574259,
         "signed_log_contrast": 0.07842183055574259
       },
-      "source_trace": "docs/360/benchmark/per-stone/IGI-LG836619414/wide/traces.json"
+      "source_trace": "docs/360/benchmark/per-stone/IGI-LG836619414/wide/traces.json",
+      "status": "ok",
+      "reasons": []
     },
     {
       "certificate": "IGI-LG836619414",
@@ -447,7 +501,9 @@
         "separation": 0.09933973263533336,
         "signed_log_contrast": -0.09933973263533336
       },
-      "source_trace": "docs/360/benchmark/per-stone/IGI-LG836619414/wide/traces.json"
+      "source_trace": "docs/360/benchmark/per-stone/IGI-LG836619414/wide/traces.json",
+      "status": "ok",
+      "reasons": []
     }
   ],
   "core_wide_sensitivity": {
@@ -884,5 +940,10 @@
   ],
   "provisional_disposition": "REVISE",
   "provisional_disposition_reason": "The observable is still plausible, but the current coarse whole-band median formulation loses spatially local tier contrast and its low/typical summaries are window-sensitive. Do not promote to #23 or #45 without a more localized formulation and the standardized/raw-pixel audit.",
-  "next_experiment": "Keep the same adjacent-tier question but test localized side/corner or boundary-neighbour contrast before adding complexity; run the standardized challenger on the release source bundles mainly as a falsification/control."
+  "next_experiment": "Keep the same adjacent-tier question but test localized side/corner or boundary-neighbour contrast before adding complexity; run the standardized challenger on the release source bundles mainly as a falsification/control.",
+  "validity_contract": {
+    "source": "docs/360/activation/summary.json coarse-fixed relative component validity",
+    "composition": "monotone unavailable > review > ok; pair cannot upgrade either component",
+    "note": "The committed trace reconstruction is numerically exact but inherits #26 interpretation validity."
+  }
 }
