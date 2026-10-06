@@ -8,3 +8,5 @@ outputs/
 docs/360/activation/per-stone/**/activation.json
 docs/360/activation/per-stone/**/activation.csv
 docs/360/activation/per-stone/**/evidence/*.png
+# Derived evaluation bundles belong in local outputs or Release assets, not Git history.
+resources/**/artifacts/*.zip

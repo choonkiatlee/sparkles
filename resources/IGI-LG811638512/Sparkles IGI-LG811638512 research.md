@@ -59,11 +59,11 @@ All files retrieved 2026-10-05T08:41:25.165513+00:00; certificate association fo
 
 Supplier capture **1 August 2026**, following the report dated 28 July 2026. Recovered 128 unique original 823 × 823 JPEGs: even indices 0–254, batches 1–6, spanning the rotation. Inspected a 64-frame ordered overview and 15 selected face-up/context originals. Batch 7 timed out after 180 seconds with incomplete data; odd frames were not decoded or archived. No full 256-frame recovery claim. Public ordering map inverted per batch and progressively interleaved; JPEG dimensions, unique hashes and decode checks passed.
 
-- [Original motion evidence ZIP](artifacts/IGI-LG811638512-pass2-motion-evidence.zip): 706040 bytes; SHA-256 `afaa628cc2e9d882982f812b7377dbbc732ca2146fc76e832d4493e5b7616d30`. Face-up reading order **246, 248, 250, 252, 254, 0, 2, 4, 6, 8, 10, 12**, context **32, 128, 192**. Selection spans both sides of face-up and changing step/central states, including darker states. Context provides outline, crown and profile views. Original JPEG bytes and source indices preserved in manifest.
+- Motion originals were used during evaluation, but the derived ZIP bundle is intentionally not committed; frame indices and provenance remain documented here.
 - [Animated face-up preview](artifacts/IGI-LG811638512-faceup-motion-preview.gif): 153837 bytes; SHA-256 `bfce4b374eea82d8173aac2f6ddba6a4355e85118f008e2c4244f268175d94e0`. Derived 150 px / 16-colour preview, forward then reversed, synthetic 160 ms timing. Use the ZIP for full-resolution originals.
 
 Combined new binary evidence: 859877 bytes. ZIP CRC and every selected original hash verified. Unselected frames/raw Base64 excluded; existing PDF/still preserved separately. Ordinary supplier lighting supports dynamic comparison, not leakage diagnosis or calibrated angles. ASET and exact-stone scan remain unresolved.
 
 ## Evaluation history
 
-- [[evaluations/Sparkles IGI-LG811638512 evaluation 2026-10-05-131523|First visual assessment · 05 October 2026]] — [visual report](../../evaluations/IGI-LG811638512-visual-report-2026-10-05-131523.html); provisional candidate, central brightness needs checking.
+- [[evaluations/Sparkles IGI-LG811638512 evaluation 2026-10-05-140217|Current outcome summary and checklist · 05 October 2026]] — [visual report](../../evaluations/IGI-LG811638512-visual-report-2026-10-05-140217.html).

@@ -48,7 +48,7 @@ No optical cut grade is given. Height percentages do not describe individual pav
 
 ## Saved evidence
 
-[Compact original-source ZIP](artifacts/IGI-LG756580087-compact-evaluation-evidence.zip), 328,903 bytes. Includes original PDF, original 704 × 704 JPEG, exact-SKU public listing record, exact-certificate public Loupe media record, README and SHA-256 manifest. ZIP CRC checked; original JPEG visually inspected and decoded; report rendered and inspected. No rescaling/recompression of originals. Extract ZIP to inspect its members.
+Derived evidence bundles used during evaluation are intentionally not committed; source provenance and retained original artifacts remain documented here.
 
 | Asset | Source / association | Access and inspection | Use / limitation |
 |---|---|---|---|
@@ -68,7 +68,6 @@ Saved-member SHA-256:
 
 ## Pass 2 recovery and curation
 
-[Pass 2 compact original-frame ZIP](artifacts/IGI-LG756580087-pass2-compact-evaluation-evidence.zip), **630,218 bytes**; SHA-256 `a2da3b0536823dcbdacf90394957bd49490ec2d112bf2c7e49d30a5d8bc838cd`.
 
 - Source: [supplier viewer](https://vision.diajewel360.com/Vision360.html?d=VL-131355), its actual [player](https://vision.diajewel360.com/js/vision360.js) and [metadata](https://vision.diajewel360.com/imaged/VL-131355/0.json).
 - Metadata quality 4 leads to final batch 7; public player requests `imaged/VL-131355/1.json?version=1` through `7.json?version=1`. Preserve the actual version query. Unversioned/Python requests returned HTTP 403; ordinary curl reads of the player-requested URLs succeeded. No confirmed bot challenge observed.
