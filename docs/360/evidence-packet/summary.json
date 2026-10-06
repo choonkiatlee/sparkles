@@ -1,0 +1,69 @@
+{
+  "schema_version": "diamond360-evidence-packet-benchmark/1",
+  "profile_schema": "diamond360-descriptor-profile/1",
+  "packet_schema": "diamond360-evidence-packet/1",
+  "window_contract": "core17",
+  "source_bundles": "docs/360/benchmark/source-bundles.json",
+  "stones": [
+    {
+      "certificate": "IGI-LG756580087",
+      "selected_count": 4,
+      "covered_families": [
+        "activity_motion",
+        "relative_dark_state",
+        "dark_persistence",
+        "nested_step",
+        "directional",
+        "flash_morphology"
+      ],
+      "uncovered_available_families": [],
+      "packet": "per-stone/IGI-LG756580087/evidence.json",
+      "contact_sheet": "per-stone/IGI-LG756580087/contact-sheet.jpg"
+    },
+    {
+      "certificate": "IGI-LG756520111",
+      "selected_count": 4,
+      "covered_families": [
+        "activity_motion",
+        "relative_dark_state",
+        "dark_persistence",
+        "nested_step",
+        "directional",
+        "flash_morphology"
+      ],
+      "uncovered_available_families": [],
+      "packet": "per-stone/IGI-LG756520111/evidence.json",
+      "contact_sheet": "per-stone/IGI-LG756520111/contact-sheet.jpg"
+    },
+    {
+      "certificate": "IGI-LG818659722",
+      "selected_count": 5,
+      "covered_families": [
+        "activity_motion",
+        "relative_dark_state",
+        "dark_persistence",
+        "nested_step",
+        "directional",
+        "flash_morphology"
+      ],
+      "uncovered_available_families": [],
+      "packet": "per-stone/IGI-LG818659722/evidence.json",
+      "contact_sheet": "per-stone/IGI-LG818659722/contact-sheet.jpg"
+    },
+    {
+      "certificate": "IGI-LG836619414",
+      "selected_count": 4,
+      "covered_families": [
+        "activity_motion",
+        "relative_dark_state",
+        "dark_persistence",
+        "nested_step",
+        "directional",
+        "flash_morphology"
+      ],
+      "uncovered_available_families": [],
+      "packet": "per-stone/IGI-LG836619414/evidence.json",
+      "contact_sheet": "per-stone/IGI-LG836619414/contact-sheet.jpg"
+    }
+  ]
+}

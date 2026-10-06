@@ -1,0 +1,2239 @@
+{
+  "schema_version": "diamond360-evidence-packet/1",
+  "profile_schema": "diamond360-descriptor-profile/1",
+  "certificate": "IGI-LG818659722",
+  "window_contract": "core17",
+  "source": {
+    "manifest_schema": "diamond360-source/1",
+    "manifest_ref": "docs/360/benchmark/per-stone/IGI-LG818659722/source-manifest.json",
+    "source_pipeline": "diajewel",
+    "viewer": "https://vision.diajewel360.com/Vision360.html?d=PD-230293",
+    "retrieved_at": "2026-10-05T18:08:56.158633+00:00",
+    "source_frame_count": 256
+  },
+  "selection_policy": {
+    "coverage_order": [
+      "activity_motion",
+      "relative_dark_state",
+      "dark_persistence",
+      "nested_step",
+      "directional",
+      "flash_morphology"
+    ],
+    "soft_min_items": 4,
+    "max_items": 6,
+    "near_distance_source_steps": 1,
+    "global_numeric_score": false,
+    "near_groups_are_suppressive": false
+  },
+  "inventory": {
+    "native_candidate_count": 73,
+    "exact_item_count": 28,
+    "near_group_count": 8,
+    "available_coverage_families": [
+      "activity_motion",
+      "relative_dark_state",
+      "dark_persistence",
+      "nested_step",
+      "directional",
+      "flash_morphology"
+    ]
+  },
+  "selected_count": 5,
+  "covered_families": [
+    "activity_motion",
+    "relative_dark_state",
+    "dark_persistence",
+    "nested_step",
+    "directional",
+    "flash_morphology"
+  ],
+  "uncovered_available_families": [],
+  "items": [
+    {
+      "location": {
+        "kind": "pair",
+        "source_indices": [
+          6,
+          7
+        ]
+      },
+      "coverage_families": [
+        "activity_motion",
+        "nested_step"
+      ],
+      "selected_for": "activity_motion",
+      "near_group_id": 3,
+      "selection_rationale": "coverage-first representative for activity_motion; also covers nested_step",
+      "claims": [
+        {
+          "descriptor_family": "activation",
+          "native_id": "coarse/centre/fixed/relative",
+          "event_type": "largest_positive_move",
+          "location": {
+            "kind": "pair",
+            "source_indices": [
+              6,
+              7
+            ]
+          },
+          "profile_field_ids": [
+            "activity.activation.centre_relative_total_excursion"
+          ],
+          "rationale": "activation selected native largest_positive_move adjacent move",
+          "validity": {
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ]
+          },
+          "redundancy_groups": [
+            "activity_motion"
+          ],
+          "provenance": {
+            "descriptor_schema": "diamond360-activation/1",
+            "requested_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "accepted_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "excluded": [],
+            "wrap_explicit": true,
+            "issue": 26,
+            "profile_schema": "diamond360-descriptor-profile/1"
+          },
+          "native_payload": {
+            "position": 15,
+            "source_index": 7,
+            "value": 0.04811786703840436,
+            "delta": 0.21680864419900098
+          },
+          "panel_reference": "evidence/coarse-centre-fixed-relative.png",
+          "importance": 0.21680864419900098
+        },
+        {
+          "descriptor_family": "activation",
+          "native_id": "coarse/inner/fixed/relative",
+          "event_type": "largest_positive_move",
+          "location": {
+            "kind": "pair",
+            "source_indices": [
+              6,
+              7
+            ]
+          },
+          "profile_field_ids": [
+            "activity.activation.inner_relative_total_excursion"
+          ],
+          "rationale": "activation selected native largest_positive_move adjacent move",
+          "validity": {
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ]
+          },
+          "redundancy_groups": [
+            "activity_motion"
+          ],
+          "provenance": {
+            "descriptor_schema": "diamond360-activation/1",
+            "requested_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "accepted_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "excluded": [],
+            "wrap_explicit": true,
+            "issue": 26,
+            "profile_schema": "diamond360-descriptor-profile/1"
+          },
+          "native_payload": {
+            "position": 15,
+            "source_index": 7,
+            "value": 0.01833978646189205,
+            "delta": 0.18175219091692496
+          },
+          "panel_reference": "evidence/coarse-inner-fixed-relative.png",
+          "importance": 0.18175219091692496
+        },
+        {
+          "descriptor_family": "activation",
+          "native_id": "whole_stone/whole_stone/fixed/raw",
+          "event_type": "largest_positive_move",
+          "location": {
+            "kind": "pair",
+            "source_indices": [
+              6,
+              7
+            ]
+          },
+          "profile_field_ids": [
+            "activity.activation.whole_stone_total_excursion"
+          ],
+          "rationale": "activation selected native largest_positive_move adjacent move",
+          "validity": {
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ]
+          },
+          "redundancy_groups": [
+            "activity_motion"
+          ],
+          "provenance": {
+            "descriptor_schema": "diamond360-activation/1",
+            "requested_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "accepted_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "excluded": [],
+            "wrap_explicit": true,
+            "issue": 26,
+            "profile_schema": "diamond360-descriptor-profile/1"
+          },
+          "native_payload": {
+            "position": 15,
+            "source_index": 7,
+            "value": 0.891690194606781,
+            "delta": 0.0773458480834961
+          },
+          "panel_reference": "evidence/whole-stone.png",
+          "importance": 0.0773458480834961
+        },
+        {
+          "descriptor_family": "coordination",
+          "native_id": "coarse/fixed/centre__inner",
+          "event_type": "strongest_coordinated",
+          "location": {
+            "kind": "pair",
+            "source_indices": [
+              6,
+              7
+            ]
+          },
+          "profile_field_ids": [
+            "nested_step.centre_inner_pearson"
+          ],
+          "rationale": "coordination selected native strongest_coordinated pair event",
+          "validity": {
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ]
+          },
+          "redundancy_groups": [],
+          "provenance": {
+            "descriptor_schema": "diamond360-concentric-coordination/1",
+            "requested_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "accepted_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "excluded": [],
+            "wrap_explicit": true,
+            "issue": 32,
+            "profile_schema": "diamond360-descriptor-profile/1"
+          },
+          "native_payload": {
+            "event_position": 14,
+            "left_position": 14,
+            "right_position": 15,
+            "left_source_index": 6,
+            "right_source_index": 7,
+            "status": "ok",
+            "delta_a": 0.21680864419900098,
+            "delta_b": 0.18175219091692496,
+            "relationship": "same",
+            "joint_move_strength": 0.18175219091692496
+          },
+          "panel_reference": "evidence/coarse-centre__inner.png",
+          "importance": 0.18175219091692496
+        },
+        {
+          "descriptor_family": "mobility",
+          "native_id": "coarse/centre/fixed/relative",
+          "event_type": "largest",
+          "location": {
+            "kind": "pair",
+            "source_indices": [
+              6,
+              7
+            ]
+          },
+          "profile_field_ids": [
+            "activity.mobility.centre_median"
+          ],
+          "rationale": "mobility selected native largest pair event",
+          "validity": {
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ]
+          },
+          "redundancy_groups": [
+            "activity_motion"
+          ],
+          "provenance": {
+            "descriptor_schema": "diamond360-contrast-mobility/1",
+            "requested_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "accepted_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "excluded": [],
+            "wrap_explicit": true,
+            "issue": 30,
+            "profile_schema": "diamond360-descriptor-profile/1"
+          },
+          "native_payload": {
+            "pair_position": 14,
+            "left_position": 14,
+            "right_position": 15,
+            "left_source_index": 6,
+            "right_source_index": 7,
+            "status": "ok",
+            "left_value": -0.1686907771605966,
+            "right_value": 0.04811786703840436,
+            "signed_delta": 0.21680864419900098,
+            "mobility": 0.21680864419900098
+          },
+          "panel_reference": "evidence/coarse-centre-fixed-relative.png",
+          "importance": 0.21680864419900098
+        },
+        {
+          "descriptor_family": "mobility",
+          "native_id": "coarse/inner/fixed/relative",
+          "event_type": "largest",
+          "location": {
+            "kind": "pair",
+            "source_indices": [
+              6,
+              7
+            ]
+          },
+          "profile_field_ids": [
+            "activity.mobility.inner_median"
+          ],
+          "rationale": "mobility selected native largest pair event",
+          "validity": {
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ]
+          },
+          "redundancy_groups": [
+            "activity_motion"
+          ],
+          "provenance": {
+            "descriptor_schema": "diamond360-contrast-mobility/1",
+            "requested_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "accepted_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "excluded": [],
+            "wrap_explicit": true,
+            "issue": 30,
+            "profile_schema": "diamond360-descriptor-profile/1"
+          },
+          "native_payload": {
+            "pair_position": 14,
+            "left_position": 14,
+            "right_position": 15,
+            "left_source_index": 6,
+            "right_source_index": 7,
+            "status": "ok",
+            "left_value": -0.1634124044550329,
+            "right_value": 0.01833978646189205,
+            "signed_delta": 0.18175219091692496,
+            "mobility": 0.18175219091692496
+          },
+          "panel_reference": "evidence/coarse-inner-fixed-relative.png",
+          "importance": 0.18175219091692496
+        },
+        {
+          "descriptor_family": "opposing",
+          "native_id": "coarse_whole/fixed/side_N_S",
+          "event_type": "strongest_divergent",
+          "location": {
+            "kind": "pair",
+            "source_indices": [
+              6,
+              7
+            ]
+          },
+          "profile_field_ids": [
+            "directional.side_N_S_pearson"
+          ],
+          "rationale": "opposing selected native strongest_divergent pair event",
+          "validity": {
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ]
+          },
+          "redundancy_groups": [],
+          "provenance": {
+            "descriptor_schema": "diamond360-opposing-region-symmetry/1",
+            "requested_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "accepted_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "excluded": [],
+            "wrap_explicit": true,
+            "issue": 31,
+            "profile_schema": "diamond360-descriptor-profile/1"
+          },
+          "native_payload": {
+            "pair_position": 14,
+            "left_position": 14,
+            "right_position": 15,
+            "left_source_index": 6,
+            "right_source_index": 7,
+            "left_delta": 0.08092445805786264,
+            "right_delta": 0.1935286410744313,
+            "direction": "same",
+            "coordination_strength": 0.08092445805786264,
+            "divergence_strength": 0.11260418301656866,
+            "movement_strength": 0.1935286410744313,
+            "status": "ok"
+          },
+          "panel_reference": "evidence/coarse_whole-fixed-side_N_S.png",
+          "importance": 0.11260418301656866
+        }
+      ],
+      "rank": 1,
+      "original_frames": [
+        {
+          "source_index": 6,
+          "path": "frames/IGI-LG818659722-frame-006.jpg",
+          "sha256": "6759f0d4a7b3066041e9a3d2dd45112a4eb2828f158106265f5a5f6224473b97",
+          "bytes": 41949,
+          "source_url": "https://vision.diajewel360.com/imaged/PD-230293/6.json?version=1",
+          "batch": 6,
+          "stored_position": 29
+        },
+        {
+          "source_index": 7,
+          "path": "frames/IGI-LG818659722-frame-007.jpg",
+          "sha256": "d7e58867adfeb6c6fcbeac4d627c85cbaf9f238b655736a79231e8bb183f2672",
+          "bytes": 37341,
+          "source_url": "https://vision.diajewel360.com/imaged/PD-230293/7.json?version=1",
+          "batch": 7,
+          "stored_position": 117
+        }
+      ],
+      "render_source_indices": [
+        6,
+        7
+      ]
+    },
+    {
+      "location": {
+        "kind": "pair",
+        "source_indices": [
+          5,
+          6
+        ]
+      },
+      "coverage_families": [
+        "relative_dark_state"
+      ],
+      "selected_for": "relative_dark_state",
+      "near_group_id": 2,
+      "selection_rationale": "coverage-first representative for relative_dark_state; also covers no additional family",
+      "claims": [
+        {
+          "descriptor_family": "mobility",
+          "native_id": "coarse/centre/fixed/relative",
+          "event_type": "q90",
+          "location": {
+            "kind": "pair",
+            "source_indices": [
+              5,
+              6
+            ]
+          },
+          "profile_field_ids": [
+            "activity.mobility.centre_median"
+          ],
+          "rationale": "mobility selected native q90 pair event",
+          "validity": {
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ]
+          },
+          "redundancy_groups": [
+            "activity_motion"
+          ],
+          "provenance": {
+            "descriptor_schema": "diamond360-contrast-mobility/1",
+            "requested_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "accepted_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "excluded": [],
+            "wrap_explicit": true,
+            "issue": 30,
+            "profile_schema": "diamond360-descriptor-profile/1"
+          },
+          "native_payload": {
+            "pair_position": 13,
+            "left_position": 13,
+            "right_position": 14,
+            "left_source_index": 5,
+            "right_source_index": 6,
+            "status": "ok",
+            "left_value": -0.047522994136276336,
+            "right_value": -0.1686907771605966,
+            "signed_delta": -0.12116778302432027,
+            "mobility": 0.12116778302432027
+          },
+          "panel_reference": "evidence/coarse-centre-fixed-relative.png",
+          "importance": 0.12116778302432027
+        },
+        {
+          "descriptor_family": "occupancy",
+          "native_id": "coarse/middle/fixed/k0.65",
+          "event_type": "largest_negative_move",
+          "location": {
+            "kind": "pair",
+            "source_indices": [
+              5,
+              6
+            ]
+          },
+          "profile_field_ids": [
+            "dark_state.occupancy.middle_mean"
+          ],
+          "rationale": "occupancy selected native largest_negative_move adjacent move",
+          "validity": {
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ]
+          },
+          "redundancy_groups": [
+            "relative_dark_state"
+          ],
+          "provenance": {
+            "descriptor_schema": "diamond360-relative-dark-occupancy/1",
+            "requested_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "accepted_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "excluded": [],
+            "wrap_explicit": true,
+            "issue": 27,
+            "profile_schema": "diamond360-descriptor-profile/1"
+          },
+          "native_payload": {
+            "position": 14,
+            "source_index": 6,
+            "value": 0.12225378787878788,
+            "delta": -0.08257575757575758
+          },
+          "panel_reference": "evidence/coarse-middle-fixed.png",
+          "importance": 0.08257575757575758
+        },
+        {
+          "descriptor_family": "switching",
+          "native_id": "coarse/inner/fixed/k0.65",
+          "event_type": "highest",
+          "location": {
+            "kind": "pair",
+            "source_indices": [
+              5,
+              6
+            ]
+          },
+          "profile_field_ids": [
+            "temporal_reconfiguration.switching.inner_rate"
+          ],
+          "rationale": "switching selected native highest pair event",
+          "validity": {
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ]
+          },
+          "redundancy_groups": [
+            "relative_dark_state"
+          ],
+          "provenance": {
+            "descriptor_schema": "diamond360-bright-dark-switching/1",
+            "requested_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "accepted_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "excluded": [],
+            "wrap_explicit": true,
+            "issue": 28,
+            "profile_schema": "diamond360-descriptor-profile/1"
+          },
+          "native_payload": {
+            "pair_position": 13,
+            "left_position": 13,
+            "right_position": 14,
+            "switch_fraction": 0.26713709677419356,
+            "eligible_pixels": 5952,
+            "switched_pixels": 1590,
+            "left_source_index": 5,
+            "right_source_index": 6
+          },
+          "panel_reference": "evidence/coarse-inner-fixed.png",
+          "importance": 0.26713709677419356
+        }
+      ],
+      "rank": 2,
+      "original_frames": [
+        {
+          "source_index": 5,
+          "path": "frames/IGI-LG818659722-frame-005.jpg",
+          "sha256": "fa46535eb82c0f84ffd7bc47e77d3c23baea63eeed694d7c93b1ee32ca9eca2d",
+          "bytes": 44695,
+          "source_url": "https://vision.diajewel360.com/imaged/PD-230293/7.json?version=1",
+          "batch": 7,
+          "stored_position": 122
+        },
+        {
+          "source_index": 6,
+          "path": "frames/IGI-LG818659722-frame-006.jpg",
+          "sha256": "6759f0d4a7b3066041e9a3d2dd45112a4eb2828f158106265f5a5f6224473b97",
+          "bytes": 41949,
+          "source_url": "https://vision.diajewel360.com/imaged/PD-230293/6.json?version=1",
+          "batch": 6,
+          "stored_position": 29
+        }
+      ],
+      "render_source_indices": [
+        5,
+        6
+      ]
+    },
+    {
+      "location": {
+        "kind": "run",
+        "source_indices": [
+          250,
+          251,
+          252,
+          253,
+          254,
+          255,
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      "coverage_families": [
+        "dark_persistence"
+      ],
+      "selected_for": "dark_persistence",
+      "near_group_id": 0,
+      "selection_rationale": "coverage-first representative for dark_persistence; also covers no additional family",
+      "claims": [
+        {
+          "descriptor_family": "persistence",
+          "native_id": "coarse/inner/fixed/dark/k0.65",
+          "event_type": "dark_q90_run",
+          "location": {
+            "kind": "run",
+            "source_indices": [
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ]
+          },
+          "profile_field_ids": [
+            "dark_state.persistence.inner_dark_q90_window_fraction"
+          ],
+          "rationale": "persistence selected the representative retained dark Q90 run",
+          "validity": {
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ]
+          },
+          "redundancy_groups": [],
+          "provenance": {
+            "descriptor_schema": "diamond360-bright-dark-persistence/1",
+            "requested_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "accepted_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "excluded": [],
+            "wrap_explicit": true,
+            "issue": 29,
+            "profile_schema": "diamond360-descriptor-profile/1"
+          },
+          "native_payload": {
+            "state": "dark",
+            "start_position": 2,
+            "middle_position": 8,
+            "end_position": 14,
+            "observed_run_length_frames": 13,
+            "evidence_window_length_frames": 6,
+            "persistent_pixel_count": 4,
+            "left_boundary": "state_change",
+            "right_boundary": "state_change",
+            "left_censored": false,
+            "right_censored": false,
+            "start_source_index": 250,
+            "middle_source_index": 0,
+            "end_source_index": 6,
+            "representative_pixel": {
+              "row": 104,
+              "col": 119
+            }
+          },
+          "panel_reference": "evidence/coarse-inner-fixed.png",
+          "importance": 13.0
+        }
+      ],
+      "rank": 3,
+      "original_frames": [
+        {
+          "source_index": 250,
+          "path": "frames/IGI-LG818659722-frame-250.jpg",
+          "sha256": "3e6ed4149801cfb2f29ceae83dd891a7ee9c6eb6b56adea4440c07da9c127738",
+          "bytes": 38937,
+          "source_url": "https://vision.diajewel360.com/imaged/PD-230293/6.json?version=1",
+          "batch": 6,
+          "stored_position": 30
+        },
+        {
+          "source_index": 251,
+          "path": "frames/IGI-LG818659722-frame-251.jpg",
+          "sha256": "6b6a4bc57fe77aa29e23c2f34bac263831264cf2fb670abe0527179842f0380e",
+          "bytes": 43580,
+          "source_url": "https://vision.diajewel360.com/imaged/PD-230293/7.json?version=1",
+          "batch": 7,
+          "stored_position": 8
+        },
+        {
+          "source_index": 252,
+          "path": "frames/IGI-LG818659722-frame-252.jpg",
+          "sha256": "b2d8b5844962218b850d86592e9f512fdf4d0935b395eb342be344f1b3c1f802",
+          "bytes": 45801,
+          "source_url": "https://vision.diajewel360.com/imaged/PD-230293/5.json?version=1",
+          "batch": 5,
+          "stored_position": 14
+        },
+        {
+          "source_index": 253,
+          "path": "frames/IGI-LG818659722-frame-253.jpg",
+          "sha256": "830ca825697df6835d5a7584364804fae2d0e3b6d837458f6210e27001b6976d",
+          "bytes": 45841,
+          "source_url": "https://vision.diajewel360.com/imaged/PD-230293/7.json?version=1",
+          "batch": 7,
+          "stored_position": 102
+        },
+        {
+          "source_index": 254,
+          "path": "frames/IGI-LG818659722-frame-254.jpg",
+          "sha256": "8c27ad68e50fc2c0b77e90b85e07406a1f04cd09b48770d3c194374154200d18",
+          "bytes": 44876,
+          "source_url": "https://vision.diajewel360.com/imaged/PD-230293/6.json?version=1",
+          "batch": 6,
+          "stored_position": 17
+        },
+        {
+          "source_index": 255,
+          "path": "frames/IGI-LG818659722-frame-255.jpg",
+          "sha256": "3fdcd59487b34324daa03c8a859dea326904bb3ed3a6eca2ae97f026b9762fae",
+          "bytes": 44927,
+          "source_url": "https://vision.diajewel360.com/imaged/PD-230293/7.json?version=1",
+          "batch": 7,
+          "stored_position": 114
+        },
+        {
+          "source_index": 0,
+          "path": "frames/IGI-LG818659722-frame-000.jpg",
+          "sha256": "ca39d8cff0849f7c1724dd6d94738eb950870249b940f5bdef32f4edacaa8629",
+          "bytes": 44735,
+          "source_url": "https://vision.diajewel360.com/imaged/PD-230293/1.json?version=1",
+          "batch": 1,
+          "stored_position": 3
+        },
+        {
+          "source_index": 1,
+          "path": "frames/IGI-LG818659722-frame-001.jpg",
+          "sha256": "6899bbb18aceae96f87d65ab8f25554633ec97227feb50afbacbc05112f0e20f",
+          "bytes": 45047,
+          "source_url": "https://vision.diajewel360.com/imaged/PD-230293/7.json?version=1",
+          "batch": 7,
+          "stored_position": 121
+        },
+        {
+          "source_index": 2,
+          "path": "frames/IGI-LG818659722-frame-002.jpg",
+          "sha256": "6ef0f2cefbbcc15c31ce74bb16575611a445c7575aabae0730289c204d8436d4",
+          "bytes": 46021,
+          "source_url": "https://vision.diajewel360.com/imaged/PD-230293/6.json?version=1",
+          "batch": 6,
+          "stored_position": 63
+        },
+        {
+          "source_index": 3,
+          "path": "frames/IGI-LG818659722-frame-003.jpg",
+          "sha256": "ed99f8352918b961f414229b5fe0159f62e3c4f0bb221a38097552bed4880f2c",
+          "bytes": 45087,
+          "source_url": "https://vision.diajewel360.com/imaged/PD-230293/7.json?version=1",
+          "batch": 7,
+          "stored_position": 89
+        },
+        {
+          "source_index": 4,
+          "path": "frames/IGI-LG818659722-frame-004.jpg",
+          "sha256": "ac46f0f94f012aa24a8ffc79bf3d9001877e88a9f9cfc224c202398f067c2289",
+          "bytes": 45303,
+          "source_url": "https://vision.diajewel360.com/imaged/PD-230293/5.json?version=1",
+          "batch": 5,
+          "stored_position": 13
+        },
+        {
+          "source_index": 5,
+          "path": "frames/IGI-LG818659722-frame-005.jpg",
+          "sha256": "fa46535eb82c0f84ffd7bc47e77d3c23baea63eeed694d7c93b1ee32ca9eca2d",
+          "bytes": 44695,
+          "source_url": "https://vision.diajewel360.com/imaged/PD-230293/7.json?version=1",
+          "batch": 7,
+          "stored_position": 122
+        },
+        {
+          "source_index": 6,
+          "path": "frames/IGI-LG818659722-frame-006.jpg",
+          "sha256": "6759f0d4a7b3066041e9a3d2dd45112a4eb2828f158106265f5a5f6224473b97",
+          "bytes": 41949,
+          "source_url": "https://vision.diajewel360.com/imaged/PD-230293/6.json?version=1",
+          "batch": 6,
+          "stored_position": 29
+        }
+      ],
+      "render_source_indices": [
+        250,
+        0,
+        6
+      ]
+    },
+    {
+      "location": {
+        "kind": "pair",
+        "source_indices": [
+          250,
+          251
+        ]
+      },
+      "coverage_families": [
+        "relative_dark_state",
+        "nested_step",
+        "directional"
+      ],
+      "selected_for": "directional",
+      "near_group_id": 6,
+      "selection_rationale": "coverage-first representative for directional; also covers relative_dark_state, nested_step",
+      "claims": [
+        {
+          "descriptor_family": "activation",
+          "native_id": "coarse/inner/fixed/relative",
+          "event_type": "largest_negative_move",
+          "location": {
+            "kind": "pair",
+            "source_indices": [
+              250,
+              251
+            ]
+          },
+          "profile_field_ids": [
+            "activity.activation.inner_relative_total_excursion"
+          ],
+          "rationale": "activation selected native largest_negative_move adjacent move",
+          "validity": {
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ]
+          },
+          "redundancy_groups": [
+            "activity_motion"
+          ],
+          "provenance": {
+            "descriptor_schema": "diamond360-activation/1",
+            "requested_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "accepted_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "excluded": [],
+            "wrap_explicit": true,
+            "issue": 26,
+            "profile_schema": "diamond360-descriptor-profile/1"
+          },
+          "native_payload": {
+            "position": 3,
+            "source_index": 251,
+            "value": -0.19250369179873586,
+            "delta": -0.17366878096291494
+          },
+          "panel_reference": "evidence/coarse-inner-fixed-relative.png",
+          "importance": 0.17366878096291494
+        },
+        {
+          "descriptor_family": "activation",
+          "native_id": "coarse/middle/fixed/relative",
+          "event_type": "largest_negative_move",
+          "location": {
+            "kind": "pair",
+            "source_indices": [
+              250,
+              251
+            ]
+          },
+          "profile_field_ids": [
+            "activity.activation.middle_relative_total_excursion"
+          ],
+          "rationale": "activation selected native largest_negative_move adjacent move",
+          "validity": {
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ]
+          },
+          "redundancy_groups": [
+            "activity_motion"
+          ],
+          "provenance": {
+            "descriptor_schema": "diamond360-activation/1",
+            "requested_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "accepted_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "excluded": [],
+            "wrap_explicit": true,
+            "issue": 26,
+            "profile_schema": "diamond360-descriptor-profile/1"
+          },
+          "native_payload": {
+            "position": 3,
+            "source_index": 251,
+            "value": -0.04780160654001028,
+            "delta": -0.07604058076144793
+          },
+          "panel_reference": "evidence/coarse-middle-fixed-relative.png",
+          "importance": 0.07604058076144793
+        },
+        {
+          "descriptor_family": "activation",
+          "native_id": "whole_stone/whole_stone/fixed/raw",
+          "event_type": "largest_negative_move",
+          "location": {
+            "kind": "pair",
+            "source_indices": [
+              250,
+              251
+            ]
+          },
+          "profile_field_ids": [
+            "activity.activation.whole_stone_total_excursion"
+          ],
+          "rationale": "activation selected native largest_negative_move adjacent move",
+          "validity": {
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ]
+          },
+          "redundancy_groups": [
+            "activity_motion"
+          ],
+          "provenance": {
+            "descriptor_schema": "diamond360-activation/1",
+            "requested_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "accepted_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "excluded": [],
+            "wrap_explicit": true,
+            "issue": 26,
+            "profile_schema": "diamond360-descriptor-profile/1"
+          },
+          "native_payload": {
+            "position": 3,
+            "source_index": 251,
+            "value": 0.7922917604446411,
+            "delta": -0.06550896167755127
+          },
+          "panel_reference": "evidence/whole-stone.png",
+          "importance": 0.06550896167755127
+        },
+        {
+          "descriptor_family": "coordination",
+          "native_id": "coarse/fixed/inner__middle",
+          "event_type": "strongest_coordinated",
+          "location": {
+            "kind": "pair",
+            "source_indices": [
+              250,
+              251
+            ]
+          },
+          "profile_field_ids": [
+            "nested_step.inner_middle_pearson"
+          ],
+          "rationale": "coordination selected native strongest_coordinated pair event",
+          "validity": {
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ]
+          },
+          "redundancy_groups": [],
+          "provenance": {
+            "descriptor_schema": "diamond360-concentric-coordination/1",
+            "requested_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "accepted_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "excluded": [],
+            "wrap_explicit": true,
+            "issue": 32,
+            "profile_schema": "diamond360-descriptor-profile/1"
+          },
+          "native_payload": {
+            "event_position": 2,
+            "left_position": 2,
+            "right_position": 3,
+            "left_source_index": 250,
+            "right_source_index": 251,
+            "status": "ok",
+            "delta_a": -0.17366878096291494,
+            "delta_b": -0.07604058076144793,
+            "relationship": "same",
+            "joint_move_strength": 0.07604058076144793
+          },
+          "panel_reference": "evidence/coarse-inner__middle.png",
+          "importance": 0.07604058076144793
+        },
+        {
+          "descriptor_family": "mobility",
+          "native_id": "coarse/inner/fixed/relative",
+          "event_type": "q90",
+          "location": {
+            "kind": "pair",
+            "source_indices": [
+              250,
+              251
+            ]
+          },
+          "profile_field_ids": [
+            "activity.mobility.inner_median"
+          ],
+          "rationale": "mobility selected native q90 pair event",
+          "validity": {
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ]
+          },
+          "redundancy_groups": [
+            "activity_motion"
+          ],
+          "provenance": {
+            "descriptor_schema": "diamond360-contrast-mobility/1",
+            "requested_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "accepted_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "excluded": [],
+            "wrap_explicit": true,
+            "issue": 30,
+            "profile_schema": "diamond360-descriptor-profile/1"
+          },
+          "native_payload": {
+            "pair_position": 2,
+            "left_position": 2,
+            "right_position": 3,
+            "left_source_index": 250,
+            "right_source_index": 251,
+            "status": "ok",
+            "left_value": -0.018834910835820923,
+            "right_value": -0.19250369179873586,
+            "signed_delta": -0.17366878096291494,
+            "mobility": 0.17366878096291494
+          },
+          "panel_reference": "evidence/coarse-inner-fixed-relative.png",
+          "importance": 0.17366878096291494
+        },
+        {
+          "descriptor_family": "mobility",
+          "native_id": "coarse/middle/fixed/relative",
+          "event_type": "q90",
+          "location": {
+            "kind": "pair",
+            "source_indices": [
+              250,
+              251
+            ]
+          },
+          "profile_field_ids": [
+            "activity.mobility.middle_median"
+          ],
+          "rationale": "mobility selected native q90 pair event",
+          "validity": {
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ]
+          },
+          "redundancy_groups": [
+            "activity_motion"
+          ],
+          "provenance": {
+            "descriptor_schema": "diamond360-contrast-mobility/1",
+            "requested_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "accepted_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "excluded": [],
+            "wrap_explicit": true,
+            "issue": 30,
+            "profile_schema": "diamond360-descriptor-profile/1"
+          },
+          "native_payload": {
+            "pair_position": 2,
+            "left_position": 2,
+            "right_position": 3,
+            "left_source_index": 250,
+            "right_source_index": 251,
+            "status": "ok",
+            "left_value": 0.028238974221437646,
+            "right_value": -0.04780160654001028,
+            "signed_delta": -0.07604058076144793,
+            "mobility": 0.07604058076144793
+          },
+          "panel_reference": "evidence/coarse-middle-fixed-relative.png",
+          "importance": 0.07604058076144793
+        },
+        {
+          "descriptor_family": "occupancy",
+          "native_id": "coarse/middle/fixed/k0.65",
+          "event_type": "largest_positive_move",
+          "location": {
+            "kind": "pair",
+            "source_indices": [
+              250,
+              251
+            ]
+          },
+          "profile_field_ids": [
+            "dark_state.occupancy.middle_mean"
+          ],
+          "rationale": "occupancy selected native largest_positive_move adjacent move",
+          "validity": {
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ]
+          },
+          "redundancy_groups": [
+            "relative_dark_state"
+          ],
+          "provenance": {
+            "descriptor_schema": "diamond360-relative-dark-occupancy/1",
+            "requested_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "accepted_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "excluded": [],
+            "wrap_explicit": true,
+            "issue": 27,
+            "profile_schema": "diamond360-descriptor-profile/1"
+          },
+          "native_payload": {
+            "position": 3,
+            "source_index": 251,
+            "value": 0.19829545454545455,
+            "delta": 0.13200757575757577
+          },
+          "panel_reference": "evidence/coarse-middle-fixed.png",
+          "importance": 0.13200757575757577
+        },
+        {
+          "descriptor_family": "opposing",
+          "native_id": "coarse_whole/fixed/corner_NE_SW",
+          "event_type": "strongest_coordinated",
+          "location": {
+            "kind": "pair",
+            "source_indices": [
+              250,
+              251
+            ]
+          },
+          "profile_field_ids": [
+            "directional.corner_NE_SW_pearson"
+          ],
+          "rationale": "opposing selected native strongest_coordinated pair event",
+          "validity": {
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ]
+          },
+          "redundancy_groups": [],
+          "provenance": {
+            "descriptor_schema": "diamond360-opposing-region-symmetry/1",
+            "requested_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "accepted_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "excluded": [],
+            "wrap_explicit": true,
+            "issue": 31,
+            "profile_schema": "diamond360-descriptor-profile/1"
+          },
+          "native_payload": {
+            "pair_position": 2,
+            "left_position": 2,
+            "right_position": 3,
+            "left_source_index": 250,
+            "right_source_index": 251,
+            "left_delta": 0.028960317827222304,
+            "right_delta": 0.05093641235720742,
+            "direction": "same",
+            "coordination_strength": 0.028960317827222304,
+            "divergence_strength": 0.021976094529985113,
+            "movement_strength": 0.05093641235720742,
+            "status": "ok"
+          },
+          "panel_reference": "evidence/coarse_whole-fixed-corner_NE_SW.png",
+          "importance": 0.05093641235720742
+        },
+        {
+          "descriptor_family": "opposing",
+          "native_id": "coarse_whole/fixed/side_N_S",
+          "event_type": "strongest_coordinated",
+          "location": {
+            "kind": "pair",
+            "source_indices": [
+              250,
+              251
+            ]
+          },
+          "profile_field_ids": [
+            "directional.side_N_S_pearson"
+          ],
+          "rationale": "opposing selected native strongest_coordinated pair event",
+          "validity": {
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ]
+          },
+          "redundancy_groups": [],
+          "provenance": {
+            "descriptor_schema": "diamond360-opposing-region-symmetry/1",
+            "requested_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "accepted_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "excluded": [],
+            "wrap_explicit": true,
+            "issue": 31,
+            "profile_schema": "diamond360-descriptor-profile/1"
+          },
+          "native_payload": {
+            "pair_position": 2,
+            "left_position": 2,
+            "right_position": 3,
+            "left_source_index": 250,
+            "right_source_index": 251,
+            "left_delta": -0.19540792983721147,
+            "right_delta": -0.22617230761915738,
+            "direction": "same",
+            "coordination_strength": 0.19540792983721147,
+            "divergence_strength": 0.030764377781945906,
+            "movement_strength": 0.22617230761915738,
+            "status": "ok"
+          },
+          "panel_reference": "evidence/coarse_whole-fixed-side_N_S.png",
+          "importance": 0.22617230761915738
+        },
+        {
+          "descriptor_family": "switching",
+          "native_id": "coarse/middle/fixed/k0.65",
+          "event_type": "highest",
+          "location": {
+            "kind": "pair",
+            "source_indices": [
+              250,
+              251
+            ]
+          },
+          "profile_field_ids": [
+            "temporal_reconfiguration.switching.middle_rate"
+          ],
+          "rationale": "switching selected native highest pair event",
+          "validity": {
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ]
+          },
+          "redundancy_groups": [
+            "relative_dark_state"
+          ],
+          "provenance": {
+            "descriptor_schema": "diamond360-bright-dark-switching/1",
+            "requested_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "accepted_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "excluded": [],
+            "wrap_explicit": true,
+            "issue": 28,
+            "profile_schema": "diamond360-descriptor-profile/1"
+          },
+          "native_payload": {
+            "pair_position": 2,
+            "left_position": 2,
+            "right_position": 3,
+            "switch_fraction": 0.16912878787878788,
+            "eligible_pixels": 10560,
+            "switched_pixels": 1786,
+            "left_source_index": 250,
+            "right_source_index": 251
+          },
+          "panel_reference": "evidence/coarse-middle-fixed.png",
+          "importance": 0.16912878787878788
+        }
+      ],
+      "rank": 4,
+      "original_frames": [
+        {
+          "source_index": 250,
+          "path": "frames/IGI-LG818659722-frame-250.jpg",
+          "sha256": "3e6ed4149801cfb2f29ceae83dd891a7ee9c6eb6b56adea4440c07da9c127738",
+          "bytes": 38937,
+          "source_url": "https://vision.diajewel360.com/imaged/PD-230293/6.json?version=1",
+          "batch": 6,
+          "stored_position": 30
+        },
+        {
+          "source_index": 251,
+          "path": "frames/IGI-LG818659722-frame-251.jpg",
+          "sha256": "6b6a4bc57fe77aa29e23c2f34bac263831264cf2fb670abe0527179842f0380e",
+          "bytes": 43580,
+          "source_url": "https://vision.diajewel360.com/imaged/PD-230293/7.json?version=1",
+          "batch": 7,
+          "stored_position": 8
+        }
+      ],
+      "render_source_indices": [
+        250,
+        251
+      ]
+    },
+    {
+      "location": {
+        "kind": "pair",
+        "source_indices": [
+          5,
+          7
+        ]
+      },
+      "coverage_families": [
+        "flash_morphology"
+      ],
+      "selected_for": "flash_morphology",
+      "near_group_id": 2,
+      "selection_rationale": "coverage-first representative for flash_morphology; also covers no additional family",
+      "claims": [
+        {
+          "descriptor_family": "morphology",
+          "native_id": "whole_stone/fixed/k1.00",
+          "event_type": "matched_active_area_pair",
+          "location": {
+            "kind": "pair",
+            "source_indices": [
+              5,
+              7
+            ]
+          },
+          "profile_field_ids": [
+            "flash_morphology.median_largest_component_fraction"
+          ],
+          "rationale": "morphology selected a similar-active-area contrast pair",
+          "validity": {
+            "status": "review",
+            "reasons": [
+              "foreground_or_nonuniformity_on_border",
+              "outline_near_image_edge"
+            ]
+          },
+          "redundancy_groups": [],
+          "provenance": {
+            "descriptor_schema": "diamond360-flash-morphology/1",
+            "requested_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "accepted_indices": [
+              248,
+              249,
+              250,
+              251,
+              252,
+              253,
+              254,
+              255,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "excluded": [],
+            "wrap_explicit": true,
+            "issue": 33,
+            "profile_schema": "diamond360-descriptor-profile/1"
+          },
+          "native_payload": {
+            "area_difference": 0.0006120486141470635,
+            "largest_component_fraction_difference": 0.3503300370524869,
+            "within_tolerance": true,
+            "left": {
+              "position": 13,
+              "source_index": 5,
+              "status": "ok",
+              "reason": null,
+              "support_pixels": 34311,
+              "active_pixels": 1494,
+              "active_fraction": 0.04354288712074845,
+              "component_count": 158,
+              "largest_component_pixels": 216,
+              "largest_component_fraction": 0.14457831325301204,
+              "largest_component_support_fraction": 0.006295357174084113,
+              "effective_component_count": 19.568620574775125,
+              "boundary_active_pixels": 47,
+              "boundary_active_fraction": 0.03145917001338688,
+              "components_touching_support_boundary": 16,
+              "reference_scale": 0.19816010159254074,
+              "active_threshold_value": 0.9837005631327629
+            },
+            "right": {
+              "position": 15,
+              "source_index": 7,
+              "status": "ok",
+              "reason": null,
+              "support_pixels": 34311,
+              "active_pixels": 1473,
+              "active_fraction": 0.042930838506601385,
+              "component_count": 90,
+              "largest_component_pixels": 729,
+              "largest_component_fraction": 0.49490835030549896,
+              "largest_component_support_fraction": 0.02124683046253388,
+              "effective_component_count": 3.5500596386340546,
+              "boundary_active_pixels": 4,
+              "boundary_active_fraction": 0.0027155465037338763,
+              "components_touching_support_boundary": 4,
+              "reference_scale": 0.10509490020275115,
+              "active_threshold_value": 0.9967850948095321
+            }
+          },
+          "panel_reference": "evidence/diagnostic.png",
+          "importance": 0.3503300370524869
+        }
+      ],
+      "rank": 5,
+      "original_frames": [
+        {
+          "source_index": 5,
+          "path": "frames/IGI-LG818659722-frame-005.jpg",
+          "sha256": "fa46535eb82c0f84ffd7bc47e77d3c23baea63eeed694d7c93b1ee32ca9eca2d",
+          "bytes": 44695,
+          "source_url": "https://vision.diajewel360.com/imaged/PD-230293/7.json?version=1",
+          "batch": 7,
+          "stored_position": 122
+        },
+        {
+          "source_index": 7,
+          "path": "frames/IGI-LG818659722-frame-007.jpg",
+          "sha256": "d7e58867adfeb6c6fcbeac4d627c85cbaf9f238b655736a79231e8bb183f2672",
+          "bytes": 37341,
+          "source_url": "https://vision.diajewel360.com/imaged/PD-230293/7.json?version=1",
+          "batch": 7,
+          "stored_position": 117
+        }
+      ],
+      "render_source_indices": [
+        5,
+        7
+      ]
+    }
+  ],
+  "contact_sheet": "contact-sheet.jpg"
+}
