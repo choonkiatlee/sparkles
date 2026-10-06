@@ -210,6 +210,31 @@ class TierContrastBenchmarkTests(unittest.TestCase):
             )
             self.assertIsNotNone(semantic["median_summary"]["q50"])
 
+    def test_partial_semantic_boundary_does_not_rescue_ambiguous_geometry(self):
+        with tempfile.TemporaryDirectory() as td:
+            processed, step_output, activation_result = boundary_local_fixture(Path(td))
+            step_path = step_output / "steps.json"
+            payload = json.loads(step_path.read_text())
+            payload["template_status"] = "unavailable"
+            payload["template_reason"] = "semantic_boundaries_not_separable"
+            payload["partial_boundaries"] = {
+                name: payload["boundaries"][name]
+                for name in ("centre_inner", "inner_middle")
+            }
+            payload["boundaries"] = {}
+            step_path.write_text(json.dumps(payload))
+
+            result = tb._boundary_local_inputs(
+                processed, step_output, activation_result, widths=(.04,), guard=.01
+            )
+            pair = result["pairs"]["centre__inner"]
+            semantic = pair["widths"]["0.040"]["semantic"]
+            self.assertEqual(pair["semantic_boundary_source"], "unavailable")
+            self.assertEqual(semantic["status"], "unavailable")
+            self.assertEqual(
+                semantic["reason"], "semantic_boundaries_not_separable"
+            )
+
     def test_guarded_strips_ignore_narrow_boundary_spike(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
