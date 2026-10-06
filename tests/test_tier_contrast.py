@@ -1,6 +1,8 @@
 import math
 import unittest
 
+import numpy as np
+
 from diamond360 import tier_contrast as tc
 
 
@@ -250,6 +252,110 @@ class TierContrastTests(unittest.TestCase):
         right = [{"source_index": 1, "x": 1.0}, {"source_index": 3, "x": 2.0}]
         with self.assertRaises(ValueError):
             tc.strongest_rank_disagreement(left, "x", right, "x")
+
+    def test_sector_coverage_preserves_weak_direction_floor_and_dispersion(self):
+        separations = {
+            name: value
+            for name, value in zip(
+                "abcdefgh",
+                [.01, .02, .03, .04, .30, .40, .50, .60],
+            )
+        }
+        left = {
+            name: [math.exp(value)] * 3
+            for name, value in separations.items()
+        }
+        right = {name: [1.0] * 3 for name in separations}
+        result = tc.sectorized_contrast_trace(left, right, [0, 1, 2])
+        row = result["frame_trace"][0]
+        self.assertLess(row["q25_separation"], row["median_separation"])
+        self.assertGreater(row["iqr_separation"], 0)
+        self.assertIsNotNone(result["q25_summary"]["q50"])
+        self.assertIsNotNone(result["mad_summary"]["q50"])
+
+    def test_joint_weakest_link_catches_complementary_boundary_collapse(self):
+        sectors = list("abcdefgh")
+        first_values = [.8, .8, .8, .8, .1, .1, .1, .1]
+        second_values = [.1, .1, .1, .1, .8, .8, .8, .8]
+
+        def row(position, source_index, values, signed):
+            return {
+                "position": position,
+                "source_index": source_index,
+                "sector_separations": dict(zip(sectors, values)),
+                "sector_signed_log_contrasts": dict(zip(sectors, signed)),
+                "sector_scale_spread": {sector: .02 for sector in sectors},
+            }
+
+        first = [
+            row(i, i, first_values, [.8] * 8)
+            for i in range(3)
+        ]
+        second = [
+            row(i, i, second_values, [.1] * 8)
+            for i in range(3)
+        ]
+        joint = tc.joint_nested_tier_readability(first, second)
+        self.assertAlmostEqual(joint["median_summary"]["q50"], .1)
+        self.assertGreater(
+            float(np.median(first_values)),
+            joint["median_summary"]["q50"],
+        )
+        self.assertGreater(
+            float(np.median(second_values)),
+            joint["median_summary"]["q50"],
+        )
+        self.assertEqual(
+            joint["frame_trace"][0]["finite_sectors"],
+            8,
+        )
+        self.assertAlmostEqual(
+            joint["scale_spread_summary"]["q50"], .02
+        )
+
+    def test_joint_signed_ordering_keeps_all_exact_states(self):
+        sectors = list("abcde")
+        base = {
+            "position": 0,
+            "source_index": 10,
+            "sector_separations": {sector: .2 for sector in sectors},
+            "sector_scale_spread": {sector: .01 for sector in sectors},
+        }
+        first = [{
+            **base,
+            "sector_signed_log_contrasts": dict(
+                zip(sectors, [1.0, -1.0, 1.0, -1.0, 0.0])
+            ),
+        }]
+        second = [{
+            **base,
+            "sector_signed_log_contrasts": dict(
+                zip(sectors, [1.0, -1.0, -1.0, 1.0, 1.0])
+            ),
+        }]
+        result = tc.joint_nested_tier_readability(first, second)
+        ordering = result["frame_trace"][0]["sector_ordering"]
+        self.assertEqual(ordering["a"], "monotonic_light_to_dark_outward")
+        self.assertEqual(ordering["b"], "monotonic_dark_to_light_outward")
+        self.assertEqual(ordering["c"], "inner_local_minimum")
+        self.assertEqual(ordering["d"], "inner_local_maximum")
+        self.assertEqual(ordering["e"], "tied")
+        self.assertEqual(result["ordering_observations"], 5)
+
+    def test_joint_nested_readability_rejects_misaligned_frames(self):
+        first = [{
+            "source_index": 1,
+            "sector_separations": {"a": .1},
+            "sector_signed_log_contrasts": {"a": .1},
+        }]
+        second = [{
+            "source_index": 2,
+            "sector_separations": {"a": .1},
+            "sector_signed_log_contrasts": {"a": .1},
+        }]
+        with self.assertRaises(ValueError):
+            tc.joint_nested_tier_readability(first, second)
+
     def test_validity_is_monotone(self):
         result = tc.compose_validity(
             [{"status": "review", "reasons": ["upstream_review"]}],
