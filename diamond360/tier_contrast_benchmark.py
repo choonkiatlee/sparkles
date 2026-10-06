@@ -17,7 +17,7 @@ from . import regions as coarse_regions
 from . import tier_contrast as tc
 from . import pipeline
 
-SCHEMA = "diamond360-tier-contrast/1"
+SCHEMA = "diamond360-tier-contrast/2"
 REGION_TRACE_SCHEMA = "diamond360-region-traces/1"
 PAIRS = (("centre", "inner"), ("inner", "middle"))
 BOUNDARY_WIDTHS = (.025, .040, .055)
