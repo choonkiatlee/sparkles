@@ -37,7 +37,7 @@ def specification(
         "schema_version": SCHEMA,
         "target_effective_diameter_px": int(target_diameter),
         "canvas_size_px": int(canvas_size),
-        "centering": "valid-mask centroid",
+        "centering": "silhouette centroid",
         "effective_diameter": "2*sqrt(mask_area/pi)",
         "resampling": "scipy.ndimage.map_coordinates order=1",
         "mask_resampling": "scipy.ndimage.map_coordinates order=0",
