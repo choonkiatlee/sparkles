@@ -1,0 +1,58 @@
+{
+  "schema_version": "diamond360-flash-morphology-dispositions/1",
+  "active_field": {
+    "brightness": "encoded brightness Y_t",
+    "reference": "G_t = #26 whole-stone median on fixed common registered support",
+    "scale": "S_t = 1.4826 * median(|Y_t(p)-G_t|) on the same fixed support",
+    "baseline": "active iff Y_t(p) > G_t + 1.00*S_t",
+    "sensitivity": [
+      0.9,
+      1.1
+    ],
+    "connectivity": 8
+  },
+  "decisions": [
+    {
+      "candidate": "robust bright active field G_t + k*S_t",
+      "disposition": "KEEP",
+      "role": "state definition",
+      "reason": "The initial multiplicative threshold failed cross-vendor availability. Robust fixed-support contrast normalization restores all four stones at baseline and preserves cross-stone morphology rank under k=0.90/1.10."
+    },
+    {
+      "candidate": "fixed-support median largest-component fraction",
+      "disposition": "KEEP",
+      "role": "primary broad-vs-fragmented descriptor",
+      "reason": "Visible broad/fragmented evidence corresponds to the statistic; core-to-wide, threshold and fixed-to-dynamic cross-stone rank Spearman are all 1.0, while matched active-area frames can differ strongly in morphology."
+    },
+    {
+      "candidate": "effective component count",
+      "disposition": "REJECT",
+      "role": "diagnostic only",
+      "reason": "Pooled baseline core-frame rank correlation with largest-component fraction is about -0.96, so it contributes little independent information."
+    },
+    {
+      "candidate": "raw component count",
+      "disposition": "REJECT",
+      "role": "audit only",
+      "reason": "Counts are dominated by many tiny marginal components and are less directly interpretable than area-weighted coherence."
+    },
+    {
+      "candidate": "dynamic support morphology",
+      "disposition": "REJECT",
+      "role": "support-motion QC",
+      "reason": "It does not change cross-stone rank but individual support-motion disagreements can be material; fixed common support is the cleaner production contract."
+    },
+    {
+      "candidate": "coarse/semantic radial restriction",
+      "disposition": "REJECT",
+      "role": "omitted design axis",
+      "reason": "Imposed radial boundaries can split otherwise connected whole-stone flashes and manufacture the morphology being measured."
+    },
+    {
+      "candidate": "spatial entropy",
+      "disposition": "REJECT",
+      "role": "not introduced",
+      "reason": "The component family already separates matched-area morphology, and the second area-weighted component statistic is strongly redundant; no evidence justified adding entropy."
+    }
+  ]
+}

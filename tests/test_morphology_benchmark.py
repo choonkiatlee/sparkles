@@ -133,5 +133,47 @@ class MorphologyBenchmarkTests(unittest.TestCase):
                 b.measure_stone(processed, [0, 1, 2], connectivity=4)
 
 
+class CommittedMorphologyArtifactTests(unittest.TestCase):
+    ROOT = Path(__file__).resolve().parents[1] / "docs" / "360" / "morphology"
+    CORE = [248,249,250,251,252,253,254,255,0,1,2,3,4,5,6,7,8]
+    WIDE = list(range(240,256)) + list(range(0,17))
+
+    def test_summary_pins_final_protocol_and_four_stones(self):
+        summary = json.loads((self.ROOT / "summary.json").read_text())
+        self.assertEqual(summary["core_indices"], self.CORE)
+        self.assertEqual(summary["wide_indices"], self.WIDE)
+        self.assertEqual(summary["thresholds"], [0.9, 1.0, 1.1])
+        self.assertEqual(summary["baseline_threshold"], 1.0)
+        self.assertEqual(summary["connectivity"], 8)
+        self.assertEqual(len(summary["stones"]), 4)
+        analysis = summary["analysis"]["median_largest_component_fraction"]
+        self.assertAlmostEqual(analysis["core_to_wide_spearman"], 1.0)
+        self.assertAlmostEqual(analysis["threshold_rank_spearman_0.90_vs_1.00"], 1.0)
+        self.assertAlmostEqual(analysis["threshold_rank_spearman_1.10_vs_1.00"], 1.0)
+        self.assertAlmostEqual(analysis["fixed_vs_dynamic_core_spearman"], 1.0)
+
+    def test_dispositions_keep_one_primary_morphology_scalar(self):
+        payload = json.loads((self.ROOT / "dispositions.json").read_text())
+        decisions = {item["candidate"]: item["disposition"] for item in payload["decisions"]}
+        self.assertEqual(decisions["robust bright active field G_t + k*S_t"], "KEEP")
+        self.assertEqual(decisions["fixed-support median largest-component fraction"], "KEEP")
+        self.assertEqual(decisions["effective component count"], "REJECT")
+        self.assertEqual(decisions["raw component count"], "REJECT")
+        self.assertEqual(decisions["spatial entropy"], "REJECT")
+
+    def test_compact_evidence_is_one_panel_per_stone(self):
+        panels = sorted(path.name for path in (self.ROOT / "evidence").glob("*.png"))
+        self.assertEqual(
+            panels,
+            [
+                "IGI-LG756520111-core.png",
+                "IGI-LG756580087-core.png",
+                "IGI-LG818659722-core.png",
+                "IGI-LG836619414-core.png",
+            ],
+        )
+        self.assertTrue(all((self.ROOT / "evidence" / name).stat().st_size > 1000 for name in panels))
+
+
 if __name__ == "__main__":
     unittest.main()

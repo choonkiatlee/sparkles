@@ -380,3 +380,26 @@ Concentric coordination describes recorded-image relationships. It is not
 physical-facet tracking, calibrated light return, fire, leakage, a
 hall-of-mirrors score or a quality grade.
 
+
+
+## Broad-vs-fragmented flash morphology: `diamond360-flash-morphology/1`
+
+`morphology.json` measures the spatial connectedness of a whole-stone **bright active field**. It intentionally does not partition the stone into coarse or semantic radial bands, because imposed band boundaries can split a connected flash and manufacture fragmentation.
+
+For each observed frame, `G_t` is the #26 median encoded brightness on fixed common registered stone support and
+
+`S_t = 1.4826 * median(|Y_t(p) - G_t|)`
+
+on that same fixed support. Active pixels satisfy the strict comparison
+
+`Y_t(p) > G_t + k*S_t`.
+
+The global benchmark threshold set is `0.90, 1.00, 1.10`, with `1.00` the baseline; per-stone tuning is forbidden. The connected-component convention is fixed at 8-connectivity.
+
+Every frame records active/support pixel counts, active fraction, raw component count, largest-component pixels, `largest_component_fraction = largest_component_pixels / active_pixels`, largest-component/support fraction, inverse-Simpson effective component count, and support-boundary contact diagnostics. A frame with no active pixels has unavailable morphology rather than an invented coherence value.
+
+Both `fixed` common support and `dynamic` frame-local support are emitted. The threshold reference and robust scale remain fixed-support quantities in both modes so changing support does not silently change the photometric state definition. Fixed support is the retained production mode; dynamic support is QC.
+
+Summaries include active-frame fraction and medians/quantiles of morphology only over active frames. Evidence selection deterministically surfaces broadest, most fragmented, matched-active-area, threshold-sensitive, strongest support-disagreement and low-disagreement cases.
+
+The retained primary descriptor is the fixed-support median largest-component fraction at `k=1.00`. Effective/raw component counts remain diagnostic. The descriptor is recorded-image morphology, not calibrated light return, fire, physical-facet identity, sparkle quality or a purchase grade.

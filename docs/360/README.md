@@ -210,3 +210,16 @@ event/evidence audit only. Middle↔outer stays support-sensitive and semantic
 variants remain localisation/QC candidates. The descriptor is descriptive and
 does not define a hall-of-mirrors or cut-quality score.
 
+
+
+## Broad-vs-fragmented flash morphology descriptor validation
+
+Issue #33's four-stone benchmark is documented in
+[morphology/README.md](morphology/README.md). It thresholds a robustly normalized
+whole-stone bright field, measures 8-connected spatial coherence, and validates
+the exact 17-frame core against the 33-frame sensitivity window, a fixed global
+`k=0.90/1.00/1.10` threshold neighborhood, and fixed-vs-dynamic support.
+Fixed-support median largest-component fraction survives as the primary
+broad↔fragmented descriptor. Effective/raw component counts are diagnostic only,
+and radial band restriction is deliberately omitted because imposed boundaries
+can manufacture fragmentation.
