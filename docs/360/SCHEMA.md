@@ -281,3 +281,54 @@ Source-step units are ordinal observations, not seconds or calibrated degrees.
 Contrast mobility is descriptive recorded-image behavior and is not sparkle
 frequency, fire, leakage, calibrated light return, physical facet identity or a
 quality grade.
+
+
+## Bright/dark persistence: `diamond360-bright-dark-persistence/1`
+
+`persistence.json` reuses the exact #27/#28 state definition:
+
+`D_(p,t)(k) = 1[Y_t(p) < k * G_t]`.
+
+The comparison remains strict `<`; `G_t` is the same fixed-support whole-stone
+median. The benchmark thresholds are globally fixed at `0.60, 0.65, 0.70`,
+with `0.65` as the operational baseline. The complementary state is named
+`non_dark` in machine output; it is not an independently calibrated bright
+state.
+
+A run is a maximal sequence of the same state over consecutive **observed source
+steps**. Missing/rejected frames and invalid whole-stone references break and
+censor runs. Under `dynamic` support, support loss breaks/censors the run and
+re-entry starts a new run. Under `fixed` support, only pixels supported
+throughout the observed interval are eligible. Interval endpoints censor runs.
+The final requested step is never joined back to the first, even when the source
+viewer itself is cyclic.
+
+For every eligible pixel and state, the descriptor records the longest observed
+run. Regional summaries include Q50/Q90/max longest-run length, fraction with a
+non-zero run, and Q90 normalized by the **requested source-step count**:
+
+`q90_window_fraction = q90_longest_run_frames / requested_source_steps`.
+
+The denominator is deliberately not each pixel's own support count: a pixel that
+is supported for only two frames cannot become "100% persistent" merely because
+it is dark in both.
+
+Censoring remains auditable. Each cell records total/completed/censored runs,
+left/right boundary counts for gaps, invalid references, support loss and window
+endpoints, plus the fraction of pixels whose longest run has any/all tied maxima
+censored.
+
+Evidence metadata selects representative long dark and non-dark runs. The
+associated panel shows run start/middle/end source frames and overlays the pixels
+that remain continuously in that state across the highlighted run, together with
+left/right censoring reasons.
+
+Every coarse and semantic region is emitted for both `fixed` and `dynamic`
+support. Semantic QC propagates only to semantic measurements. Primary benchmark
+interpretation should inherit #27/#28's prior evidence: coarse-fixed
+centre/inner/middle first (especially inner/middle), with dynamic, semantic and
+outer cells retained primarily as support/localisation falsification.
+
+Persistence is descriptive recorded-image run structure. It is not duration in
+seconds/degrees, physical-facet tracking, calibrated light return, fire, leakage
+or a quality grade.

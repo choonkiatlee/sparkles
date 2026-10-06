@@ -186,3 +186,15 @@ survives as the primary local continuous-change descriptor; Q90 remains an audit
 field, while whole-stone mobility is not retained as another primary scalar
 because it is redundant with whole-stone activation excursion. Outer and semantic
 variants inherit #26's REVISE status.
+
+
+## Bright/dark persistence descriptor validation
+
+Issue #29's four-stone benchmark is documented in
+[persistence/README.md](persistence/README.md). It reuses #27/#28's relative-dark
+state and measures longest dark/non-dark runs with explicit gap/support/endpoint
+censoring. The surviving descriptor is **coarse-fixed inner-band dark Q90
+persistence**, retained as a secondary temporal-structure measure. Centre/middle
+remain revised, outer/semantic remain QC-sensitive, and non-dark Q90 is rejected
+because it saturates at the full window. Aggregate results and representative
+evidence live under [persistence/](persistence/).

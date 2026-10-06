@@ -1,0 +1,109 @@
+{
+  "schema_version": "sparkles-bright-dark-persistence-dispositions/1",
+  "issue": 29,
+  "overall_disposition": "KEEP",
+  "interpretation": "Keep dark-run persistence with a narrow scope as a secondary temporal structure descriptor; reject the symmetric non-dark scalar and do not convert persistence into a quality score.",
+  "surviving_descriptor": {
+    "state": "dark",
+    "representation": "coarse",
+    "region": "inner",
+    "support_mode": "fixed",
+    "threshold": 0.65,
+    "summary": "Q90 longest observed dark run / requested source-step count",
+    "role": "secondary temporal descriptor",
+    "units": "fraction of the declared source-step window; not seconds or degrees"
+  },
+  "key_evidence": {
+    "core_wide_spearman": {
+      "centre_dark": 0.632455532033676,
+      "inner_dark": 0.8164965809277261,
+      "middle_dark": 0.7071067811865477,
+      "outer_dark": 0.5443310539518174
+    },
+    "inner_threshold_rank": {
+      "0.60_vs_0.65": 0.8164965809277261,
+      "0.70_vs_0.65": 0.8333333333333335
+    },
+    "non_dark_q90": "1.0 for every coarse-fixed stone/region in both core and wide windows",
+    "outer_support_sensitivity": {
+      "core_dark_max_abs_fixed_dynamic": 0.12941176470587165,
+      "wide_dark_max_abs_fixed_dynamic": 0.09090909090909091
+    },
+    "semantic_localisation_sensitivity": {
+      "core_inner_dark_rho": -0.9486832980505139,
+      "core_middle_dark_rho": 0,
+      "wide_inner_dark_rho": -0.8660254037844387,
+      "wide_middle_dark_rho": -1
+    },
+    "core_redundancy_with_occupancy_switching_by_band": {
+      "centre": [
+        0.316227766016838,
+        0.316227766016838
+      ],
+      "inner": [
+        0.316227766016838,
+        0.316227766016838
+      ],
+      "middle": [
+        0,
+        0
+      ]
+    }
+  },
+  "decisions": [
+    {
+      "candidate": "coarse fixed inner dark Q90 longest-run fraction",
+      "disposition": "KEEP",
+      "reason": "Best combination of discrimination, core-to-wide rank stability, threshold stability and support robustness; retain as a secondary temporal descriptor."
+    },
+    {
+      "candidate": "coarse fixed centre dark Q90 longest-run fraction",
+      "disposition": "REVISE",
+      "reason": "Visually interpretable but core-to-wide cross-stone rank stability is only about 0.63."
+    },
+    {
+      "candidate": "coarse fixed middle dark Q90 longest-run fraction",
+      "disposition": "REVISE",
+      "reason": "Reasonable window/support robustness, but k=0.70 collapses all four core stones to the same Q90 value."
+    },
+    {
+      "candidate": "coarse outer dark persistence",
+      "disposition": "REVISE",
+      "reason": "Material fixed-vs-dynamic support sensitivity repeats the known outer-region pose/support confound."
+    },
+    {
+      "candidate": "non-dark Q90 longest-run fraction",
+      "disposition": "REJECT",
+      "reason": "Saturates at the full requested window in every coarse-fixed benchmark cell."
+    },
+    {
+      "candidate": "Q50 longest-run fraction",
+      "disposition": "REJECT",
+      "reason": "Heavily tied and quantized, often 0-1 source steps."
+    },
+    {
+      "candidate": "max longest-run fraction",
+      "disposition": "REJECT",
+      "reason": "Single-pixel tail statistic; too sensitive to outliers and censoring for a headline comparison scalar."
+    },
+    {
+      "candidate": "dynamic support as a separate centre/inner/middle descriptor",
+      "disposition": "REJECT",
+      "reason": "Mostly duplicates fixed support in retained regions; keep only as QC/falsification."
+    },
+    {
+      "candidate": "semantic persistence as primary geometry",
+      "disposition": "REVISE",
+      "reason": "Strong coarse-vs-semantic rank inversions show localisation sensitivity; retain as QC."
+    },
+    {
+      "candidate": "censoring diagnostics",
+      "disposition": "KEEP",
+      "reason": "Necessary audit/QC metadata for interpreting longest-run measurements."
+    }
+  ],
+  "benchmark_evidence": {
+    "source_release": "benchmark-sources-v1",
+    "committed_policy": "aggregate summary + six representative panels only; full generated per-stone outputs intentionally omitted from Git"
+  }
+}
