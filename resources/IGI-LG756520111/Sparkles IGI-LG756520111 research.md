@@ -56,7 +56,7 @@ Provenance discrepancy: Quality Diamonds advertises `top_index=0`; certificate q
 
 ## Saved bundle
 
-[Compact originals and source records](artifacts/IGI-LG756520111-compact-evaluation-evidence.zip) — 297,873 bytes; SHA-256 `02bb0eb45a0b8c1a7999e486f36feef80ea273f075db456d7c4b32aa1db0a7fa`. Contains the original PDF, original JPEG, selected listing attributes, certificate-query JSON and manifest. ZIP CRC verified. No retailer page scripts, duplicate imagery, full frame sequence or uninspected supplier photos included.
+Derived compact evidence bundles used during evaluation are intentionally not committed; durable source provenance remains in this dossier and the retained source artifacts.
 
 | File within ZIP | Bytes | SHA-256 |
 |---|---:|---|
@@ -79,7 +79,7 @@ The exact Loupe360 certificate query returns this **same Workshop viewer**, not 
 
 Selection reading order **[244, 246, 248, 250, 252, 254, 255, 0, 2, 4, 6, 8, 64, 128, 192, 208]**. The first 12 show nearby states on both sides of the face-up boundary; the remaining four show distinct broader orientation/profile context. Includes strongly contrasting and pale states; no cut-quality verdict assigned. The inner side panels remain pale in some sampled views; this is a recorded visual feature, not a leakage finding.
 
-[Pass 2 originals and SVGs](artifacts/IGI-LG756520111-pass2-motion-diagrams.zip) — 411,362 bytes, SHA-256 `1dc56f355f16a13295ce8dc195ada414187220daa3085666398674d1a707a6bb`. [Animated face-up preview](artifacts/IGI-LG756520111-faceup-motion-preview.gif) — 537,328 bytes, SHA-256 `85c634b7f64aa721b9d0d1fc685c0e1114f1491a15741a38c3b5b059ad19d56f`. Combined new binary evidence: 948,690 bytes. ZIP CRC, original frame hashes/dimensions and unique indices verified. Full 256-frame working sequence and raw source batches deliberately excluded from compact publication.
+[Animated face-up preview](artifacts/IGI-LG756520111-faceup-motion-preview.gif) — 537,328 bytes; SHA-256 `85c634b7f64aa721b9d0d1fc685c0e1114f1491a15741a38c3b5b059ad19d56f`.
 
 ## Next useful evidence
 

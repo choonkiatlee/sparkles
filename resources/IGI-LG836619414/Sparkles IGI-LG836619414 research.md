@@ -117,7 +117,7 @@ Diyona's direct Nivoda photo link returned 403; the observed Loupe360 DOM image 
 
 ## Compact evaluation evidence — Pass 3
 
-[[resources/IGI-LG836619414/artifacts/IGI-LG836619414-compact-evaluation-evidence.zip|Download compact evidence bundle]] — **863,784 bytes**, below the strict 1,000,000-byte limit. Includes 16 original 682 × 682 JPEGs (no resizing/recompression), the unchanged 306176-byte report PDF, README and selected-frame manifest with SHA-256 and source batch/key references. ZIP SHA-256: `1946642a4e0198229ef7f3753073e3f6dfd4237369699be3d950b42f212e84eb`.
+Derived evidence bundles used during evaluation are intentionally not committed; retained originals, source links and provenance remain documented here.
 
 Selection order around face-up crosses the loop boundary: **246, 248, 250, 252, 254, 255, 000, 002, 004, 006, 008, 010**. These capture nearby centre/step/windmill transitions on both sides of the face-up composition. Additional **032, 096, 128, 192** provide broader tilted/profile context. All 16 were visually inspected for selection; no optical evaluation or calibrated-angle inference is claimed. Continuous motion and intervening frames are omitted.
 
@@ -127,11 +127,11 @@ All 256 original supplier frames were recovered from the page-linked public play
 
 ## Dated evaluations
 
-Preferred visual presentation: [[evaluations/IGI-LG836619414-visual-report-2026-10-04-200232.html|Compact HTML assessment]] — 740,176-byte self-contained report with original selected frames, virtual-facet annotations, playback controls and raw-source links. Same provisional assessment; no new optical verification is claimed.
+Preferred visual presentation: [[evaluations/IGI-LG836619414-visual-report-2026-10-05-140217.html|Current compact HTML assessment]] — standardized outcome summary and checklist.
 
-- [[evaluations/Sparkles IGI-LG836619414 evaluation 2026-10-04-200232|First provisional Asscher assessment]] — 2026-10-04T20:02:32+01:00; keep on shortlist. Crisp steps and changing contrast; inner-step return/leakage and fire remain unresolved. Inspected consecutive sequence 246–255 → 000–010 plus broad rotation samples; no full 256-frame playback claim.
+- [[evaluations/Sparkles IGI-LG836619414 evaluation 2026-10-05-140217|Current outcome summary and checklist]] — retained assessment record.
 
-Derived comparison: [[resources/IGI-LG836619414/artifacts/IGI-LG836619414-evaluation-2026-10-04-200232-transitions.jpg|Four-frame inner-step comparison]], 96,698 bytes; SHA-256 `b4b84f014e3c8b6ca3e4d8519cb84ef8df22775a1a93d6d16a72ff19ca578b29`. Parent A3 frames 248, 252, 000, 008 are preserved unchanged in the compact evidence ZIP; full parent hashes and derivation are recorded in the evaluation. The full archive remains excluded from GitHub.
+Derived comparison: [[resources/IGI-LG836619414/artifacts/IGI-LG836619414-evaluation-2026-10-04-200232-transitions.jpg|Four-frame inner-step comparison]], 96,698 bytes; SHA-256 `b4b84f014e3c8b6ca3e4d8519cb84ef8df22775a1a93d6d16a72ff19ca578b29`. Parent A3 frames 248, 252, 000, 008 were used unchanged during evaluation; full parent hashes and derivation are recorded in the evaluation. The full archive remains excluded from GitHub.
 
 ## Next pass / handoff
 

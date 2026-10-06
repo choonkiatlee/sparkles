@@ -39,7 +39,7 @@ Source for the table: inspected PDF above. Report proportion/clarity diagrams ar
 
 ## Media and provenance
 
-[Supplier controllable 360](https://vision.diajewel360.com/Vision360.html?d=PD-230293) · [Loupe360 certificate viewer](https://loupe360.com/diamond/LG818659722) · [Curated original evidence ZIP](artifacts/IGI-LG818659722-compact-evaluation-evidence.zip)
+[Supplier controllable 360](https://vision.diajewel360.com/Vision360.html?d=PD-230293) · [Loupe360 certificate viewer](https://loupe360.com/diamond/LG818659722)
 
 | Asset | Source and association | Access / inspection | Coverage / use and limits |
 |---|---|---|---|
