@@ -305,10 +305,13 @@ def run_source_benchmark(source_root, output, bundle_manifest):
             certificate = item["certificate"]
             source = source_root / certificate
             processed = work / certificate / "processed"
+            source_manifest = Path(item["source_manifest"])
+            if not source_manifest.is_absolute():
+                source_manifest = Path.cwd() / source_manifest
             pipeline.run(
                 source,
                 processed,
-                source / "source-manifest.json",
+                source_manifest,
                 gain=1.0,
                 accept_review=True,
             )
