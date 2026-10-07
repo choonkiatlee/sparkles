@@ -555,24 +555,80 @@ def transfer_fixed_ruler_frame(
     }
 
 
-def _eligible_transfer_records(pose_payload):
-    records = []
-    resolved = (
-        pose_payload.get("face_selection", {}).get("status")
-        == "resolved"
+def _transfer_window(pose_payload, selected):
+    """Use #73's crown lobe when resolved; otherwise derive a broad fixed window.
+
+    The unresolved fallback is based only on the primary geometry-view cluster,
+    not on transfer-frame optical evidence. Its base radius reuses #73's
+    sequence-size / 8 lobe policy and expands only enough to contain every
+    primary fitting view.
+    """
+    frames = pose_payload.get("frames", [])
+    size = len(frames)
+    if size < 1:
+        raise ValueError("pose sequence has no frames")
+    face = pose_payload.get("face_selection") or {}
+    crown_peak = face.get("likely_crown_peak_position")
+    if face.get("status") == "resolved" and crown_peak is not None:
+        radius = int(face.get("lobe_radius_frames") or round(size / 8.0))
+        return {
+            "centre_position": int(crown_peak),
+            "radius_frames": int(radius),
+            "provenance": "resolved_73_crown_lobe",
+        }
+
+    selected_positions = [
+        int(row["position"])
+        for row in selected
+        if row.get("position") is not None
+    ]
+    if not selected_positions:
+        raise ValueError("cannot derive transfer window without primary positions")
+    centre = min(
+        selected_positions,
+        key=lambda candidate: (
+            sum(
+                _circular_distance(position, candidate, size)
+                for position in selected_positions
+            ),
+            candidate,
+        ),
     )
-    for record in pose_payload.get("frames", []):
+    selected_radius = max(
+        _circular_distance(position, centre, size)
+        for position in selected_positions
+    )
+    return {
+        "centre_position": int(centre),
+        "radius_frames": int(max(round(size / 8.0), selected_radius)),
+        "provenance": (
+            "primary_geometry_view_circular_medoid_plus_73_lobe_radius"
+        ),
+    }
+
+
+def _eligible_transfer_records(pose_payload, selected):
+    frames = pose_payload.get("frames", [])
+    size = len(frames)
+    window = _transfer_window(pose_payload, selected)
+    centre = window["centre_position"]
+    radius = window["radius_frames"]
+    wrap_positions = {0, max(0, size - 1)}
+    records = []
+    for record in frames:
         canonical = record.get("canonical") or {}
         coordinate = record.get("sequence_coordinate") or {}
-        if not canonical.get("path"):
+        position = record.get("position")
+        if not canonical.get("path") or position is None:
             continue
         if coordinate.get("gauge_status") not in ("available", "review"):
             continue
-        if resolved and record.get("face_role") != "likely_crown_lobe":
+        in_window = _circular_distance(position, centre, size) <= radius
+        if not in_window and int(position) not in wrap_positions:
             continue
         records.append(record)
     records.sort(key=lambda row: int(row.get("position", 10**9)))
-    return records
+    return records, window
 
 
 def _wrap_summary(rows, sequence_size):
@@ -620,7 +676,9 @@ def _run_transfer(
     output,
 ):
     output = Path(output)
-    records = _eligible_transfer_records(pose_payload)
+    records, window = _eligible_transfer_records(
+        pose_payload, selected
+    )
     selected_positions = {
         row.get("position") for row in selected
     }
@@ -628,6 +686,8 @@ def _run_transfer(
         "likely_crown_peak_position"
     )
     sequence_size = len(pose_payload.get("frames", []))
+    transfer_centre = window["centre_position"]
+    transfer_radius = window["radius_frames"]
     rows = []
     render_items = []
 
@@ -644,14 +704,44 @@ def _run_transfer(
             u,
             primary_result,
             frame_metadata=meta,
-            crown_peak_position=crown_peak,
+            crown_peak_position=(
+                crown_peak if crown_peak is not None else transfer_centre
+            ),
             sequence_size=sequence_size,
             in_primary_fit=record.get("position") in selected_positions,
+        )
+        in_window = (
+            _circular_distance(
+                record.get("position"), transfer_centre, sequence_size
+            )
+            <= transfer_radius
+        )
+        transfer["transfer_scope"] = (
+            "crown_view_window"
+            if in_window
+            else "cyclic_wrap_control"
         )
         rows.append(transfer)
         render_items.append((transfer, brightness, mask))
 
     wrap = _wrap_summary(rows, sequence_size)
+    semantic_ids = sorted(
+        primary_result["scaffold"]["entity_observations"]
+    )
+    entity_status_counts = {
+        semantic_id: {
+            status: sum(
+                frame["entities"][semantic_id]["status"] == status
+                for frame in rows
+            )
+            for status in ("ok", "review", "unavailable")
+        }
+        for semantic_id in semantic_ids
+    }
+    crown_rows = [
+        row for row in rows
+        if row["transfer_scope"] == "crown_view_window"
+    ]
     payload = {
         "schema_version": TRANSFER_SCHEMA,
         "policy": TRANSFER_POLICY,
@@ -665,7 +755,13 @@ def _run_transfer(
             row.get("position") for row in selected
         ],
         "crown_peak_position": crown_peak,
+        "transfer_window": window,
         "frame_count": len(rows),
+        "crown_view_frame_count": len(crown_rows),
+        "cyclic_wrap_control_count": sum(
+            row["transfer_scope"] == "cyclic_wrap_control"
+            for row in rows
+        ),
         "outside_primary_fit_count": sum(
             not row["in_primary_geometry_fit"] for row in rows
         ),
@@ -673,6 +769,11 @@ def _run_transfer(
             status: sum(row["status"] == status for row in rows)
             for status in ("ok", "review", "unavailable")
         },
+        "crown_view_status_counts": {
+            status: sum(row["status"] == status for row in crown_rows)
+            for status in ("ok", "review", "unavailable")
+        },
+        "entity_status_counts": entity_status_counts,
         "semantic_identity_swap_count": 0,
         "wrap_check": wrap,
         "frames": rows,
