@@ -83,6 +83,12 @@ class AsscherGeometryValidationTests(unittest.TestCase):
             all(len(row["sha256"]) == 64 for row in snapshot["bundles"])
         )
 
+    def test_benchmark_manifest_drift_fails_closed(self):
+        changed = benchmark_manifest()
+        changed["core_indices"] = changed["core_indices"][:-1]
+        with self.assertRaises(RuntimeError):
+            validation.assert_frozen_benchmark_manifest(changed)
+
     def test_boundary_displacement_reports_raw_and_local_tier_fraction(self):
         reference = topology.canonical_synthetic_scaffold(gauge_id="g")
         candidate = deepcopy(reference)
