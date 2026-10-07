@@ -44,6 +44,11 @@ jobs:
               assert not result["sparse"]
               assert result["ordering"] == "explicit_manifest"
               source = json.loads(manifest.read_text())
+              sampling = source["sequence_sampling"]
+              assert sampling["kind"] == "uniform_cyclic_viewer_phase"
+              assert sampling["period_frames"] == 256
+              assert sampling["nominal_cycle_deg"] == 360.0
+              assert sampling["physical_angle_calibrated"] is False
               print(json.dumps({
                   "item_id": item,
                   "frame_count": result["frame_count"],
