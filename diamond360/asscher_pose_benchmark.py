@@ -138,6 +138,7 @@ def _summarise_stone(certificate, payload):
         "certificate": certificate,
         "frame_count": len(frames),
         "status_counts": dict(sorted(counts.items())),
+        "face_selection": payload.get("face_selection"),
         "usable_score_quantiles": (
             None
             if not len(usable_scores)
