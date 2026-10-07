@@ -160,7 +160,12 @@ class DiamondRetriever:
                 attempts.append(self._attempt(reference, EvidenceStatus.PROCESSING_FAILED, str(exc)))
                 continue
             evidence.extend(processed)
-            attempts.append(self._attempt(reference, EvidenceStatus.SUCCESS))
+            attempt_status = (
+                EvidenceStatus.EXTRACTION_FAILED
+                if any(item.status == EvidenceStatus.EXTRACTION_FAILED for item in processed)
+                else EvidenceStatus.SUCCESS
+            )
+            attempts.append(self._attempt(reference, attempt_status))
 
         comparisons = tuple(self.identity_validator.validate(listing, evidence))
         conflicts = tuple(item for item in comparisons if item.outcome == IdentityOutcome.CONFLICT)
@@ -209,8 +214,11 @@ class DiamondRetriever:
     def _validate_processed(processed: Sequence[Evidence]) -> None:
         if not processed:
             raise InvalidPayloadError("processor returned no evidence")
+        allowed = {EvidenceStatus.SUCCESS, EvidenceStatus.EXTRACTION_FAILED}
         for item in processed:
-            if item.status != EvidenceStatus.SUCCESS:
-                raise InvalidPayloadError("processors may only return successful typed evidence")
+            if item.status not in allowed:
+                raise InvalidPayloadError(
+                    "processors may only return successful evidence or retained extraction failures"
+                )
             if not isinstance(item.payload, bytes) or not item.payload:
                 raise InvalidPayloadError("processed evidence must preserve non-empty original bytes")
