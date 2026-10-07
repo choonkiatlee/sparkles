@@ -17,6 +17,7 @@ from diamond_retrieval import (
 from diamond_retrieval.motion import (
     ProgressiveRotationProcessor,
     canonical_progressive_positions,
+    decode_vision360_scramble,
     ordered_positions,
     validate_scramble,
 )
@@ -98,6 +99,11 @@ class ProgressiveMotionContractTests(unittest.TestCase):
             canonical_progressive_positions(),
             legacy(),
         )
+
+    def test_public_player_aes_scramble_decodes_to_audited_maps(self):
+        for audit in AUDITS:
+            decoded = decode_vision360_scramble(audit["encrypted_scramble"])
+            self.assertEqual(decoded, audit["scramble"])
 
     def test_diajewel_full_audit_mapping_is_reproduced(self):
         self._assert_full_audit(AUDITS[0])
