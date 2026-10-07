@@ -183,9 +183,13 @@ def fit_asscher_outline(mask):
         + _rotate_points(vertices_q, orientation)
     )
 
-    side_vectors = np.roll(vertices_q, -1, axis=0) - vertices_q
-    side_lengths = np.linalg.norm(side_vectors, axis=1)
-    perimeter = float(side_lengths.sum())
+    # Vertex i is the intersection of line i and line i+1, so line i
+    # spans vertex i-1 -> vertex i.
+    line_lengths = np.linalg.norm(
+        vertices_q - np.roll(vertices_q, 1, axis=0),
+        axis=1,
+    )
+    perimeter = float(line_lengths.sum())
 
     residuals = centred_offsets[None, :] - q_centre @ normals.T
     abs_residuals = np.abs(residuals)
@@ -200,7 +204,7 @@ def fit_asscher_outline(mask):
         selected = boundary[chosen]
         observed_angle = _line_direction_deg(selected)
         observed_angles.append(observed_angle)
-        expected_fraction = float(side_lengths[index] / max(perimeter, 1e-12))
+        expected_fraction = float(line_lengths[index] / max(perimeter, 1e-12))
         observed_fraction = float(np.mean(chosen))
         support_ratio = float(
             observed_fraction / max(expected_fraction, 1e-12)
@@ -211,7 +215,7 @@ def fit_asscher_outline(mask):
                 "family": "cardinal" if index % 2 == 0 else "corner",
                 "normal_angle_canonical_deg": float(normal_angles[index]),
                 "offset_from_centre_px": float(centred_offsets[index]),
-                "model_side_length_px": float(side_lengths[index]),
+                "model_side_length_px": float(line_lengths[index]),
                 "boundary_support_fraction": observed_fraction,
                 "support_ratio_to_model_length": support_ratio,
                 "observed_line_angle_image_deg": observed_angle,
@@ -240,7 +244,7 @@ def fit_asscher_outline(mask):
 
     width = float(centred_offsets[0] + centred_offsets[4])
     height = float(centred_offsets[2] + centred_offsets[6])
-    corner_lengths = side_lengths[1::2]
+    corner_lengths = line_lengths[1::2]
     opposite_corner_imbalance = []
     for a, b in [(0, 2), (1, 3)]:
         denom = max(float(corner_lengths[a] + corner_lengths[b]), 1e-12)
