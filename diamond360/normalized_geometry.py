@@ -156,13 +156,19 @@ def normalize_frame(
     canonical_to_source = np.linalg.inv(source_to_canonical)
 
     oy, ox = np.indices((n, n), dtype=float)
-    homogeneous = np.stack(
-        [ox.ravel(), oy.ravel(), np.ones(n * n, dtype=float)],
-        axis=0,
-    )
-    source_xy = canonical_to_source @ homogeneous
-    ix = source_xy[0].reshape(n, n)
-    iy = source_xy[1].reshape(n, n)
+    if rotation_deg == 0.0:
+        # Preserve the original sampling arithmetic exactly for all existing
+        # consumers that use the default translation/scale-only transfer.
+        iy = cy + (oy - oc) / scale
+        ix = cx + (ox - oc) / scale
+    else:
+        homogeneous = np.stack(
+            [ox.ravel(), oy.ravel(), np.ones(n * n, dtype=float)],
+            axis=0,
+        )
+        source_xy = canonical_to_source @ homogeneous
+        ix = source_xy[0].reshape(n, n)
+        iy = source_xy[1].reshape(n, n)
 
     sampled = ndi.map_coordinates(
         source,
