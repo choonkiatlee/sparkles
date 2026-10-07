@@ -1,0 +1,1601 @@
+{
+  "schema_version": "sparkles-expert-observations/1",
+  "corpus_id": "pricescope-karl-strmrdr-asscher-observations-v1",
+  "purpose": "Provenance-preserving Karl_K / strmrdr observations from the existing #64 PriceScope archive, for downstream falsification of frozen Sparkles geometry/optical/perceptual methods. No new human or AI labels.",
+  "interpretation_contract": {
+    "expert_is_not_ground_truth": true,
+    "source_observation_and_machine_mapping_are_separate": true,
+    "catalog_wording_is_not_verbatim": "Every v1 source_wording field is the existing #64 catalog paraphrase unless wording_fidelity explicitly changes in a later revision.",
+    "grey_is_not_leakage": "Do not normalize grey to leakage without an explicit source statement.",
+    "holdout_rule": "A held_out_candidate may be called independent validation for a new method only if its observation was not used to design, tune, threshold, or select that method. Prior legacy-descriptor exposure is recorded separately.",
+    "mapping_rule": "pending_geometry records must not acquire semantic facet IDs until #72 geometry is validated; original source wording/locality is immutable provenance."
+  },
+  "observations": [
+    {
+      "observation_id": "karl-p3-extremely-off",
+      "sample_id": "p3-extremely-off",
+      "sample_domain": "simulation",
+      "reviewer": {
+        "name": "Karl K.",
+        "reviewer_class": "expert",
+        "provenance": "explicit_label_reviewer"
+      },
+      "source": {
+        "source_id": "pricescope-p3-article",
+        "source_url": "https://www.pricescope.com/blog/performance-and-p3-facets-discussion-about-step-cut-diamonds",
+        "group_id": "p3-static-labelled",
+        "post_number": null,
+        "location_text": "group p3-static-labelled / sample p3-extremely-off",
+        "wording_fidelity": "catalog_paraphrase",
+        "catalog_path": "docs/360/external-benchmark/pricescope/source-catalog.json",
+        "benchmark_manifest_path": "docs/360/external-benchmark/pricescope/benchmark-manifest.json",
+        "media_linkage": {
+          "benchmark_sample_ids": [
+            "p3-extremely-off"
+          ],
+          "archive_status": "archived_original",
+          "full_original_verified": true
+        },
+        "relation_refs": []
+      },
+      "observation": {
+        "phenomenon": "p3_angle_geometry",
+        "locality_text": "P3 facets",
+        "viewing_condition": "unspecified",
+        "motion_condition": "unspecified",
+        "polarity": "negative",
+        "explicitness": "explicit",
+        "source_wording": "p3 facets described as extremely far from proper angles",
+        "qualifier_text": null,
+        "relation_claim": null
+      },
+      "classification": [
+        "performance",
+        "geometry_style"
+      ],
+      "machine_mapping": {
+        "status": "pending_geometry",
+        "semantic_entities": [],
+        "source_interval": null,
+        "optical_event_refs": [],
+        "mapping_confidence": null
+      },
+      "validation_usage": {
+        "designation": "development_sanity",
+        "prior_use": "none",
+        "rationale": "Useful source-controlled P3 semantics, but simulation/static evidence is development/sanity material rather than held-out real-stone vendor-360 validation."
+      }
+    },
+    {
+      "observation_id": "karl-p3-slightly-off",
+      "sample_id": "p3-slightly-off",
+      "sample_domain": "simulation",
+      "reviewer": {
+        "name": "Karl K.",
+        "reviewer_class": "expert",
+        "provenance": "explicit_label_reviewer"
+      },
+      "source": {
+        "source_id": "pricescope-p3-article",
+        "source_url": "https://www.pricescope.com/blog/performance-and-p3-facets-discussion-about-step-cut-diamonds",
+        "group_id": "p3-static-labelled",
+        "post_number": null,
+        "location_text": "group p3-static-labelled / sample p3-slightly-off",
+        "wording_fidelity": "catalog_paraphrase",
+        "catalog_path": "docs/360/external-benchmark/pricescope/source-catalog.json",
+        "benchmark_manifest_path": "docs/360/external-benchmark/pricescope/benchmark-manifest.json",
+        "media_linkage": {
+          "benchmark_sample_ids": [
+            "p3-slightly-off"
+          ],
+          "archive_status": "archived_original",
+          "full_original_verified": true
+        },
+        "relation_refs": []
+      },
+      "observation": {
+        "phenomenon": "p3_angle_geometry",
+        "locality_text": "P3 facets",
+        "viewing_condition": "unspecified",
+        "motion_condition": "unspecified",
+        "polarity": "concern",
+        "explicitness": "explicit",
+        "source_wording": "p3 facets described as only a little off",
+        "qualifier_text": null,
+        "relation_claim": null
+      },
+      "classification": [
+        "performance",
+        "geometry_style"
+      ],
+      "machine_mapping": {
+        "status": "pending_geometry",
+        "semantic_entities": [],
+        "source_interval": null,
+        "optical_event_refs": [],
+        "mapping_confidence": null
+      },
+      "validation_usage": {
+        "designation": "development_sanity",
+        "prior_use": "none",
+        "rationale": "Useful source-controlled P3 semantics, but simulation/static evidence is development/sanity material rather than held-out real-stone vendor-360 validation."
+      }
+    },
+    {
+      "observation_id": "karl-p3-acceptable-1",
+      "sample_id": "p3-acceptable-1",
+      "sample_domain": "simulation",
+      "reviewer": {
+        "name": "Karl K.",
+        "reviewer_class": "expert",
+        "provenance": "explicit_label_reviewer"
+      },
+      "source": {
+        "source_id": "pricescope-p3-article",
+        "source_url": "https://www.pricescope.com/blog/performance-and-p3-facets-discussion-about-step-cut-diamonds",
+        "group_id": "p3-static-labelled",
+        "post_number": null,
+        "location_text": "group p3-static-labelled / sample p3-acceptable-1",
+        "wording_fidelity": "catalog_paraphrase",
+        "catalog_path": "docs/360/external-benchmark/pricescope/source-catalog.json",
+        "benchmark_manifest_path": "docs/360/external-benchmark/pricescope/benchmark-manifest.json",
+        "media_linkage": {
+          "benchmark_sample_ids": [
+            "p3-acceptable-1"
+          ],
+          "archive_status": "archived_original",
+          "full_original_verified": true
+        },
+        "relation_refs": []
+      },
+      "observation": {
+        "phenomenon": "p3_angle_geometry",
+        "locality_text": "P3 facets",
+        "viewing_condition": "unspecified",
+        "motion_condition": "unspecified",
+        "polarity": "positive",
+        "explicitness": "explicit",
+        "source_wording": "example described as having acceptable p3 angles",
+        "qualifier_text": null,
+        "relation_claim": null
+      },
+      "classification": [
+        "performance",
+        "geometry_style"
+      ],
+      "machine_mapping": {
+        "status": "pending_geometry",
+        "semantic_entities": [],
+        "source_interval": null,
+        "optical_event_refs": [],
+        "mapping_confidence": null
+      },
+      "validation_usage": {
+        "designation": "development_sanity",
+        "prior_use": "none",
+        "rationale": "Useful source-controlled P3 semantics, but simulation/static evidence is development/sanity material rather than held-out real-stone vendor-360 validation."
+      }
+    },
+    {
+      "observation_id": "karl-p3-acceptable-2",
+      "sample_id": "p3-acceptable-2",
+      "sample_domain": "simulation",
+      "reviewer": {
+        "name": "Karl K.",
+        "reviewer_class": "expert",
+        "provenance": "explicit_label_reviewer"
+      },
+      "source": {
+        "source_id": "pricescope-p3-article",
+        "source_url": "https://www.pricescope.com/blog/performance-and-p3-facets-discussion-about-step-cut-diamonds",
+        "group_id": "p3-static-labelled",
+        "post_number": null,
+        "location_text": "group p3-static-labelled / sample p3-acceptable-2",
+        "wording_fidelity": "catalog_paraphrase",
+        "catalog_path": "docs/360/external-benchmark/pricescope/source-catalog.json",
+        "benchmark_manifest_path": "docs/360/external-benchmark/pricescope/benchmark-manifest.json",
+        "media_linkage": {
+          "benchmark_sample_ids": [
+            "p3-acceptable-2"
+          ],
+          "archive_status": "archived_original",
+          "full_original_verified": true
+        },
+        "relation_refs": []
+      },
+      "observation": {
+        "phenomenon": "p3_angle_geometry",
+        "locality_text": "P3 facets",
+        "viewing_condition": "unspecified",
+        "motion_condition": "unspecified",
+        "polarity": "positive",
+        "explicitness": "explicit",
+        "source_wording": "example described as having acceptable p3 angles",
+        "qualifier_text": null,
+        "relation_claim": null
+      },
+      "classification": [
+        "performance",
+        "geometry_style"
+      ],
+      "machine_mapping": {
+        "status": "pending_geometry",
+        "semantic_entities": [],
+        "source_interval": null,
+        "optical_event_refs": [],
+        "mapping_confidence": null
+      },
+      "validation_usage": {
+        "designation": "development_sanity",
+        "prior_use": "none",
+        "rationale": "Useful source-controlled P3 semantics, but simulation/static evidence is development/sanity material rather than held-out real-stone vendor-360 validation."
+      }
+    },
+    {
+      "observation_id": "karl-p3-acceptable-3",
+      "sample_id": "p3-acceptable-3",
+      "sample_domain": "simulation",
+      "reviewer": {
+        "name": "Karl K.",
+        "reviewer_class": "expert",
+        "provenance": "explicit_label_reviewer"
+      },
+      "source": {
+        "source_id": "pricescope-p3-article",
+        "source_url": "https://www.pricescope.com/blog/performance-and-p3-facets-discussion-about-step-cut-diamonds",
+        "group_id": "p3-static-labelled",
+        "post_number": null,
+        "location_text": "group p3-static-labelled / sample p3-acceptable-3",
+        "wording_fidelity": "catalog_paraphrase",
+        "catalog_path": "docs/360/external-benchmark/pricescope/source-catalog.json",
+        "benchmark_manifest_path": "docs/360/external-benchmark/pricescope/benchmark-manifest.json",
+        "media_linkage": {
+          "benchmark_sample_ids": [
+            "p3-acceptable-3"
+          ],
+          "archive_status": "archived_original",
+          "full_original_verified": true
+        },
+        "relation_refs": []
+      },
+      "observation": {
+        "phenomenon": "p3_angle_geometry",
+        "locality_text": "P3 facets",
+        "viewing_condition": "unspecified",
+        "motion_condition": "unspecified",
+        "polarity": "positive",
+        "explicitness": "explicit",
+        "source_wording": "example described as having acceptable p3 angles",
+        "qualifier_text": null,
+        "relation_claim": null
+      },
+      "classification": [
+        "performance",
+        "geometry_style"
+      ],
+      "machine_mapping": {
+        "status": "pending_geometry",
+        "semantic_entities": [],
+        "source_interval": null,
+        "optical_event_refs": [],
+        "mapping_confidence": null
+      },
+      "validation_usage": {
+        "designation": "development_sanity",
+        "prior_use": "none",
+        "rationale": "Useful source-controlled P3 semantics, but simulation/static evidence is development/sanity material rather than held-out real-stone vendor-360 validation."
+      }
+    },
+    {
+      "observation_id": "karl-p3-video-cut-for-weight",
+      "sample_id": "p3-video-cut-for-weight",
+      "sample_domain": "simulation",
+      "reviewer": {
+        "name": "Karl K.",
+        "reviewer_class": "expert",
+        "provenance": "explicit_label_reviewer"
+      },
+      "source": {
+        "source_id": "pricescope-p3-article",
+        "source_url": "https://www.pricescope.com/blog/performance-and-p3-facets-discussion-about-step-cut-diamonds",
+        "group_id": "p3-controlled-video-progression",
+        "post_number": null,
+        "location_text": "group p3-controlled-video-progression / sample p3-video-cut-for-weight",
+        "wording_fidelity": "catalog_paraphrase",
+        "catalog_path": "docs/360/external-benchmark/pricescope/source-catalog.json",
+        "benchmark_manifest_path": "docs/360/external-benchmark/pricescope/benchmark-manifest.json",
+        "media_linkage": {
+          "benchmark_sample_ids": [
+            "p3-video-cut-for-weight"
+          ],
+          "archive_status": "archived_original",
+          "full_original_verified": true
+        },
+        "relation_refs": [
+          "p3-controlled-video-progression-ordering"
+        ]
+      },
+      "observation": {
+        "phenomenon": "p3_angle_geometry",
+        "locality_text": "P3 facets",
+        "viewing_condition": "unspecified",
+        "motion_condition": "source_motion_clip",
+        "polarity": "negative",
+        "explicitness": "explicit",
+        "source_wording": "cut-for-weight example with bad p3 angle",
+        "qualifier_text": null,
+        "relation_claim": {
+          "type": "source_rank",
+          "rank": 1,
+          "relation_id": "p3-controlled-video-progression-ordering"
+        }
+      },
+      "classification": [
+        "performance",
+        "geometry_style"
+      ],
+      "machine_mapping": {
+        "status": "pending_geometry",
+        "semantic_entities": [],
+        "source_interval": null,
+        "optical_event_refs": [],
+        "mapping_confidence": null
+      },
+      "validation_usage": {
+        "designation": "development_sanity",
+        "prior_use": "blind_descriptor_falsification_pr70",
+        "rationale": "Already used in #64/PR70 external descriptor falsification; retain for development/sanity only, not independent #79 validation."
+      }
+    },
+    {
+      "observation_id": "karl-p3-video-corrected",
+      "sample_id": "p3-video-corrected",
+      "sample_domain": "simulation",
+      "reviewer": {
+        "name": "Karl K.",
+        "reviewer_class": "expert",
+        "provenance": "explicit_label_reviewer"
+      },
+      "source": {
+        "source_id": "pricescope-p3-article",
+        "source_url": "https://www.pricescope.com/blog/performance-and-p3-facets-discussion-about-step-cut-diamonds",
+        "group_id": "p3-controlled-video-progression",
+        "post_number": null,
+        "location_text": "group p3-controlled-video-progression / sample p3-video-corrected",
+        "wording_fidelity": "catalog_paraphrase",
+        "catalog_path": "docs/360/external-benchmark/pricescope/source-catalog.json",
+        "benchmark_manifest_path": "docs/360/external-benchmark/pricescope/benchmark-manifest.json",
+        "media_linkage": {
+          "benchmark_sample_ids": [
+            "p3-video-corrected"
+          ],
+          "archive_status": "archived_original",
+          "full_original_verified": true
+        },
+        "relation_refs": [
+          "p3-controlled-video-progression-ordering"
+        ]
+      },
+      "observation": {
+        "phenomenon": "p3_angle_geometry",
+        "locality_text": "P3 facets",
+        "viewing_condition": "unspecified",
+        "motion_condition": "source_motion_clip",
+        "polarity": "positive",
+        "explicitness": "explicit",
+        "source_wording": "same basic example with proper p3 angle",
+        "qualifier_text": null,
+        "relation_claim": {
+          "type": "source_rank",
+          "rank": 2,
+          "relation_id": "p3-controlled-video-progression-ordering"
+        }
+      },
+      "classification": [
+        "performance",
+        "geometry_style"
+      ],
+      "machine_mapping": {
+        "status": "pending_geometry",
+        "semantic_entities": [],
+        "source_interval": null,
+        "optical_event_refs": [],
+        "mapping_confidence": null
+      },
+      "validation_usage": {
+        "designation": "development_sanity",
+        "prior_use": "blind_descriptor_falsification_pr70",
+        "rationale": "Already used in #64/PR70 external descriptor falsification; retain for development/sanity only, not independent #79 validation."
+      }
+    },
+    {
+      "observation_id": "karl-p3-video-higher-performance",
+      "sample_id": "p3-video-higher-performance",
+      "sample_domain": "simulation",
+      "reviewer": {
+        "name": "Karl K.",
+        "reviewer_class": "expert",
+        "provenance": "explicit_label_reviewer"
+      },
+      "source": {
+        "source_id": "pricescope-p3-article",
+        "source_url": "https://www.pricescope.com/blog/performance-and-p3-facets-discussion-about-step-cut-diamonds",
+        "group_id": "p3-controlled-video-progression",
+        "post_number": null,
+        "location_text": "group p3-controlled-video-progression / sample p3-video-higher-performance",
+        "wording_fidelity": "catalog_paraphrase",
+        "catalog_path": "docs/360/external-benchmark/pricescope/source-catalog.json",
+        "benchmark_manifest_path": "docs/360/external-benchmark/pricescope/benchmark-manifest.json",
+        "media_linkage": {
+          "benchmark_sample_ids": [
+            "p3-video-higher-performance"
+          ],
+          "archive_status": "archived_original",
+          "full_original_verified": true
+        },
+        "relation_refs": [
+          "p3-controlled-video-progression-ordering"
+        ]
+      },
+      "observation": {
+        "phenomenon": "light_return_performance",
+        "locality_text": null,
+        "viewing_condition": "unspecified",
+        "motion_condition": "source_motion_clip",
+        "polarity": "positive",
+        "explicitness": "explicit",
+        "source_wording": "lighter example described as having higher performance",
+        "qualifier_text": null,
+        "relation_claim": {
+          "type": "source_rank",
+          "rank": 3,
+          "relation_id": "p3-controlled-video-progression-ordering"
+        }
+      },
+      "classification": [
+        "performance"
+      ],
+      "machine_mapping": {
+        "status": "pending_geometry",
+        "semantic_entities": [],
+        "source_interval": null,
+        "optical_event_refs": [],
+        "mapping_confidence": null
+      },
+      "validation_usage": {
+        "designation": "development_sanity",
+        "prior_use": "blind_descriptor_falsification_pr70",
+        "rationale": "Already used in #64/PR70 external descriptor falsification; retain for development/sanity only, not independent #79 validation."
+      }
+    },
+    {
+      "observation_id": "karl-p3-static-cut-for-weight",
+      "sample_id": "p3-static-cut-for-weight-a",
+      "sample_domain": "simulation",
+      "reviewer": {
+        "name": "Karl K.",
+        "reviewer_class": "expert",
+        "provenance": "explicit_label_reviewer"
+      },
+      "source": {
+        "source_id": "pricescope-p3-article",
+        "source_url": "https://www.pricescope.com/blog/performance-and-p3-facets-discussion-about-step-cut-diamonds",
+        "group_id": "p3-static-performance-progression",
+        "post_number": null,
+        "location_text": "group p3-static-performance-progression / paired case cut-for-weight",
+        "wording_fidelity": "catalog_paraphrase",
+        "catalog_path": "docs/360/external-benchmark/pricescope/source-catalog.json",
+        "benchmark_manifest_path": "docs/360/external-benchmark/pricescope/benchmark-manifest.json",
+        "media_linkage": {
+          "benchmark_sample_ids": [
+            "p3-static-cut-for-weight-a",
+            "p3-static-cut-for-weight-b"
+          ],
+          "archive_status": "archived_original",
+          "full_original_verified": true
+        },
+        "relation_refs": [
+          "p3-static-performance-progression-ordering"
+        ]
+      },
+      "observation": {
+        "phenomenon": "p3_leakage",
+        "locality_text": "P3 facets",
+        "viewing_condition": "unspecified",
+        "motion_condition": "unspecified",
+        "polarity": "negative",
+        "explicitness": "explicit",
+        "source_wording": "cut-for-weight case; source describes heavy leakage and weak p3 return",
+        "qualifier_text": null,
+        "relation_claim": {
+          "type": "source_rank",
+          "rank": 1,
+          "relation_id": "p3-static-performance-progression-ordering"
+        }
+      },
+      "classification": [
+        "performance"
+      ],
+      "machine_mapping": {
+        "status": "pending_geometry",
+        "semantic_entities": [],
+        "source_interval": null,
+        "optical_event_refs": [],
+        "mapping_confidence": null
+      },
+      "validation_usage": {
+        "designation": "development_sanity",
+        "prior_use": "none",
+        "rationale": "Controlled simulation evidence is useful for semantic sanity checks but is not the target real-stone vendor-360 holdout."
+      }
+    },
+    {
+      "observation_id": "karl-p3-static-corrected",
+      "sample_id": "p3-static-corrected-a",
+      "sample_domain": "simulation",
+      "reviewer": {
+        "name": "Karl K.",
+        "reviewer_class": "expert",
+        "provenance": "explicit_label_reviewer"
+      },
+      "source": {
+        "source_id": "pricescope-p3-article",
+        "source_url": "https://www.pricescope.com/blog/performance-and-p3-facets-discussion-about-step-cut-diamonds",
+        "group_id": "p3-static-performance-progression",
+        "post_number": null,
+        "location_text": "group p3-static-performance-progression / paired case corrected",
+        "wording_fidelity": "catalog_paraphrase",
+        "catalog_path": "docs/360/external-benchmark/pricescope/source-catalog.json",
+        "benchmark_manifest_path": "docs/360/external-benchmark/pricescope/benchmark-manifest.json",
+        "media_linkage": {
+          "benchmark_sample_ids": [
+            "p3-static-corrected-a",
+            "p3-static-corrected-b"
+          ],
+          "archive_status": "archived_original",
+          "full_original_verified": true
+        },
+        "relation_refs": [
+          "p3-static-performance-progression-ordering"
+        ]
+      },
+      "observation": {
+        "phenomenon": "light_return_performance",
+        "locality_text": null,
+        "viewing_condition": "unspecified",
+        "motion_condition": "unspecified",
+        "polarity": "positive",
+        "explicitness": "explicit",
+        "source_wording": "corrected/deeper case; source describes materially higher light return",
+        "qualifier_text": null,
+        "relation_claim": {
+          "type": "source_rank",
+          "rank": 2,
+          "relation_id": "p3-static-performance-progression-ordering"
+        }
+      },
+      "classification": [
+        "performance"
+      ],
+      "machine_mapping": {
+        "status": "pending_geometry",
+        "semantic_entities": [],
+        "source_interval": null,
+        "optical_event_refs": [],
+        "mapping_confidence": null
+      },
+      "validation_usage": {
+        "designation": "development_sanity",
+        "prior_use": "none",
+        "rationale": "Controlled simulation evidence is useful for semantic sanity checks but is not the target real-stone vendor-360 holdout."
+      }
+    },
+    {
+      "observation_id": "karl-p3-static-higher-performance",
+      "sample_id": "p3-static-higher-performance-a",
+      "sample_domain": "simulation",
+      "reviewer": {
+        "name": "Karl K.",
+        "reviewer_class": "expert",
+        "provenance": "explicit_label_reviewer"
+      },
+      "source": {
+        "source_id": "pricescope-p3-article",
+        "source_url": "https://www.pricescope.com/blog/performance-and-p3-facets-discussion-about-step-cut-diamonds",
+        "group_id": "p3-static-performance-progression",
+        "post_number": null,
+        "location_text": "group p3-static-performance-progression / paired case higher-performance",
+        "wording_fidelity": "catalog_paraphrase",
+        "catalog_path": "docs/360/external-benchmark/pricescope/source-catalog.json",
+        "benchmark_manifest_path": "docs/360/external-benchmark/pricescope/benchmark-manifest.json",
+        "media_linkage": {
+          "benchmark_sample_ids": [
+            "p3-static-higher-performance-a",
+            "p3-static-higher-performance-b"
+          ],
+          "archive_status": "archived_original",
+          "full_original_verified": true
+        },
+        "relation_refs": [
+          "p3-static-performance-progression-ordering"
+        ]
+      },
+      "observation": {
+        "phenomenon": "light_return_performance",
+        "locality_text": null,
+        "viewing_condition": "unspecified",
+        "motion_condition": "unspecified",
+        "polarity": "positive",
+        "explicitness": "explicit",
+        "source_wording": "lighter case; source describes stronger light return again",
+        "qualifier_text": null,
+        "relation_claim": {
+          "type": "source_rank",
+          "rank": 3,
+          "relation_id": "p3-static-performance-progression-ordering"
+        }
+      },
+      "classification": [
+        "performance"
+      ],
+      "machine_mapping": {
+        "status": "pending_geometry",
+        "semantic_entities": [],
+        "source_interval": null,
+        "optical_event_refs": [],
+        "mapping_confidence": null
+      },
+      "validation_usage": {
+        "designation": "development_sanity",
+        "prior_use": "none",
+        "rationale": "Controlled simulation evidence is useful for semantic sanity checks but is not the target real-stone vendor-360 holdout."
+      }
+    },
+    {
+      "observation_id": "karl-windmill-24",
+      "sample_id": "windmill-24",
+      "sample_domain": "simulation",
+      "reviewer": {
+        "name": "strmrdr / later Karl_K",
+        "reviewer_class": "expert",
+        "provenance": "source_author_attribution"
+      },
+      "source": {
+        "source_id": "pricescope-windmill-thread",
+        "source_url": "https://www.pricescope.com/community/threads/why-cut-asschers-with-small-corners-and-windmills.78433/",
+        "group_id": "corner-windmill-controlled-sweep",
+        "post_number": 1,
+        "location_text": "displayed forum post 1",
+        "wording_fidelity": "catalog_paraphrase",
+        "catalog_path": "docs/360/external-benchmark/pricescope/source-catalog.json",
+        "benchmark_manifest_path": "docs/360/external-benchmark/pricescope/benchmark-manifest.json",
+        "media_linkage": {
+          "benchmark_sample_ids": [
+            "windmill-24"
+          ],
+          "archive_status": "archived_inline_preview",
+          "full_original_verified": false
+        },
+        "relation_refs": [
+          "corner-windmill-sweep"
+        ]
+      },
+      "observation": {
+        "phenomenon": "windmill_size_style",
+        "locality_text": "corners / windmills",
+        "viewing_condition": "rendered_design_view",
+        "motion_condition": "unspecified",
+        "polarity": "positive",
+        "explicitness": "explicit",
+        "source_wording": "poster favourite; rare",
+        "qualifier_text": null,
+        "relation_claim": {
+          "type": "geometry_sweep_member",
+          "relation_id": "corner-windmill-sweep"
+        }
+      },
+      "classification": [
+        "geometry_style",
+        "preference"
+      ],
+      "machine_mapping": {
+        "status": "pending_geometry",
+        "semantic_entities": [],
+        "source_interval": null,
+        "optical_event_refs": [],
+        "mapping_confidence": null
+      },
+      "validation_usage": {
+        "designation": "development_sanity",
+        "prior_use": "blind_static_geometry_falsification_pr70",
+        "rationale": "Controlled geometry/character sweep already used by #64/PR70; useful for geometry sanity checks, not optical-quality holdout."
+      }
+    },
+    {
+      "observation_id": "karl-windmill-22",
+      "sample_id": "windmill-22",
+      "sample_domain": "simulation",
+      "reviewer": {
+        "name": "strmrdr / later Karl_K",
+        "reviewer_class": "expert",
+        "provenance": "source_author_attribution"
+      },
+      "source": {
+        "source_id": "pricescope-windmill-thread",
+        "source_url": "https://www.pricescope.com/community/threads/why-cut-asschers-with-small-corners-and-windmills.78433/",
+        "group_id": "corner-windmill-controlled-sweep",
+        "post_number": 2,
+        "location_text": "displayed forum post 2",
+        "wording_fidelity": "catalog_paraphrase",
+        "catalog_path": "docs/360/external-benchmark/pricescope/source-catalog.json",
+        "benchmark_manifest_path": "docs/360/external-benchmark/pricescope/benchmark-manifest.json",
+        "media_linkage": {
+          "benchmark_sample_ids": [
+            "windmill-22"
+          ],
+          "archive_status": "archived_inline_preview",
+          "full_original_verified": false
+        },
+        "relation_refs": [
+          "corner-windmill-sweep"
+        ]
+      },
+      "observation": {
+        "phenomenon": "windmill_size_style",
+        "locality_text": "corners / windmills",
+        "viewing_condition": "rendered_design_view",
+        "motion_condition": "unspecified",
+        "polarity": "positive",
+        "explicitness": "explicit",
+        "source_wording": "within poster target zone",
+        "qualifier_text": null,
+        "relation_claim": {
+          "type": "geometry_sweep_member",
+          "relation_id": "corner-windmill-sweep"
+        }
+      },
+      "classification": [
+        "geometry_style",
+        "preference"
+      ],
+      "machine_mapping": {
+        "status": "pending_geometry",
+        "semantic_entities": [],
+        "source_interval": null,
+        "optical_event_refs": [],
+        "mapping_confidence": null
+      },
+      "validation_usage": {
+        "designation": "development_sanity",
+        "prior_use": "blind_static_geometry_falsification_pr70",
+        "rationale": "Controlled geometry/character sweep already used by #64/PR70; useful for geometry sanity checks, not optical-quality holdout."
+      }
+    },
+    {
+      "observation_id": "karl-windmill-20",
+      "sample_id": "windmill-20",
+      "sample_domain": "simulation",
+      "reviewer": {
+        "name": "strmrdr / later Karl_K",
+        "reviewer_class": "expert",
+        "provenance": "source_author_attribution"
+      },
+      "source": {
+        "source_id": "pricescope-windmill-thread",
+        "source_url": "https://www.pricescope.com/community/threads/why-cut-asschers-with-small-corners-and-windmills.78433/",
+        "group_id": "corner-windmill-controlled-sweep",
+        "post_number": 3,
+        "location_text": "displayed forum post 3",
+        "wording_fidelity": "catalog_paraphrase",
+        "catalog_path": "docs/360/external-benchmark/pricescope/source-catalog.json",
+        "benchmark_manifest_path": "docs/360/external-benchmark/pricescope/benchmark-manifest.json",
+        "media_linkage": {
+          "benchmark_sample_ids": [
+            "windmill-20"
+          ],
+          "archive_status": "archived_inline_preview",
+          "full_original_verified": false
+        },
+        "relation_refs": [
+          "corner-windmill-sweep"
+        ]
+      },
+      "observation": {
+        "phenomenon": "windmill_size_style",
+        "locality_text": "corners / windmills",
+        "viewing_condition": "rendered_design_view",
+        "motion_condition": "unspecified",
+        "polarity": "positive",
+        "explicitness": "explicit",
+        "source_wording": "within poster target zone; reaches 1.50 ct magic weight",
+        "qualifier_text": null,
+        "relation_claim": {
+          "type": "geometry_sweep_member",
+          "relation_id": "corner-windmill-sweep"
+        }
+      },
+      "classification": [
+        "geometry_style",
+        "preference"
+      ],
+      "machine_mapping": {
+        "status": "pending_geometry",
+        "semantic_entities": [],
+        "source_interval": null,
+        "optical_event_refs": [],
+        "mapping_confidence": null
+      },
+      "validation_usage": {
+        "designation": "development_sanity",
+        "prior_use": "blind_static_geometry_falsification_pr70",
+        "rationale": "Controlled geometry/character sweep already used by #64/PR70; useful for geometry sanity checks, not optical-quality holdout."
+      }
+    },
+    {
+      "observation_id": "karl-windmill-18",
+      "sample_id": "windmill-18",
+      "sample_domain": "simulation",
+      "reviewer": {
+        "name": "strmrdr / later Karl_K",
+        "reviewer_class": "expert",
+        "provenance": "source_author_attribution"
+      },
+      "source": {
+        "source_id": "pricescope-windmill-thread",
+        "source_url": "https://www.pricescope.com/community/threads/why-cut-asschers-with-small-corners-and-windmills.78433/",
+        "group_id": "corner-windmill-controlled-sweep",
+        "post_number": 4,
+        "location_text": "displayed forum post 4",
+        "wording_fidelity": "catalog_paraphrase",
+        "catalog_path": "docs/360/external-benchmark/pricescope/source-catalog.json",
+        "benchmark_manifest_path": "docs/360/external-benchmark/pricescope/benchmark-manifest.json",
+        "media_linkage": {
+          "benchmark_sample_ids": [
+            "windmill-18"
+          ],
+          "archive_status": "archived_inline_preview",
+          "full_original_verified": false
+        },
+        "relation_refs": [
+          "corner-windmill-sweep"
+        ]
+      },
+      "observation": {
+        "phenomenon": "windmill_size_style",
+        "locality_text": "corners / windmills",
+        "viewing_condition": "rendered_design_view",
+        "motion_condition": "unspecified",
+        "polarity": "descriptive",
+        "explicitness": "explicit",
+        "source_wording": "described as a common market size",
+        "qualifier_text": null,
+        "relation_claim": {
+          "type": "geometry_sweep_member",
+          "relation_id": "corner-windmill-sweep"
+        }
+      },
+      "classification": [
+        "geometry_style"
+      ],
+      "machine_mapping": {
+        "status": "pending_geometry",
+        "semantic_entities": [],
+        "source_interval": null,
+        "optical_event_refs": [],
+        "mapping_confidence": null
+      },
+      "validation_usage": {
+        "designation": "development_sanity",
+        "prior_use": "blind_static_geometry_falsification_pr70",
+        "rationale": "Controlled geometry/character sweep already used by #64/PR70; useful for geometry sanity checks, not optical-quality holdout."
+      }
+    },
+    {
+      "observation_id": "karl-windmill-16",
+      "sample_id": "windmill-16",
+      "sample_domain": "simulation",
+      "reviewer": {
+        "name": "strmrdr / later Karl_K",
+        "reviewer_class": "expert",
+        "provenance": "source_author_attribution"
+      },
+      "source": {
+        "source_id": "pricescope-windmill-thread",
+        "source_url": "https://www.pricescope.com/community/threads/why-cut-asschers-with-small-corners-and-windmills.78433/",
+        "group_id": "corner-windmill-controlled-sweep",
+        "post_number": 5,
+        "location_text": "displayed forum post 5",
+        "wording_fidelity": "catalog_paraphrase",
+        "catalog_path": "docs/360/external-benchmark/pricescope/source-catalog.json",
+        "benchmark_manifest_path": "docs/360/external-benchmark/pricescope/benchmark-manifest.json",
+        "media_linkage": {
+          "benchmark_sample_ids": [
+            "windmill-16"
+          ],
+          "archive_status": "archived_inline_preview",
+          "full_original_verified": false
+        },
+        "relation_refs": [
+          "corner-windmill-sweep"
+        ]
+      },
+      "observation": {
+        "phenomenon": "windmill_size_style",
+        "locality_text": "corners / windmills",
+        "viewing_condition": "rendered_design_view",
+        "motion_condition": "unspecified",
+        "polarity": "concern",
+        "explicitness": "explicit",
+        "source_wording": "described as common and on the too-small side",
+        "qualifier_text": null,
+        "relation_claim": {
+          "type": "geometry_sweep_member",
+          "relation_id": "corner-windmill-sweep"
+        }
+      },
+      "classification": [
+        "geometry_style",
+        "preference"
+      ],
+      "machine_mapping": {
+        "status": "pending_geometry",
+        "semantic_entities": [],
+        "source_interval": null,
+        "optical_event_refs": [],
+        "mapping_confidence": null
+      },
+      "validation_usage": {
+        "designation": "development_sanity",
+        "prior_use": "blind_static_geometry_falsification_pr70",
+        "rationale": "Controlled geometry/character sweep already used by #64/PR70; useful for geometry sanity checks, not optical-quality holdout."
+      }
+    },
+    {
+      "observation_id": "karl-windmill-14",
+      "sample_id": "windmill-14",
+      "sample_domain": "simulation",
+      "reviewer": {
+        "name": "strmrdr / later Karl_K",
+        "reviewer_class": "expert",
+        "provenance": "source_author_attribution"
+      },
+      "source": {
+        "source_id": "pricescope-windmill-thread",
+        "source_url": "https://www.pricescope.com/community/threads/why-cut-asschers-with-small-corners-and-windmills.78433/",
+        "group_id": "corner-windmill-controlled-sweep",
+        "post_number": 6,
+        "location_text": "displayed forum post 6",
+        "wording_fidelity": "catalog_paraphrase",
+        "catalog_path": "docs/360/external-benchmark/pricescope/source-catalog.json",
+        "benchmark_manifest_path": "docs/360/external-benchmark/pricescope/benchmark-manifest.json",
+        "media_linkage": {
+          "benchmark_sample_ids": [
+            "windmill-14"
+          ],
+          "archive_status": "archived_inline_preview",
+          "full_original_verified": false
+        },
+        "relation_refs": [
+          "corner-windmill-sweep"
+        ]
+      },
+      "observation": {
+        "phenomenon": "windmill_size_style",
+        "locality_text": "corners / windmills",
+        "viewing_condition": "rendered_design_view",
+        "motion_condition": "unspecified",
+        "polarity": "negative",
+        "explicitness": "explicit",
+        "source_wording": "described as strongly weight-saving / pushing small corners",
+        "qualifier_text": null,
+        "relation_claim": {
+          "type": "geometry_sweep_member",
+          "relation_id": "corner-windmill-sweep"
+        }
+      },
+      "classification": [
+        "geometry_style",
+        "preference"
+      ],
+      "machine_mapping": {
+        "status": "pending_geometry",
+        "semantic_entities": [],
+        "source_interval": null,
+        "optical_event_refs": [],
+        "mapping_confidence": null
+      },
+      "validation_usage": {
+        "designation": "development_sanity",
+        "prior_use": "blind_static_geometry_falsification_pr70",
+        "rationale": "Controlled geometry/character sweep already used by #64/PR70; useful for geometry sanity checks, not optical-quality holdout."
+      }
+    },
+    {
+      "observation_id": "karl-asscher-target-centre-darkness",
+      "sample_id": "asscher-eval-target-centre",
+      "sample_domain": "real_stone",
+      "reviewer": {
+        "name": "Karl_K / strmrdr",
+        "reviewer_class": "expert",
+        "provenance": "explicit_label_reviewer"
+      },
+      "source": {
+        "source_id": "pricescope-asscher-evaluation-thread",
+        "source_url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/",
+        "group_id": "karl-initial-three-stone-ranking",
+        "post_number": 9,
+        "location_text": "displayed forum post 9",
+        "wording_fidelity": "catalog_paraphrase",
+        "catalog_path": "docs/360/external-benchmark/pricescope/source-catalog.json",
+        "benchmark_manifest_path": "docs/360/external-benchmark/pricescope/benchmark-manifest.json",
+        "media_linkage": {
+          "benchmark_sample_ids": [
+            "asscher-eval-target-centre"
+          ],
+          "archive_status": "locator_only_no_archived_media",
+          "full_original_verified": false
+        },
+        "relation_refs": [
+          "initial-three-source-ranking"
+        ]
+      },
+      "observation": {
+        "phenomenon": "central_darkness",
+        "locality_text": "centre",
+        "viewing_condition": "unspecified",
+        "motion_condition": "unspecified",
+        "polarity": "concern",
+        "explicitness": "explicit",
+        "source_wording": "very close; slightly over-dark in the centre; ASET needed to determine whether it is a real-world issue",
+        "qualifier_text": "ASET requested to decide whether the observed centre darkness is a real-world problem.",
+        "relation_claim": null
+      },
+      "classification": [
+        "performance",
+        "uncertainty"
+      ],
+      "machine_mapping": {
+        "status": "pending_geometry",
+        "semantic_entities": [],
+        "source_interval": null,
+        "optical_event_refs": [],
+        "mapping_confidence": null
+      },
+      "validation_usage": {
+        "designation": "not_suitable",
+        "prior_use": "none",
+        "rationale": "Potentially valuable localized expert observation, but exact original motion media are not archived, so it cannot currently support reproducible machine validation."
+      }
+    },
+    {
+      "observation_id": "karl-asscher-target-centre-crown",
+      "sample_id": "asscher-eval-target-centre",
+      "sample_domain": "real_stone",
+      "reviewer": {
+        "name": "Karl_K / strmrdr",
+        "reviewer_class": "expert",
+        "provenance": "explicit_label_reviewer"
+      },
+      "source": {
+        "source_id": "pricescope-asscher-evaluation-thread",
+        "source_url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/",
+        "group_id": "karl-initial-three-stone-ranking",
+        "post_number": 10,
+        "location_text": "displayed forum post 10",
+        "wording_fidelity": "catalog_paraphrase",
+        "catalog_path": "docs/360/external-benchmark/pricescope/source-catalog.json",
+        "benchmark_manifest_path": "docs/360/external-benchmark/pricescope/benchmark-manifest.json",
+        "media_linkage": {
+          "benchmark_sample_ids": [
+            "asscher-eval-target-centre"
+          ],
+          "archive_status": "locator_only_no_archived_media",
+          "full_original_verified": false
+        },
+        "relation_refs": []
+      },
+      "observation": {
+        "phenomenon": "crown_height_geometry",
+        "locality_text": "crown",
+        "viewing_condition": "unspecified",
+        "motion_condition": "unspecified",
+        "polarity": "positive",
+        "explicitness": "explicit",
+        "source_wording": "very nice crown height",
+        "qualifier_text": null,
+        "relation_claim": null
+      },
+      "classification": [
+        "geometry_style"
+      ],
+      "machine_mapping": {
+        "status": "not_applicable",
+        "semantic_entities": [],
+        "source_interval": null,
+        "optical_event_refs": [],
+        "mapping_confidence": null
+      },
+      "validation_usage": {
+        "designation": "not_suitable",
+        "prior_use": "none",
+        "rationale": "Geometry/style observation is preserved, but source media are incomplete and this is not an optical-event holdout."
+      }
+    },
+    {
+      "observation_id": "karl-asscher-glittery-windmills",
+      "sample_id": "asscher-eval-glittery",
+      "sample_domain": "real_stone",
+      "reviewer": {
+        "name": "Karl_K / strmrdr",
+        "reviewer_class": "expert",
+        "provenance": "explicit_label_reviewer"
+      },
+      "source": {
+        "source_id": "pricescope-asscher-evaluation-thread",
+        "source_url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/",
+        "group_id": "karl-initial-three-stone-ranking",
+        "post_number": 9,
+        "location_text": "displayed forum post 9",
+        "wording_fidelity": "catalog_paraphrase",
+        "catalog_path": "docs/360/external-benchmark/pricescope/source-catalog.json",
+        "benchmark_manifest_path": "docs/360/external-benchmark/pricescope/benchmark-manifest.json",
+        "media_linkage": {
+          "benchmark_sample_ids": [
+            "asscher-eval-glittery"
+          ],
+          "archive_status": "archived_complete_d360",
+          "full_original_verified": true
+        },
+        "relation_refs": [
+          "initial-three-source-ranking"
+        ]
+      },
+      "observation": {
+        "phenomenon": "windmill_size_style",
+        "locality_text": "windmills",
+        "viewing_condition": "unspecified",
+        "motion_condition": "unspecified",
+        "polarity": "concern",
+        "explicitness": "explicit",
+        "source_wording": "tiny windmills; overall not horrible but off",
+        "qualifier_text": null,
+        "relation_claim": null
+      },
+      "classification": [
+        "geometry_style",
+        "perceptual_character"
+      ],
+      "machine_mapping": {
+        "status": "pending_geometry",
+        "semantic_entities": [],
+        "source_interval": null,
+        "optical_event_refs": [],
+        "mapping_confidence": null
+      },
+      "validation_usage": {
+        "designation": "held_out_candidate",
+        "prior_use": "blind_descriptor_falsification_pr70",
+        "rationale": "Complete exact D360 is archived and the expert observation is localized. It may serve as a #79 holdout only if this label is excluded from method design/tuning; it is not globally untouched because PR70 already ran legacy descriptors on the stone."
+      }
+    },
+    {
+      "observation_id": "karl-asscher-crispest-p3-leakage",
+      "sample_id": "asscher-eval-crispest",
+      "sample_domain": "real_stone",
+      "reviewer": {
+        "name": "Karl_K / strmrdr",
+        "reviewer_class": "expert",
+        "provenance": "explicit_label_reviewer"
+      },
+      "source": {
+        "source_id": "pricescope-asscher-evaluation-thread",
+        "source_url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/",
+        "group_id": "karl-initial-three-stone-ranking",
+        "post_number": 9,
+        "location_text": "displayed forum post 9",
+        "wording_fidelity": "catalog_paraphrase",
+        "catalog_path": "docs/360/external-benchmark/pricescope/source-catalog.json",
+        "benchmark_manifest_path": "docs/360/external-benchmark/pricescope/benchmark-manifest.json",
+        "media_linkage": {
+          "benchmark_sample_ids": [
+            "asscher-eval-crispest"
+          ],
+          "archive_status": "archived_complete_d360",
+          "full_original_verified": true
+        },
+        "relation_refs": [
+          "initial-three-source-ranking"
+        ]
+      },
+      "observation": {
+        "phenomenon": "p3_leakage",
+        "locality_text": "top and bottom V in the centre between windmills",
+        "viewing_condition": "face_up",
+        "motion_condition": "unspecified",
+        "polarity": "negative",
+        "explicitness": "explicit",
+        "source_wording": "p3 leakage at the top and bottom V in the centre between windmills when face-up; worst of the first three",
+        "qualifier_text": null,
+        "relation_claim": {
+          "type": "source_partial_ranking",
+          "claim": "worst_of_first_three",
+          "relation_id": "initial-three-source-ranking"
+        }
+      },
+      "classification": [
+        "performance"
+      ],
+      "machine_mapping": {
+        "status": "pending_geometry",
+        "semantic_entities": [],
+        "source_interval": {
+          "kind": "wrapped_frame_core",
+          "indices": [
+            248,
+            249,
+            250,
+            251,
+            252,
+            253,
+            254,
+            255,
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8
+          ],
+          "basis": "PR70 frozen wrapped face-up core; this brackets the source-described face-up condition but is not a reviewer-annotated interval."
+        },
+        "optical_event_refs": [],
+        "mapping_confidence": null
+      },
+      "validation_usage": {
+        "designation": "held_out_candidate",
+        "prior_use": "blind_descriptor_falsification_pr70",
+        "rationale": "Strongest localized real-stone observation with complete exact D360. Reserve for #79 validation only if the observation is kept out of method design/tuning; legacy descriptors were already compared in PR70."
+      }
+    },
+    {
+      "observation_id": "karl-asscher-crispest-crown",
+      "sample_id": "asscher-eval-crispest",
+      "sample_domain": "real_stone",
+      "reviewer": {
+        "name": "Karl_K / strmrdr",
+        "reviewer_class": "expert",
+        "provenance": "explicit_label_reviewer"
+      },
+      "source": {
+        "source_id": "pricescope-asscher-evaluation-thread",
+        "source_url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/",
+        "group_id": "karl-initial-three-stone-ranking",
+        "post_number": 10,
+        "location_text": "displayed forum post 10",
+        "wording_fidelity": "catalog_paraphrase",
+        "catalog_path": "docs/360/external-benchmark/pricescope/source-catalog.json",
+        "benchmark_manifest_path": "docs/360/external-benchmark/pricescope/benchmark-manifest.json",
+        "media_linkage": {
+          "benchmark_sample_ids": [
+            "asscher-eval-crispest"
+          ],
+          "archive_status": "archived_complete_d360",
+          "full_original_verified": true
+        },
+        "relation_refs": []
+      },
+      "observation": {
+        "phenomenon": "crown_height_geometry",
+        "locality_text": "crown",
+        "viewing_condition": "unspecified",
+        "motion_condition": "unspecified",
+        "polarity": "negative",
+        "explicitness": "explicit",
+        "source_wording": "crown height is on the low side",
+        "qualifier_text": null,
+        "relation_claim": null
+      },
+      "classification": [
+        "geometry_style"
+      ],
+      "machine_mapping": {
+        "status": "not_applicable",
+        "semantic_entities": [],
+        "source_interval": null,
+        "optical_event_refs": [],
+        "mapping_confidence": null
+      },
+      "validation_usage": {
+        "designation": "held_out_candidate",
+        "prior_use": "source_label_present_during_pr70_context",
+        "rationale": "Companion observation on the Crispest holdout stone. Keep it withheld with the sample to avoid sample-level leakage even though crown height is geometry/style rather than the primary optical-event test."
+      }
+    },
+    {
+      "observation_id": "karl-asscher-royal-clone",
+      "sample_id": "asscher-eval-royal-asscher-clone",
+      "sample_domain": "real_stone",
+      "reviewer": {
+        "name": "Karl_K / strmrdr",
+        "reviewer_class": "expert",
+        "provenance": "explicit_label_reviewer"
+      },
+      "source": {
+        "source_id": "pricescope-asscher-evaluation-thread",
+        "source_url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/",
+        "group_id": "explicit-negative-controls",
+        "post_number": 12,
+        "location_text": "displayed forum post 12",
+        "wording_fidelity": "catalog_paraphrase",
+        "catalog_path": "docs/360/external-benchmark/pricescope/source-catalog.json",
+        "benchmark_manifest_path": "docs/360/external-benchmark/pricescope/benchmark-manifest.json",
+        "media_linkage": {
+          "benchmark_sample_ids": [
+            "asscher-eval-royal-asscher-clone"
+          ],
+          "archive_status": "locator_only_no_archived_media",
+          "full_original_verified": false
+        },
+        "relation_refs": []
+      },
+      "observation": {
+        "phenomenon": "contrast_pattern",
+        "locality_text": "whole-stone facet arrangement / light performance",
+        "viewing_condition": "unspecified",
+        "motion_condition": "unspecified",
+        "polarity": "negative",
+        "explicitness": "explicit",
+        "source_wording": "facet arrangement resembles a Royal Asscher but light performance is well below the better Royal Asschers",
+        "qualifier_text": null,
+        "relation_claim": null
+      },
+      "classification": [
+        "performance",
+        "geometry_style"
+      ],
+      "machine_mapping": {
+        "status": "pending_geometry",
+        "semantic_entities": [],
+        "source_interval": null,
+        "optical_event_refs": [],
+        "mapping_confidence": null
+      },
+      "validation_usage": {
+        "designation": "not_suitable",
+        "prior_use": "none",
+        "rationale": "Expert comparative statement is useful context, but original 360 was unavailable even to the thread author; no reproducible source media remain."
+      }
+    },
+    {
+      "observation_id": "karl-principle-dance",
+      "sample_id": null,
+      "sample_domain": "general_principle",
+      "reviewer": {
+        "name": "Karl_K / strmrdr",
+        "reviewer_class": "expert",
+        "provenance": "explicit_principle_reviewer"
+      },
+      "source": {
+        "source_id": "pricescope-asscher-evaluation-thread",
+        "source_url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/",
+        "group_id": "expert-general-360-rules",
+        "post_number": 18,
+        "location_text": "displayed forum post 18",
+        "wording_fidelity": "catalog_paraphrase",
+        "catalog_path": "docs/360/external-benchmark/pricescope/source-catalog.json",
+        "benchmark_manifest_path": "docs/360/external-benchmark/pricescope/benchmark-manifest.json",
+        "media_linkage": null,
+        "relation_refs": []
+      },
+      "observation": {
+        "phenomenon": "organized_motion",
+        "locality_text": null,
+        "viewing_condition": "unspecified",
+        "motion_condition": "moving",
+        "polarity": "descriptive",
+        "explicitness": "explicit",
+        "source_wording": "The most important information in 360 video is the dance once the diamond moves.",
+        "qualifier_text": null,
+        "relation_claim": null
+      },
+      "classification": [
+        "perceptual_character"
+      ],
+      "machine_mapping": {
+        "status": "not_applicable",
+        "semantic_entities": [],
+        "source_interval": null,
+        "optical_event_refs": [],
+        "mapping_confidence": null
+      },
+      "validation_usage": {
+        "designation": "semantic_principle",
+        "prior_use": "none",
+        "rationale": "General expert heuristic, not a per-stone label. Use to name/interpret phenomena, never as a held-out sample outcome."
+      }
+    },
+    {
+      "observation_id": "karl-principle-broad-darkness",
+      "sample_id": null,
+      "sample_domain": "general_principle",
+      "reviewer": {
+        "name": "Karl_K / strmrdr",
+        "reviewer_class": "expert",
+        "provenance": "explicit_principle_reviewer"
+      },
+      "source": {
+        "source_id": "pricescope-asscher-evaluation-thread",
+        "source_url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/",
+        "group_id": "expert-general-360-rules",
+        "post_number": 18,
+        "location_text": "displayed forum post 18",
+        "wording_fidelity": "catalog_paraphrase",
+        "catalog_path": "docs/360/external-benchmark/pricescope/source-catalog.json",
+        "benchmark_manifest_path": "docs/360/external-benchmark/pricescope/benchmark-manifest.json",
+        "media_linkage": null,
+        "relation_refs": []
+      },
+      "observation": {
+        "phenomenon": "simultaneous_broad_darkness",
+        "locality_text": "large areas",
+        "viewing_condition": "unspecified",
+        "motion_condition": "moving",
+        "polarity": "descriptive",
+        "explicitness": "explicit",
+        "source_wording": "Avoid very large areas going dark together or areas remaining dark through substantial movement.",
+        "qualifier_text": null,
+        "relation_claim": null
+      },
+      "classification": [
+        "perceptual_character"
+      ],
+      "machine_mapping": {
+        "status": "not_applicable",
+        "semantic_entities": [],
+        "source_interval": null,
+        "optical_event_refs": [],
+        "mapping_confidence": null
+      },
+      "validation_usage": {
+        "designation": "semantic_principle",
+        "prior_use": "none",
+        "rationale": "General expert heuristic, not a per-stone label. Use to name/interpret phenomena, never as a held-out sample outcome."
+      }
+    },
+    {
+      "observation_id": "karl-principle-persistent-darkness",
+      "sample_id": null,
+      "sample_domain": "general_principle",
+      "reviewer": {
+        "name": "Karl_K / strmrdr",
+        "reviewer_class": "expert",
+        "provenance": "explicit_principle_reviewer"
+      },
+      "source": {
+        "source_id": "pricescope-asscher-evaluation-thread",
+        "source_url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/",
+        "group_id": "expert-general-360-rules",
+        "post_number": 18,
+        "location_text": "displayed forum post 18",
+        "wording_fidelity": "catalog_paraphrase",
+        "catalog_path": "docs/360/external-benchmark/pricescope/source-catalog.json",
+        "benchmark_manifest_path": "docs/360/external-benchmark/pricescope/benchmark-manifest.json",
+        "media_linkage": null,
+        "relation_refs": []
+      },
+      "observation": {
+        "phenomenon": "persistent_darkness",
+        "locality_text": "areas that remain dark",
+        "viewing_condition": "unspecified",
+        "motion_condition": "moving",
+        "polarity": "descriptive",
+        "explicitness": "explicit",
+        "source_wording": "Avoid very large areas going dark together or areas remaining dark through substantial movement.",
+        "qualifier_text": null,
+        "relation_claim": null
+      },
+      "classification": [
+        "perceptual_character"
+      ],
+      "machine_mapping": {
+        "status": "not_applicable",
+        "semantic_entities": [],
+        "source_interval": null,
+        "optical_event_refs": [],
+        "mapping_confidence": null
+      },
+      "validation_usage": {
+        "designation": "semantic_principle",
+        "prior_use": "none",
+        "rationale": "General expert heuristic, not a per-stone label. Use to name/interpret phenomena, never as a held-out sample outcome."
+      }
+    },
+    {
+      "observation_id": "karl-principle-grey-ambiguity",
+      "sample_id": null,
+      "sample_domain": "general_principle",
+      "reviewer": {
+        "name": "Karl_K / strmrdr",
+        "reviewer_class": "expert",
+        "provenance": "explicit_principle_reviewer"
+      },
+      "source": {
+        "source_id": "pricescope-asscher-evaluation-thread",
+        "source_url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/",
+        "group_id": "expert-general-360-rules",
+        "post_number": 18,
+        "location_text": "displayed forum post 18",
+        "wording_fidelity": "catalog_paraphrase",
+        "catalog_path": "docs/360/external-benchmark/pricescope/source-catalog.json",
+        "benchmark_manifest_path": "docs/360/external-benchmark/pricescope/benchmark-manifest.json",
+        "media_linkage": null,
+        "relation_refs": []
+      },
+      "observation": {
+        "phenomenon": "grey_ambiguity",
+        "locality_text": null,
+        "viewing_condition": "unspecified",
+        "motion_condition": "unspecified",
+        "polarity": "descriptive",
+        "explicitness": "explicit",
+        "source_wording": "Grey in vendor video is ambiguous: leakage, lower-angle/dimmer source return, or inefficient light return.",
+        "qualifier_text": "Do not translate grey directly into leakage.",
+        "relation_claim": null
+      },
+      "classification": [
+        "uncertainty",
+        "perceptual_character"
+      ],
+      "machine_mapping": {
+        "status": "not_applicable",
+        "semantic_entities": [],
+        "source_interval": null,
+        "optical_event_refs": [],
+        "mapping_confidence": null
+      },
+      "validation_usage": {
+        "designation": "semantic_principle",
+        "prior_use": "none",
+        "rationale": "General expert heuristic, not a per-stone label. Use to name/interpret phenomena, never as a held-out sample outcome."
+      }
+    }
+  ],
+  "coverage": {
+    "included_observation_count": 27,
+    "included_reviewer_scope": [
+      "Karl K. (PriceScope P3 article)",
+      "strmrdr / later Karl_K (controlled windmill thread)",
+      "Karl_K / strmrdr (Asscher evaluation thread)"
+    ],
+    "held_out_candidate_observation_ids": [
+      "karl-asscher-glittery-windmills",
+      "karl-asscher-crispest-p3-leakage",
+      "karl-asscher-crispest-crown"
+    ],
+    "held_out_candidate_sample_ids": [
+      "asscher-eval-glittery",
+      "asscher-eval-crispest"
+    ],
+    "development_sanity_count": 17,
+    "held_out_candidate_count": 3,
+    "not_suitable_count": 3,
+    "semantic_principle_count": 4,
+    "excluded_catalog_material": [
+      {
+        "group_id": "thread-secondary-labelled-designs",
+        "reason": "The #64 catalog does not resolve the reviewer identity to Karl_K/strmrdr for each record; excluded rather than guessing."
+      },
+      {
+        "sample_id": "asscher-eval-messy-arrows",
+        "reason": "Attributed to the thread author, not Karl_K/strmrdr."
+      },
+      {
+        "group_id": "later-community-comparison-cases",
+        "reason": "Community/purchaser evidence is deliberately outside the primary expert corpus."
+      }
+    ]
+  }
+}
