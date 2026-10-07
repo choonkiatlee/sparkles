@@ -32,10 +32,17 @@ scaffolds side-by-side for visual audit.
 
 After the primary scaffold is fitted, **the fitter is no longer called**.
 
-The primary C1/C2/C3 and P1/P2/P3 targets are frozen and evaluated against every
-canonical frame in the wider likely-crown lobe that has a usable #80 sequence
-gauge, including frames outside the primary fit and frames whose pose assessment
-has deteriorated to rejected.
+The primary C1/C2/C3 and P1/P2/P3 targets are frozen and evaluated against a
+wider crown-view window with a usable #80 sequence gauge, including frames
+outside the primary fit and frames whose pose assessment has deteriorated to
+rejected.
+
+When #73 resolves the crown lobe, its crown peak and lobe radius define this
+window directly. When #73 leaves face identity unresolved, #89 does **not**
+silently widen to the whole 360: it takes the circular medoid of the primary
+geometry-view positions and reuses #73's sequence-size/8 lobe radius, expanding
+only enough to contain every primary fitting view. Positions 255 and 0 are
+retained as explicit cyclic-wrap controls when needed.
 
 For every transfer frame the result records:
 
