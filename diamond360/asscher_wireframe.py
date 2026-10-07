@@ -824,36 +824,116 @@ def _median_outer_vertices(masks):
     return points / scale
 
 
-def _draw_scaffold_on_frame(brightness, mask, scaffold):
-    grey = np.rint(np.clip(brightness, 0.0, 1.0) * 255).astype(np.uint8)
-    rgb = np.repeat(grey[:, :, None], 3, axis=2)
-    image = Image.fromarray(rgb)
-    draw = ImageDraw.Draw(image)
+def _scaffold_points_in_gauge(mask, scaffold):
+    """Map normalized scaffold vertices into the #80 sequence-gauge canvas."""
     yy, xx = np.nonzero(mask)
     if not len(xx):
-        return image
+        raise ValueError("cannot render scaffold without gauge mask support")
     cx, cy = float(np.mean(xx)), float(np.mean(yy))
     scale = max(
         float(np.max(np.abs(xx - cx))),
         float(np.max(np.abs(yy - cy))),
         1.0,
     )
+    return {
+        vertex_id: (
+            cx + float(point[0]) * scale,
+            cy + float(point[1]) * scale,
+        )
+        for vertex_id, point in scaffold["vertices"].items()
+    }
 
-    def px(vertex_id):
-        x, y = scaffold["vertices"][vertex_id]
-        return cx + float(x) * scale, cy + float(y) * scale
+
+def _draw_scaffold_on_frame(brightness, mask, scaffold):
+    """Fallback measurement-view QC; intentionally not the preferred display."""
+    grey = np.rint(np.clip(brightness, 0.0, 1.0) * 255).astype(np.uint8)
+    rgb = np.repeat(grey[:, :, None], 3, axis=2)
+    image = Image.fromarray(rgb)
+    draw = ImageDraw.Draw(image)
+    points_by_id = _scaffold_points_in_gauge(mask, scaffold)
 
     for support in scaffold["semantic_supports"]:
         if not support["semantic_ids"][0].startswith("P"):
             continue
-        points = [px(v) for v in support["vertex_ids"]]
+        points = [points_by_id[v] for v in support["vertex_ids"]]
         draw.line(points + [points[0]], fill=(150, 150, 150), width=1)
     for boundary in scaffold["boundaries"]:
-        points = [px(v) for v in boundary["vertex_ids"]]
+        points = [points_by_id[v] for v in boundary["vertex_ids"]]
         if boundary.get("closed"):
             points += [points[0]]
         draw.line(points, fill=(255, 255, 255), width=2)
     return image
+
+
+def _draw_scaffold_on_source(processed, record, gauge_mask, scaffold):
+    """Render human-facing QC on the untouched camera RGB using exact #80 map."""
+    source_path = record.get("source_camera_path")
+    transform = (record.get("sequence_coordinate") or {}).get(
+        "sequence_gauge_to_camera_xy"
+    )
+    if not source_path or transform is None:
+        return None
+
+    source = Image.open(Path(processed) / source_path).convert("RGB")
+    matrix = np.asarray(transform, float)
+    if matrix.shape != (3, 3):
+        return None
+
+    gauge_points = _scaffold_points_in_gauge(gauge_mask, scaffold)
+
+    def camera_point(vertex_id):
+        x, y = gauge_points[vertex_id]
+        mapped = matrix @ np.array([x, y, 1.0], dtype=float)
+        return float(mapped[0] / mapped[2]), float(mapped[1] / mapped[2])
+
+    draw = ImageDraw.Draw(source)
+    width = max(2, int(round(max(source.size) / 280.0)))
+    faint_width = max(1, width - 1)
+    for support in scaffold["semantic_supports"]:
+        if not support["semantic_ids"][0].startswith("P"):
+            continue
+        points = [camera_point(v) for v in support["vertex_ids"]]
+        draw.line(
+            points + [points[0]],
+            fill=(170, 170, 170),
+            width=faint_width,
+        )
+    for boundary in scaffold["boundaries"]:
+        points = [camera_point(v) for v in boundary["vertex_ids"]]
+        if boundary.get("closed"):
+            points += [points[0]]
+        draw.line(points, fill=(255, 255, 255), width=width)
+
+    # Crop using the gauge-mask footprint transformed back to camera space so
+    # the QC preserves native source detail without wasting space on background.
+    yy, xx = np.nonzero(gauge_mask)
+    if not len(xx):
+        return source
+    xmin, xmax = float(xx.min()), float(xx.max())
+    ymin, ymax = float(yy.min()), float(yy.max())
+    corners = np.array(
+        [
+            [xmin, ymin, 1.0],
+            [xmax, ymin, 1.0],
+            [xmax, ymax, 1.0],
+            [xmin, ymax, 1.0],
+        ],
+        dtype=float,
+    ).T
+    camera = matrix @ corners
+    camera = camera[:2] / camera[2:3]
+    left, top = camera.min(axis=1)
+    right, bottom = camera.max(axis=1)
+    pad = 0.08 * max(right - left, bottom - top)
+    box = (
+        max(0, int(math.floor(left - pad))),
+        max(0, int(math.floor(top - pad))),
+        min(source.width, int(math.ceil(right + pad))),
+        min(source.height, int(math.ceil(bottom + pad))),
+    )
+    if box[2] <= box[0] or box[3] <= box[1]:
+        return source
+    return source.crop(box)
 
 
 def _contact_sheet(items, destination, columns=4):
@@ -875,10 +955,12 @@ def fit_pose_sequence(
     output,
     *,
     max_frames=MAX_GEOMETRY_FRAMES,
+    processed=None,
 ):
     """Fit and persist one stone-level scaffold from a #73/#80 pose output."""
     pose_output = Path(pose_output).resolve()
     output = Path(output).resolve()
+    processed = None if processed is None else Path(processed).resolve()
     payload_path = pose_output / "asscher-pose.json"
     if not payload_path.is_file():
         raise ValueError("pose_output must contain asscher-pose.json")
@@ -959,20 +1041,40 @@ def fit_pose_sequence(
     result["selected_frames"] = metadata
     result["sequence_gauge"] = payload.get("sequence_gauge")
     if result.get("scaffold") is not None:
-        items = [
-            _draw_scaffold_on_frame(brightness, mask, result["scaffold"])
-            for brightness, mask in zip(brightness_frames, masks)
-        ]
-        items.append(
-            topology.render_scaffold(
-                result["scaffold"], size=brightness_frames[0].shape[0]
-            )
+        items = []
+        display_source = "normalized_lowpass_measurement_fallback"
+        for record, brightness, mask in zip(
+            selected, brightness_frames, masks
+        ):
+            image = None
+            if processed is not None:
+                image = _draw_scaffold_on_source(
+                    processed, record, mask, result["scaffold"]
+                )
+            if image is None:
+                image = _draw_scaffold_on_frame(
+                    brightness, mask, result["scaffold"]
+                )
+            else:
+                display_source = "original_camera_rgb_exact_sequence_gauge_map"
+            items.append(image)
+        reference = topology.render_scaffold(
+            result["scaffold"], size=max(items[0].size)
         )
+        items.append(reference)
         result["qc_path"] = _contact_sheet(
             items, output / "wireframe-qc.jpg", columns=4
         )
+        result["qc_display_source"] = display_source
+        result["qc_interpretation"] = (
+            "Human-facing QC uses original camera RGB when processed input is "
+            "available. The fitter still uses the frozen normalized low-pass "
+            "measurement representation; display sharpening does not alter "
+            "geometry."
+        )
     else:
         result["qc_path"] = None
+        result["qc_display_source"] = None
 
     (output / "wireframe.json").write_text(
         json.dumps(result, indent=2, allow_nan=False) + "\n"
@@ -989,9 +1091,18 @@ def main():
     parser.add_argument(
         "--max-frames", type=int, default=MAX_GEOMETRY_FRAMES
     )
+    parser.add_argument(
+        "--processed",
+        type=Path,
+        default=None,
+        help="Optional processed sequence root for sharp native-RGB QC",
+    )
     args = parser.parse_args()
     result = fit_pose_sequence(
-        args.pose_output, args.output, max_frames=args.max_frames
+        args.pose_output,
+        args.output,
+        max_frames=args.max_frames,
+        processed=args.processed,
     )
     print(
         result["status"],

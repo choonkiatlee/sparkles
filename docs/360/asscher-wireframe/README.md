@@ -124,6 +124,19 @@ The workflow produces, for each stone:
 The generated research bundle is uploaded as a workflow artifact rather than
 committed as bulk source-derived imagery.
 
+### QC display versus measurement representation
+
+The estimator intentionally measures the fixed 160-pixel normalized luminance
+representation with its declared low-pass transfer function. That representation
+is designed for stable measurement, not visual appraisal.
+
+Human-facing `wireframe-qc.jpg` therefore uses the original camera RGB at native
+source resolution when the processed source sequence is available. The fitted
+scaffold is mapped back with #80's exact sequence-gauge-to-camera transform.
+This avoids making the diamond look artificially blurred or making an
+approximate display mapping look like a geometric fitting error. Changing the
+QC rendering does not change the fitted scaffold.
+
 ## Validation boundary with #76
 
 #75 is the estimator/frozen-method PR. It does **not** tune against the stored
