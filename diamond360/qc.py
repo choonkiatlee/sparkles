@@ -78,3 +78,34 @@ def diagnostic_sheet(summary,destination):
             ('support fraction 0..1','support_fraction',1)]
     contact_sheet([(label,map_image(summary[key],scale)) for label,key,scale in groups],
                   destination,columns=4)
+
+
+def asscher_pose_overlay(rgb, assessment):
+    """Overlay the fitted 2-D Asscher outline/axes for compact pose QC."""
+    image = Image.fromarray(np.asarray(rgb, dtype=np.uint8).copy())
+    outline = assessment.get("outline")
+    if not outline:
+        return image
+    draw = ImageDraw.Draw(image)
+    vertices = [tuple(point) for point in outline["vertices_xy"]]
+    if vertices:
+        draw.line(vertices + [vertices[0]], fill=(255, 55, 55), width=2)
+    cx, cy = outline["centre_xy"]
+    radius = max(2, int(round(outline["effective_diameter_px"] * 0.015)))
+    draw.ellipse(
+        (cx - radius, cy - radius, cx + radius, cy + radius),
+        outline=(255, 220, 40),
+        width=2,
+    )
+    axis_half = outline["effective_diameter_px"] * 0.38
+    for axis, colour in zip(
+        outline["cardinal_axes_xy"],
+        [(30, 180, 255), (80, 240, 110)],
+    ):
+        dx, dy = np.asarray(axis, float) * axis_half
+        draw.line(
+            (cx - dx, cy - dy, cx + dx, cy + dy),
+            fill=colour,
+            width=2,
+        )
+    return image
