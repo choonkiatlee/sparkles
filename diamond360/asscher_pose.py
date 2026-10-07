@@ -91,7 +91,7 @@ def _component(value, score, unit=None):
     return result
 
 
-def assess_frame(mask, valid_mask=None):
+def assess_frame(mask, valid_mask=None, *, valid_fraction=None):
     """Assess one candidate frame from its segmented silhouette/support."""
     mask = np.asarray(mask, bool)
     if mask.ndim != 2:
@@ -100,6 +100,12 @@ def assess_frame(mask, valid_mask=None):
         valid_mask = np.asarray(valid_mask, bool)
         if valid_mask.shape != mask.shape:
             raise ValueError("valid_mask must match mask shape")
+    if valid_mask is not None and valid_fraction is not None:
+        raise ValueError("provide valid_mask or valid_fraction, not both")
+    if valid_fraction is not None:
+        valid_fraction = float(valid_fraction)
+        if not np.isfinite(valid_fraction) or not 0.0 <= valid_fraction <= 1.0:
+            raise ValueError("valid_fraction must be finite and within 0..1")
 
     try:
         outline = fit_asscher_outline(mask)
@@ -160,11 +166,11 @@ def assess_frame(mask, valid_mask=None):
     ]
     edge_visibility_score = float(np.mean(support_ratios))
 
-    if valid_mask is None:
-        valid_fraction = None
+    if valid_mask is not None:
+        valid_fraction = float((valid_mask & mask).sum() / max(1, mask.sum()))
+    if valid_fraction is None:
         valid_support_score = 1.0
     else:
-        valid_fraction = float((valid_mask & mask).sum() / max(1, mask.sum()))
         valid_support_score = _bounded(
             (valid_fraction - _REJECT_MIN_VALID_FRACTION)
             / (0.95 - _REJECT_MIN_VALID_FRACTION)
