@@ -8,8 +8,9 @@ from collections import Counter
 from pathlib import Path
 
 import numpy as np
+from PIL import Image
 
-from . import pipeline
+from . import pipeline, qc
 from .asscher_pose_sequence import analyse_processed_sequence
 
 SCHEMA = "diamond360-asscher-pose-benchmark/1"
@@ -40,6 +41,39 @@ def _frame_summary(record):
             "corner_balance", {}
         ).get("value"),
     }
+
+
+def _render_reference_faces(processed, pose_output, payload, source_indices=(0, 128)):
+    """Render independent benchmark anchors for crown/opposite-face review."""
+    items = []
+    lookup = {
+        record.get("source_index"): record
+        for record in payload["frames"]
+    }
+    for source_index in source_indices:
+        record = lookup.get(source_index)
+        if record is None or not record.get("source_camera_path"):
+            continue
+        rgb = np.asarray(
+            Image.open(
+                Path(processed) / record["source_camera_path"]
+            ).convert("RGB")
+        )
+        assessment = record["assessment"]
+        items.append(
+            (
+                (
+                    f"{source_index} rank {record.get('rank')} "
+                    f"{assessment['status']} {assessment['score']:.2f}"
+                ),
+                qc.asscher_pose_overlay(rgb, assessment),
+            )
+        )
+    if not items:
+        return None
+    destination = Path(pose_output) / "reference-faces.jpg"
+    qc.contact_sheet(items, destination, columns=2)
+    return destination.name
 
 
 def _summarise_stone(certificate, payload):
@@ -102,6 +136,7 @@ def _summarise_stone(certificate, payload):
             )
         ),
         "qc_path": payload.get("qc_path"),
+        "reference_faces_path": payload.get("reference_faces_path"),
     }
 
 
@@ -133,6 +168,11 @@ def run_source_benchmark(source_root, output, bundle_manifest):
                 processed,
                 pose_output,
                 persist_canonical=False,
+            )
+            payload["reference_faces_path"] = _render_reference_faces(
+                processed,
+                pose_output,
+                payload,
             )
             stones.append(_summarise_stone(certificate, payload))
 
