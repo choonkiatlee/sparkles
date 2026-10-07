@@ -68,17 +68,21 @@ wireframe, the fitter now treats the observed silhouette as the primary
 physical image boundary:
 
 1. #73 crown-lobe records are only coarse candidates.
-2. Each candidate's constrained eight-side silhouette fit is scored using only
-   outer-boundary evidence: outline residual, projection consistency, cardinal
-   parallelism, aspect and edge visibility.
-3. Candidate octagons are compared to a robust stone-level medoid; silhouette
-   shape outliers are rejected.
-4. The fitter deliberately does **not** fill the seven-frame quota with weaker
-   edge-of-lobe views. Three strong compatible views are preferable to seven
-   mixed-pose views.
-5. A fixed stone-level `GIRDLE_OUTLINE` is the median of the selected fitted
+2. Outline residual and edge visibility first decide whether the observed
+   octagon is reliable enough to use.
+3. Reliable octagons are ranked for face-onness from the outer geometry itself:
+   aspect/foreshortening and opposite-cardinal convergence. The broader #73
+   projection-consistency composite remains diagnostic rather than a hard gate
+   because stone-specific centre/corner asymmetry should not be mistaken for
+   camera tilt.
+4. Candidate octagons are also compared to a robust stone-level medoid;
+   silhouette-shape outliers are rejected.
+5. The fitter deliberately uses only a small face-on core (currently up to five
+   frames) rather than filling the seven-frame quota with weaker edge-of-lobe
+   views.
+6. A fixed stone-level `GIRDLE_OUTLINE` is the median of the selected fitted
    octagons in the #80 sequence gauge.
-6. Only after that anchor exists are persistent radial edges considered for
+7. Only after that anchor exists are persistent radial edges considered for
    C1/C2/C3/table support.
 
 This is intentionally a conservative 2-D image-plane procedure. It does not
