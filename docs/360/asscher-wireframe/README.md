@@ -70,11 +70,12 @@ physical image boundary:
 1. #73 crown-lobe records are only coarse candidates.
 2. Outline residual and edge visibility first decide whether the observed
    octagon is reliable enough to use.
-3. Reliable octagons are ranked for face-onness from the outer geometry itself:
-   aspect/foreshortening and opposite-cardinal convergence. The broader #73
-   projection-consistency composite remains diagnostic rather than a hard gate
-   because stone-specific centre/corner asymmetry should not be mistaken for
-   camera tilt.
+3. Reliable octagons are ranked for face-onness using the full #73
+   outer-silhouette projection-consistency score **relative to other views of
+   the same stone**. It is deliberately not an absolute cross-stone threshold:
+   persistent centre/corner asymmetry may be real cutting geometry rather than
+   camera tilt. Explicit aspect/foreshortening and opposite-cardinal
+   convergence remain serialized diagnostics and hard sanity bounds.
 4. Candidate octagons are also compared to a robust stone-level medoid;
    silhouette-shape outliers are rejected.
 5. The fitter deliberately uses only a small face-on core (currently up to five
