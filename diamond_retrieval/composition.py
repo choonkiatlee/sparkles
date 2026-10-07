@@ -1,20 +1,26 @@
-"""Public configuration and default framework composition."""
+"""Public configuration and default production composition."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 
 from .assembler import StandardResultAssembler
-from .identity import StrictIdentityValidator
+from .downloaders import LinkedEvidenceDownloader
+from .http import UrllibHttpClient
+from .identity import DiamondIdentityValidator
 from .policy import StandardRetrievalPolicy
+from .processors import PdfCertificateProcessor, StillImageProcessor
 from .protocols import (
     EvidenceDownloader,
     EvidenceProcessor,
     EvidenceResolver,
+    HttpClient,
     IdentityValidator,
     ListingProvider,
     ResultAssembler,
     RetrievalPolicy,
 )
+from .resolvers import IgiReportPdfResolver, Loupe360CertificateResolver
+from .retailers import DiyonaListingProvider, QualityDiamondsListingProvider
 from .retriever import DiamondRetriever
 
 
@@ -25,7 +31,7 @@ class RetrievalConfig:
     policy: RetrievalPolicy = field(default_factory=StandardRetrievalPolicy)
     downloaders: tuple[EvidenceDownloader, ...] = ()
     processors: tuple[EvidenceProcessor, ...] = ()
-    identity_validator: IdentityValidator = field(default_factory=StrictIdentityValidator)
+    identity_validator: IdentityValidator = field(default_factory=DiamondIdentityValidator)
     assembler: ResultAssembler = field(default_factory=StandardResultAssembler)
     max_resolution_depth: int = 8
 
@@ -42,6 +48,24 @@ class RetrievalConfig:
         )
 
 
-def default_config() -> RetrievalConfig:
-    """Return the framework composition. Real adapters are registered in later PRs."""
-    return RetrievalConfig()
+def default_config(http_client: HttpClient | None = None) -> RetrievalConfig:
+    """Compose the currently supported public retailer/certificate adapters."""
+    client = http_client or UrllibHttpClient()
+    return RetrievalConfig(
+        providers=(
+            DiyonaListingProvider(client),
+            QualityDiamondsListingProvider(client),
+        ),
+        resolvers=(
+            IgiReportPdfResolver(),
+            Loupe360CertificateResolver(),
+        ),
+        policy=StandardRetrievalPolicy(),
+        downloaders=(LinkedEvidenceDownloader(client),),
+        processors=(
+            PdfCertificateProcessor(),
+            StillImageProcessor(),
+        ),
+        identity_validator=DiamondIdentityValidator(),
+        assembler=StandardResultAssembler(),
+    )
