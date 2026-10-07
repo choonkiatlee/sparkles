@@ -36,6 +36,9 @@ The implementation has three explicit contracts:
    - canonicalises already-registered photometry through the existing
      `normalized_geometry` transfer;
    - composes the registered transform back to original camera coordinates;
+   - keeps geometry rank separate from likely viewing-face role;
+   - on a complete ordered rotation, resolves crown-versus-opposite-face only
+     when two broad face-on geometry lobes are genuinely competitive;
    - persists per-frame canonical brightness/mask/support and compact QC.
 
 ## Canonical transform
@@ -77,6 +80,43 @@ The PriceScope fixture informs the qualitative policy: prefer low-projection
 views and reject conditions consistent with appreciable side/pavilion
 projection. The stored P1/P2/P3/C1 values are not inputs to the fit or
 thresholds.
+
+## Correct face versus square-on geometry
+
+A square-looking silhouette is not sufficient by itself. In two retained
+rotations, both the crown/top side and the opposing pavilion side can produce
+plausibly square-on views.
+
+Human validation identified the useful optical distinction:
+
+- a crown/top view shows a closed central table boundary;
+- an opposite/pavilion view can show centre-crossing diagonal facet junctions
+  that meet through the middle.
+
+The production selector does **not** use the human-labelled source indices.
+Instead it keeps the decisions separate:
+
+1. smooth the geometry-suitability trace and find broad competing face-on
+   lobes;
+2. if the best two lobe scores differ by more than 0.10, keep the geometry
+   ranking unchanged;
+3. otherwise compare closed-table-boundary continuity over each local lobe;
+4. resolve a likely crown lobe only when the median difference is at least
+   1.5 local MAD units;
+5. keep the opposite face as a valid geometry observation but rank it behind
+   likely crown-lobe candidates.
+
+The audit record therefore retains `geometry_rank`, `face_role`, the
+geometry-lobe evidence and the final selection rank. A likely opposite face is
+not mislabeled as clipping, tilt, or bad geometry.
+
+Per-frame face diagnostics also expose central radial-spoke strength,
+centre-crossing diagonal energy and table-boundary continuity. These are
+viewing-face evidence only; they do not constitute semantic table/facet fitting.
+
+The two human 0-vs-128 judgements used to validate this behavior are stored in
+`human-face-validation.json`. They are validation evidence, not production
+inputs.
 
 ## Orientation ambiguity
 
@@ -126,8 +166,31 @@ Synthetic tests cover:
 - projection-like trapezoidal distortion;
 - reduced valid support;
 - failed/degenerate silhouettes;
+- centre-crossing spokes versus a closed table boundary;
+- competing face-on lobe resolution without source-index labels;
 - sequence ranking, transform composition and persistence.
 
-Real-sequence ranking remains the next validation step before #73 is marked
-complete. That check should use several existing Sparkles 360 sequences without
-tuning the v1 policy to the DiaGem stored angle values.
+The reproducible four-stone real-sequence benchmark uses the retained 256-frame
+release bundles and the frozen policy:
+
+- **IGI-LG756520111:** geometry alone preferred the ~129 lobe. The competing
+  ~253/0 lobe has stronger closed-table continuity (0.730 versus 0.677,
+  2.89 MAD separation), so final selection moves to the crown-side cluster.
+- **IGI-LG818659722:** geometry lobes ~6 and ~132 are nearly tied. Closed-table
+  continuity selects ~6/0 (0.735 versus 0.710, 2.04 MAD separation).
+- **IGI-LG756580087:** the best broad geometry lobe already exceeds the next by
+  0.229, so face resolution is not invoked.
+- **IGI-LG836619414:** the corresponding geometry gap is 0.272, so face
+  resolution is likewise not invoked.
+
+The two ambiguous resolutions independently agree with the human validation
+that the frame-0-side view is the likely crown/top side. No source-frame number
+is used by production logic.
+
+GitHub Actions run 17 of `asscher-pose-benchmark` passed the focused issue-73
+tests, the recorded repository test suite, all four source downloads,
+four-stone processing, QC generation and artifact upload. The existing
+`geometric-crispness-benchmark` also passed on the same code head, exercising
+the shared `normalized_geometry` path.
+
+No threshold was fitted to the DiaGem/Sergey stored P1/P2/P3/C1 angle values.
