@@ -1,8 +1,20 @@
 # Source media recovery — 7 October 2026
 
-Partial recovery: three exact PriceScope-served public inline previews are archived. Full/original attachment bytes remain unresolved. The previews were copied without re-encoding; they must not be described as original uploads.
+Recovery completed: after the user signed in to PriceScope, the three full attachment endpoints served native JPEG objects. These exact downloaded bytes now replace the previews. The original historical upload identity cannot be independently proven beyond the verifiable full attachment objects.
 
-## Attachment inventory and results
+## Full attachment recovery
+
+Authenticated full attachment navigation and image-document download succeeded for all three targets on 7 October 2026. MIME type was image/jpeg. HTTP response status was not exposed by the browser API.
+
+| Post | Dimensions | Bytes | SHA-256 |
+|---|---|---|---|
+| 151 | 410 × 319 | 9889 | `0d0d87dfd9d4090dc21d03173b9260abe00556b40c6df05e19fad310fa0bd3a3` |
+| 157 | 421 × 277 | 14797 | `4993dfcd3521d800c7b7751f38e23eeba3fc8962682e35ee5001708f87207acb` |
+| 158 | 414 × 281 | 15779 | `7ea46e6bf93eceb23d83d86c50e3d27cf07160392f7adc14c68b7573d49f2d86` |
+
+All objects decode and were visually checked against their expected contents. Both original and inline-preview URLs remain in ground-truth.json. No numeric values were transcribed.
+
+## Earlier unauthenticated inventory and results
 
 The live page-6 DOM exposes linked `img` elements with `src`, `alt`, and `title`. For the three targets, `srcset` was empty; no extra `data-src` / `data-url` or full data/CDN URL was present on those elements. Full attachment IDs and original filenames are therefore known, but the original upload dimensions and byte counts are not.
 
@@ -50,8 +62,8 @@ Post 151 names its image `profileNewA.JPG` and introduces a better photograph fo
 - Reviewed temporary recovery workflow at commit `195f28a6a2af779863d839a8a82e49f5f89ef0f0`: it attempted the page before media and wrote results to logs, without an artifact-upload step. Inspected run 37585754394, job 112675358314: HTTP 403 occurred at `page, _ = fetch(THREAD)` before parsing or requesting any image. The run has no artifacts. Thus the earlier CI failure says nothing about attachment availability. Run: https://github.com/choonkiatlee/sparkles/actions/runs/37585754394
 - Exact-filename public search with two search engines found no independently hosted original object; one engine returned the same source thread. No archive/cache object with verifiable provenance was found. Archive CDX enumeration was not performed.
 
-## Remaining limits
+## Earlier limits (resolved by authenticated attachment recovery)
 
-These previews resolve source identity and provide compact visual evidence, but do not finish original-upload recovery. Never promote their dimensions or byte counts to full-attachment metadata. No measurement values were transcribed or inferred from the images. Post 158 is a distinct corrected complete table, rather than a standalone last-line image.
+Before authentication, only previews were available. Never promote their dimensions or byte counts to full-attachment metadata. No measurement values were transcribed or inferred from the images. Post 158 is a distinct corrected complete table, rather than a standalone last-line image.
 
 PR #71 was already merged before this work. Changes belong in a focused follow-up PR using the existing fixture directory.

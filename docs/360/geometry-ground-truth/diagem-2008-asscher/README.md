@@ -28,9 +28,9 @@ Structured facts live in [ground-truth.json](ground-truth.json). Every value is 
 
 ## Source media status
 
-Exact PriceScope-served **inline preview bytes** are now archived for post 151 (`profile-photo.JPG`), post 157 (`manual-measurements.JPG`) and post 158 (`manual-measurements-last-line.JPG`). These are 300-pixel previews, not verified full/original attachments. Full attachment links currently require PriceScope login. URLs, attachment IDs, original filenames, dimensions, bytes and SHA-256 are recorded in `ground-truth.json`.
+The full PriceScope attachment objects are now archived for post 151 (`profile-photo.JPG`, 410 × 319), post 157 (`manual-measurements.JPG`, 421 × 277) and post 158 (`manual-measurements-last-line.JPG`, 414 × 281). They were downloaded through the authenticated full attachment endpoints without re-encoding. Exact URLs, original filenames, content types, bytes, dimensions, SHA-256 and retrieval provenance are recorded in `ground-truth.json`, alongside the earlier inline-preview metadata.
 
-Post 158 is a distinct corrected full table with the previously omitted pavilion row; it is not merely a crop of the last line. No numeric values were inferred/transcribed from these previews. See [media-recovery.md](media-recovery.md) for the remaining full-resolution recovery blockage.
+Post 158 is a distinct corrected complete table with the previously omitted pavilion row. No numeric values were inferred/transcribed from the images. See [media-recovery.md](media-recovery.md) for recovery history.
 
 ## Intended first experiment
 

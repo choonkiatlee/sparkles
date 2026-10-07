@@ -214,7 +214,7 @@
     {
       "role": "profile_photo_used_for_photo_estimate",
       "source_page": 6,
-      "status": "recovered_exact_inline_preview",
+      "status": "recovered_original_attachment",
       "recovery_attempt": {
         "date": "2026-10-07",
         "environment": "GitHub Actions",
@@ -223,33 +223,42 @@
       "source_post": 151,
       "source_post_id": 1229394,
       "repo_path": "docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG",
-      "source_url": "https://www.pricescope.com/community/data/attachments/116/116998-234bd483c8c2b28449a166b9399c6ba0.jpg?hash=I0vUg8jCso",
+      "source_url": "https://www.pricescope.com/community/attachments/profilenewa-jpg.120620/",
       "full_attachment_url": "https://www.pricescope.com/community/attachments/profilenewa-jpg.120620/",
       "attachment_id": 120620,
       "original_filename": "profileNewA.JPG",
       "content_type": "image/jpeg",
-      "bytes": 6968,
+      "bytes": 9889,
       "dimensions": {
-        "width": 300,
-        "height": 233
+        "width": 410,
+        "height": 319
       },
-      "sha256": "efa466418fb993196029685c703e220a1a1b766d82e2617748eea58763d1885d",
-      "media_variant": "inline_preview",
-      "full_attachment_status": "requires_pricescope_login",
+      "sha256": "0d0d87dfd9d4090dc21d03173b9260abe00556b40c6df05e19fad310fa0bd3a3",
+      "media_variant": "full_attachment",
+      "full_attachment_status": "recovered",
       "retrieval_provenance": {
         "retrieved_on": "2026-10-07",
-        "method": "Cloud browser direct navigation to the exact img src from the live thread DOM, then locator.downloadMedia on the image document; byte-for-byte copy of the downloaded object. No screenshot, crop, canvas or re-encoding.",
-        "content_type_evidence": "Browser image document contentType was image/jpeg.",
-        "attachment_link_result": "Full attachment link rendered Log in | PriceScope and You must be logged-in to do that. HTTP status not exposed by browser API.",
-        "preview_result": "Native image document loaded and exact media download succeeded; HTTP status not exposed by browser API."
+        "method": "After user completed PriceScope sign-in, navigated to the exact full attachment link from thread markup and downloaded the native image document with locator.downloadMedia. Downloaded bytes copied without re-encoding.",
+        "content_type_evidence": "Native image document contentType was image/jpeg.",
+        "attachment_link_result": "Full native JPEG image document loaded and download succeeded. HTTP status not exposed by browser API.",
+        "fidelity_note": "Highest-fidelity object served by the full attachment endpoint; original historical upload byte identity cannot independently be proven beyond this attachment object."
       },
-      "identity_validation": "Post 151 explicitly introduces a better photograph for Sergey. Visual inspection confirms a horizontal-table profile with visible step boundaries. Post 154 is a different attachment, morepics.JPG (120622), and is not substituted. The association with the post-156 estimates follows thread sequence, not an explicit image citation in post 156."
+      "identity_validation": "Post 151 explicitly introduces a better photograph for Sergey. Visual inspection confirms a horizontal-table profile with visible step boundaries. Post 154 is a different attachment, morepics.JPG (120622), and is not substituted. The association with the post-156 estimates follows thread sequence, not an explicit image citation in post 156.",
+      "inline_preview": {
+        "source_url": "https://www.pricescope.com/community/data/attachments/116/116998-234bd483c8c2b28449a166b9399c6ba0.jpg?hash=I0vUg8jCso",
+        "sha256": "efa466418fb993196029685c703e220a1a1b766d82e2617748eea58763d1885d",
+        "bytes": 6968,
+        "dimensions": {
+          "width": 300,
+          "height": 233
+        }
+      }
     },
     {
       "role": "manual_step_facet_measurements",
       "source_post": 157,
       "source_page": 6,
-      "status": "recovered_exact_inline_preview",
+      "status": "recovered_original_attachment",
       "recovery_attempt": {
         "date": "2026-10-07",
         "environment": "GitHub Actions",
@@ -257,33 +266,42 @@
       },
       "source_post_id": 1229565,
       "repo_path": "docs/360/geometry-ground-truth/diagem-2008-asscher/manual-measurements.JPG",
-      "source_url": "https://www.pricescope.com/community/data/attachments/117/117007-5422cf26c73fa4730ad74512a90e36bf.jpg?hash=VCLPJsc_pH",
+      "source_url": "https://www.pricescope.com/community/attachments/manualmeasurements-jpg.120629/",
       "full_attachment_url": "https://www.pricescope.com/community/attachments/manualmeasurements-jpg.120629/",
       "attachment_id": 120629,
       "original_filename": "manualMeasurements.JPG",
       "content_type": "image/jpeg",
-      "bytes": 9284,
+      "bytes": 14797,
       "dimensions": {
-        "width": 300,
-        "height": 197
+        "width": 421,
+        "height": 277
       },
-      "sha256": "f81e4c9bb3e9b5666ba70ad5849f42ec0d202f29f243ce393f80774076d09c4d",
-      "media_variant": "inline_preview",
-      "full_attachment_status": "requires_pricescope_login",
+      "sha256": "4993dfcd3521d800c7b7751f38e23eeba3fc8962682e35ee5001708f87207acb",
+      "media_variant": "full_attachment",
+      "full_attachment_status": "recovered",
       "retrieval_provenance": {
         "retrieved_on": "2026-10-07",
-        "method": "Cloud browser direct navigation to the exact img src from the live thread DOM, then locator.downloadMedia on the image document; byte-for-byte copy of the downloaded object. No screenshot, crop, canvas or re-encoding.",
-        "content_type_evidence": "Browser image document contentType was image/jpeg.",
-        "attachment_link_result": "Full attachment link rendered Log in | PriceScope and You must be logged-in to do that. HTTP status not exposed by browser API.",
-        "preview_result": "Native image document loaded and exact media download succeeded; HTTP status not exposed by browser API."
+        "method": "After user completed PriceScope sign-in, navigated to the exact full attachment link from thread markup and downloaded the native image document with locator.downloadMedia. Downloaded bytes copied without re-encoding.",
+        "content_type_evidence": "Native image document contentType was image/jpeg.",
+        "attachment_link_result": "Full native JPEG image document loaded and download succeeded. HTTP status not exposed by browser API.",
+        "fidelity_note": "Highest-fidelity object served by the full attachment endpoint; original historical upload byte identity cannot independently be proven beyond this attachment object."
       },
-      "identity_validation": "Visual inspection confirms the dated personal/manual measurements table for a 0.79 carat Asscher, with C1/C2/C3 and P1/P2/P3 columns. No numbers transcribed from the preview."
+      "identity_validation": "Visual inspection confirms the dated personal/manual measurements table for a 0.79 carat Asscher, with C1/C2/C3 and P1/P2/P3 columns. No numbers transcribed from the preview.",
+      "inline_preview": {
+        "source_url": "https://www.pricescope.com/community/data/attachments/117/117007-5422cf26c73fa4730ad74512a90e36bf.jpg?hash=VCLPJsc_pH",
+        "sha256": "f81e4c9bb3e9b5666ba70ad5849f42ec0d202f29f243ce393f80774076d09c4d",
+        "bytes": 9284,
+        "dimensions": {
+          "width": 300,
+          "height": 197
+        }
+      }
     },
     {
       "role": "manual_measurements_last_line",
       "source_post": 158,
       "source_page": 6,
-      "status": "recovered_exact_inline_preview",
+      "status": "recovered_original_attachment",
       "recovery_attempt": {
         "date": "2026-10-07",
         "environment": "GitHub Actions",
@@ -291,27 +309,36 @@
       },
       "source_post_id": 1229566,
       "repo_path": "docs/360/geometry-ground-truth/diagem-2008-asscher/manual-measurements-last-line.JPG",
-      "source_url": "https://www.pricescope.com/community/data/attachments/117/117008-d50b687ee48e01c4f24c63ce7a9954bc.jpg?hash=1QtofuSOAc",
+      "source_url": "https://www.pricescope.com/community/attachments/manualmeasurementsfull-jpg.120630/",
       "full_attachment_url": "https://www.pricescope.com/community/attachments/manualmeasurementsfull-jpg.120630/",
       "attachment_id": 120630,
       "original_filename": "manualMeasurementsFull.JPG",
       "content_type": "image/jpeg",
-      "bytes": 10505,
+      "bytes": 15779,
       "dimensions": {
-        "width": 300,
-        "height": 203
+        "width": 414,
+        "height": 281
       },
-      "sha256": "0100b93cddc422dc8787f0d360b1240fa2854cda4c3deec9cbf301acae92ab9f",
-      "media_variant": "inline_preview",
-      "full_attachment_status": "requires_pricescope_login",
+      "sha256": "7ea46e6bf93eceb23d83d86c50e3d27cf07160392f7adc14c68b7573d49f2d86",
+      "media_variant": "full_attachment",
+      "full_attachment_status": "recovered",
       "retrieval_provenance": {
         "retrieved_on": "2026-10-07",
-        "method": "Cloud browser direct navigation to the exact img src from the live thread DOM, then locator.downloadMedia on the image document; byte-for-byte copy of the downloaded object. No screenshot, crop, canvas or re-encoding.",
-        "content_type_evidence": "Browser image document contentType was image/jpeg.",
-        "attachment_link_result": "Full attachment link rendered Log in | PriceScope and You must be logged-in to do that. HTTP status not exposed by browser API.",
-        "preview_result": "Native image document loaded and exact media download succeeded; HTTP status not exposed by browser API."
+        "method": "After user completed PriceScope sign-in, navigated to the exact full attachment link from thread markup and downloaded the native image document with locator.downloadMedia. Downloaded bytes copied without re-encoding.",
+        "content_type_evidence": "Native image document contentType was image/jpeg.",
+        "attachment_link_result": "Full native JPEG image document loaded and download succeeded. HTTP status not exposed by browser API.",
+        "fidelity_note": "Highest-fidelity object served by the full attachment endpoint; original historical upload byte identity cannot independently be proven beyond this attachment object."
       },
-      "identity_validation": "Distinct attachment and bytes; visual inspection shows the same measurement table extended to include a fourth pavilion row. This is a corrected complete table, not a standalone last-line crop."
+      "identity_validation": "Distinct attachment and bytes; visual inspection shows the same measurement table extended to include a fourth pavilion row. This is a corrected complete table, not a standalone last-line crop.",
+      "inline_preview": {
+        "source_url": "https://www.pricescope.com/community/data/attachments/117/117008-d50b687ee48e01c4f24c63ce7a9954bc.jpg?hash=1QtofuSOAc",
+        "sha256": "0100b93cddc422dc8787f0d360b1240fa2854cda4c3deec9cbf301acae92ab9f",
+        "bytes": 10505,
+        "dimensions": {
+          "width": 300,
+          "height": 203
+        }
+      }
     }
   ],
   "validation_contract": {
