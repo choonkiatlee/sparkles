@@ -81,6 +81,22 @@ def decode_vision360_scramble(ciphertext: str) -> list[list[int]]:
     return decoded
 
 
+def validate_jpeg_bytes(payload: bytes) -> tuple[int, int]:
+    """Validate one complete original JPEG and return its decoded dimensions."""
+    if not isinstance(payload, bytes) or not payload.startswith(b"\xff\xd8") or not payload.endswith(b"\xff\xd9"):
+        raise InvalidPayloadError("frame is not a complete JPEG")
+    try:
+        with Image.open(BytesIO(payload)) as image:
+            image.load()
+            if image.format != "JPEG":
+                raise InvalidPayloadError("decoded frame is not JPEG")
+            return tuple(image.size)
+    except InvalidPayloadError:
+        raise
+    except Exception as exc:
+        raise InvalidPayloadError(f"invalid JPEG: {exc}") from exc
+
+
 def _decode_jpeg(encoded: str, *, batch: int, stored_position: int) -> tuple[bytes, tuple[int, int]]:
     if not isinstance(encoded, str):
         raise InvalidPayloadError(
@@ -92,19 +108,9 @@ def _decode_jpeg(encoded: str, *, batch: int, stored_position: int) -> tuple[byt
         raise InvalidPayloadError(
             f"invalid base64 JPEG in progressive batch {batch} position {stored_position}"
         ) from exc
-    if not payload.startswith(b"\xff\xd8") or not payload.endswith(b"\xff\xd9"):
-        raise InvalidPayloadError(
-            f"progressive batch {batch} position {stored_position} is not a complete JPEG"
-        )
     try:
-        with Image.open(BytesIO(payload)) as image:
-            image.load()
-            if image.format != "JPEG":
-                raise InvalidPayloadError("decoded frame is not JPEG")
-            dimensions = tuple(image.size)
-    except InvalidPayloadError:
-        raise
-    except Exception as exc:
+        dimensions = validate_jpeg_bytes(payload)
+    except InvalidPayloadError as exc:
         raise InvalidPayloadError(
             f"invalid JPEG in progressive batch {batch} position {stored_position}: {exc}"
         ) from exc
