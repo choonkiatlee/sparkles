@@ -47,6 +47,12 @@ def _frame_summary(record):
         "central_ring_edge_score": face.get(
             "central_ring_edge_score"
         ),
+        "table_boundary_angular_entropy": face.get(
+            "table_boundary_angular_entropy"
+        ),
+        "table_boundary_continuity_score": face.get(
+            "table_boundary_continuity_score"
+        ),
         "centre_gradient_ratio": face.get(
             "centre_gradient_ratio"
         ),
