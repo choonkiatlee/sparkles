@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from .assembler import StandardResultAssembler
 from .composition import RetrievalConfig, default_config
+from .downloaders import LinkedEvidenceDownloader
 from .errors import (
     AmbiguousRegistrationError,
     ConfigurationError,
@@ -14,7 +15,8 @@ from .errors import (
     UnsupportedEvidenceError,
     UnsupportedInputError,
 )
-from .identity import StrictIdentityValidator
+from .http import UrllibHttpClient, validate_public_http_url
+from .identity import DiamondIdentityValidator, StrictIdentityValidator
 from .models import (
     CERTIFICATE,
     ROTATION,
@@ -44,6 +46,7 @@ from .models import (
     VideoEvidence,
 )
 from .policy import StandardRetrievalPolicy
+from .processors import PdfCertificateProcessor, StillImageProcessor
 from .protocols import (
     EvidenceDownloader,
     EvidenceProcessor,
@@ -55,6 +58,8 @@ from .protocols import (
     ResultAssembler,
     RetrievalPolicy,
 )
+from .resolvers import IgiReportPdfResolver, Loupe360CertificateResolver
+from .retailers import DiyonaListingProvider, QualityDiamondsListingProvider
 from .retriever import DiamondRetriever
 
 
@@ -69,38 +74,45 @@ __all__ = [
     "CertificateEvidence",
     "CompletionAssessment",
     "ConfigurationError",
+    "DiamondIdentityValidator",
     "DiamondMetadata",
     "DiamondResult",
     "DiamondRetrievalError",
     "DiamondRetriever",
+    "DiyonaListingProvider",
     "Evidence",
     "EvidenceAttempt",
-    "EvidenceKind",
-    "EvidenceReference",
-    "EvidenceStatus",
     "EvidenceDownloader",
+    "EvidenceKind",
     "EvidenceProcessor",
+    "EvidenceReference",
     "EvidenceResolver",
+    "EvidenceStatus",
+    "FieldAttribution",
     "HttpClient",
     "HttpResponse",
-    "IdentityValidator",
-    "ListingProvider",
-    "FieldAttribution",
     "IdentityComparison",
     "IdentityConflictError",
     "IdentityObservation",
     "IdentityOutcome",
+    "IdentityValidator",
+    "IgiReportPdfResolver",
     "InvalidPayloadError",
+    "LinkedEvidenceDownloader",
+    "ListingProvider",
     "ListingRecord",
+    "Loupe360CertificateResolver",
     "MissingEvidenceError",
+    "PdfCertificateProcessor",
     "ProvenanceStep",
+    "QualityDiamondsListingProvider",
     "ROTATION",
     "RawEvidence",
     "ResultAssembler",
     "ResultStatus",
-    "RetrievalPolicy",
     "RetrievalConfig",
     "RetrievalError",
+    "RetrievalPolicy",
     "RotationEvidence",
     "RotationFrame",
     "STILL",
@@ -108,11 +120,14 @@ __all__ = [
     "StandardResultAssembler",
     "StandardRetrievalPolicy",
     "StillEvidence",
+    "StillImageProcessor",
     "StrictIdentityValidator",
     "UnsupportedEvidenceError",
     "UnsupportedInputError",
+    "UrllibHttpClient",
     "VIDEO",
     "VideoEvidence",
     "default_config",
     "retrieve_diamond",
+    "validate_public_http_url",
 ]
