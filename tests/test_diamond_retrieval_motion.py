@@ -10,9 +10,14 @@ from PIL import Image
 from diamond_retrieval import (
     ROTATION,
     EvidenceReference,
+    HttpResponse,
     InvalidPayloadError,
     ProvenanceStep,
     RawEvidence,
+)
+from diamond_retrieval.motion_sources import (
+    DiajewelRotationDownloader,
+    WorkshopRotationDownloader,
 )
 from diamond_retrieval.motion import (
     ProgressiveRotationProcessor,
@@ -91,6 +96,53 @@ def _raw_from_audit(audit, *, corrupt_index=None, omit_batch=None, scramble=None
     )
 
 
+
+
+class FakeHttpClient:
+    def __init__(self, responses):
+        self.responses = dict(responses)
+        self.calls = []
+
+    def get(self, url, *, timeout):
+        self.calls.append(url)
+        value = self.responses.get(url)
+        if value is None:
+            return HttpResponse(404, url, {"Content-Type": "text/plain"}, b"missing")
+        content, media_type = value
+        return HttpResponse(200, url, {"Content-Type": media_type}, content)
+
+
+def _progressive_source_responses(audit, source_root, *, version):
+    by_batch = {}
+    for frame in audit["frames"]:
+        by_batch.setdefault(frame["batch"], []).append(frame)
+    bootstrap = {
+        "width": 8,
+        "height": 8,
+        "quality": 4,
+        "version": version,
+        "scramble": audit["encrypted_scramble"],
+        "image": base64.b64encode(_jpeg(0)).decode("ascii"),
+    }
+    responses = {}
+    metadata_url = source_root + "/0.json" + ("?version=" if audit["source_pipeline"] == "workshop" else "")
+    responses[metadata_url] = (
+        json.dumps(bootstrap, separators=(",", ":")).encode(),
+        "application/json",
+    )
+    for batch in range(1, 8):
+        frames = sorted(by_batch[batch], key=lambda item: item["stored_position"])
+        encoded = [
+            base64.b64encode(_jpeg(frame["source_index"])).decode("ascii")
+            for frame in frames
+        ]
+        responses[f"{source_root}/{batch}.json?version={version}"] = (
+            json.dumps(encoded, separators=(",", ":")).encode(),
+            "application/json",
+        )
+    return responses
+
+
 class ProgressiveMotionContractTests(unittest.TestCase):
     def test_canonical_progressive_positions_match_legacy_d360_contract(self):
         from diamond360.d360_source import canonical_progressive_positions as legacy
@@ -152,6 +204,58 @@ class ProgressiveMotionContractTests(unittest.TestCase):
             ProgressiveRotationProcessor().process(
                 _raw_from_audit(AUDITS[0], corrupt_index=137)
             )
+
+
+    def test_diajewel_downloader_accepts_new_exact_item_id_and_uses_public_version(self):
+        audit = AUDITS[0]
+        viewer = "https://vision.diajewel360.com/Vision360.html?d=VL-NEW123"
+        root = "https://vision.diajewel360.com/imaged/VL-NEW123"
+        http = FakeHttpClient(_progressive_source_responses(audit, root, version=1))
+        downloader = DiajewelRotationDownloader(http)
+        ref = _reference("diajewel", viewer)
+
+        self.assertTrue(downloader.supports(ref))
+        raw = downloader.download(ref)
+        self.assertEqual(raw.format, "progressive-rotation-json")
+        rotation = ProgressiveRotationProcessor().process(raw)[0]
+        self.assertEqual([frame.source_index for frame in rotation.frames], list(range(256)))
+        self.assertEqual(
+            http.calls,
+            [root + "/0.json"] + [f"{root}/{batch}.json?version=1" for batch in range(1, 8)],
+        )
+        self.assertEqual(len(raw.source_responses), 8)
+
+    def test_workshop_downloader_accepts_new_exact_item_id_and_core360_alias(self):
+        audit = AUDITS[1]
+        viewers = (
+            "https://workshop.360view.link/view/NEW-ABC-42",
+            "https://workshop.360view.link/360viewer/360view.html?d=NEW-ABC-42",
+        )
+        root = "https://data1.360view.link/data/1/imaged/NEW-ABC-42"
+        for viewer in viewers:
+            with self.subTest(viewer=viewer):
+                http = FakeHttpClient(_progressive_source_responses(audit, root, version=2))
+                downloader = WorkshopRotationDownloader(http)
+                ref = _reference("workshop", viewer)
+                self.assertTrue(downloader.supports(ref))
+                raw = downloader.download(ref)
+                rotation = ProgressiveRotationProcessor().process(raw)[0]
+                self.assertEqual(len(rotation.frames), 256)
+                self.assertEqual(
+                    http.calls,
+                    [root + "/0.json?version="]
+                    + [f"{root}/{batch}.json?version=2" for batch in range(1, 8)],
+                )
+
+    def test_progressive_downloader_rejects_incomplete_public_batch(self):
+        audit = AUDITS[0]
+        viewer = "https://vision.diajewel360.com/Vision360.html?d=VL-NEW123"
+        root = "https://vision.diajewel360.com/imaged/VL-NEW123"
+        responses = _progressive_source_responses(audit, root, version=1)
+        responses[root + "/4.json?version=1"] = (b"[]", "application/json")
+        downloader = DiajewelRotationDownloader(FakeHttpClient(responses))
+        with self.assertRaises(InvalidPayloadError):
+            downloader.download(_reference("diajewel", viewer))
 
     def test_ordered_positions_is_a_complete_permutation(self):
         positions = ordered_positions(AUDITS[0]["scramble"])
