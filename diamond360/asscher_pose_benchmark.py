@@ -50,6 +50,12 @@ def _frame_summary(record):
         "centre_gradient_ratio": face.get(
             "centre_gradient_ratio"
         ),
+        "central_diagonal_spoke_energy_ratio": face.get(
+            "central_diagonal_spoke_energy_ratio"
+        ),
+        "central_diagonal_to_cardinal_energy_ratio": face.get(
+            "central_diagonal_to_cardinal_energy_ratio"
+        ),
     }
 
 
