@@ -1,0 +1,202 @@
+{
+  "schema_version": "diamond360-source-profile-benchmark-summary/1",
+  "source_profile_schema": "diamond360-source-profile/1",
+  "workflow_run": 37680179543,
+  "workflow_artifact_sha256": "12e3ed37792f28590a2bc2426568633354dbf9c6dea3c5c1a3f9c4a0f2a75d78",
+  "sources": [
+    {
+      "source_id": "IGI-LG756580087",
+      "source_pipeline": "diajewel",
+      "dimensions_px": [
+        704,
+        704
+      ],
+      "effective_diameter_median_px": 507.1,
+      "extent_provenance": "asscher_pose_top_ranked_usable_views",
+      "jpeg_quantization_median": 48.5,
+      "bytes_per_pixel_median": 0.0701,
+      "acutance_proxy_median": 0.02048,
+      "background_reference_status": "ok",
+      "background_luminance_mad": 0,
+      "stone_channel_clipping_median": 0.0429,
+      "stone_channel_clipping_max": 0.1184,
+      "pose_status": "review",
+      "pose_reason": "crown_view_interval_not_resolved",
+      "usable_pose_frames": 173,
+      "crown_usable_frames": 0,
+      "phase_status": "review",
+      "measurements": {
+        "geometry_topology": "review",
+        "spatial_optical_morphology": "ok",
+        "physical_spatial_scale": "unavailable",
+        "ordered_dynamics": "ok",
+        "angular_persistence": "review",
+        "relative_luminance_dynamics": "review",
+        "absolute_luminance_amplitude": "review",
+        "chromatic_activity": "review",
+        "tier_edge_crispness": "ok"
+      }
+    },
+    {
+      "source_id": "IGI-LG756520111",
+      "source_pipeline": "workshop",
+      "dimensions_px": [
+        758,
+        598
+      ],
+      "effective_diameter_median_px": 432.6,
+      "extent_provenance": "asscher_pose_likely_crown_lobe",
+      "jpeg_quantization_median": 48.5,
+      "bytes_per_pixel_median": 0.0518,
+      "acutance_proxy_median": 0.01525,
+      "background_reference_status": "ok",
+      "background_luminance_mad": 0,
+      "stone_channel_clipping_median": 0.1619,
+      "stone_channel_clipping_max": 0.4068,
+      "pose_status": "ok",
+      "usable_pose_frames": 204,
+      "crown_usable_frames": 65,
+      "phase_status": "available",
+      "measurements": {
+        "geometry_topology": "ok",
+        "spatial_optical_morphology": "ok",
+        "physical_spatial_scale": "unavailable",
+        "ordered_dynamics": "ok",
+        "angular_persistence": "ok",
+        "relative_luminance_dynamics": "review",
+        "absolute_luminance_amplitude": "review",
+        "chromatic_activity": "review",
+        "tier_edge_crispness": "ok"
+      }
+    },
+    {
+      "source_id": "IGI-LG818659722",
+      "source_pipeline": "diajewel",
+      "dimensions_px": [
+        659,
+        517
+      ],
+      "effective_diameter_median_px": 553.3,
+      "extent_provenance": "asscher_pose_likely_crown_lobe",
+      "jpeg_quantization_median": 48.5,
+      "bytes_per_pixel_median": 0.092,
+      "acutance_proxy_median": 0.01434,
+      "background_reference_status": "ok",
+      "background_luminance_mad": 0.0002831,
+      "stone_channel_clipping_median": 0.1726,
+      "stone_channel_clipping_max": 0.3503,
+      "pose_status": "ok",
+      "usable_pose_frames": 247,
+      "crown_usable_frames": 65,
+      "phase_status": "available",
+      "measurements": {
+        "geometry_topology": "ok",
+        "spatial_optical_morphology": "ok",
+        "physical_spatial_scale": "unavailable",
+        "ordered_dynamics": "ok",
+        "angular_persistence": "ok",
+        "relative_luminance_dynamics": "review",
+        "absolute_luminance_amplitude": "review",
+        "chromatic_activity": "review",
+        "tier_edge_crispness": "ok"
+      }
+    },
+    {
+      "source_id": "IGI-LG836619414",
+      "source_pipeline": "diajewel",
+      "dimensions_px": [
+        682,
+        682
+      ],
+      "effective_diameter_median_px": 490.6,
+      "extent_provenance": "asscher_pose_top_ranked_usable_views",
+      "jpeg_quantization_median": 48.5,
+      "bytes_per_pixel_median": 0.0726,
+      "acutance_proxy_median": 0.02215,
+      "background_reference_status": "ok",
+      "background_luminance_mad": 0,
+      "stone_channel_clipping_median": 0.0434,
+      "stone_channel_clipping_max": 0.0653,
+      "pose_status": "review",
+      "pose_reason": "crown_view_interval_not_resolved",
+      "usable_pose_frames": 152,
+      "crown_usable_frames": 0,
+      "phase_status": "review",
+      "measurements": {
+        "geometry_topology": "review",
+        "spatial_optical_morphology": "ok",
+        "physical_spatial_scale": "unavailable",
+        "ordered_dynamics": "ok",
+        "angular_persistence": "review",
+        "relative_luminance_dynamics": "review",
+        "absolute_luminance_amplitude": "review",
+        "chromatic_activity": "review",
+        "tier_edge_crispness": "ok"
+      }
+    },
+    {
+      "source_id": "d360-79-BB-5159600",
+      "source_pipeline": "d360-tech",
+      "dimensions_px": [
+        758,
+        597
+      ],
+      "effective_diameter_median_px": 609.6,
+      "extent_provenance": "asscher_pose_likely_crown_lobe",
+      "jpeg_quantization_median": 48.5,
+      "bytes_per_pixel_median": 0.0942,
+      "acutance_proxy_median": 0.01598,
+      "background_reference_status": "ok",
+      "background_luminance_mad": 0.0023878,
+      "stone_channel_clipping_median": 0.0523,
+      "stone_channel_clipping_max": 0.1179,
+      "pose_status": "ok",
+      "usable_pose_frames": 242,
+      "crown_usable_frames": 65,
+      "phase_status": "available",
+      "measurements": {
+        "geometry_topology": "ok",
+        "spatial_optical_morphology": "ok",
+        "physical_spatial_scale": "unavailable",
+        "ordered_dynamics": "ok",
+        "angular_persistence": "ok",
+        "relative_luminance_dynamics": "review",
+        "absolute_luminance_amplitude": "review",
+        "chromatic_activity": "review",
+        "tier_edge_crispness": "ok"
+      }
+    },
+    {
+      "source_id": "d360-79-BT-5165227",
+      "source_pipeline": "d360-tech",
+      "dimensions_px": [
+        648,
+        511
+      ],
+      "effective_diameter_median_px": 528.5,
+      "extent_provenance": "asscher_pose_likely_crown_lobe",
+      "jpeg_quantization_median": 48.5,
+      "bytes_per_pixel_median": 0.0968,
+      "acutance_proxy_median": 0.01961,
+      "background_reference_status": "ok",
+      "background_luminance_mad": 0.0002831,
+      "stone_channel_clipping_median": 0.0632,
+      "stone_channel_clipping_max": 0.3105,
+      "pose_status": "ok",
+      "usable_pose_frames": 228,
+      "crown_usable_frames": 65,
+      "phase_status": "available",
+      "measurements": {
+        "geometry_topology": "ok",
+        "spatial_optical_morphology": "ok",
+        "physical_spatial_scale": "unavailable",
+        "ordered_dynamics": "ok",
+        "angular_persistence": "ok",
+        "relative_luminance_dynamics": "review",
+        "absolute_luminance_amplitude": "review",
+        "chromatic_activity": "review",
+        "tier_edge_crispness": "ok"
+      }
+    }
+  ]
+}
