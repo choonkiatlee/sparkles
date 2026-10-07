@@ -184,6 +184,14 @@ class AsscherPoseTests(unittest.TestCase):
             table_cues["central_ring_edge_score"],
             spoke_cues["central_ring_edge_score"],
         )
+        self.assertGreater(
+            spoke_cues["central_diagonal_spoke_energy_ratio"],
+            table_cues["central_diagonal_spoke_energy_ratio"],
+        )
+        self.assertGreater(
+            spoke_cues["central_diagonal_to_cardinal_energy_ratio"],
+            table_cues["central_diagonal_to_cardinal_energy_ratio"],
+        )
 
     def test_rank_puts_ok_then_review_then_rejected_then_failed(self):
         assessments = [
