@@ -150,6 +150,28 @@ class AsscherGeometrySourceStressTests(unittest.TestCase):
             with Image.open(derived_path) as decoded:
                 self.assertEqual(decoded.mode, "RGB")
 
+    def test_identity_detail_separates_gauge_change_from_id_swap(self):
+        record = {
+            "measurements": {
+                "semantic_identity": {
+                    "consistent": False,
+                    "missing_semantic_ids": [],
+                    "extra_semantic_ids": [],
+                    "support_semantic_reassignments": [],
+                    "reference_gauge_id": "g:0",
+                    "candidate_gauge_id": "g:2",
+                    "gauge_consistent": False,
+                }
+            }
+        }
+        detail = stress._identity_detail(record)
+        self.assertFalse(detail["gauge_consistent"])
+        self.assertTrue(detail["semantic_id_set_consistent"])
+        self.assertEqual(
+            detail["support_semantic_reassignment_count"], 0
+        )
+        self.assertFalse(detail["overall_contract_consistent"])
+
     def test_support_delta_is_componentwise_not_a_composite_score(self):
         reference = {
             "status": "available",
