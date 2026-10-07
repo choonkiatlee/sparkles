@@ -44,7 +44,10 @@ def specification():
             "clipping": "minimum image-edge margin / effective diameter",
             "outline_fit": "q90 boundary-to-eight-line residual / effective diameter",
             "squareness": "absolute log fitted width/height",
-            "opposite_parallelism": "maximum observed opposite-side angle error",
+            "opposite_parallelism": (
+                "maximum observed opposite cardinal-side angle error; "
+                "corner-pair errors remain diagnostic"
+            ),
             "centre_offset": "outline-centre to silhouette-centroid / effective diameter",
             "corner_balance": "maximum normalized opposite corner-side imbalance",
             "edge_visibility": "boundary support relative to fitted model-side length",
@@ -142,8 +145,8 @@ def assess_frame(mask, valid_mask=None, *, valid_fraction=None):
 
     parallel_errors = [
         float(value)
-        for value in outline["parallelism_error_deg"].values()
-        if value is not None
+        for name, value in outline["parallelism_error_deg"].items()
+        if name.startswith("cardinal_") and value is not None
     ]
     max_parallelism = max(parallel_errors) if parallel_errors else 90.0
     parallelism_score = _gaussian_score(max_parallelism, 6.0)
