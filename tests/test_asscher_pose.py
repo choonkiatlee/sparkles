@@ -131,6 +131,60 @@ class AsscherPoseTests(unittest.TestCase):
         self.assertTrue(result["transform"]["quarter_turn_ambiguous"])
         self.assertEqual(result["transform"]["rectification"], "none")
 
+    def test_face_orientation_cues_distinguish_central_spokes_from_table_ring(self):
+        mask = _asscher_mask()
+        outline = geometry.fit_asscher_outline(mask)
+        yy, xx = np.indices(mask.shape, dtype=float)
+        cx, cy = outline["centre_xy"]
+        dx = xx - cx
+        dy = yy - cy
+        radius = np.hypot(dx, dy)
+
+        spokes = np.full(mask.shape, 0.5, dtype=float)
+        diagonal_distance = np.minimum(
+            np.abs(dy - dx),
+            np.abs(dy + dx),
+        ) / np.sqrt(2.0)
+        spokes[(diagonal_distance < 1.5) & (radius < 65)] = 0.9
+
+        table = np.full(mask.shape, 0.5, dtype=float)
+        half = 26.0
+        table_edge = (
+            (
+                (np.abs(np.abs(dx) - half) < 1.5)
+                & (np.abs(dy) <= half)
+            )
+            | (
+                (np.abs(np.abs(dy) - half) < 1.5)
+                & (np.abs(dx) <= half)
+            )
+        )
+        table[table_edge] = 0.9
+
+        spoke_cues = asscher_pose.face_orientation_cues(
+            spokes,
+            mask,
+            outline,
+        )
+        table_cues = asscher_pose.face_orientation_cues(
+            table,
+            mask,
+            outline,
+        )
+
+        self.assertGreater(
+            spoke_cues["central_radial_spoke_score"],
+            table_cues["central_radial_spoke_score"],
+        )
+        self.assertGreater(
+            spoke_cues["centre_gradient_ratio"],
+            table_cues["centre_gradient_ratio"],
+        )
+        self.assertGreater(
+            table_cues["central_ring_edge_score"],
+            spoke_cues["central_ring_edge_score"],
+        )
+
     def test_rank_puts_ok_then_review_then_rejected_then_failed(self):
         assessments = [
             {"status": "rejected", "score": 0.9},
