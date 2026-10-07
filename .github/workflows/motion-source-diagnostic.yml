@@ -15,48 +15,56 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Inspect public progressive viewer metadata
+      - name: Decode public player constants and metadata shape
         run: |
           python - <<'PY'
           import json, re, urllib.request
-          targets = [
-              ("diajewel", "https://vision.diajewel360.com/imaged/PD-249203/0.json",
-               "https://vision.diajewel360.com/js/vision360.js"),
-              ("workshop", "https://data1.360view.link/data/1/imaged/2612250-YK-808/0.json?version=",
-               "https://workshop.360view.link/js/vision360.js"),
-          ]
-          for name, metadata_url, script_url in targets:
-              print("===", name, "===")
-              headers={"User-Agent":"Mozilla/5.0 SparklesIssue100/1","Accept":"*/*"}
-              try:
-                  with urllib.request.urlopen(urllib.request.Request(metadata_url, headers=headers), timeout=20) as r:
-                      raw=r.read()
-                  data=json.loads(raw)
-                  print("metadata_status=ok bytes=", len(raw))
-                  print("keys=", sorted(data.keys()))
-                  scramble=data.get("scramble")
-                  print("scramble_type=", type(scramble).__name__)
-                  print("scramble_repr=", repr(scramble)[:12000])
-                  print("width_height=", data.get("width"), data.get("height"))
-                  print("version=", data.get("version"), "quality=", data.get("quality"))
-              except Exception as exc:
-                  print("metadata_error=", type(exc).__name__, str(exc))
-              try:
-                  with urllib.request.urlopen(urllib.request.Request(script_url, headers=headers), timeout=20) as r:
-                      script=r.read().decode("utf-8","replace")
-                  print("script_status=ok bytes=", len(script))
-                  low=script.lower()
-                  hits=[]
-                  for term in ("scramble","decrypt","crypto","aes","fernet","key"):
-                      start=0
-                      while True:
-                          i=low.find(term,start)
-                          if i<0: break
-                          hits.append((i,term,script[max(0,i-500):min(len(script),i+1500)]))
-                          start=i+len(term)
-                  for i,term,context in sorted(hits)[:30]:
-                      print(f"--- {term}@{i} ---")
-                      print(context)
-              except Exception as exc:
-                  print("script_error=", type(exc).__name__, str(exc))
+          headers={"User-Agent":"Mozilla/5.0 SparklesIssue100/1","Accept":"*/*"}
+          metadata_url="https://vision.diajewel360.com/imaged/PD-249203/0.json"
+          script_url="https://vision.diajewel360.com/js/vision360.js"
+          with urllib.request.urlopen(urllib.request.Request(metadata_url,headers=headers),timeout=20) as r:
+              metadata=json.load(r)
+          with urllib.request.urlopen(urllib.request.Request(script_url,headers=headers),timeout=20) as r:
+              script=r.read().decode("utf-8","replace")
+          print("metadata_scramble=", metadata["scramble"])
+          marker="var _0xb946=["
+          start=script.find(marker)
+          if start < 0:
+              raise SystemExit("string table not found")
+          cursor=start+len("var _0xb946=")
+          depth=0
+          quote=None
+          escaped=False
+          end=None
+          for i,ch in enumerate(script[cursor:],cursor):
+              if quote:
+                  if escaped: escaped=False
+                  elif ch=="\\": escaped=True
+                  elif ch==quote: quote=None
+                  continue
+              if ch in ("'", '"'): quote=ch
+              elif ch=="[": depth+=1
+              elif ch=="]":
+                  depth-=1
+                  if depth==0:
+                      end=i+1
+                      break
+          table_text=script[cursor:end]
+          encoded=re.findall(r'"((?:\\.|[^"\\])*)"',table_text)
+          values=[bytes(x,"utf-8").decode("unicode_escape") for x in encoded]
+          print("table_len=",len(values))
+          for i in range(285,346):
+              if i < len(values):
+                  print(f"b946[{i}]={values[i]!r}")
+          for token in ("_0xc8cexba=", "_0xc8cexc1=", "_0xc8cexc4="):
+              pos=0
+              count=0
+              while True:
+                  pos=script.find(token,pos)
+                  if pos<0: break
+                  print(f"--- {token} occurrence {count} @{pos} ---")
+                  print(script[max(0,pos-900):min(len(script),pos+1800)])
+                  pos+=len(token)
+                  count+=1
+                  if count>=5: break
           PY
