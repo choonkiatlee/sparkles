@@ -163,6 +163,24 @@ class AsscherGeometryStabilityTests(unittest.TestCase):
             any(item["status"] != "ok" for item in crown)
         )
 
+    def test_unresolved_face_selection_uses_bounded_primary_view_window(self):
+        payload = {
+            "face_selection": {"status": "ambiguous"},
+            "frames": [{} for _ in range(256)],
+        }
+        selected = [
+            {"position": value}
+            for value in (18, 28, 25, 24, 236, 19, 238)
+        ]
+        window = stability._transfer_window(payload, selected)
+        self.assertEqual(window["centre_position"], 19)
+        self.assertEqual(window["radius_frames"], 39)
+        self.assertEqual(
+            window["provenance"],
+            "primary_geometry_view_circular_medoid_plus_73_lobe_radius",
+        )
+        self.assertLess(window["radius_frames"], 128)
+
     def test_wrap_summary_requires_both_cyclic_boundary_frames(self):
         rows = [
             {
