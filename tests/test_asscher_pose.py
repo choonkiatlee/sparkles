@@ -185,6 +185,10 @@ class AsscherPoseTests(unittest.TestCase):
             spoke_cues["central_ring_edge_score"],
         )
         self.assertGreater(
+            table_cues["table_boundary_continuity_score"],
+            spoke_cues["table_boundary_continuity_score"],
+        )
+        self.assertGreater(
             spoke_cues["central_diagonal_spoke_energy_ratio"],
             table_cues["central_diagonal_spoke_energy_ratio"],
         )
