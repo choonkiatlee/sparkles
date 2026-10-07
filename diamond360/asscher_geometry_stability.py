@@ -790,6 +790,34 @@ def _run_transfer(
     return payload, render_items
 
 
+def _write_primary_failure_qc(
+    selected, brightness_frames, masks, output
+):
+    images = []
+    for record, brightness, mask in zip(
+        selected, brightness_frames, masks
+    ):
+        grey = np.rint(
+            np.clip(brightness, 0.0, 1.0) * 255
+        ).astype(np.uint8)
+        rgb = np.repeat(grey[:, :, None], 3, axis=2)
+        rgb[~np.asarray(mask, bool)] = 0
+        image = Image.fromarray(rgb)
+        images.append(_annotate(
+            image,
+            (
+                f"src{record.get('source_index')} "
+                f"p{record.get('position')} "
+                f"{record.get('assessment', {}).get('status')}"
+            ),
+        ))
+    if not images:
+        return None
+    path = Path(output) / "primary-failure-qc.jpg"
+    wireframe._contact_sheet(images, path, columns=4)
+    return path.name
+
+
 def _annotate(image, text):
     image = image.copy()
     draw = ImageDraw.Draw(image)
@@ -899,12 +927,31 @@ def run_stone(
         json.dumps(primary, indent=2, allow_nan=False) + "\n"
     )
     if primary.get("scaffold") is None:
+        failure_qc = _write_primary_failure_qc(
+            selected, primary_brightness, primary_masks, output
+        )
         summary = {
             "schema_version": SCHEMA,
             "certificate": certificate,
             "status": "unavailable",
             "reason": primary.get("reason"),
             "primary_result_status": primary.get("status"),
+            "semantic_gauge_id": primary.get("semantic_gauge_id"),
+            "selected_source_indices": [
+                row.get("source_index") for row in selected
+            ],
+            "selected_positions": [
+                row.get("position") for row in selected
+            ],
+            "partial_step_controls": primary.get(
+                "partial_step_controls", {}
+            ),
+            "primary_failure_qc_path": failure_qc,
+            "interpretation": (
+                "The frozen #75 primary estimator failed on this retained "
+                "stone. #89 preserves the failure and does not tune or invent "
+                "a transfer scaffold."
+            ),
         }
         (output / "summary.json").write_text(
             json.dumps(summary, indent=2, allow_nan=False) + "\n"
