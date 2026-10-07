@@ -4,9 +4,12 @@ on:
   pull_request:
     paths:
       - "diamond_retrieval/**"
+      - "diamond360/d360_source.py"
       - "tests/test_diamond_retrieval*.py"
+      - "tests/test_d360_source.py"
       - "tests/fixtures/diamond_retrieval/**"
       - "docs/diamond-retrieval.md"
+      - "docs/superpowers/plans/**"
       - "pyproject.toml"
       - ".github/workflows/diamond-retrieval-contract.yml"
   workflow_dispatch:
@@ -29,6 +32,8 @@ jobs:
         run: |
           python -m unittest tests.test_diamond_retrieval -v
           python -m unittest tests.test_diamond_retrieval_retailers -v
+          python -m unittest tests.test_diamond_retrieval_motion -v
+          python -m unittest tests.test_d360_source -v
 
       - name: Record full-suite status
         continue-on-error: true
