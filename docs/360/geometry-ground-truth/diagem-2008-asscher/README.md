@@ -28,15 +28,9 @@ Structured facts live in [ground-truth.json](ground-truth.json). Every value is 
 
 ## Source media status
 
-The most useful embedded media are the better profile photograph around post 151/154 and DiaGem's manual-measurement images in posts 157–158. The public thread text is readable, but automated recovery of the original attachment bytes currently returns HTTP 403 from PriceScope in GitHub Actions. We therefore **do not** commit screenshots or guessed/recompressed substitutes.
+Exact PriceScope-served **inline preview bytes** are now archived for post 151 (`profile-photo.JPG`), post 157 (`manual-measurements.JPG`) and post 158 (`manual-measurements-last-line.JPG`). These are 300-pixel previews, not verified full/original attachments. Full attachment links currently require PriceScope login. URLs, attachment IDs, original filenames, dimensions, bytes and SHA-256 are recorded in `ground-truth.json`.
 
-When exact source bytes are recovered, commit the small number of originals directly beside this README and add their SHA-256 hashes to `ground-truth.json`:
-
-- `profile-photo.*` — photograph used for Sergey's post-156 estimate;
-- `manual-measurements.*` — DiaGem's post-157 manual facet table;
-- optionally `manual-measurements-last-line.*` — post 158 if it is a separate image.
-
-Until then, the text-grounded facts are usable as a partial test fixture and the missing image fields remain explicitly unresolved.
+Post 158 is a distinct corrected full table with the previously omitted pavilion row; it is not merely a crop of the last line. No numeric values were inferred/transcribed from these previews. See [media-recovery.md](media-recovery.md) for the remaining full-resolution recovery blockage.
 
 ## Intended first experiment
 
