@@ -175,3 +175,18 @@ CI workflow `.github/workflows/pricescope-external-benchmark.yml` downloads the
 pinned release asset, runs the adapter tests and blind benchmark, and uploads
 the detailed per-sample evidence as an artifact. Compact comparison findings
 are intended to be versioned here after the run has been inspected.
+
+
+## Structured expert observations
+
+Issue #82 normalizes the existing Karl_K / strmrdr evidence into a separate,
+provenance-preserving corpus:
+
+- `expert-observation.schema.json` — versioned record contract;
+- `expert-observations.json` — normalized observations and validation-use partition;
+- `expert-observations.md` — interpretation and anti-leakage rules.
+
+The original #64 catalog/manifest remains the source/media record of truth. The
+new corpus does not add subjective labels and does not map textual locality to
+#72 facet IDs yet. In v1, `source_wording` is explicitly the existing catalog
+paraphrase rather than a claimed verbatim transcription.
