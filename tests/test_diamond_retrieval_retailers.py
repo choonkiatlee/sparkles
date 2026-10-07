@@ -1,0 +1,384 @@
+import io
+import unittest
+from pathlib import Path
+
+from PIL import Image
+
+from diamond_retrieval import (
+    CERTIFICATE,
+    ROTATION,
+    STILL,
+    CompletionAssessment,
+    EvidenceStatus,
+    HttpResponse,
+    IdentityConflictError,
+    IdentityOutcome,
+    ResultStatus,
+    default_config,
+    retrieve_diamond,
+)
+from diamond_retrieval.retailers import (
+    DiyonaListingProvider,
+    QualityDiamondsListingProvider,
+)
+
+
+FIXTURES = Path(__file__).parent / "fixtures" / "diamond_retrieval"
+DIYONA_URL = "https://diyona.com/pages/diamond-detail?sku=B934F4533"
+QD_URL = (
+    "https://www.qualitydiamonds.co.uk/loose-diamonds/"
+    "buy-loose-diamonds?d=133%2FF74D0EF67"
+)
+QD_STILL = (
+    "https://assets-images-saas.nivoda.com/"
+    "ba549dd3-96aa-4871-9a40-42e54d23ce72.jpg"
+    "?c_id=95095175-f466-48c3-b90d-8979575bb8ae"
+    "&d_id=8ea0dc8e-333f-48a1-a8a5-4881d40a4758"
+    "&f_id=24c9640d-d795-498f-b870-f69e02eb85fa&type=csv"
+)
+
+
+class FakeHttpClient:
+    def __init__(self, responses):
+        self.responses = dict(responses)
+        self.calls = []
+
+    def get(self, url, *, timeout):
+        self.calls.append(url)
+        value = self.responses.get(url)
+        if value is None:
+            return HttpResponse(404, url, {"Content-Type": "text/plain"}, b"missing")
+        if isinstance(value, HttpResponse):
+            return value
+        content, media_type = value
+        return HttpResponse(200, url, {"Content-Type": media_type}, content)
+
+
+def _fixture(name):
+    return (FIXTURES / name).read_bytes()
+
+
+def _jpeg_bytes():
+    buffer = io.BytesIO()
+    image = Image.new("RGB", (3, 2), (230, 230, 230))
+    image.putpixel((1, 0), (80, 80, 80))
+    image.putpixel((1, 1), (120, 120, 120))
+    image.save(buffer, format="JPEG", quality=95)
+    return buffer.getvalue()
+
+
+def _pdf_bytes(
+    *,
+    report,
+    shape,
+    carat,
+    colour,
+    clarity,
+    dimensions,
+    include_report=True,
+):
+    lines = [
+        "INTERNATIONAL GEMOLOGICAL INSTITUTE",
+        "LABORATORY GROWN DIAMOND REPORT",
+    ]
+    if include_report:
+        lines.append(f"REPORT NUMBER {report}")
+    lines.extend(
+        [
+            f"SHAPE AND CUT {shape}",
+            "MEASUREMENTS " + " x ".join(str(value) for value in dimensions) + " mm",
+            f"CARAT WEIGHT {carat} Carats",
+            f"COLOR GRADE {colour}",
+            f"CLARITY GRADE {clarity}",
+        ]
+    )
+    stream = ["BT", "/F1 10 Tf", "50 760 Td"]
+    for index, line in enumerate(lines):
+        escaped = line.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+        if index:
+            stream.append("0 -16 Td")
+        stream.append(f"({escaped}) Tj")
+    stream.append("ET")
+    stream_bytes = "\n".join(stream).encode("ascii")
+
+    objects = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        (
+            b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
+            b"/Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>"
+        ),
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+        b"<< /Length %d >>\nstream\n" % len(stream_bytes)
+        + stream_bytes
+        + b"\nendstream",
+    ]
+    output = bytearray(b"%PDF-1.4\n")
+    offsets = [0]
+    for number, obj in enumerate(objects, 1):
+        offsets.append(len(output))
+        output += f"{number} 0 obj\n".encode() + obj + b"\nendobj\n"
+    xref = len(output)
+    output += f"xref\n0 {len(objects) + 1}\n".encode()
+    output += b"0000000000 65535 f \n"
+    for offset in offsets[1:]:
+        output += f"{offset:010d} 00000 n \n".encode()
+    output += (
+        f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\n"
+        f"startxref\n{xref}\n%%EOF\n"
+    ).encode()
+    return bytes(output)
+
+
+def _diyona_pdf(report="LG800667394", include_report=True):
+    return _pdf_bytes(
+        report=report,
+        shape="ROUND BRILLIANT",
+        carat="3.05",
+        colour="E",
+        clarity="VVS2",
+        dimensions=("9.23", "9.28", "5.74"),
+        include_report=include_report,
+    )
+
+
+def _qd_pdf(report="LG713574578", include_report=True):
+    return _pdf_bytes(
+        report=report,
+        shape="OVAL BRILLIANT",
+        carat="3.32",
+        colour="D",
+        clarity="VVS1",
+        dimensions=("12.00", "8.46", "5.13"),
+        include_report=include_report,
+    )
+
+
+class CertificateOnlyPolicy:
+    def select(self, listing, reference):
+        return reference.kind == CERTIFICATE
+
+    def assess_completion(self, listing, evidence, attempts, comparisons):
+        outcomes = {item.field: item.outcome for item in comparisons}
+        certificate_ok = any(
+            item.kind == CERTIFICATE and item.status == EvidenceStatus.SUCCESS
+            for item in evidence
+        )
+        complete = (
+            certificate_ok
+            and outcomes.get("report_number") == IdentityOutcome.AGREEMENT
+            and outcomes.get("lab") == IdentityOutcome.AGREEMENT
+        )
+        return CompletionAssessment(
+            complete,
+            () if complete else ("matched certificate required",),
+        )
+
+
+class RetailerProviderTests(unittest.TestCase):
+    def test_diyona_exact_url_fixture(self):
+        http = FakeHttpClient(
+            {
+                DIYONA_URL: (
+                    _fixture("diyona-detail.html"),
+                    "text/html; charset=utf-8",
+                )
+            }
+        )
+        record = DiyonaListingProvider(http).fetch(DIYONA_URL)
+        self.assertEqual(record.metadata.retailer_sku, "B934F4533")
+        self.assertEqual(record.metadata.report_number, "LG800667394")
+        self.assertEqual(record.metadata.shape, "Round")
+        self.assertEqual(str(record.metadata.carat), "3.05")
+        self.assertEqual(record.metadata.colour, "E")
+        self.assertEqual(record.metadata.clarity, "VVS2")
+        self.assertEqual(record.metadata.dimensions, (9.23, 9.28, 5.74))
+        self.assertEqual(str(record.metadata.price), "724.45")
+        self.assertEqual(record.metadata.currency, "USD")
+        self.assertEqual(
+            record.metadata.tax_basis, "displayed price; tax basis not stated"
+        )
+        self.assertEqual(
+            [ref.kind for ref in record.references],
+            [CERTIFICATE, ROTATION],
+        )
+        self.assertIn("[redacted]", record.raw_responses[0].body)
+        self.assertNotIn("fixture-public-key", record.raw_responses[0].body)
+
+    def test_quality_diamonds_exact_url_fixture(self):
+        http = FakeHttpClient(
+            {
+                QD_URL: (
+                    _fixture("quality-diamonds-detail.html"),
+                    "text/html; charset=utf-8",
+                )
+            }
+        )
+        record = QualityDiamondsListingProvider(http).fetch(QD_URL)
+        self.assertEqual(record.metadata.retailer_sku, "133/F74D0EF67")
+        self.assertEqual(record.metadata.report_number, "LG713574578")
+        self.assertEqual(record.metadata.shape, "Oval")
+        self.assertEqual(str(record.metadata.carat), "3.32")
+        self.assertEqual(record.metadata.origin, "lab-grown")
+        self.assertEqual(record.metadata.dimensions, (12.0, 8.46, 5.13))
+        self.assertEqual(str(record.metadata.price), "1330.00")
+        self.assertEqual(record.metadata.currency, "GBP")
+        self.assertEqual(record.metadata.tax_basis, "inc. VAT")
+        self.assertEqual(str(record.metadata.extra["price_ex_vat_gbp"]), "1108.33")
+        self.assertEqual(
+            [ref.kind for ref in record.references],
+            [CERTIFICATE, STILL, ROTATION],
+        )
+        self.assertEqual(record.references[1].locator, QD_STILL)
+
+    def test_providers_reject_non_exact_routes(self):
+        http = FakeHttpClient({})
+        diyona = DiyonaListingProvider(http)
+        quality = QualityDiamondsListingProvider(http)
+        self.assertFalse(diyona.supports("https://diyona.com/pages/diamond-detail"))
+        self.assertFalse(diyona.supports("https://diyona.com/search?sku=B934F4533"))
+        self.assertFalse(
+            quality.supports("https://www.qualitydiamonds.co.uk/loose-diamonds")
+        )
+
+
+class RetailerEndToEndTests(unittest.TestCase):
+    def qd_http(self, *, pdf=None, pdf_status=200):
+        pdf_url = "https://api.igi.org/viewpdf.php?r=LG713574578"
+        responses = {
+            QD_URL: (
+                _fixture("quality-diamonds-detail.html"),
+                "text/html; charset=utf-8",
+            ),
+            QD_STILL: (_jpeg_bytes(), "image/jpeg"),
+        }
+        if pdf_status == 200:
+            responses[pdf_url] = (pdf if pdf is not None else _qd_pdf(), "application/pdf")
+        else:
+            responses[pdf_url] = HttpResponse(
+                pdf_status, pdf_url, {"Content-Type": "text/plain"}, b"missing"
+            )
+        return FakeHttpClient(responses)
+
+    def diyona_http(self, *, pdf=None):
+        pdf_url = "https://api.igi.org/viewpdf.php?r=LG800667394"
+        return FakeHttpClient(
+            {
+                DIYONA_URL: (
+                    _fixture("diyona-detail.html"),
+                    "text/html; charset=utf-8",
+                ),
+                pdf_url: (
+                    pdf if pdf is not None else _diyona_pdf(),
+                    "application/pdf",
+                ),
+            }
+        )
+
+    def test_default_composition_quality_diamonds_returns_certificate_still_and_partial_motion(self):
+        http = self.qd_http()
+        result = retrieve_diamond(QD_URL, config=default_config(http))
+        self.assertEqual(result.status, ResultStatus.PARTIAL)
+        self.assertEqual(len(result.certificates), 1)
+        self.assertEqual(len(result.stills), 1)
+        self.assertEqual(result.certificates[0].payload, _qd_pdf())
+        self.assertEqual(result.stills[0].payload, _jpeg_bytes())
+        self.assertEqual(result.stills[0].dimensions, (3, 2))
+        self.assertIn(
+            EvidenceStatus.UNSUPPORTED,
+            [attempt.status for attempt in result.attempts],
+        )
+        outcomes = {item.field: item.outcome for item in result.identity_comparisons}
+        for field in (
+            "report_number",
+            "lab",
+            "origin",
+            "shape",
+            "carat",
+            "colour",
+            "clarity",
+            "dimensions",
+        ):
+            self.assertEqual(outcomes[field], IdentityOutcome.AGREEMENT)
+
+    def test_default_composition_diyona_returns_matched_certificate_and_partial_motion(self):
+        http = self.diyona_http()
+        result = retrieve_diamond(DIYONA_URL, config=default_config(http))
+        self.assertEqual(result.status, ResultStatus.PARTIAL)
+        self.assertEqual(len(result.certificates), 1)
+        self.assertEqual(result.certificates[0].extracted_fields["report_number"], "LG800667394")
+        outcomes = {item.field: item.outcome for item in result.identity_comparisons}
+        self.assertEqual(outcomes["shape"], IdentityOutcome.AGREEMENT)
+        self.assertEqual(outcomes["report_number"], IdentityOutcome.AGREEMENT)
+
+    def test_certificate_only_policy_is_complete_and_never_fetches_still_or_motion(self):
+        http = self.qd_http()
+        config = default_config(http)
+        config = type(config)(
+            providers=config.providers,
+            resolvers=config.resolvers,
+            policy=CertificateOnlyPolicy(),
+            downloaders=config.downloaders,
+            processors=config.processors,
+            identity_validator=config.identity_validator,
+            assembler=config.assembler,
+            max_resolution_depth=config.max_resolution_depth,
+        )
+        result = retrieve_diamond(QD_URL, config=config)
+        self.assertEqual(result.status, ResultStatus.COMPLETE)
+        self.assertEqual(
+            http.calls,
+            [
+                QD_URL,
+                "https://api.igi.org/viewpdf.php?r=LG713574578",
+            ],
+        )
+        statuses = {item.kind: item.status for item in result.attempts if item.status == EvidenceStatus.NOT_REQUESTED}
+        self.assertEqual(statuses[STILL], EvidenceStatus.NOT_REQUESTED)
+        self.assertEqual(statuses[ROTATION], EvidenceStatus.NOT_REQUESTED)
+
+    def test_mismatched_certificate_raises_source_linked_identity_error(self):
+        http = self.qd_http(pdf=_qd_pdf(report="LG999999999"))
+        with self.assertRaises(IdentityConflictError) as caught:
+            retrieve_diamond(QD_URL, config=default_config(http))
+        report = next(
+            item for item in caught.exception.comparisons if item.field == "report_number"
+        )
+        self.assertEqual(report.outcome, IdentityOutcome.CONFLICT)
+        locators = {step.locator for step in report.provenance}
+        self.assertIn(QD_URL, locators)
+        self.assertIn(
+            "https://api.igi.org/viewpdf.php?r=LG713574578",
+            locators,
+        )
+
+    def test_valid_unparseable_pdf_bytes_are_retained_with_extraction_failure(self):
+        http = self.qd_http(pdf=_qd_pdf(include_report=False))
+        result = retrieve_diamond(QD_URL, config=default_config(http))
+        self.assertEqual(len(result.certificates), 1)
+        self.assertEqual(
+            result.certificates[0].status,
+            EvidenceStatus.EXTRACTION_FAILED,
+        )
+        self.assertTrue(result.certificates[0].payload.startswith(b"%PDF-"))
+        self.assertEqual(result.status, ResultStatus.PARTIAL)
+        self.assertIn(
+            EvidenceStatus.EXTRACTION_FAILED,
+            [attempt.status for attempt in result.attempts],
+        )
+
+    def test_missing_pdf_preserves_useful_partial_listing_and_still(self):
+        http = self.qd_http(pdf_status=404)
+        result = retrieve_diamond(QD_URL, config=default_config(http))
+        self.assertEqual(result.metadata.report_number, "LG713574578")
+        self.assertEqual(len(result.certificates), 0)
+        self.assertEqual(len(result.stills), 1)
+        self.assertEqual(result.status, ResultStatus.PARTIAL)
+        self.assertIn(
+            EvidenceStatus.MISSING,
+            [attempt.status for attempt in result.attempts],
+        )
+
+
+if __name__ == "__main__":
+    unittest.main()
