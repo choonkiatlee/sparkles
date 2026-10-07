@@ -16,6 +16,7 @@ from diamond_retrieval import (
     RawEvidence,
 )
 from diamond_retrieval.motion_sources import (
+    D360RotationDownloader,
     DiajewelRotationDownloader,
     WorkshopRotationDownloader,
 )
@@ -29,7 +30,9 @@ from diamond_retrieval.motion import (
 
 
 FIXTURES = Path(__file__).parent / "fixtures" / "diamond_retrieval"
-AUDITS = json.loads((FIXTURES / "motion-audits.json").read_text())["audits"]
+_MOTION_FIXTURE = json.loads((FIXTURES / "motion-audits.json").read_text())
+AUDITS = _MOTION_FIXTURE["audits"]
+D360_AUDITS = _MOTION_FIXTURE["d360_audits"]
 
 
 def _jpeg(index: int) -> bytes:
@@ -96,6 +99,45 @@ def _raw_from_audit(audit, *, corrupt_index=None, omit_batch=None, scramble=None
     )
 
 
+
+
+
+
+def _d360_source_responses(d360_audit, *, item_id="NEW-D360-1", still_matches=True):
+    from diamond360.d360_source import KNOWN_SOURCES, PACK_COUNTS, PACK_START_SERIALS
+
+    scramble = KNOWN_SOURCES[d360_audit["item_id"]]["scramble"]
+    targets = ordered_positions(scramble)
+    root = f"https://media.d360.us/imaged/{item_id}"
+    still = _jpeg(0)
+    bootstrap = {
+        "width": 8,
+        "height": 8,
+        "quality": 4,
+        "scramble": d360_audit["encrypted_scramble"],
+        "image": base64.b64encode(still if still_matches else _jpeg(1)).decode("ascii"),
+    }
+    responses = {
+        root + "/metadata.json": (b'{"fixture":true}', "application/json"),
+        root + "/0.json": (
+            json.dumps(bootstrap, separators=(",", ":")).encode(),
+            "application/json",
+        ),
+        root + "/still.jpg": (still, "image/jpeg"),
+    }
+    for batch, (count, start_serial) in enumerate(
+        zip(PACK_COUNTS, PACK_START_SERIALS), 1
+    ):
+        payload = []
+        for stored_position in range(count):
+            serial = start_serial + stored_position
+            source_index = targets[serial - 1]
+            payload.append(base64.b64encode(_jpeg(source_index)).decode("ascii"))
+        responses[f"{root}/{batch}.json"] = (
+            json.dumps(payload, separators=(",", ":")).encode(),
+            "application/json",
+        )
+    return responses
 
 
 class FakeHttpClient:
@@ -205,6 +247,47 @@ class ProgressiveMotionContractTests(unittest.TestCase):
                 _raw_from_audit(AUDITS[0], corrupt_index=137)
             )
 
+
+
+    def test_d360_public_scramble_decodes_to_legacy_audited_maps(self):
+        from diamond360.d360_source import KNOWN_SOURCES
+
+        for audit in D360_AUDITS:
+            with self.subTest(item_id=audit["item_id"]):
+                self.assertEqual(
+                    decode_vision360_scramble(audit["encrypted_scramble"]),
+                    KNOWN_SOURCES[audit["item_id"]]["scramble"],
+                )
+
+    def test_d360_downloader_accepts_new_item_id_without_allowlist(self):
+        audit = D360_AUDITS[0]
+        item_id = "NEW-D360-1"
+        viewer = f"https://d360.tech/view.html?d={item_id}"
+        http = FakeHttpClient(_d360_source_responses(audit, item_id=item_id))
+        downloader = D360RotationDownloader(http)
+        ref = _reference("d360-tech", viewer)
+
+        self.assertTrue(downloader.supports(ref))
+        raw = downloader.download(ref)
+        rotation = ProgressiveRotationProcessor().process(raw)[0]
+        self.assertEqual([frame.source_index for frame in rotation.frames], list(range(256)))
+        self.assertEqual(rotation.frames[0].payload, _jpeg(0))
+        root = f"https://media.d360.us/imaged/{item_id}"
+        self.assertEqual(
+            http.calls,
+            [root + "/metadata.json", root + "/0.json", root + "/still.jpg"]
+            + [f"{root}/{batch}.json" for batch in range(1, 8)],
+        )
+
+    def test_d360_preview_must_match_still(self):
+        audit = D360_AUDITS[0]
+        item_id = "NEW-D360-1"
+        viewer = f"https://d360.tech/view.html?d={item_id}"
+        http = FakeHttpClient(
+            _d360_source_responses(audit, item_id=item_id, still_matches=False)
+        )
+        with self.assertRaises(InvalidPayloadError):
+            D360RotationDownloader(http).download(_reference("d360-tech", viewer))
 
     def test_diajewel_downloader_accepts_new_exact_item_id_and_uses_public_version(self):
         audit = AUDITS[0]
