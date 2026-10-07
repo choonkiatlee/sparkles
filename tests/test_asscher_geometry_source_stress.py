@@ -112,7 +112,7 @@ class AsscherGeometrySourceStressTests(unittest.TestCase):
                 ]
             )
 
-    def test_jpeg_condition_remains_jpeg_and_is_hash_valid(self):
+    def test_jpeg_condition_is_single_roundtrip_then_lossless_serialization(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             source = root / "source"
@@ -145,8 +145,10 @@ class AsscherGeometrySourceStressTests(unittest.TestCase):
             )
             row = derived["frames"][0]
             derived_path = root / "derived" / row["path"]
-            self.assertEqual(derived_path.suffix, ".jpg")
+            self.assertEqual(derived_path.suffix, ".png")
             self.assertEqual(row["sha256"], stress._sha256_file(derived_path))
+            with Image.open(derived_path) as decoded:
+                self.assertEqual(decoded.mode, "RGB")
 
     def test_support_delta_is_componentwise_not_a_composite_score(self):
         reference = {
