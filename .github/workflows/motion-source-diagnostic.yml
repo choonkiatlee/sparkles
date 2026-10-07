@@ -1,0 +1,62 @@
+name: motion-source-diagnostic
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/motion-source-diagnostic.yml"
+  workflow_dispatch:
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Inspect public progressive viewer metadata
+        run: |
+          python - <<'PY'
+          import json, re, urllib.request
+          targets = [
+              ("diajewel", "https://vision.diajewel360.com/imaged/PD-249203/0.json",
+               "https://vision.diajewel360.com/js/vision360.js"),
+              ("workshop", "https://data1.360view.link/data/1/imaged/2612250-YK-808/0.json?version=",
+               "https://workshop.360view.link/js/vision360.js"),
+          ]
+          for name, metadata_url, script_url in targets:
+              print("===", name, "===")
+              headers={"User-Agent":"Mozilla/5.0 SparklesIssue100/1","Accept":"*/*"}
+              try:
+                  with urllib.request.urlopen(urllib.request.Request(metadata_url, headers=headers), timeout=20) as r:
+                      raw=r.read()
+                  data=json.loads(raw)
+                  print("metadata_status=ok bytes=", len(raw))
+                  print("keys=", sorted(data.keys()))
+                  scramble=data.get("scramble")
+                  print("scramble_type=", type(scramble).__name__)
+                  print("scramble_repr=", repr(scramble)[:12000])
+                  print("width_height=", data.get("width"), data.get("height"))
+                  print("version=", data.get("version"), "quality=", data.get("quality"))
+              except Exception as exc:
+                  print("metadata_error=", type(exc).__name__, str(exc))
+              try:
+                  with urllib.request.urlopen(urllib.request.Request(script_url, headers=headers), timeout=20) as r:
+                      script=r.read().decode("utf-8","replace")
+                  print("script_status=ok bytes=", len(script))
+                  low=script.lower()
+                  hits=[]
+                  for term in ("scramble","decrypt","crypto","aes","fernet","key"):
+                      start=0
+                      while True:
+                          i=low.find(term,start)
+                          if i<0: break
+                          hits.append((i,term,script[max(0,i-500):min(len(script),i+1500)]))
+                          start=i+len(term)
+                  for i,term,context in sorted(hits)[:30]:
+                      print(f"--- {term}@{i} ---")
+                      print(context)
+              except Exception as exc:
+                  print("script_error=", type(exc).__name__, str(exc))
+          PY
