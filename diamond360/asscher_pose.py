@@ -10,6 +10,7 @@ from __future__ import annotations
 import math
 
 import numpy as np
+from scipy import ndimage as ndi
 
 from . import normalized_geometry
 from .geometry import fit_asscher_outline
@@ -283,6 +284,80 @@ def assess_frame(mask, valid_mask=None, *, valid_fraction=None):
             "minimum_image_edge_margin_px": margin_px,
             "valid_fraction_of_mask": valid_fraction,
         },
+    }
+
+
+
+def face_orientation_cues(brightness, mask, outline):
+    """Return optical diagnostics for crown-vs-opposite-face review.
+
+    These cues are intentionally *not* part of the v1 suitability score. They
+    are measured only after a geometric outline exists so human-labelled
+    crown/opposite-face examples can test whether a generic discriminator is
+    possible without baking sequence indices into the selector.
+    """
+    brightness = np.asarray(brightness, float)
+    mask = np.asarray(mask, bool)
+    if brightness.ndim != 2 or brightness.shape != mask.shape:
+        raise ValueError("brightness and mask must be matching 2-D arrays")
+    if not np.isfinite(brightness[mask]).all():
+        raise ValueError("brightness contains non-finite values on mask support")
+
+    cx, cy = map(float, outline["centre_xy"])
+    diameter = max(float(outline["effective_diameter_px"]), 1e-12)
+    yy, xx = np.indices(mask.shape, dtype=float)
+    dx = xx - cx
+    dy = yy - cy
+    radius = np.hypot(dx, dy)
+    radius_fraction = radius / diameter
+
+    gx = ndi.sobel(brightness, axis=1, mode="nearest") / 8.0
+    gy = ndi.sobel(brightness, axis=0, mode="nearest") / 8.0
+    magnitude = np.hypot(gx, gy)
+
+    annulus = mask & (radius_fraction >= 0.04) & (radius_fraction <= 0.30)
+    good = annulus & (magnitude > 1e-9) & (radius > 1e-9)
+    if int(good.sum()) < 32:
+        return {
+            "status": "insufficient_support",
+            "central_radial_spoke_score": None,
+            "central_ring_edge_score": None,
+            "centre_gradient_ratio": None,
+            "support_pixels": int(good.sum()),
+        }
+
+    ux = dx[good] / radius[good]
+    uy = dy[good] / radius[good]
+    ngx = gx[good] / magnitude[good]
+    ngy = gy[good] / magnitude[good]
+    # A radial facet junction has an edge tangent pointing toward the centre,
+    # hence its image gradient is approximately tangential to the radius.
+    radial_alignment = 1.0 - np.abs(ngx * ux + ngy * uy)
+    weights = magnitude[good]
+    spoke_score = float(np.average(radial_alignment, weights=weights))
+    ring_score = float(1.0 - spoke_score)
+
+    centre = mask & (radius_fraction <= 0.08)
+    comparison = mask & (radius_fraction >= 0.10) & (radius_fraction <= 0.24)
+    centre_gradient = float(np.mean(magnitude[centre])) if np.any(centre) else 0.0
+    comparison_gradient = (
+        float(np.mean(magnitude[comparison])) if np.any(comparison) else 0.0
+    )
+    gradient_ratio = float(
+        centre_gradient / max(comparison_gradient, 1e-12)
+    )
+
+    return {
+        "status": "ok",
+        "central_radial_spoke_score": spoke_score,
+        "central_ring_edge_score": ring_score,
+        "centre_gradient_ratio": gradient_ratio,
+        "support_pixels": int(good.sum()),
+        "radius_band_diameter_fraction": [0.04, 0.30],
+        "interpretation": (
+            "diagnostic only: higher radial-spoke score means central edges "
+            "more often run toward the fitted centre; not a crown classifier"
+        ),
     }
 
 
