@@ -13,6 +13,7 @@ import argparse
 from collections import Counter
 from copy import deepcopy
 import hashlib
+from io import BytesIO
 import json
 import tempfile
 from pathlib import Path
@@ -162,8 +163,18 @@ def apply_perturbation(image, spec):
             raise ValueError("contrast factor must be positive")
         return ImageEnhance.Contrast(image).enhance(factor)
     if kind == "jpeg_recompress":
-        # Pixel transform is performed by the save/decode round-trip below.
-        return image.copy()
+        buffer = BytesIO()
+        image.save(
+            buffer,
+            format="JPEG",
+            quality=int(spec["quality"]),
+            subsampling=int(spec["subsampling"]),
+            optimize=False,
+            progressive=False,
+        )
+        buffer.seek(0)
+        with Image.open(buffer) as decoded:
+            return decoded.convert("RGB").copy()
     raise ValueError(f"unsupported perturbation kind: {kind}")
 
 
@@ -171,17 +182,7 @@ def _write_perturbed_image(source_path, destination, spec):
     with Image.open(source_path) as image:
         transformed = apply_perturbation(image, spec)
         destination.parent.mkdir(parents=True, exist_ok=True)
-        if spec["kind"] == "jpeg_recompress":
-            transformed.save(
-                destination,
-                format="JPEG",
-                quality=int(spec["quality"]),
-                subsampling=int(spec["subsampling"]),
-                optimize=False,
-                progressive=False,
-            )
-        else:
-            transformed.save(destination, format="PNG", compress_level=6)
+        transformed.save(destination, format="PNG", compress_level=6)
 
 
 def derive_perturbed_source(
@@ -218,10 +219,7 @@ def derive_perturbed_source(
     for frame in original.get("frames", []):
         relative = Path(frame["path"])
         source_path = source_root / relative
-        if spec["kind"] == "jpeg_recompress":
-            derived_relative = relative.with_suffix(".jpg")
-        else:
-            derived_relative = relative.with_suffix(".png")
+        derived_relative = relative.with_suffix(".png")
         destination_path = destination / derived_relative
         _write_perturbed_image(source_path, destination_path, spec)
 
