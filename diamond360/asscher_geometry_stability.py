@@ -230,16 +230,20 @@ def _leave_one_out(
                 ],
             },
         )
-        filename = (
-            f"leave-out-{int(omitted.get('position', omitted_index)):04d}.json"
-        )
+        stem = f"leave-out-{int(omitted.get('position', omitted_index)):04d}"
+        filename = stem + ".json"
+        candidate_filename = stem + "-wireframe.json"
         (output / filename).write_text(
             json.dumps(record, indent=2, allow_nan=False) + "\n"
+        )
+        (output / candidate_filename).write_text(
+            json.dumps(candidate, indent=2, allow_nan=False) + "\n"
         )
         runs.append({
             "omitted_source_index": omitted.get("source_index"),
             "omitted_position": omitted.get("position"),
             "validation_path": filename,
+            "candidate_wireframe_path": candidate_filename,
             **summarize_validation_record(record),
         })
 
@@ -578,6 +582,16 @@ def _wrap_summary(rows, sequence_size):
         if row.get("position") is not None
     }
     last = int(sequence_size) - 1
+    gauge_turns = sorted({
+        int(row["gauge_quarter_turn"])
+        for row in rows
+        if row.get("gauge_quarter_turn") in (0, 1, 2, 3)
+    })
+    gauge_ids = {
+        row.get("semantic_gauge_id")
+        for row in rows
+        if row.get("semantic_gauge_id") is not None
+    }
     return {
         "sequence_size": int(sequence_size),
         "contains_position_0": 0 in positions,
@@ -590,6 +604,9 @@ def _wrap_summary(rows, sequence_size):
             row.get("gauge_status") not in ("available", "review")
             for row in rows
         ),
+        "gauge_quarter_turns_present": gauge_turns,
+        "semantic_gauge_ids": sorted(gauge_ids),
+        "one_semantic_gauge_for_all_frames": len(gauge_ids) <= 1,
         "refit_count": sum(bool(row.get("refit_performed")) for row in rows),
         "semantic_identity_policy": "fixed_primary_scaffold_ids_no_reassignment",
     }
@@ -732,13 +749,17 @@ def _write_stability_qc(primary_result, stability_output, output):
             "primary",
         ))
     for run in stability_output.get("runs", []):
-        path = Path(output) / "stability" / run["validation_path"]
-        record = json.loads(path.read_text())
-        # Validation records intentionally do not duplicate scaffolds. The
-        # numeric QC label therefore sits beside the source-free primary ruler.
-        image = topology.render_scaffold(
-            primary_result["scaffold"], size=420
+        candidate_path = (
+            Path(output) / "stability" / run["candidate_wireframe_path"]
         )
+        candidate = json.loads(candidate_path.read_text())
+        scaffold = candidate.get("scaffold")
+        if scaffold is None:
+            image = topology.render_scaffold(
+                primary_result["scaffold"], size=420
+            )
+        else:
+            image = topology.render_scaffold(scaffold, size=420)
         fraction = run.get("max_boundary_displacement_tier_fraction")
         label = (
             f"omit {run.get('omitted_source_index')} "
