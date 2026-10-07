@@ -92,8 +92,12 @@ jobs:
                   stone.get("geometry_unavailable_condition_count"),
                   "gauge:",
                   stone.get("gauge_failure_condition_count"),
-                  "swaps:",
-                  stone.get("semantic_identity_swap_count"),
+                  "gauge-changes:",
+                  stone.get("gauge_change_condition_count"),
+                  "id-set-changes:",
+                  stone.get("semantic_id_set_change_condition_count"),
+                  "support-reassignments:",
+                  stone.get("support_semantic_reassignment_condition_count"),
               )
               for row in stone.get("conditions", []):
                   geometry = row["geometry_comparison"]
@@ -116,6 +120,7 @@ jobs:
                   print(
                       "  poor-view",
                       row["distance_bin_frames"],
+                      row["window_scope"],
                       "n=", row["frame_count"],
                       "pose=", row["mean_pose_score"],
                       "support=", row["mean_crown_boundary_support_fraction"],
