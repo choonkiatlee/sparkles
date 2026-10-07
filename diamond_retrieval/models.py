@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Mapping, NewType, Sequence
+from typing import Any, Mapping, NewType
 
 EvidenceKind = NewType("EvidenceKind", str)
 CERTIFICATE = EvidenceKind("certificate")
@@ -21,6 +21,7 @@ class EvidenceStatus(str, Enum):
     MISSING = "missing"
     DOWNLOAD_FAILED = "download_failed"
     PROCESSING_FAILED = "processing_failed"
+    EXTRACTION_FAILED = "extraction_failed"
     INVALID_PAYLOAD = "invalid_payload"
     RESOLUTION_FAILED = "resolution_failed"
     RESOLUTION_LIMIT = "resolution_limit"
