@@ -196,12 +196,29 @@ def analyse_processed_sequence(processed, output, *, persist_canonical=True):
             source_mask,
             valid_fraction=valid_fraction,
         )
+        source_camera_path = record.get("camera_original_path")
+        if assessment["status"] != "failed" and source_camera_path:
+            source_rgb = np.asarray(
+                Image.open(processed / source_camera_path).convert("RGB"),
+                dtype=float,
+            ) / 255.0
+            source_brightness = (
+                source_rgb
+                @ np.array([0.2126, 0.7152, 0.0722], dtype=float)
+            )
+            assessment["face_orientation_cues"] = (
+                asscher_pose.face_orientation_cues(
+                    source_brightness,
+                    source_mask,
+                    assessment["outline"],
+                )
+            )
 
         result = {
             "source_index": record.get("source_index"),
             "position": record.get("position"),
             "name": record.get("name"),
-            "source_camera_path": record.get("camera_original_path"),
+            "source_camera_path": source_camera_path,
             "assessment": assessment,
             "canonical": None,
         }
