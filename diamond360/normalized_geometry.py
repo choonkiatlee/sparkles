@@ -74,6 +74,8 @@ def normalize_frame(
     target_diameter=DEFAULT_TARGET_DIAMETER,
     margin_fraction=DEFAULT_MARGIN_FRACTION,
     lowpass_sigma_px=DEFAULT_LOWPASS_SIGMA_PX,
+    centre_xy=None,
+    rotation_deg=0.0,
 ):
     """Normalize one registered frame onto the declared spatial transfer."""
     spec = specification(target_diameter, margin_fraction, lowpass_sigma_px)
@@ -95,7 +97,19 @@ def normalize_frame(
 
     source_diameter = effective_diameter(mask)
     scale = float(target_diameter / source_diameter)
-    cy, cx = _centroid(mask)
+    centroid_y, centroid_x = _centroid(mask)
+    if centre_xy is None:
+        cx, cy = centroid_x, centroid_y
+        centering_applied = "silhouette centroid"
+    else:
+        centre_xy = np.asarray(centre_xy, float)
+        if centre_xy.shape != (2,) or not np.isfinite(centre_xy).all():
+            raise ValueError("centre_xy must be a finite [x, y] pair")
+        cx, cy = map(float, centre_xy)
+        centering_applied = "explicit image-plane centre"
+    if not np.isfinite(rotation_deg):
+        raise ValueError("rotation_deg must be finite")
+    rotation_deg = float(rotation_deg)
     anti_alias_sigma = (
         max(0.0, 0.5 * (1.0 / scale - 1.0))
         if scale < 1.0
@@ -123,9 +137,32 @@ def normalize_frame(
 
     n = spec["canvas_size_px"]
     oc = (n - 1) / 2.0
+
+    # source -> canonical is a similarity transform only.  Rotation is
+    # deliberately not allowed to introduce anisotropic scale, shear, or
+    # projective rectification because those would hide projection evidence.
+    angle = math.radians(-rotation_deg)
+    cosine, sine = math.cos(angle), math.sin(angle)
+    rotation = np.array(
+        [[cosine, -sine], [sine, cosine]],
+        dtype=float,
+    )
+    linear = scale * rotation
+    centre = np.array([cx, cy], dtype=float)
+    translation = np.array([oc, oc], dtype=float) - linear @ centre
+    source_to_canonical = np.eye(3, dtype=float)
+    source_to_canonical[:2, :2] = linear
+    source_to_canonical[:2, 2] = translation
+    canonical_to_source = np.linalg.inv(source_to_canonical)
+
     oy, ox = np.indices((n, n), dtype=float)
-    iy = cy + (oy - oc) / scale
-    ix = cx + (ox - oc) / scale
+    homogeneous = np.stack(
+        [ox.ravel(), oy.ravel(), np.ones(n * n, dtype=float)],
+        axis=0,
+    )
+    source_xy = canonical_to_source @ homogeneous
+    ix = source_xy[0].reshape(n, n)
+    iy = source_xy[1].reshape(n, n)
 
     sampled = ndi.map_coordinates(
         source,
@@ -190,7 +227,13 @@ def normalize_frame(
             "anti_alias_sigma_source_px": float(
                 anti_alias_sigma
             ),
-            "source_centroid_yx": [cy, cx],
+            "source_centroid_yx": [centroid_y, centroid_x],
+            "source_centre_xy": [cx, cy],
+            "centering_applied": centering_applied,
+            "rotation_applied_deg": rotation_deg,
+            "transform_type": "similarity: translation + rotation + isotropic scale",
+            "source_to_canonical_xy": source_to_canonical.tolist(),
+            "canonical_to_source_xy": canonical_to_source.tolist(),
             "valid_fraction_of_mask": float(
                 out_valid.sum() / max(1, out_mask.sum())
             ),
