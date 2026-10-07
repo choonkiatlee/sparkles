@@ -102,6 +102,241 @@ def _canonical_record(processed, output, record, assessment, persist=True):
     }
 
 
+
+def _circular_distance(a, b, size):
+    delta = abs(int(a) - int(b)) % int(size)
+    return min(delta, int(size) - delta)
+
+
+def _circular_window(values, centre, radius):
+    size = len(values)
+    return [
+        values[(int(centre) + offset) % size]
+        for offset in range(-int(radius), int(radius) + 1)
+    ]
+
+
+def _face_metric(assessment):
+    cues = assessment.get("face_orientation_cues") or {}
+    value = cues.get("table_boundary_continuity_score")
+    if value is None:
+        value = cues.get("central_ring_edge_score")
+    return None if value is None else float(value)
+
+
+def resolve_face_lobes(records, *, sequence_complete):
+    """Resolve competing face-on lobes without using source-index labels.
+
+    Geometry finds broad face-on candidates first.  Only when two broad
+    geometric peaks are genuinely competitive does the optical table-boundary
+    diagnostic choose which lobe is *likely* crown-facing.  The opposite lobe
+    is never reclassified as a geometry failure.
+    """
+    size = len(records)
+    unavailable = {
+        "status": "unavailable",
+        "reason": "requires_complete_ordered_sequence",
+    }
+    if not sequence_complete or size < 16:
+        return unavailable
+
+    positions = [record.get("position") for record in records]
+    if positions != list(range(size)):
+        return {
+            "status": "unavailable",
+            "reason": "requires_contiguous_sequence_positions",
+        }
+
+    geometry_scores = np.array(
+        [
+            float(record["assessment"].get("score", 0.0))
+            if record["assessment"].get("status") != "failed"
+            else 0.0
+            for record in records
+        ],
+        dtype=float,
+    )
+    smooth_radius = max(2, int(round(size / 32.0)))
+    smoothed = np.array(
+        [
+            np.mean(_circular_window(geometry_scores, index, smooth_radius))
+            for index in range(size)
+        ],
+        dtype=float,
+    )
+
+    primary = int(np.argmax(smoothed))
+    minimum_separation = max(2, int(round(size / 4.0)))
+    candidate_indices = [
+        index
+        for index in range(size)
+        if _circular_distance(index, primary, size) >= minimum_separation
+    ]
+    if not candidate_indices:
+        return {
+            "status": "unavailable",
+            "reason": "no_separated_competing_lobe",
+        }
+    secondary = max(candidate_indices, key=lambda index: smoothed[index])
+    primary_score = float(smoothed[primary])
+    secondary_score = float(smoothed[secondary])
+    gap = float(primary_score - secondary_score)
+
+    lobe_radius = max(smooth_radius, int(round(size / 8.0)))
+
+    def lobe_summary(position):
+        members = [
+            index
+            for index in range(size)
+            if _circular_distance(index, position, size) <= smooth_radius
+        ]
+        face_values = [
+            _face_metric(records[index]["assessment"])
+            for index in members
+        ]
+        face_values = np.asarray(
+            [value for value in face_values if value is not None],
+            dtype=float,
+        )
+        if not len(face_values):
+            median = mad = None
+        else:
+            median = float(np.median(face_values))
+            mad = float(np.median(np.abs(face_values - median)))
+        return {
+            "peak_position": int(position),
+            "peak_source_index": records[position].get("source_index"),
+            "smoothed_geometry_score": float(smoothed[position]),
+            "table_boundary_median": median,
+            "table_boundary_mad": mad,
+            "window_radius_frames": int(smooth_radius),
+        }
+
+    first = lobe_summary(primary)
+    second = lobe_summary(secondary)
+    result = {
+        "status": "not_needed",
+        "reason": "one_geometric_lobe_clearly_better",
+        "geometry_peak_gap": gap,
+        "competitive_gap_threshold": 0.10,
+        "lobe_radius_frames": int(lobe_radius),
+        "lobes": [first, second],
+        "likely_crown_peak_position": None,
+        "likely_opposite_peak_position": None,
+        "confidence_mad_units": None,
+    }
+    if gap > 0.10:
+        return result
+
+    if (
+        first["table_boundary_median"] is None
+        or second["table_boundary_median"] is None
+    ):
+        result.update(
+            status="ambiguous",
+            reason="table_boundary_metric_unavailable",
+        )
+        return result
+
+    difference = float(
+        first["table_boundary_median"]
+        - second["table_boundary_median"]
+    )
+    noise = max(
+        float(first["table_boundary_mad"] or 0.0),
+        float(second["table_boundary_mad"] or 0.0),
+        0.005,
+    )
+    confidence = float(abs(difference) / noise)
+    result["table_boundary_difference"] = difference
+    result["confidence_mad_units"] = confidence
+    result["minimum_confidence_mad_units"] = 1.5
+    if confidence < 1.5:
+        result.update(
+            status="ambiguous",
+            reason="competing_face_lobes_not_optically_separated",
+        )
+        return result
+
+    if difference > 0:
+        crown, opposite = primary, secondary
+    else:
+        crown, opposite = secondary, primary
+    result.update(
+        status="resolved",
+        reason="closed_table_boundary_prefers_one_competing_face_on_lobe",
+        likely_crown_peak_position=int(crown),
+        likely_crown_peak_source_index=records[crown].get("source_index"),
+        likely_opposite_peak_position=int(opposite),
+        likely_opposite_peak_source_index=records[opposite].get("source_index"),
+    )
+    return result
+
+
+def _annotate_face_roles(records, face_selection):
+    for record in records:
+        record["face_role"] = "unresolved"
+    if face_selection.get("status") != "resolved":
+        return
+    size = len(records)
+    radius = int(face_selection["lobe_radius_frames"])
+    crown = int(face_selection["likely_crown_peak_position"])
+    opposite = int(face_selection["likely_opposite_peak_position"])
+    for record in records:
+        position = int(record["position"])
+        crown_distance = _circular_distance(position, crown, size)
+        opposite_distance = _circular_distance(position, opposite, size)
+        if crown_distance <= radius and crown_distance <= opposite_distance:
+            record["face_role"] = "likely_crown_lobe"
+        elif opposite_distance <= radius:
+            record["face_role"] = "likely_opposite_lobe"
+        else:
+            record["face_role"] = "outside_face_on_lobes"
+
+
+def rank_sequence_records(records, face_selection):
+    """Rank geometry-usable crown-lobe frames ahead of competing faces."""
+    geometry_order = asscher_pose.rank_assessments(
+        [record["assessment"] for record in records]
+    )
+    geometry_rank = {
+        index: rank
+        for rank, index in enumerate(geometry_order, start=1)
+    }
+    for index, rank in geometry_rank.items():
+        records[index]["geometry_rank"] = rank
+
+    if face_selection.get("status") != "resolved":
+        return geometry_order
+
+    role_order = {
+        "likely_crown_lobe": 0,
+        "outside_face_on_lobes": 1,
+        "unresolved": 1,
+        "likely_opposite_lobe": 2,
+    }
+    status_order = {
+        "ok": 0,
+        "review": 1,
+        "rejected": 2,
+        "failed": 3,
+    }
+
+    def key(index):
+        assessment = records[index]["assessment"]
+        status = assessment.get("status", "failed")
+        hard_failure = 1 if status in ("rejected", "failed") else 0
+        return (
+            hard_failure,
+            role_order.get(records[index].get("face_role"), 1),
+            status_order.get(status, 4),
+            -float(assessment.get("score", 0.0)),
+            int(records[index].get("position", index)),
+        )
+
+    return sorted(range(len(records)), key=key)
+
+
 def _qc_indices(records, ranked, limit=6):
     usable = [
         index
@@ -232,9 +467,14 @@ def analyse_processed_sequence(processed, output, *, persist_canonical=True):
             )
         records.append(result)
 
-    ranked = asscher_pose.rank_assessments(
-        [record["assessment"] for record in records]
+    source_manifest = metadata.get("source_manifest") or {}
+    sequence_complete = bool(source_manifest.get("sequence_complete"))
+    face_selection = resolve_face_lobes(
+        records,
+        sequence_complete=sequence_complete,
     )
+    _annotate_face_roles(records, face_selection)
+    ranked = rank_sequence_records(records, face_selection)
     for rank, index in enumerate(ranked, start=1):
         records[index]["rank"] = rank
 
@@ -248,12 +488,15 @@ def analyse_processed_sequence(processed, output, *, persist_canonical=True):
             record["assessment"]["status"] in ("ok", "review")
             for record in records
         ),
+        "face_selection": face_selection,
         "ranking": [
             {
                 "rank": rank,
+                "geometry_rank": records[index].get("geometry_rank"),
                 "source_index": records[index]["source_index"],
                 "status": records[index]["assessment"]["status"],
                 "score": records[index]["assessment"]["score"],
+                "face_role": records[index].get("face_role"),
             }
             for rank, index in enumerate(ranked, start=1)
         ],
@@ -261,8 +504,11 @@ def analyse_processed_sequence(processed, output, *, persist_canonical=True):
         "qc_path": qc_path,
         "canonical_arrays_persisted": bool(persist_canonical),
         "interpretation": (
-            "Ranks image-plane geometry suitability for semantic wireframe fitting; "
-            "does not estimate physical facet angles or physical facet lengths."
+            "Ranks image-plane geometry suitability for semantic wireframe fitting. "
+            "On complete ordered rotations with two competitive face-on lobes, "
+            "closed-table evidence may mark one lobe as likely crown-facing and "
+            "demote the likely opposite face without calling it a geometry failure. "
+            "Does not estimate physical facet angles or physical facet lengths."
         ),
     }
     (output / "asscher-pose.json").write_text(
