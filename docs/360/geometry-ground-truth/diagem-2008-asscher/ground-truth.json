@@ -1,0 +1,277 @@
+{
+  "schema_version": "sparkles-asscher-geometry-ground-truth/1",
+  "case_id": "pricescope-diagem-sergey-2008-asscher",
+  "purpose": "External geometry-validation fixture for canonical Asscher wireframe and facet-family extraction; not a quality label or training target.",
+  "source": {
+    "thread_title": "Why cut asschers with small corners and windmills?",
+    "thread_url": "https://www.pricescope.com/community/threads/why-cut-asschers-with-small-corners-and-windmills.78433/",
+    "pages": {
+      "finished_stone_and_dimensions": "https://www.pricescope.com/community/threads/why-cut-asschers-with-small-corners-and-windmills.78433/page-4",
+      "photo_requirements_and_actual_p3": "https://www.pricescope.com/community/threads/why-cut-asschers-with-small-corners-and-windmills.78433/page-5",
+      "photo_estimate_and_manual_comparison": "https://www.pricescope.com/community/threads/why-cut-asschers-with-small-corners-and-windmills.78433/page-6"
+    },
+    "stone_type": "real_cut_asscher_like_step_cut",
+    "participants": {
+      "diagem": {
+        "name": "Yoram F.",
+        "role": "cutter/source of manual measurements"
+      },
+      "serg": {
+        "name": "Sergey Sivovolenko",
+        "role": "independent photo-based geometry estimate"
+      },
+      "strmrdr": {
+        "name": "Karl / strmrdr",
+        "role": "design collaborator/context"
+      }
+    }
+  },
+  "evidence_policy": {
+    "classes": {
+      "manual_reported": "Reported by DiaGem/Yoram from direct/manual measurement or cutting knowledge; primary physical evidence for this fixture.",
+      "photo_estimate": "Estimated by Sergey from a supplied photograph; independent image-derived comparison target.",
+      "scanner_reported": "Instrument output quoted in the thread; context only because the participants explicitly question scanner accuracy for this stone.",
+      "design_context": "Intended/model geometry discussed around the cut; not finished-stone ground truth.",
+      "source_media_unresolved": "An original image is referenced in the thread, but exact source bytes are not yet archived."
+    },
+    "rule": "Never silently promote photo estimates, scanner output, design values, or Sparkles inferences to manual ground truth."
+  },
+  "stone": {
+    "weight_ct": {
+      "value": 0.79,
+      "evidence_class": "manual_reported",
+      "source_post": 106,
+      "source_page": 4
+    },
+    "dimensions_mm": {
+      "value": [
+        5.2,
+        5.19,
+        3.93
+      ],
+      "order": [
+        "length",
+        "width",
+        "depth"
+      ],
+      "evidence_class": "manual_reported",
+      "source_post": 106,
+      "source_page": 4
+    },
+    "total_depth_pct": {
+      "value": 75.7,
+      "evidence_class": "manual_reported",
+      "source_posts": [
+        102,
+        134
+      ],
+      "source_pages": [
+        4,
+        5
+      ],
+      "note": "DiaGem calls 75.7% his/manual total-depth measurement."
+    },
+    "crown_height_pct": {
+      "value": 23.9,
+      "evidence_class": "manual_reported",
+      "source_post": 134,
+      "source_page": 5,
+      "note": "Also reported by OGI in post 102; post 134 describes 23.9% as the actual crown height."
+    },
+    "table_pct": {
+      "value": 27,
+      "evidence_class": "manual_reported",
+      "source_post": 134,
+      "source_page": 5,
+      "note": "DiaGem says the table went down to 27% due to step sizes. OGI is separately recorded as 27.1%."
+    }
+  },
+  "finished_stone_geometry": {
+    "p3_angles_deg": {
+      "values": {
+        "at_least_two_facets": 31,
+        "other_two_facets": 30
+      },
+      "evidence_class": "manual_reported",
+      "source_post": 134,
+      "source_page": 5,
+      "uncertainty_note": "DiaGem says at least two P3 facets are 31 degrees and the other two are maybe 30 degrees, associated with creating the pointed culet."
+    },
+    "relative_physical_facet_lengths": {
+      "p1_vs_p2": "approximately_equal; P1 may be fractionally longer",
+      "p3_relative_to_p1_p2": 0.6,
+      "evidence_class": "manual_reported",
+      "source_post": 171,
+      "source_page": 6,
+      "uncertainty_note": "P3 ratio is explicitly approximate."
+    },
+    "known_asymmetry": [
+      {
+        "feature": "P3",
+        "observation": "Two opposed P3 facets were adjusted during final cutting to close the culet; north/south and west/east P3 therefore have a small angle difference.",
+        "evidence_class": "manual_reported",
+        "source_post": 115,
+        "source_page": 4
+      },
+      {
+        "feature": "table_C3_junctions",
+        "observation": "Table junctions with C3 are slightly unbalanced because the very small table gave limited dop holding surface.",
+        "evidence_class": "manual_reported",
+        "source_post": 115,
+        "source_page": 4
+      }
+    ]
+  },
+  "independent_photo_estimate": {
+    "source_post": 156,
+    "source_page": 6,
+    "estimator": "Sergey Sivovolenko",
+    "evidence_class": "photo_estimate",
+    "stated_uncertainty_deg": 1,
+    "right_side_deg": {
+      "P1": 50,
+      "P2": 42,
+      "P3": 31,
+      "C1": 43.5
+    },
+    "left_side_deg": {
+      "P1": 49.5,
+      "P2": 41,
+      "P3": 30,
+      "C1": 46
+    },
+    "note": "These are deliberately stored as an independent image-derived estimate, not as the physical ground truth."
+  },
+  "projection_caveat": {
+    "observation": "P1 appears longer than P2 in the photograph even though DiaGem says their real physical lengths are practically identical.",
+    "implication": "Do not equate image-plane facet width/length with physical facet length without an explicit projection model.",
+    "evidence_class": "manual_reported",
+    "source_post": 171,
+    "source_page": 6
+  },
+  "source_image_selection_criteria": {
+    "positive": [
+      {
+        "criterion": "sharp image",
+        "source_post": 136,
+        "source_page": 5
+      },
+      {
+        "criterion": "front light not very bright; avoid flashes",
+        "source_post": 136,
+        "source_page": 5
+      },
+      {
+        "criterion": "white background",
+        "source_post": 136,
+        "source_page": 5
+      },
+      {
+        "criterion": "table horizontal",
+        "source_post": 136,
+        "source_page": 5
+      },
+      {
+        "criterion": "right rotation/minimum projection",
+        "source_post": 137,
+        "source_page": 5
+      },
+      {
+        "criterion": "pavilion side facets should not be visible",
+        "source_post": 137,
+        "source_page": 5
+      }
+    ],
+    "negative_example": {
+      "source_post": 163,
+      "source_page": 6,
+      "reason": "Sergey says pavilion side facets are visible, indicating large tilt or short focal length, and therefore declines to estimate from that image."
+    }
+  },
+  "scanner_context": {
+    "evidence_class": "scanner_reported",
+    "source_post": 102,
+    "source_page": 4,
+    "OGI": {
+      "total_depth_pct": 76.6,
+      "crown_height_pct": 23.9,
+      "table_pct": 27.1
+    },
+    "caveat": "DiaGem says the OGI numbers are somewhat off reality and elsewhere says Sarin/FacetWare scans were not accurate for this comparison; scanner values are context, not truth."
+  },
+  "design_context": {
+    "evidence_class": "design_context",
+    "source_post": 134,
+    "source_page": 5,
+    "remembered_design_numbers_deg": {
+      "P1": 52,
+      "P2": 41,
+      "P3": 31
+    },
+    "note": "Stored only to distinguish intended/model values from the measured finished stone."
+  },
+  "source_media": [
+    {
+      "role": "profile_photo_used_for_photo_estimate",
+      "likely_source_posts": [
+        151,
+        154
+      ],
+      "source_page": 6,
+      "status": "source_media_unresolved",
+      "recovery_attempt": {
+        "date": "2026-10-07",
+        "environment": "GitHub Actions",
+        "result": "HTTP 403 from PriceScope page/media recovery; no screenshot or recompressed substitute committed."
+      },
+      "expected_repo_path_when_recovered": "docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.*"
+    },
+    {
+      "role": "manual_step_facet_measurements",
+      "source_post": 157,
+      "source_page": 6,
+      "status": "source_media_unresolved",
+      "recovery_attempt": {
+        "date": "2026-10-07",
+        "environment": "GitHub Actions",
+        "result": "Original embedded image not recovered; thread text confirms it contains DiaGem's manual measurements for all step facets except table and girdle."
+      },
+      "expected_repo_path_when_recovered": "docs/360/geometry-ground-truth/diagem-2008-asscher/manual-measurements.*"
+    },
+    {
+      "role": "manual_measurements_last_line",
+      "source_post": 158,
+      "source_page": 6,
+      "status": "source_media_unresolved",
+      "recovery_attempt": {
+        "date": "2026-10-07",
+        "environment": "GitHub Actions",
+        "result": "Original embedded image not recovered; stored separately so it is not silently omitted."
+      },
+      "expected_repo_path_when_recovered": "docs/360/geometry-ground-truth/diagem-2008-asscher/manual-measurements-last-line.*"
+    }
+  ],
+  "validation_contract": {
+    "primary_task": "Recover a 2D semantic Asscher wireframe/facet-family representation before attempting a full 3D physical reconstruction.",
+    "anti_leakage_rule": "Specify and implement extraction without using the stored angle values as fitting targets.",
+    "expected_outputs": [
+      "selected/accepted source-image status with reasons",
+      "semantic facet-family boundaries or polygons",
+      "per-boundary confidence",
+      "observed versus symmetry-inferred provenance",
+      "image-plane geometry explicitly separated from inferred physical geometry"
+    ],
+    "checks": [
+      "Compare image-derived P1/P2/P3/C1 estimates with Sergey's independent photo estimates after extraction.",
+      "Do not require perfect fourfold equality; the real stone contains known P3 and C3/table asymmetry.",
+      "Reject or strongly downweight images where pavilion side facets become visible from tilt/projection.",
+      "Do not infer physical P1/P2 length equality solely from apparent image-plane lengths."
+    ],
+    "non_goals": [
+      "cut-quality scoring",
+      "universal Asscher angle targets",
+      "training a model on this single case",
+      "forcing exact agreement with Sergey or DiaGem by tuning thresholds"
+    ]
+  }
+}
