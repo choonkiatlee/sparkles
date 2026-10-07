@@ -56,10 +56,12 @@ def specification():
             "preferred_face_on_core_frames": PREFERRED_FACE_ON_CORE_FRAMES,
         },
         "consensus_policy": (
-            "outline residual and edge visibility are reliability gates; "
-            "among reliable silhouettes, face-onness is ranked from explicit "
-            "octagon foreshortening (aspect) and opposite-cardinal convergence; "
-            "a robust medoid/MAD gate separately removes shape outliers"
+            "outline residual, edge visibility, aspect and cardinal "
+            "parallelism are absolute reliability gates; among reliable "
+            "silhouettes the full outer-octagon projection-consistency score "
+            "is used only as a within-stone ranking signal, never as a "
+            "cross-stone rejection threshold; a robust medoid/MAD gate "
+            "separately removes shape outliers"
         ),
         "stone_outline_policy": (
             "the stone-level GIRDLE_OUTLINE is the coordinate-wise median of "
@@ -259,6 +261,7 @@ def select_records(records, *, max_frames=7, min_frames=3):
     selected_indices = sorted(
         consensus_pool,
         key=lambda index: (
+            -diagnostics[index]["projection_consistency_score"],
             diagnostics[index]["face_on_error"],
             -diagnostics[index]["quality"],
             distances[index],
