@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/choonkiatlee/sparkles/blob/master/docs/360/source-profile/source-profile.schema.json",
+  "title": "diamond360-source-profile/1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "source",
+    "sequence",
+    "spatial_sampling",
+    "compression_processing",
+    "photometric",
+    "pose_coverage",
+    "physical_scale",
+    "diagnostic_provenance",
+    "interpretation"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "diamond360-source-profile/1"
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "manifest_schema_version",
+        "source_pipeline",
+        "dimensions_px",
+        "source_frame_count",
+        "sequence_complete"
+      ],
+      "additionalProperties": true
+    },
+    "sequence": {
+      "type": "object",
+      "required": ["ordering", "sampling", "phase"],
+      "properties": {
+        "ordering": {"$ref": "#/$defs/statusRecord"},
+        "sampling": {
+          "type": ["object", "null"]
+        },
+        "phase": {"type": "object"}
+      },
+      "additionalProperties": true
+    },
+    "spatial_sampling": {
+      "allOf": [
+        {"$ref": "#/$defs/statusRecord"},
+        {
+          "type": "object",
+          "required": [
+            "effective_diameter_px",
+            "stone_width_px",
+            "stone_height_px",
+            "common_transfer"
+          ]
+        }
+      ]
+    },
+    "compression_processing": {"$ref": "#/$defs/statusRecord"},
+    "photometric": {"$ref": "#/$defs/statusRecord"},
+    "pose_coverage": {"$ref": "#/$defs/statusRecord"},
+    "physical_scale": {"$ref": "#/$defs/statusRecord"},
+    "diagnostic_provenance": {
+      "type": "object",
+      "required": [
+        "source_sequence_schema",
+        "source_manifest_schema",
+        "normalized_geometry_schema",
+        "specification"
+      ],
+      "additionalProperties": true
+    },
+    "interpretation": {"type": "string"}
+  },
+  "$defs": {
+    "statusRecord": {
+      "type": "object",
+      "required": ["status", "reasons"],
+      "properties": {
+        "status": {
+          "enum": ["ok", "review", "unavailable"]
+        },
+        "reasons": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}
