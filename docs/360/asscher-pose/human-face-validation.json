@@ -1,0 +1,25 @@
+{
+  "schema_version": "sparkles-asscher-pose-human-face-validation/1",
+  "created_at": "2026-10-07",
+  "purpose": "Validation-only labels for crown/top versus opposite-face ambiguity in issue #73. These labels are not production scoring inputs.",
+  "observations": [
+    {
+      "certificate": "IGI-LG756520111",
+      "comparison": [0, 128],
+      "likely_crown_top_source_index": 0,
+      "likely_opposite_face_source_index": 128,
+      "confidence": "likely",
+      "label_origin": "human visual review during issue #73 implementation",
+      "note": "Reviewer judged the left-hand/frame-0 image most likely to be the top."
+    },
+    {
+      "certificate": "IGI-LG818659722",
+      "comparison": [0, 128],
+      "likely_crown_top_source_index": 0,
+      "likely_opposite_face_source_index": 128,
+      "confidence": "likely",
+      "label_origin": "human visual review during issue #73 implementation",
+      "note": "Reviewer judged the left-hand/frame-0 image most likely to be the top."
+    }
+  ]
+}
