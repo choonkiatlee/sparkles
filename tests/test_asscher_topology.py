@@ -102,6 +102,14 @@ class AsscherTopologyTests(unittest.TestCase):
             scaffold["representation_policy"]["supports_may_overlap"]
         )
 
+    def test_observation_cannot_claim_unrelated_semantic_support(self):
+        scaffold = topology.canonical_synthetic_scaffold()
+        scaffold["entity_observations"]["P3_N"]["support_ids"] = [
+            "SUPPORT_C1_N"
+        ]
+        with self.assertRaises(topology.ScaffoldValidationError):
+            topology.validate_scaffold(scaffold, self.physical)
+
     def test_sequence_gauge_must_not_drift_frame_by_frame(self):
         first = topology.canonical_synthetic_scaffold(
             gauge_id="stone-A-gauge"
