@@ -1,7 +1,7 @@
 name: source-profile-benchmark
 
 concurrency:
-  group: source-profile-\${{ github.ref }}
+  group: source-profile-${{ github.ref }}
   cancel-in-progress: true
 
 on:
@@ -72,10 +72,10 @@ jobs:
       - name: Attempt audited d360 external sources
         run: |
           for item in 79-BB-5159600 79-BT-5165227; do
-            destination="outputs/source-profile-sources/d360-\${item}"
-            if ! python -m diamond360.d360_source "\${item}" "\${destination}"; then
-              echo "::warning::d360 source \${item} unavailable; retaining four-source benchmark"
-              rm -rf "\${destination}"
+            destination="outputs/source-profile-sources/d360-${item}"
+            if ! python -m diamond360.d360_source "${item}" "${destination}"; then
+              echo "::warning::d360 source ${item} unavailable; retaining four-source benchmark"
+              rm -rf "${destination}"
             fi
           done
 
