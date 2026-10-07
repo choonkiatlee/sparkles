@@ -428,6 +428,29 @@ def fixed_ruler_support_on_source_indices(
     }
 
 
+def _identity_detail(validation_record):
+    identity = (
+        validation_record.get("measurements", {}).get("semantic_identity")
+        or {}
+    )
+    missing_ids = list(identity.get("missing_semantic_ids", []))
+    extra_ids = list(identity.get("extra_semantic_ids", []))
+    reassignments = list(
+        identity.get("support_semantic_reassignments", [])
+    )
+    return {
+        "semantic_id_set_consistent": not missing_ids and not extra_ids,
+        "missing_semantic_ids": missing_ids,
+        "extra_semantic_ids": extra_ids,
+        "support_semantic_reassignment_count": len(reassignments),
+        "support_semantic_reassignments": reassignments,
+        "gauge_consistent": identity.get("gauge_consistent"),
+        "reference_gauge_id": identity.get("reference_gauge_id"),
+        "candidate_gauge_id": identity.get("candidate_gauge_id"),
+        "overall_contract_consistent": identity.get("consistent"),
+    }
+
+
 def _primary_summary(result):
     return {
         "status": result.get("status"),
@@ -516,6 +539,7 @@ def _run_source_condition(
         ),
         "candidate_primary": _primary_summary(candidate),
         "geometry_comparison": validation_summary,
+        "identity_detail": _identity_detail(validation_record),
         "fixed_ruler_support": fixed_support["summary"],
         "fixed_ruler_support_delta_from_baseline": _support_delta(
             reference_support, fixed_support["summary"]
@@ -585,6 +609,10 @@ def poor_view_stress(pose_output, pose_payload, primary_result):
         }
 
     sequence_size = len(pose_payload.get("frames", []))
+    transfer_window = stability._transfer_window(
+        pose_payload, primary_result.get("selected_frames", [])
+    )
+    crown_radius = int(transfer_window["radius_frames"])
     rows = []
     for record in pose_payload.get("frames", []):
         canonical = record.get("canonical") or {}
@@ -616,6 +644,9 @@ def poor_view_stress(pose_output, pose_payload, primary_result):
         )
         transfer["distance_to_nearest_primary_frame"] = distance
         transfer["distance_bin"] = _bin_for_distance(distance)
+        transfer["within_primary_crown_view_window"] = (
+            distance <= crown_radius
+        )
         transfer["mean_crown_boundary_support_fraction"] = float(
             np.mean([
                 transfer["boundary_support"][boundary_id][
@@ -638,8 +669,15 @@ def poor_view_stress(pose_output, pose_payload, primary_result):
             row.get("pose_score") for row in members
             if row.get("pose_score") is not None
         ]
+        if hi <= crown_radius:
+            window_scope = "within_crown_view_window"
+        elif lo > crown_radius:
+            window_scope = "outside_crown_view_window_context"
+        else:
+            window_scope = "crosses_crown_view_window_boundary"
         bins.append({
             "distance_bin_frames": [int(lo), int(hi)],
+            "window_scope": window_scope,
             "frame_count": len(members),
             "mean_distance_frames": float(np.mean([
                 row["distance_to_nearest_primary_frame"]
@@ -676,6 +714,7 @@ def poor_view_stress(pose_output, pose_payload, primary_result):
             "geometry-support position; not a calibrated camera angle"
         ),
         "primary_positions": primary_positions,
+        "transfer_window": transfer_window,
         "semantic_gauge_id": primary_result.get("semantic_gauge_id"),
         "frame_count": len(rows),
         "refit_count": sum(
@@ -819,10 +858,18 @@ def run_stone(
         == "semantic_gauge_changed_under_source_perturbation"
         for row in condition_summaries
     )
-    semantic_swaps = sum(
-        row["geometry_comparison"].get(
-            "semantic_identity_consistent"
-        ) is False
+    gauge_changes = sum(
+        row["identity_detail"].get("gauge_consistent") is False
+        for row in condition_summaries
+    )
+    semantic_id_set_changes = sum(
+        not row["identity_detail"].get("semantic_id_set_consistent", True)
+        for row in condition_summaries
+    )
+    support_reassignments = sum(
+        row["identity_detail"].get(
+            "support_semantic_reassignment_count", 0
+        ) > 0
         for row in condition_summaries
     )
     summary = {
@@ -844,7 +891,9 @@ def run_stone(
         "condition_count": len(condition_summaries),
         "geometry_unavailable_condition_count": geometry_unavailable,
         "gauge_failure_condition_count": gauge_failures,
-        "semantic_identity_swap_count": semantic_swaps,
+        "gauge_change_condition_count": gauge_changes,
+        "semantic_id_set_change_condition_count": semantic_id_set_changes,
+        "support_semantic_reassignment_condition_count": support_reassignments,
         "conditions": condition_summaries,
         "qc_path": "source-perturbation-qc.jpg",
         "interpretation": (
