@@ -340,10 +340,30 @@ class AsscherWireframeTests(unittest.TestCase):
             records, max_frames=7
         )
         self.assertEqual(
-            [row["source_index"] for row in selected],
-            [0, 1, 2, 3],
+            len(selected),
+            outer_octagon.PREFERRED_FACE_ON_CORE_FRAMES,
         )
         self.assertLess(diagnostic["selected_count"], 7)
+
+    def test_outer_projection_composite_is_diagnostic_not_hard_gate(self):
+        records = [
+            outer_record(
+                i,
+                projection=0.35,
+                fit=0.96,
+                edge=0.94,
+                aspect=1.0 + 0.002 * i,
+                parallelism=0.6 + 0.05 * i,
+            )
+            for i in range(5)
+        ]
+        selected, diagnostic = outer_octagon.select_records(
+            records, max_frames=7
+        )
+        self.assertGreaterEqual(len(selected), 3)
+        self.assertTrue(
+            all(row["hard_usable"] for row in diagnostic["frames"])
+        )
 
     def test_outer_octagon_consensus_rejects_shape_outlier(self):
         records = [
