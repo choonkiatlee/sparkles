@@ -113,6 +113,114 @@ def _reference_face_metrics(payload, source_indices=(0, 128)):
     }
 
 
+
+def _sequence_coordinate_summary(payload):
+    gauge = payload.get("sequence_gauge") or {}
+    phase = gauge.get("phase") or {}
+    orientation = gauge.get("orientation_gauge") or {}
+    frames = payload.get("frames", [])
+
+    phases = [
+        record.get("sequence_coordinate", {}).get(
+            "rotation_phase_0_360_deg"
+        )
+        for record in frames
+    ]
+    available_phases = [
+        float(value) for value in phases if value is not None
+    ]
+    period = float(phase.get("period_deg") or 360.0)
+    nominal_step = phase.get("nominal_step_deg")
+    phase_step_errors = []
+    if (
+        nominal_step is not None
+        and len(available_phases) == len(frames)
+        and len(frames) > 1
+    ):
+        expected = (
+            float(nominal_step)
+            * int(phase.get("direction_sign", 1))
+        ) % period
+        for first, second in zip(
+            available_phases,
+            available_phases[1:] + available_phases[:1],
+        ):
+            observed = (second - first) % period
+            phase_step_errors.append(abs(observed - expected))
+
+    gauge_frames = [
+        record.get("sequence_coordinate", {})
+        for record in frames
+        if record.get("canonical") is not None
+    ]
+    transform_available = sum(
+        row.get("camera_to_sequence_gauge_xy") is not None
+        for row in gauge_frames
+    )
+    quarter_turns = [
+        row.get("gauge_quarter_turn")
+        for row in gauge_frames
+        if row.get("gauge_quarter_turn") is not None
+    ]
+    return {
+        "phase_status": phase.get("status"),
+        "phase_reference_position": phase.get("reference_position"),
+        "nominal_step_deg": nominal_step,
+        "phase_frame_count": len(available_phases),
+        "maximum_phase_step_error_deg": (
+            None if not phase_step_errors else max(phase_step_errors)
+        ),
+        "orientation_gauge_status": orientation.get("status"),
+        "orientation_reference_position": orientation.get(
+            "reference_position"
+        ),
+        "orientation_physically_unique": orientation.get(
+            "physically_unique"
+        ),
+        "equivalent_global_quarter_turns": orientation.get(
+            "equivalent_global_quarter_turns"
+        ),
+        "orientation_observation_count": orientation.get(
+            "observation_count"
+        ),
+        "maximum_neighbor_branch_jump_deg": orientation.get(
+            "maximum_neighbor_branch_jump_deg"
+        ),
+        "closure_jump_deg": orientation.get("closure_jump_deg"),
+        "gauge_transform_count": transform_available,
+        "canonical_frame_count": len(gauge_frames),
+        "selected_quarter_turns": sorted(set(quarter_turns)),
+    }
+
+
+def _validate_sequence_coordinate_contract(payload):
+    summary = _sequence_coordinate_summary(payload)
+    if summary["phase_status"] not in ("available", "review"):
+        raise ValueError(
+            "benchmark sequence must expose declared viewer phase"
+        )
+    if summary["phase_frame_count"] != len(payload.get("frames", [])):
+        raise ValueError("benchmark phase must cover every source frame")
+    if (
+        summary["maximum_phase_step_error_deg"] is None
+        or summary["maximum_phase_step_error_deg"] > 1e-9
+    ):
+        raise ValueError("benchmark phase is not cyclically uniform")
+    if summary["orientation_gauge_status"] != "available":
+        raise ValueError("benchmark semantic orientation gauge unavailable")
+    if summary["orientation_physically_unique"] is not False:
+        raise ValueError("benchmark gauge must preserve 90-degree ambiguity")
+    if summary["equivalent_global_quarter_turns"] != [0, 1, 2, 3]:
+        raise ValueError("benchmark quarter-turn equivalence not explicit")
+    if (
+        summary["gauge_transform_count"]
+        != summary["canonical_frame_count"]
+    ):
+        raise ValueError(
+            "every canonical benchmark frame must map into sequence gauge"
+        )
+    return summary
+
 def _summarise_stone(certificate, payload):
     frames = payload["frames"]
     counts = Counter(
@@ -134,9 +242,11 @@ def _summarise_stone(certificate, payload):
         [record["assessment"]["score"] for record in usable],
         dtype=float,
     )
+    sequence_coordinate = _validate_sequence_coordinate_contract(payload)
     return {
         "certificate": certificate,
         "frame_count": len(frames),
+        "sequence_coordinate": sequence_coordinate,
         "status_counts": dict(sorted(counts.items())),
         "face_selection": payload.get("face_selection"),
         "usable_score_quantiles": (
