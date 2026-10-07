@@ -84,6 +84,7 @@ def run_source_benchmark(source_root, output, bundle_manifest):
             result = fit_pose_sequence(
                 pose_output,
                 output / "per-stone" / certificate,
+                processed=processed,
             )
             stones.append(_stone_summary(certificate, result))
 
