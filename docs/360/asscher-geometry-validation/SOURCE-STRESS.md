@@ -88,8 +88,11 @@ views after perturbation and records changes in:
 - per-entity `ok` fraction;
 - per-entity confidence.
 
-If the #80 semantic gauge changes under perturbation, fixed-ruler comparison
-fails closed instead of trying to post-hoc rotate the result into agreement.
+If the #80 semantic gauge identity changes under perturbation, fixed-ruler
+comparison fails closed instead of trying to post-hoc rotate the result into
+agreement. Gauge drift is reported separately from changes to the semantic-ID
+set or support-to-semantic associations; a changed gauge anchor is **not**
+reported as a facet-ID swap.
 
 No composite source-quality or robustness score is calculated.
 
@@ -110,10 +113,17 @@ Results are summarized in the frozen bins:
 
 Each bin reports:
 
+- whether the bin lies inside the #89 crown-view window, crosses its boundary,
+  or is wider full-rotation context;
 - pose status and mean pose score;
 - fixed-ruler transfer status;
 - mean/median crown-boundary support;
 - mean crown-entity confidence.
+
+Only bins inside the #89 crown-view window are interpreted as progressively
+poorer crown projection. Farther bins are retained as context and may encounter
+the opposite face-on lobe, so monotonic degradation is neither expected nor
+required there.
 
 The full per-frame trace remains available for audit. Geometry and semantic IDs
 never move during this experiment; `refit_count` must remain zero.
