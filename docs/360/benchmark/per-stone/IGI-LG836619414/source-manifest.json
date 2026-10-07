@@ -2363,5 +2363,13 @@
       "stored_position": 63,
       "source_url": "https://vision.diajewel360.com/imaged/PD-249203/7.json?version=1"
     }
-  ]
+  ],
+  "sequence_sampling": {
+    "kind": "uniform_cyclic_viewer_phase",
+    "period_frames": 256,
+    "nominal_cycle_deg": 360,
+    "physical_angle_calibrated": false,
+    "direction_physical_meaning": "unknown; source-index direction is conventional",
+    "provenance": "audited workshop viewer order; uniform viewer-step convention"
+  }
 }

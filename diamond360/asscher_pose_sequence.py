@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from . import asscher_pose, normalized_geometry, qc
+from . import asscher_pose, asscher_sequence_gauge, normalized_geometry, qc
 from .geometry import fit_asscher_outline
 
 SEQUENCE_SCHEMA = "diamond360-asscher-pose-sequence/1"
@@ -478,6 +478,17 @@ def analyse_processed_sequence(processed, output, *, persist_canonical=True):
     for rank, index in enumerate(ranked, start=1):
         records[index]["rank"] = rank
 
+    sequence_coordinates = asscher_sequence_gauge.build_sequence_coordinates(
+        records,
+        source_manifest,
+        face_selection,
+    )
+    for record, coordinate in zip(
+        records,
+        sequence_coordinates["frames"],
+    ):
+        record["sequence_coordinate"] = coordinate
+
     qc_path = _write_qc(processed, output, records, ranked)
     payload = {
         "schema_version": SEQUENCE_SCHEMA,
@@ -489,6 +500,11 @@ def analyse_processed_sequence(processed, output, *, persist_canonical=True):
             for record in records
         ),
         "face_selection": face_selection,
+        "sequence_gauge": {
+            key: value
+            for key, value in sequence_coordinates.items()
+            if key != "frames"
+        },
         "ranking": [
             {
                 "rank": rank,
@@ -508,7 +524,10 @@ def analyse_processed_sequence(processed, output, *, persist_canonical=True):
             "On complete ordered rotations with two competitive face-on lobes, "
             "closed-table evidence may mark one lobe as likely crown-facing and "
             "demote the likely opposite face without calling it a geometry failure. "
-            "Does not estimate physical facet angles or physical facet lengths."
+            "A sequence-level semantic gauge preserves explicit 90-degree equivalence; "
+            "declared uniform cyclic sources may also expose approximate viewer phase. "
+            "Neither is a calibrated physical camera angle. Does not estimate physical "
+            "facet angles or physical facet lengths."
         ),
     }
     (output / "asscher-pose.json").write_text(

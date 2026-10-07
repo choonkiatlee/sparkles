@@ -242,6 +242,14 @@ def extract(viewer_or_id: str, output: str | Path, *, media_base: str = DEFAULT_
         "still_sha256": sha256(still_raw),
         "source_frame_count": FRAME_COUNT,
         "sequence_complete": True,
+        "sequence_sampling": {
+            "kind": "uniform_cyclic_viewer_phase",
+            "period_frames": FRAME_COUNT,
+            "nominal_cycle_deg": 360.0,
+            "physical_angle_calibrated": False,
+            "direction_physical_meaning": "unknown; source-index direction is conventional",
+            "provenance": "audited d360 viewer order; uniform viewer-step convention",
+        },
         "dimensions": list(expected_dimensions),
         "ordering": "d360 audited scramble map over canonical progressive odd-position interleave",
         "ordering_validation": (

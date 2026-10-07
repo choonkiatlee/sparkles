@@ -44,6 +44,11 @@ jobs:
               assert not result["sparse"]
               assert result["ordering"] == "explicit_manifest"
               source = json.loads(manifest.read_text())
+              sampling = source["sequence_sampling"]
+              assert sampling["kind"] == "uniform_cyclic_viewer_phase"
+              assert sampling["period_frames"] == 256
+              assert sampling["nominal_cycle_deg"] == 360.0
+              assert sampling["physical_angle_calibrated"] is False
               print(json.dumps({
                   "item_id": item,
                   "frame_count": result["frame_count"],
@@ -53,6 +58,65 @@ jobs:
                   "first_frame_sha256": source["frames"][0]["sha256"],
                   "last_frame_sha256": source["frames"][-1]["sha256"],
               }, sort_keys=True))
+          PY
+
+      - name: Validate issue 80 gauge on D360 rotations
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          from diamond360 import pipeline
+          from diamond360.asscher_pose_sequence import analyse_processed_sequence
+
+          for item in ("79-BB-5159600", "79-BT-5165227"):
+              source = Path("/tmp/d360") / item
+              processed = Path("/tmp/d360-analysis") / item / "processed"
+              pose = Path("/tmp/d360-analysis") / item / "pose"
+              pipeline.run(
+                  source,
+                  processed,
+                  source / "source-manifest.json",
+                  gain=1.0,
+                  accept_review=True,
+              )
+              result = analyse_processed_sequence(
+                  processed,
+                  pose,
+                  persist_canonical=False,
+              )
+              phase = result["sequence_gauge"]["phase"]
+              orientation = result["sequence_gauge"]["orientation_gauge"]
+              assert phase["status"] in ("available", "review")
+              assert phase["nominal_step_deg"] == 1.40625
+              assert phase["physical_camera_angle_calibrated"] is False
+              assert orientation["status"] in ("available", "review")
+              assert orientation["physically_unique"] is False
+              assert orientation["equivalent_global_quarter_turns"] == [0, 1, 2, 3]
+              assert len(result["frames"]) == 256
+              assert all(
+                  frame["sequence_coordinate"]["rotation_phase_deg"] is not None
+                  for frame in result["frames"]
+              )
+              canonical = [
+                  frame for frame in result["frames"]
+                  if frame["canonical"] is not None
+              ]
+              assert canonical
+              assert all(
+                  frame["sequence_coordinate"]["camera_to_sequence_gauge_xy"]
+                  is not None
+                  for frame in canonical
+              )
+              print(
+                  item,
+                  "phase_reference=", phase["reference_position"],
+                  "phase_status=", phase["status"],
+                  "gauge_status=", orientation["status"],
+                  "closure_jump_deg=", orientation["closure_jump_deg"],
+                  "max_neighbor_jump_deg=", orientation[
+                      "maximum_neighbor_branch_jump_deg"
+                  ],
+              )
           PY
 
       - name: Upload extracted sources
