@@ -42,7 +42,7 @@ def _failed_record(record, reason):
     }
 
 
-def _canonical_record(processed, output, record, assessment):
+def _canonical_record(processed, output, record, assessment, persist=True):
     brightness, registered_mask, valid = _load_registered_arrays(
         processed, record
     )
@@ -70,15 +70,16 @@ def _canonical_record(processed, output, record, assessment):
 
     stem = f'{int(record["position"]):04d}'
     canonical_path = Path("canonical") / f"{stem}.npz"
-    np.savez_compressed(
-        output / canonical_path,
-        brightness=normalized["brightness"],
-        mask=normalized["mask"],
-        valid_mask=normalized["valid_mask"],
-    )
+    if persist:
+        np.savez_compressed(
+            output / canonical_path,
+            brightness=normalized["brightness"],
+            mask=normalized["mask"],
+            valid_mask=normalized["valid_mask"],
+        )
 
     return {
-        "path": canonical_path.as_posix(),
+        "path": canonical_path.as_posix() if persist else None,
         "registered_outline": registered_outline,
         "registered_to_canonical_xy": registered_to_canonical.tolist(),
         "camera_to_canonical_xy": camera_to_canonical.tolist(),
@@ -133,7 +134,7 @@ def _write_qc(processed, output, records, ranked):
                 )
             )
         canonical = result.get("canonical")
-        if canonical is not None:
+        if canonical is not None and canonical.get("path"):
             with np.load(output / canonical["path"]) as data:
                 brightness = np.asarray(data["brightness"], float)
             grey = np.rint(np.clip(brightness, 0.0, 1.0) * 255).astype(np.uint8)
@@ -154,8 +155,8 @@ def _write_qc(processed, output, records, ranked):
     return None
 
 
-def analyse_processed_sequence(processed, output):
-    """Persist ranked pose records and canonical support for one processed run."""
+def analyse_processed_sequence(processed, output, *, persist_canonical=True):
+    """Persist ranked pose records and optional canonical support for one processed run."""
     processed = Path(processed).resolve()
     output = Path(output).resolve()
     if processed == output or processed in output.parents or output in processed.parents:
@@ -167,7 +168,8 @@ def analyse_processed_sequence(processed, output):
 
     metadata = json.loads((processed / "sequence.json").read_text())
     output.mkdir(parents=True, exist_ok=True)
-    (output / "canonical").mkdir(exist_ok=True)
+    if persist_canonical:
+        (output / "canonical").mkdir(exist_ok=True)
 
     records = []
     for record in metadata.get("frames", []):
@@ -209,6 +211,7 @@ def analyse_processed_sequence(processed, output):
                 output,
                 record,
                 assessment,
+                persist=persist_canonical,
             )
         records.append(result)
 
@@ -239,6 +242,7 @@ def analyse_processed_sequence(processed, output):
         ],
         "frames": records,
         "qc_path": qc_path,
+        "canonical_arrays_persisted": bool(persist_canonical),
         "interpretation": (
             "Ranks image-plane geometry suitability for semantic wireframe fitting; "
             "does not estimate physical facet angles or physical facet lengths."
