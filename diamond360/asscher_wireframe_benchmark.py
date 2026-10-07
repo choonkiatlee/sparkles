@@ -29,6 +29,8 @@ def _stone_summary(certificate, result):
             for row in result.get("selected_frames", [])
         ],
         "semantic_gauge_id": result.get("semantic_gauge_id"),
+        "outer_selection": result.get("outer_selection"),
+        "outer_evidence": result.get("outer_evidence"),
         "scaffold_validity": (
             None if scaffold is None else scaffold.get("validity")
         ),
