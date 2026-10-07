@@ -335,7 +335,36 @@ def face_orientation_cues(brightness, mask, outline):
     radial_alignment = 1.0 - np.abs(ngx * ux + ngy * uy)
     weights = magnitude[good]
     spoke_score = float(np.average(radial_alignment, weights=weights))
-    ring_score = float(1.0 - spoke_score)
+    ring_alignment = 1.0 - radial_alignment
+    ring_score = float(np.average(ring_alignment, weights=weights))
+
+    # A closed table boundary should contribute ring-like edge energy around
+    # most angular directions.  Radial pavilion spokes concentrate edge
+    # structure into a few directions even when their overall contrast varies.
+    angles = (np.arctan2(dy[good], dx[good]) + 2.0 * math.pi) % (
+        2.0 * math.pi
+    )
+    angular_bins = 32
+    bin_index = np.minimum(
+        angular_bins - 1,
+        np.floor(angles / (2.0 * math.pi) * angular_bins).astype(int),
+    )
+    ring_energy = np.bincount(
+        bin_index,
+        weights=weights * ring_alignment,
+        minlength=angular_bins,
+    ).astype(float)
+    total_ring_energy = float(ring_energy.sum())
+    if total_ring_energy > 0:
+        probabilities = ring_energy / total_ring_energy
+        nonzero = probabilities > 0
+        angular_entropy = float(
+            -np.sum(probabilities[nonzero] * np.log(probabilities[nonzero]))
+            / math.log(angular_bins)
+        )
+    else:
+        angular_entropy = 0.0
+    table_boundary_continuity = float(ring_score * angular_entropy)
 
     centre = mask & (radius_fraction <= 0.08)
     comparison = mask & (radius_fraction >= 0.10) & (radius_fraction <= 0.24)
@@ -381,6 +410,8 @@ def face_orientation_cues(brightness, mask, outline):
         "status": "ok",
         "central_radial_spoke_score": spoke_score,
         "central_ring_edge_score": ring_score,
+        "table_boundary_angular_entropy": angular_entropy,
+        "table_boundary_continuity_score": table_boundary_continuity,
         "centre_gradient_ratio": gradient_ratio,
         "central_diagonal_spoke_energy_ratio": diagonal_excess,
         "central_diagonal_to_cardinal_energy_ratio": diagonal_to_cardinal,
@@ -388,8 +419,10 @@ def face_orientation_cues(brightness, mask, outline):
         "support_pixels": int(good.sum()),
         "radius_band_diameter_fraction": [0.04, 0.30],
         "interpretation": (
-            "diagnostic only: higher radial-spoke and central-diagonal ratios "
-            "mean stronger centre-crossing spoke structure; not a crown classifier"
+            "diagnostic only: higher table-boundary continuity means ring-like "
+            "edge structure distributed around the centre; higher radial-spoke "
+            "and central-diagonal ratios mean stronger centre-crossing spokes; "
+            "not yet a crown classifier"
         ),
     }
 
