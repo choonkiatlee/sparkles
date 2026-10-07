@@ -181,6 +181,122 @@ class AsscherPoseSequenceTests(unittest.TestCase):
             self.assertTrue((output / "asscher-pose.json").is_file())
             self.assertTrue((output / "asscher-pose-qc.jpg").is_file())
 
+    def test_competing_face_on_lobes_use_table_boundary_to_resolve_crown(self):
+        size = 64
+
+        def distance(index, centre):
+            delta = abs(index - centre)
+            return min(delta, size - delta)
+
+        records = []
+        for position in range(size):
+            d0 = distance(position, 0)
+            d1 = distance(position, 32)
+            score = max(
+                0.45 + 0.42 * np.exp(-((d0 / 4.0) ** 2)),
+                0.45 + 0.39 * np.exp(-((d1 / 4.0) ** 2)),
+            )
+            table = (
+                0.82 - 0.01 * d0
+                if d0 <= d1
+                else 0.62 - 0.005 * d1
+            )
+            records.append(
+                {
+                    "position": position,
+                    "source_index": position,
+                    "assessment": {
+                        "status": "review",
+                        "score": float(score),
+                        "face_orientation_cues": {
+                            "table_boundary_continuity_score": float(table),
+                        },
+                    },
+                }
+            )
+
+        selection = asscher_pose_sequence.resolve_face_lobes(
+            records,
+            sequence_complete=True,
+        )
+        self.assertEqual(selection["status"], "resolved")
+        self.assertLess(
+            asscher_pose_sequence._circular_distance(
+                selection["likely_crown_peak_position"],
+                0,
+                size,
+            ),
+            4,
+        )
+        self.assertLess(
+            asscher_pose_sequence._circular_distance(
+                selection["likely_opposite_peak_position"],
+                32,
+                size,
+            ),
+            4,
+        )
+
+        asscher_pose_sequence._annotate_face_roles(records, selection)
+        ranked = asscher_pose_sequence.rank_sequence_records(
+            records,
+            selection,
+        )
+        self.assertEqual(
+            records[ranked[0]]["face_role"],
+            "likely_crown_lobe",
+        )
+        opposite_indices = {
+            index
+            for index, record in enumerate(records)
+            if record["face_role"] == "likely_opposite_lobe"
+        }
+        self.assertTrue(opposite_indices)
+        self.assertGreater(
+            min(ranked.index(index) for index in opposite_indices),
+            0,
+        )
+
+    def test_face_resolution_does_not_override_clear_single_geometry_lobe(self):
+        size = 64
+        records = []
+        for position in range(size):
+            d0 = asscher_pose_sequence._circular_distance(
+                position, 0, size
+            )
+            d1 = asscher_pose_sequence._circular_distance(
+                position, 32, size
+            )
+            score = max(
+                0.35 + 0.55 * np.exp(-((d0 / 4.0) ** 2)),
+                0.35 + 0.20 * np.exp(-((d1 / 4.0) ** 2)),
+            )
+            records.append(
+                {
+                    "position": position,
+                    "source_index": position,
+                    "assessment": {
+                        "status": "review",
+                        "score": float(score),
+                        "face_orientation_cues": {
+                            "table_boundary_continuity_score": (
+                                0.6 if d0 <= d1 else 0.9
+                            ),
+                        },
+                    },
+                }
+            )
+
+        selection = asscher_pose_sequence.resolve_face_lobes(
+            records,
+            sequence_complete=True,
+        )
+        self.assertEqual(selection["status"], "not_needed")
+        self.assertEqual(
+            selection["reason"],
+            "one_geometric_lobe_clearly_better",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
