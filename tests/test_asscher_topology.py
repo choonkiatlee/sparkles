@@ -1,5 +1,7 @@
+import json
 import unittest
 from copy import deepcopy
+from pathlib import Path
 
 from diamond360 import asscher_topology as topology
 
@@ -170,6 +172,19 @@ class AsscherTopologyTests(unittest.TestCase):
             contract["future_extension_boundary"][
                 "explicitly_not_implemented_here"
             ],
+        )
+
+    def test_committed_contract_matches_runtime_contract(self):
+        path = (
+            Path(__file__).parents[1]
+            / "docs"
+            / "360"
+            / "asscher-topology"
+            / "contract-v1.json"
+        )
+        self.assertEqual(
+            json.loads(path.read_text()),
+            topology.contract_document(),
         )
 
     def test_synthetic_scaffold_renders_without_source_image(self):
