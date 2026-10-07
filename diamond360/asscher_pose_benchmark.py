@@ -1,0 +1,189 @@
+"""Four-stone real-sequence benchmark for Asscher frame suitability."""
+from __future__ import annotations
+
+import argparse
+import json
+import tempfile
+from collections import Counter
+from pathlib import Path
+
+import numpy as np
+
+from . import pipeline
+from .asscher_pose_sequence import analyse_processed_sequence
+
+SCHEMA = "diamond360-asscher-pose-benchmark/1"
+
+
+def _frame_summary(record):
+    assessment = record["assessment"]
+    components = assessment.get("components", {})
+    return {
+        "source_index": record.get("source_index"),
+        "rank": record.get("rank"),
+        "status": assessment["status"],
+        "score": assessment["score"],
+        "reasons": assessment.get("reasons", []),
+        "projection_consistency": components.get(
+            "projection_consistency", {}
+        ).get("score"),
+        "opposite_parallelism_deg": components.get(
+            "opposite_parallelism", {}
+        ).get("value"),
+        "outline_fit_residual": components.get(
+            "outline_fit", {}
+        ).get("value"),
+        "squareness_error": components.get(
+            "squareness", {}
+        ).get("value"),
+        "corner_imbalance": components.get(
+            "corner_balance", {}
+        ).get("value"),
+    }
+
+
+def _summarise_stone(certificate, payload):
+    frames = payload["frames"]
+    counts = Counter(
+        record["assessment"]["status"]
+        for record in frames
+    )
+    usable = [
+        record
+        for record in frames
+        if record["assessment"]["status"] in ("ok", "review")
+    ]
+    rejected = [
+        record
+        for record in frames
+        if record["assessment"]["status"] == "rejected"
+    ]
+    ordered = sorted(frames, key=lambda record: record.get("rank", 10**9))
+    usable_scores = np.array(
+        [record["assessment"]["score"] for record in usable],
+        dtype=float,
+    )
+    return {
+        "certificate": certificate,
+        "frame_count": len(frames),
+        "status_counts": dict(sorted(counts.items())),
+        "usable_score_quantiles": (
+            None
+            if not len(usable_scores)
+            else {
+                "q10": float(np.quantile(usable_scores, 0.10)),
+                "median": float(np.median(usable_scores)),
+                "q90": float(np.quantile(usable_scores, 0.90)),
+            }
+        ),
+        "top_candidates": [
+            _frame_summary(record)
+            for record in ordered
+            if record["assessment"]["status"] in ("ok", "review")
+        ][:12],
+        "borderline_usable": (
+            None
+            if not usable
+            else _frame_summary(
+                min(
+                    usable,
+                    key=lambda record: record["assessment"]["score"],
+                )
+            )
+        ),
+        "first_rejected": (
+            None
+            if not rejected
+            else _frame_summary(
+                max(
+                    rejected,
+                    key=lambda record: record["assessment"]["score"],
+                )
+            )
+        ),
+        "qc_path": payload.get("qc_path"),
+    }
+
+
+def run_source_benchmark(source_root, output, bundle_manifest):
+    """Preprocess four retained rotations and apply the frozen v1 pose policy."""
+    source_root = Path(source_root).resolve()
+    output = Path(output).resolve()
+    manifest = json.loads(Path(bundle_manifest).read_text())
+    output.mkdir(parents=True, exist_ok=True)
+    stones = []
+
+    with tempfile.TemporaryDirectory(
+        prefix="sparkles-asscher-pose-"
+    ) as temporary:
+        work = Path(temporary)
+        for item in manifest["bundles"]:
+            certificate = item["certificate"]
+            source = source_root / certificate
+            processed = work / certificate / "processed"
+            pipeline.run(
+                source,
+                processed,
+                source / "source-manifest.json",
+                gain=1.0,
+                accept_review=True,
+            )
+            pose_output = output / "per-stone" / certificate
+            payload = analyse_processed_sequence(
+                processed,
+                pose_output,
+                persist_canonical=False,
+            )
+            stones.append(_summarise_stone(certificate, payload))
+
+    result = {
+        "schema_version": SCHEMA,
+        "source_bundle_schema": manifest.get("schema_version"),
+        "policy": (
+            "frozen diamond360-asscher-pose/1; no tuning to DiaGem/Sergey "
+            "facet-angle values"
+        ),
+        "stones": stones,
+    }
+    (output / "summary.json").write_text(
+        json.dumps(result, indent=2, allow_nan=False) + "\n"
+    )
+    return result
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Run Asscher pose suitability on retained benchmark rotations"
+    )
+    parser.add_argument("--source-root", required=True, type=Path)
+    parser.add_argument(
+        "--output",
+        required=True,
+        type=Path,
+    )
+    parser.add_argument(
+        "--bundle-manifest",
+        type=Path,
+        default=Path("docs/360/benchmark/source-bundles.json"),
+    )
+    args = parser.parse_args()
+    result = run_source_benchmark(
+        args.source_root,
+        args.output,
+        args.bundle_manifest,
+    )
+    for stone in result["stones"]:
+        top = stone["top_candidates"][:5]
+        print(
+            stone["certificate"],
+            stone["status_counts"],
+            "top=",
+            [
+                (row["source_index"], round(row["score"], 3))
+                for row in top
+            ],
+        )
+
+
+if __name__ == "__main__":
+    main()
