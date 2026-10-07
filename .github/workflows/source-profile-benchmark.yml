@@ -1,0 +1,109 @@
+name: source-profile-benchmark
+
+concurrency:
+  group: source-profile-\${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    paths:
+      - "diamond360/source_profile.py"
+      - "diamond360/source_profile_benchmark.py"
+      - "diamond360/d360_source.py"
+      - "diamond360/normalized_geometry.py"
+      - "diamond360/asscher_pose.py"
+      - "diamond360/asscher_pose_sequence.py"
+      - "diamond360/asscher_sequence_gauge.py"
+      - "tests/test_source_profile.py"
+      - "docs/360/source-profile/**"
+      - ".github/workflows/source-profile-benchmark.yml"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: python -m pip install -e .
+
+      - name: Run issue 81 tests
+        run: python -m unittest tests.test_source_profile -v
+
+      - name: Record full-suite status
+        continue-on-error: true
+        run: python -m unittest discover -s tests -v
+
+      - name: Download retained benchmark sources
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import urllib.request
+          import zipfile
+          from pathlib import Path
+
+          manifest = json.loads(
+              Path("docs/360/benchmark/source-bundles.json").read_text()
+          )
+          root = Path("outputs/source-profile-sources")
+          root.mkdir(parents=True, exist_ok=True)
+
+          for item in manifest["bundles"]:
+              archive = root / item["filename"]
+              urllib.request.urlretrieve(item["download_url"], archive)
+              assert archive.stat().st_size == item["bytes"]
+              assert (
+                  hashlib.sha256(archive.read_bytes()).hexdigest()
+                  == item["sha256"]
+              )
+              destination = root / item["certificate"]
+              destination.mkdir(parents=True, exist_ok=True)
+              with zipfile.ZipFile(archive) as bundle:
+                  bundle.extractall(destination)
+          PY
+
+      - name: Attempt audited d360 external sources
+        run: |
+          for item in 79-BB-5159600 79-BT-5165227; do
+            destination="outputs/source-profile-sources/d360-\${item}"
+            if ! python -m diamond360.d360_source "\${item}" "\${destination}"; then
+              echo "::warning::d360 source \${item} unavailable; retaining four-source benchmark"
+              rm -rf "\${destination}"
+            fi
+          done
+
+      - name: Run heterogeneous source benchmark
+        run: |
+          python -m diamond360.source_profile_benchmark \
+            --source-root outputs/source-profile-sources \
+            --output outputs/source-profile-benchmark
+
+      - name: Print measurement capability summary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          result = json.loads(
+              Path("outputs/source-profile-benchmark/summary.json").read_text()
+          )
+          for source in result["sources"]:
+              print(source["source_id"], source["source_pipeline"])
+              for family, decision in source["measurements"].items():
+                  print(" ", family, decision["status"], decision["reasons"])
+          PY
+
+      - name: Upload benchmark outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-profile-benchmark
+          path: outputs/source-profile-benchmark
+          if-no-files-found: error
+          retention-days: 90
