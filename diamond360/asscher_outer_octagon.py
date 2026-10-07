@@ -18,12 +18,13 @@ from .geometry import fit_asscher_outline
 
 SCHEMA = "diamond360-asscher-outer-octagon/1"
 
-MIN_PROJECTION_SCORE = 0.80
 MIN_EDGE_VISIBILITY_SCORE = 0.72
 MAX_NORMALIZED_Q90_RESIDUAL = 0.040
 MAX_CARDINAL_PARALLELISM_DEG = 6.0
 MAX_ABS_LOG_ASPECT = 0.10
-MAX_QUALITY_DROP_FROM_BEST = 0.10
+FACE_ON_ASPECT_SCALE = 0.050
+FACE_ON_PARALLELISM_SCALE_DEG = 3.0
+PREFERRED_FACE_ON_CORE_FRAMES = 5
 MIN_CONSENSUS_DISTANCE = 0.012
 CONSENSUS_MAD_MULTIPLIER = 2.5
 
@@ -42,7 +43,6 @@ def specification():
             "interior optical edge as semantic geometry"
         ),
         "selection_thresholds": {
-            "minimum_projection_consistency_score": MIN_PROJECTION_SCORE,
             "minimum_edge_visibility_score": MIN_EDGE_VISIBILITY_SCORE,
             "maximum_normalized_q90_boundary_residual": (
                 MAX_NORMALIZED_Q90_RESIDUAL
@@ -51,12 +51,15 @@ def specification():
                 MAX_CARDINAL_PARALLELISM_DEG
             ),
             "maximum_abs_log_aspect": MAX_ABS_LOG_ASPECT,
-            "maximum_quality_drop_from_best": MAX_QUALITY_DROP_FROM_BEST,
+            "face_on_aspect_scale": FACE_ON_ASPECT_SCALE,
+            "face_on_parallelism_scale_deg": FACE_ON_PARALLELISM_SCALE_DEG,
+            "preferred_face_on_core_frames": PREFERRED_FACE_ON_CORE_FRAMES,
         },
         "consensus_policy": (
-            "candidate silhouettes are compared by normalized eight-side "
-            "offsets modulo the declared 90-degree gauge ambiguity; a robust "
-            "medoid/MAD gate removes shape outliers before frame ranking"
+            "outline residual and edge visibility are reliability gates; "
+            "among reliable silhouettes, face-onness is ranked from explicit "
+            "octagon foreshortening (aspect) and opposite-cardinal convergence; "
+            "a robust medoid/MAD gate separately removes shape outliers"
         ),
         "stone_outline_policy": (
             "the stone-level GIRDLE_OUTLINE is the coordinate-wise median of "
@@ -143,11 +146,17 @@ def assess_record(record):
         assessment, "edge_visibility", default=0.0
     )
     fit_score = _component_score(assessment, "outline_fit", default=0.0)
+    # Detection quality answers "can we trust this outline?".
+    # Projection-consistency remains diagnostic because its centre/corner terms
+    # can penalize a genuinely asymmetric stone. Face-onness is instead an
+    # explicit, narrow geometric measure from the outer octagon itself.
     quality = float(
-        max(0.0, fit_score)
-        * max(0.0, projection)
-        * max(0.0, edge_visibility)
-    ) ** (1.0 / 3.0)
+        max(0.0, fit_score) * max(0.0, edge_visibility)
+    ) ** 0.5
+    face_on_error = float(math.sqrt(
+        (aspect_error / FACE_ON_ASPECT_SCALE) ** 2
+        + (parallelism / FACE_ON_PARALLELISM_SCALE_DEG) ** 2
+    ))
     shape = _shape_vector(outline)
 
     reasons = []
@@ -159,8 +168,6 @@ def assess_record(record):
         reasons.append("outer_projection_parallelism")
     if aspect_error > MAX_ABS_LOG_ASPECT:
         reasons.append("outer_projection_aspect")
-    if projection < MIN_PROJECTION_SCORE:
-        reasons.append("outer_projection_score")
     if edge_visibility < MIN_EDGE_VISIBILITY_SCORE:
         reasons.append("outer_edge_visibility")
 
@@ -168,6 +175,7 @@ def assess_record(record):
         status="candidate" if not reasons else "rejected",
         hard_usable=not reasons,
         quality=quality,
+        face_on_error=face_on_error,
         normalized_q90_boundary_residual=residual,
         abs_log_aspect=aspect_error,
         max_cardinal_parallelism_error_deg=parallelism,
@@ -240,43 +248,24 @@ def select_records(records, *, max_frames=7, min_frames=3):
         distance_median + CONSENSUS_MAD_MULTIPLIER * robust_scale,
     )
 
-    best_quality = max(diagnostics[index]["quality"] for index in hard)
-    quality_threshold = max(
-        MIN_PROJECTION_SCORE,
-        best_quality - MAX_QUALITY_DROP_FROM_BEST,
-    )
-
     consensus_pool = [
         index for index in hard
         if distances[index] <= distance_threshold
     ]
-    selected_indices = [
-        index for index in consensus_pool
-        if diagnostics[index]["quality"] >= quality_threshold
-    ]
-
-    # Keep the gate honest but avoid an arbitrary "need seven" rule.  If the
-    # relative quality gate leaves fewer than the minimum, take only the best
-    # minimum-compatible core from the already consensus-compatible pool.
-    if len(selected_indices) < int(min_frames):
-        selected_indices = sorted(
-            consensus_pool,
-            key=lambda index: (
-                -diagnostics[index]["quality"],
-                distances[index],
-                int(records[index].get("rank", 10**9)),
-            ),
-        )[: int(min_frames)]
-
+    effective_max = min(
+        int(max_frames),
+        int(PREFERRED_FACE_ON_CORE_FRAMES),
+    )
     selected_indices = sorted(
-        selected_indices,
+        consensus_pool,
         key=lambda index: (
+            diagnostics[index]["face_on_error"],
             -diagnostics[index]["quality"],
             distances[index],
             int(records[index].get("rank", 10**9)),
             int(records[index].get("position", 10**9)),
         ),
-    )[: int(max_frames)]
+    )[: effective_max]
     selected_set = set(selected_indices)
 
     for index in hard:
@@ -291,12 +280,9 @@ def select_records(records, *, max_frames=7, min_frames=3):
             if distances[index] > distance_threshold:
                 row["status"] = "rejected"
                 row["reasons"] = ["outer_octagon_consensus_outlier"]
-            elif row["quality"] < quality_threshold:
-                row["status"] = "rejected"
-                row["reasons"] = ["outer_octagon_quality_drop"]
             else:
                 row["status"] = "not_selected"
-                row["reasons"] = ["outer_octagon_frame_limit"]
+                row["reasons"] = ["outside_face_on_outer_core"]
     for index, row in enumerate(diagnostics):
         if index not in hard:
             row["selected"] = False
@@ -307,7 +293,7 @@ def select_records(records, *, max_frames=7, min_frames=3):
         consensus_distance_threshold=float(distance_threshold),
         consensus_distance_median=distance_median,
         consensus_distance_mad=distance_mad,
-        quality_threshold=float(quality_threshold),
+        preferred_face_on_core_frames=int(PREFERRED_FACE_ON_CORE_FRAMES),
         frames=diagnostics,
     )
     return [records[index] for index in selected_indices], result
