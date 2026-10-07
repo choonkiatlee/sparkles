@@ -1,0 +1,32 @@
+name: diamond-retrieval-contract
+
+on:
+  pull_request:
+    paths:
+      - "diamond_retrieval/**"
+      - "tests/test_diamond_retrieval.py"
+      - "docs/diamond-retrieval.md"
+      - "pyproject.toml"
+      - ".github/workflows/diamond-retrieval-contract.yml"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: python -m pip install -e .
+
+      - name: Run diamond retrieval contract tests
+        run: python -m unittest tests.test_diamond_retrieval -v
+
+      - name: Record full-suite status
+        continue-on-error: true
+        run: python -m unittest discover -s tests -v
