@@ -228,6 +228,44 @@ def _pose_coverage(pose):
     )
 
 
+def _pose_extents(pose):
+    """Prefer source-camera extents from #73 crown or top-ranked usable views."""
+    if not isinstance(pose, dict):
+        return None
+    usable = [
+        record
+        for record in pose.get("frames") or []
+        if (record.get("assessment") or {}).get("status") in ("ok", "review")
+        and (record.get("assessment") or {}).get("outline")
+    ]
+    crown = [
+        record
+        for record in usable
+        if record.get("face_role") == "likely_crown_lobe"
+    ]
+    if crown:
+        selected = crown
+        provenance = "asscher_pose_likely_crown_lobe"
+    elif usable:
+        selected = sorted(
+            usable,
+            key=lambda record: int(record.get("rank", 10**9)),
+        )[: min(16, len(usable))]
+        provenance = "asscher_pose_top_ranked_usable_views"
+    else:
+        return None
+
+    outlines = [record["assessment"]["outline"] for record in selected]
+    return {
+        "provenance": provenance,
+        "diameter": _summary(
+            outline.get("effective_diameter_px") for outline in outlines
+        ),
+        "widths": _summary(outline.get("width_px") for outline in outlines),
+        "heights": _summary(outline.get("height_px") for outline in outlines),
+    }
+
+
 def _physical_scale(widths, heights, certificate_dimensions_mm, pose_coverage):
     if certificate_dimensions_mm is None:
         return _status(
@@ -274,8 +312,19 @@ def _physical_scale(widths, heights, certificate_dimensions_mm, pose_coverage):
     )
 
 
-def _spatial_sampling(metadata):
-    diameter, widths, heights = _stone_diameters(metadata)
+def _spatial_sampling(metadata, pose=None):
+    pose_extents = _pose_extents(pose)
+    if pose_extents is None:
+        diameter, widths, heights = _stone_diameters(metadata)
+        provenance = "processed_sequence_all_views_fallback"
+        fallback_reason = "pose_conditioned_native_sampling_unavailable"
+    else:
+        diameter = pose_extents["diameter"]
+        widths = pose_extents["widths"]
+        heights = pose_extents["heights"]
+        provenance = pose_extents["provenance"]
+        fallback_reason = None
+
     native = diameter.get("median")
     if native is None:
         state, reasons = "unavailable", ["stone_effective_diameter_unavailable"]
@@ -303,9 +352,13 @@ def _spatial_sampling(metadata):
             median_scale=float(DEFAULT_TARGET_DIAMETER_PX / native),
             requires_upsampling=bool(needs_upsampling),
         )
+    if fallback_reason and state != "unavailable":
+        state = "review"
+        reasons = list(reasons) + [fallback_reason]
     return _status(
         state,
         reasons,
+        extent_provenance=provenance,
         effective_diameter_px=diameter,
         stone_width_px=widths,
         stone_height_px=heights,
@@ -325,7 +378,7 @@ def build_profile(
         raise ValueError("metadata must be a sequence.json-style mapping")
     manifest = metadata.get("source_manifest") or {}
     pose_coverage = _pose_coverage(pose)
-    spatial = _spatial_sampling(metadata)
+    spatial = _spatial_sampling(metadata, pose)
     image_diagnostics = image_diagnostics or {}
 
     compression = image_diagnostics.get(
