@@ -495,6 +495,7 @@ def validate_scaffold(scaffold, topology=None):
             parent, parent_area = polygon, area
 
     entity_ids, support_ids = set(_index(topology)), set()
+    support_semantics = {}
     for support in scaffold.get("semantic_supports", []):
         sid = support.get("support_id")
         if not sid or sid in support_ids:
@@ -504,6 +505,7 @@ def validate_scaffold(scaffold, topology=None):
         semantic_ids = support.get("semantic_ids", [])
         if not semantic_ids or any(x not in entity_ids for x in semantic_ids):
             raise ScaffoldValidationError(f"{sid}: invalid semantic references")
+        support_semantics[sid] = set(semantic_ids)
         if support.get("direct_projection_claim") is not False:
             raise ScaffoldValidationError(f"{sid}: direct projection claim forbidden")
         points = [_point(vertices, v) for v in support.get("vertex_ids", [])]
@@ -520,6 +522,10 @@ def validate_scaffold(scaffold, topology=None):
         refs = record.get("support_ids", [])
         if any(ref not in support_ids for ref in refs):
             raise ScaffoldValidationError(f"{semantic_id}: missing support reference")
+        if any(semantic_id not in support_semantics[ref] for ref in refs):
+            raise ScaffoldValidationError(
+                f"{semantic_id}: support reference lacks matching semantic association"
+            )
         if record["observation_state"] == "unavailable" and refs:
             raise ScaffoldValidationError(f"{semantic_id}: unavailable cannot require support")
     return True
