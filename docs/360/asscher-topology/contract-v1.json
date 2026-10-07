@@ -1,0 +1,42 @@
+{
+  "schema_version": "diamond360-asscher-topology-contract/1",
+  "physical_topology_schema": "diamond360-asscher-physical-topology/1",
+  "image_plane_scaffold_schema": "diamond360-asscher-semantic-scaffold/1",
+  "topology_id": "asscher-step-cut-semantic-v1",
+  "physical_facet_families": ["C1", "C2", "C3", "P1", "P2", "P3"],
+  "orientation_labels": ["N", "NE", "E", "SE", "S", "SW", "W", "NW"],
+  "orientation_period_deg": 90,
+  "provenance_enum": ["observed", "model_inferred", "symmetry_inferred", "unavailable"],
+  "observation_state_enum": ["complete", "partial", "unavailable"],
+  "validity_enum": ["ok", "review", "unavailable"],
+  "crown_boundary_order_outer_to_inner": [
+    "GIRDLE_OUTLINE",
+    "C1_C2",
+    "C2_C3",
+    "C3_TABLE"
+  ],
+  "invariants": [
+    "semantic identity exists independently of observation provenance",
+    "one stone/sequence uses one stable semantic gauge",
+    "fourfold symmetry is a relationship/prior, not coordinate equality",
+    "image-plane semantic supports are non-exclusive",
+    "semantic supports are not direct polished-facet projections",
+    "one support may reference multiple physical semantic entities",
+    "future optical regions may associate many-to-many with physical entities",
+    "declared crown boundaries are simple, nested, ordered and non-crossing"
+  ],
+  "future_extension_boundary": {
+    "implemented_here": [
+      "physical semantic topology",
+      "image-plane semantic scaffold",
+      "confidence/provenance/observation state"
+    ],
+    "explicitly_not_implemented_here": [
+      "empirical optical or virtual-facet segmentation",
+      "optical event tracking",
+      "brilliance/fire/scintillation metrics",
+      "quality scoring",
+      "full 3-D reconstruction"
+    ]
+  }
+}
