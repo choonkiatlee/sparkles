@@ -229,6 +229,7 @@ def normalize_frame(
             ),
             "source_centroid_yx": [centroid_y, centroid_x],
             "source_centre_xy": [cx, cy],
+            "centering": centering_applied,
             "centering_applied": centering_applied,
             "rotation_applied_deg": rotation_deg,
             "transform_type": "similarity: translation + rotation + isotropic scale",
