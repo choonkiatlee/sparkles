@@ -347,16 +347,49 @@ def face_orientation_cues(brightness, mask, outline):
         centre_gradient / max(comparison_gradient, 1e-12)
     )
 
+    # Put the central image into the fitted Asscher orientation, then measure
+    # whether edge energy forms the two full diagonals that cross the centre.
+    angle = math.radians(-float(outline["orientation_deg_mod_90"]))
+    cosine, sine = math.cos(angle), math.sin(angle)
+    qx = cosine * dx - sine * dy
+    qy = sine * dx + cosine * dy
+    diagonal_distance = np.minimum(
+        np.abs(qy - qx),
+        np.abs(qy + qx),
+    ) / math.sqrt(2.0)
+    cardinal_distance = np.minimum(np.abs(qx), np.abs(qy))
+    central_band = mask & (radius_fraction <= 0.16)
+    corridor_width = max(1.0, 0.012 * diameter)
+    diagonal_corridor = central_band & (diagonal_distance <= corridor_width)
+    cardinal_corridor = central_band & (cardinal_distance <= corridor_width)
+
+    diagonal_energy = float(np.sum(magnitude[diagonal_corridor]))
+    cardinal_energy = float(np.sum(magnitude[cardinal_corridor]))
+    central_energy = float(np.sum(magnitude[central_band]))
+    diagonal_area = max(1, int(diagonal_corridor.sum()))
+    central_area = max(1, int(central_band.sum()))
+    diagonal_energy_density = diagonal_energy / diagonal_area
+    central_energy_density = central_energy / central_area
+    diagonal_excess = float(
+        diagonal_energy_density / max(central_energy_density, 1e-12)
+    )
+    diagonal_to_cardinal = float(
+        diagonal_energy / max(cardinal_energy, 1e-12)
+    )
+
     return {
         "status": "ok",
         "central_radial_spoke_score": spoke_score,
         "central_ring_edge_score": ring_score,
         "centre_gradient_ratio": gradient_ratio,
+        "central_diagonal_spoke_energy_ratio": diagonal_excess,
+        "central_diagonal_to_cardinal_energy_ratio": diagonal_to_cardinal,
+        "central_diagonal_corridor_width_px": float(corridor_width),
         "support_pixels": int(good.sum()),
         "radius_band_diameter_fraction": [0.04, 0.30],
         "interpretation": (
-            "diagnostic only: higher radial-spoke score means central edges "
-            "more often run toward the fitted centre; not a crown classifier"
+            "diagnostic only: higher radial-spoke and central-diagonal ratios "
+            "mean stronger centre-crossing spoke structure; not a crown classifier"
         ),
     }
 
