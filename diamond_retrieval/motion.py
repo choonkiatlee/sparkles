@@ -7,6 +7,8 @@ import json
 from io import BytesIO
 from typing import Any
 
+from cryptography.hazmat.primitives import padding
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from PIL import Image
 
 from diamond360.d360_source import (
@@ -42,6 +44,41 @@ def ordered_positions(scramble: list[list[int]]) -> tuple[int, ...]:
     """Return progressive serial order as zero-based final source indices."""
     mapping = _legacy_ordered_positions(scramble)
     return tuple(mapping[serial] - 1 for serial in range(1, FRAME_COUNT + 1))
+
+
+_VISION360_AES_KEY = b"2606198511121984"
+
+
+def decode_vision360_scramble(ciphertext: str) -> list[list[int]]:
+    """Decode the public Vision360 AES-CBC/PKCS#7 scramble payload.
+
+    The public player parses the same UTF-8 literal as both AES key and IV,
+    decrypts the Base64 string in CBC mode, removes PKCS#7 padding, then parses
+    the resulting JSON. Validation remains fail-closed through validate_scramble.
+    """
+    if not isinstance(ciphertext, str) or not ciphertext:
+        raise ValueError("Vision360 scramble must be non-empty Base64 text")
+    try:
+        encrypted = base64.b64decode(ciphertext, validate=True)
+    except Exception as exc:
+        raise ValueError("Vision360 scramble is not valid Base64") from exc
+    if not encrypted or len(encrypted) % 16:
+        raise ValueError("Vision360 scramble ciphertext is not AES block-aligned")
+    try:
+        decryptor = Cipher(
+            algorithms.AES(_VISION360_AES_KEY),
+            modes.CBC(_VISION360_AES_KEY),
+        ).decryptor()
+        padded = decryptor.update(encrypted) + decryptor.finalize()
+        unpadder = padding.PKCS7(128).unpadder()
+        plaintext = unpadder.update(padded) + unpadder.finalize()
+        decoded = json.loads(plaintext.decode("utf-8"))
+    except Exception as exc:
+        raise ValueError("Vision360 scramble decryption failed") from exc
+    if not isinstance(decoded, list):
+        raise ValueError("Vision360 scramble plaintext must be a JSON array")
+    validate_scramble(decoded)
+    return decoded
 
 
 def _decode_jpeg(encoded: str, *, batch: int, stored_position: int) -> tuple[bytes, tuple[int, int]]:
