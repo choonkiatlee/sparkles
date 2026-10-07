@@ -19,6 +19,7 @@ SCHEMA = "diamond360-asscher-pose-benchmark/1"
 def _frame_summary(record):
     assessment = record["assessment"]
     components = assessment.get("components", {})
+    face = assessment.get("face_orientation_cues", {})
     return {
         "source_index": record.get("source_index"),
         "rank": record.get("rank"),
@@ -40,6 +41,15 @@ def _frame_summary(record):
         "corner_imbalance": components.get(
             "corner_balance", {}
         ).get("value"),
+        "central_radial_spoke_score": face.get(
+            "central_radial_spoke_score"
+        ),
+        "central_ring_edge_score": face.get(
+            "central_ring_edge_score"
+        ),
+        "centre_gradient_ratio": face.get(
+            "centre_gradient_ratio"
+        ),
     }
 
 
@@ -74,6 +84,21 @@ def _render_reference_faces(processed, pose_output, payload, source_indices=(0, 
     destination = Path(pose_output) / "reference-faces.jpg"
     qc.contact_sheet(items, destination, columns=2)
     return destination.name
+
+
+def _reference_face_metrics(payload, source_indices=(0, 128)):
+    lookup = {
+        record.get("source_index"): record
+        for record in payload["frames"]
+    }
+    return {
+        str(source_index): (
+            None
+            if source_index not in lookup
+            else _frame_summary(lookup[source_index])
+        )
+        for source_index in source_indices
+    }
 
 
 def _summarise_stone(certificate, payload):
@@ -137,6 +162,7 @@ def _summarise_stone(certificate, payload):
         ),
         "qc_path": payload.get("qc_path"),
         "reference_faces_path": payload.get("reference_faces_path"),
+        "reference_face_metrics": _reference_face_metrics(payload),
     }
 
 
