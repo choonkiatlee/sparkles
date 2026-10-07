@@ -698,9 +698,9 @@ def fit_from_sector_evidence(
     }
     topology.validate_scaffold(scaffold)
 
-    selected_candidate_indices = {
-        int(control["index"]) for control in controls
-    }
+    selected_candidate_u = [
+        float(control["global_u"]) for control in controls
+    ]
     rejected = [
         {
             "u": float(candidate["u"]),
@@ -708,7 +708,10 @@ def fit_from_sector_evidence(
             "sector_support": float(candidate["sector_support"]),
         }
         for candidate in template.get("candidates", [])
-        if int(candidate["index"]) not in selected_candidate_indices
+        if all(
+            abs(float(candidate["u"]) - chosen_u) > 1e-12
+            for chosen_u in selected_candidate_u
+        )
     ]
 
     boundary_evidence = {
