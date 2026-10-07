@@ -194,6 +194,17 @@ def benchmark_snapshot(manifest):
     }
 
 
+def assert_frozen_benchmark_manifest(manifest):
+    """Fail closed if benchmark provenance differs from the predeclared set."""
+    snapshot = benchmark_snapshot(manifest)
+    if not snapshot["manifest_matches_frozen_snapshot"]:
+        raise RuntimeError(
+            "benchmark source manifest differs from frozen #88 snapshot; "
+            "declare a new validation campaign before continuing"
+        )
+    return snapshot
+
+
 def contract_document():
     return {
         "schema_version": CONTRACT_SCHEMA,
@@ -579,7 +590,7 @@ def build_validation_record(
     assert_frozen_method()
     reference_result = deepcopy(reference_result)
     candidate_result = deepcopy(candidate_result)
-    sources = benchmark_snapshot(benchmark_manifest)
+    sources = assert_frozen_benchmark_manifest(benchmark_manifest)
 
     result_reasons = []
     for label, result in (
