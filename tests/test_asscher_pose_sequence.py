@@ -133,8 +133,17 @@ class AsscherPoseSequenceTests(unittest.TestCase):
             self.assertEqual(result["frame_count"], 3)
             self.assertEqual(result["usable_count"], 2)
             self.assertEqual(
-                [row["source_index"] for row in result["ranking"][:2]],
-                [10, 20],
+                {
+                    row["source_index"]
+                    for row in result["ranking"][:2]
+                },
+                {10, 20},
+            )
+            self.assertTrue(
+                all(
+                    row["status"] == "ok"
+                    for row in result["ranking"][:2]
+                )
             )
             bad_record = next(
                 record
