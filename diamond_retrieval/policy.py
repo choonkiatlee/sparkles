@@ -38,18 +38,31 @@ class StandardRetrievalPolicy:
     ) -> CompletionAssessment:
         kinds = {item.kind for item in evidence if item.status == EvidenceStatus.SUCCESS}
         reasons: list[str] = []
-        certificates = [item for item in evidence if item.kind == CERTIFICATE and item.status == EvidenceStatus.SUCCESS]
+        certificates = [
+            item
+            for item in evidence
+            if item.kind == CERTIFICATE and item.status == EvidenceStatus.SUCCESS
+        ]
         if not certificates:
             reasons.append("missing successful certificate evidence")
         else:
             certificate_identity_fields = {
-                observation.field for item in certificates for observation in item.identity_observations
+                observation.field
+                for item in certificates
+                for observation in item.identity_observations
             }
             comparison_outcomes = {item.field: item.outcome for item in comparisons}
-            if "report_number" not in certificate_identity_fields or comparison_outcomes.get("report_number") != IdentityOutcome.AGREEMENT:
+            if (
+                "report_number" not in certificate_identity_fields
+                or comparison_outcomes.get("report_number")
+                != IdentityOutcome.AGREEMENT
+            ):
                 reasons.append("certificate report number was not parsed and matched")
             if listing.metadata.lab is not None:
-                if "lab" not in certificate_identity_fields or comparison_outcomes.get("lab") != IdentityOutcome.AGREEMENT:
+                if (
+                    "lab" not in certificate_identity_fields
+                    or comparison_outcomes.get("lab") != IdentityOutcome.AGREEMENT
+                ):
                     reasons.append("certificate lab identity was not parsed and matched")
         if not ({ROTATION, VIDEO} & kinds):
             reasons.append("missing successful motion evidence")
@@ -59,6 +72,7 @@ class StandardRetrievalPolicy:
             EvidenceStatus.MISSING,
             EvidenceStatus.DOWNLOAD_FAILED,
             EvidenceStatus.PROCESSING_FAILED,
+            EvidenceStatus.EXTRACTION_FAILED,
             EvidenceStatus.INVALID_PAYLOAD,
             EvidenceStatus.RESOLUTION_FAILED,
             EvidenceStatus.RESOLUTION_LIMIT,
