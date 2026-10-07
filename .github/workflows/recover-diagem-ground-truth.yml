@@ -1,0 +1,46 @@
+name: Recover DiaGem ground-truth fixture
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/recover-diagem-ground-truth.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Recover PriceScope post media
+        shell: bash
+        run: |
+          python - <<'PY'
+          import base64, hashlib
+          from tools.archive_pricescope_external import fetch, ThreadMediaParser
+
+          THREAD = "https://www.pricescope.com/community/threads/why-cut-asschers-with-small-corners-and-windmills.78433/page-6"
+          page, _ = fetch(THREAD)
+          parser = ThreadMediaParser(THREAD)
+          parser.feed(page.decode("utf-8", errors="replace"))
+          targets = {1:151, 7:157, 8:158}
+          for local_post, absolute_post in targets.items():
+              urls = []
+              seen = set()
+              for u in parser.by_post.get(local_post, []):
+                  if u not in seen:
+                      seen.add(u); urls.append(u)
+              print(f"POST {absolute_post} URL_COUNT {len(urls)}")
+              for i, u in enumerate(urls, 1):
+                  data, headers = fetch(u)
+                  ctype = headers.get("content-type","")
+                  print(f"BEGIN_MEDIA post={absolute_post} index={i}")
+                  print(f"URL={u}")
+                  print(f"CONTENT_TYPE={ctype}")
+                  print(f"BYTES={len(data)}")
+                  print(f"SHA256={hashlib.sha256(data).hexdigest()}")
+                  print("BASE64="+base64.b64encode(data).decode("ascii"))
+                  print(f"END_MEDIA post={absolute_post} index={i}")
+          PY
