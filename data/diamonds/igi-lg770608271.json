@@ -337,6 +337,15 @@
       "retailer_sku": "4E098A68E",
       "tax_basis": "public API USD price; storefront/tax basis not verified",
       "url": "https://diyona.com/pages/diamond-detail?sku=4E098A68E"
+    },
+    {
+      "currency": "USD",
+      "observed_at": "2026-10-08T21:28:39.139426Z",
+      "price": "686.44",
+      "retailer": "diyona.com",
+      "retailer_sku": "4E098A68E",
+      "tax_basis": "public API USD price; storefront/tax basis not verified",
+      "url": "https://diyona.com/pages/diamond-detail?sku=4E098A68E"
     }
   ],
   "retrievals": [
@@ -722,6 +731,390 @@
         }
       ],
       "retrieved_at": "2026-10-08T21:18:37.246316Z",
+      "status": "partial"
+    },
+    {
+      "attempts": [
+        {
+          "kind": "certificate",
+          "locator": "https://dnyvsyhu34v1w.cloudfront.net/pdf/LG770608271.pdf",
+          "message": null,
+          "provenance": [
+            {
+              "locator": "https://diyona.com/pages/diamond-detail?sku=4E098A68E",
+              "source": "diyona_listing"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.4E098A68E&limit=1",
+              "source": "diyona_public_supabase"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.4E098A68E&limit=1",
+              "source": "diyona_public_supabase"
+            }
+          ],
+          "reference_identifier": "diyona_public_supabase:LG770608271:certificate",
+          "retrieval_key": "https://dnyvsyhu34v1w.cloudfront.net/pdf/LG770608271.pdf",
+          "status": "success"
+        },
+        {
+          "kind": "still",
+          "locator": "https://assets-images-saas.nivoda.com/fcb0d1db-f1c2-4673-a63e-fc07468018f8.jpg?d_id=20190fb5-a731-42ca-878a-d4a19a00e059&c_id=d4bcbf93-b298-49fc-b02b-8f840de7eda7&f_id=592b0a50-a7f5-42a9-a21e-7f55c2588f0f&type=csv",
+          "message": null,
+          "provenance": [
+            {
+              "locator": "https://diyona.com/pages/diamond-detail?sku=4E098A68E",
+              "source": "diyona_listing"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.4E098A68E&limit=1",
+              "source": "diyona_public_supabase"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.4E098A68E&limit=1",
+              "source": "diyona_public_supabase"
+            }
+          ],
+          "reference_identifier": "diyona_public_supabase:4E098A68E:still:0",
+          "retrieval_key": "https://assets-images-saas.nivoda.com/fcb0d1db-f1c2-4673-a63e-fc07468018f8.jpg?d_id=20190fb5-a731-42ca-878a-d4a19a00e059&c_id=d4bcbf93-b298-49fc-b02b-8f840de7eda7&f_id=592b0a50-a7f5-42a9-a21e-7f55c2588f0f&type=csv",
+          "status": "success"
+        },
+        {
+          "kind": "rotation",
+          "locator": "https://loupe360.com/diamond/LG770608271/video/500/500?d_id=20190fb5-a731-42ca-878a-d4a19a00e059&f_id=592b0a50-a7f5-42a9-a21e-7f55c2588f0f&type=csv",
+          "message": null,
+          "provenance": [
+            {
+              "locator": "https://diyona.com/pages/diamond-detail?sku=4E098A68E",
+              "source": "diyona_listing"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.4E098A68E&limit=1",
+              "source": "diyona_public_supabase"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.4E098A68E&limit=1",
+              "source": "diyona_public_supabase"
+            }
+          ],
+          "reference_identifier": "diyona_public_supabase:LG770608271:loupe360:rotation",
+          "retrieval_key": "loupe360-report:LG770608271",
+          "status": "resolved"
+        },
+        {
+          "kind": "video",
+          "locator": "https://loupe360.com/diamond/LG770608271/video/500/500?d_id=20190fb5-a731-42ca-878a-d4a19a00e059&f_id=592b0a50-a7f5-42a9-a21e-7f55c2588f0f&type=csv",
+          "message": "resolution already visited",
+          "provenance": [
+            {
+              "locator": "https://diyona.com/pages/diamond-detail?sku=4E098A68E",
+              "source": "diyona_listing"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.4E098A68E&limit=1",
+              "source": "diyona_public_supabase"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.4E098A68E&limit=1",
+              "source": "diyona_public_supabase"
+            }
+          ],
+          "reference_identifier": "diyona_public_supabase:LG770608271:loupe360:video",
+          "retrieval_key": "loupe360-report:LG770608271",
+          "status": "duplicate"
+        },
+        {
+          "kind": "rotation",
+          "locator": "https://360view2.360view.link/360view.html?d=DA-36A",
+          "message": "no downloader supports reference",
+          "provenance": [
+            {
+              "locator": "https://diyona.com/pages/diamond-detail?sku=4E098A68E",
+              "source": "diyona_listing"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.4E098A68E&limit=1",
+              "source": "diyona_public_supabase"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.4E098A68E&limit=1",
+              "source": "diyona_public_supabase"
+            },
+            {
+              "locator": "https://g.nivoda.com/graphql-public-loupe360",
+              "source": "loupe360_exact_certificate"
+            }
+          ],
+          "reference_identifier": "diyona_public_supabase:LG770608271:loupe360:rotation:supplier-rotation",
+          "retrieval_key": "https://360view2.360view.link/360view.html?d=DA-36A",
+          "status": "unsupported"
+        }
+      ],
+      "certificate_link": "https://dnyvsyhu34v1w.cloudfront.net/pdf/LG770608271.pdf",
+      "completion_reasons": [
+        "missing successful motion evidence",
+        "one or more requested evidence assets failed"
+      ],
+      "identity_comparisons": [
+        {
+          "field": "report_number",
+          "outcome": "agreement",
+          "provenance": [
+            {
+              "locator": "https://diyona.com/pages/diamond-detail?sku=4E098A68E",
+              "source": "diyona_listing"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.4E098A68E&limit=1",
+              "source": "diyona_public_supabase"
+            },
+            {
+              "locator": "https://diyona.com/pages/diamond-detail?sku=4E098A68E",
+              "source": "diyona_listing"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.4E098A68E&limit=1",
+              "source": "diyona_public_supabase"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.4E098A68E&limit=1",
+              "source": "diyona_public_supabase"
+            },
+            {
+              "locator": "https://dnyvsyhu34v1w.cloudfront.net/pdf/LG770608271.pdf",
+              "source": "certificate_pdf"
+            }
+          ],
+          "values": [
+            "LG770608271",
+            "LG770608271"
+          ]
+        },
+        {
+          "field": "lab",
+          "outcome": "agreement",
+          "provenance": [
+            {
+              "locator": "https://diyona.com/pages/diamond-detail?sku=4E098A68E",
+              "source": "diyona_listing"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.4E098A68E&limit=1",
+              "source": "diyona_public_supabase"
+            },
+            {
+              "locator": "https://diyona.com/pages/diamond-detail?sku=4E098A68E",
+              "source": "diyona_listing"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.4E098A68E&limit=1",
+              "source": "diyona_public_supabase"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.4E098A68E&limit=1",
+              "source": "diyona_public_supabase"
+            },
+            {
+              "locator": "https://dnyvsyhu34v1w.cloudfront.net/pdf/LG770608271.pdf",
+              "source": "certificate_pdf"
+            }
+          ],
+          "values": [
+            "IGI",
+            "IGI"
+          ]
+        },
+        {
+          "field": "origin",
+          "outcome": "agreement",
+          "provenance": [
+            {
+              "locator": "https://diyona.com/pages/diamond-detail?sku=4E098A68E",
+              "source": "diyona_listing"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.4E098A68E&limit=1",
+              "source": "diyona_public_supabase"
+            },
+            {
+              "locator": "https://diyona.com/pages/diamond-detail?sku=4E098A68E",
+              "source": "diyona_listing"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.4E098A68E&limit=1",
+              "source": "diyona_public_supabase"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.4E098A68E&limit=1",
+              "source": "diyona_public_supabase"
+            },
+            {
+              "locator": "https://dnyvsyhu34v1w.cloudfront.net/pdf/LG770608271.pdf",
+              "source": "certificate_pdf"
+            }
+          ],
+          "values": [
+            "lab-grown",
+            "lab-grown"
+          ]
+        },
+        {
+          "field": "shape",
+          "outcome": "missing",
+          "provenance": [
+            {
+              "locator": "https://diyona.com/pages/diamond-detail?sku=4E098A68E",
+              "source": "diyona_listing"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.4E098A68E&limit=1",
+              "source": "diyona_public_supabase"
+            }
+          ],
+          "values": [
+            "Asscher"
+          ]
+        },
+        {
+          "field": "carat",
+          "outcome": "agreement",
+          "provenance": [
+            {
+              "locator": "https://diyona.com/pages/diamond-detail?sku=4E098A68E",
+              "source": "diyona_listing"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.4E098A68E&limit=1",
+              "source": "diyona_public_supabase"
+            },
+            {
+              "locator": "https://diyona.com/pages/diamond-detail?sku=4E098A68E",
+              "source": "diyona_listing"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.4E098A68E&limit=1",
+              "source": "diyona_public_supabase"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.4E098A68E&limit=1",
+              "source": "diyona_public_supabase"
+            },
+            {
+              "locator": "https://dnyvsyhu34v1w.cloudfront.net/pdf/LG770608271.pdf",
+              "source": "certificate_pdf"
+            }
+          ],
+          "values": [
+            "2.5",
+            2.5
+          ]
+        },
+        {
+          "field": "colour",
+          "outcome": "agreement",
+          "provenance": [
+            {
+              "locator": "https://diyona.com/pages/diamond-detail?sku=4E098A68E",
+              "source": "diyona_listing"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.4E098A68E&limit=1",
+              "source": "diyona_public_supabase"
+            },
+            {
+              "locator": "https://diyona.com/pages/diamond-detail?sku=4E098A68E",
+              "source": "diyona_listing"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.4E098A68E&limit=1",
+              "source": "diyona_public_supabase"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.4E098A68E&limit=1",
+              "source": "diyona_public_supabase"
+            },
+            {
+              "locator": "https://dnyvsyhu34v1w.cloudfront.net/pdf/LG770608271.pdf",
+              "source": "certificate_pdf"
+            }
+          ],
+          "values": [
+            "D",
+            "D"
+          ]
+        },
+        {
+          "field": "clarity",
+          "outcome": "missing",
+          "provenance": [
+            {
+              "locator": "https://diyona.com/pages/diamond-detail?sku=4E098A68E",
+              "source": "diyona_listing"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.4E098A68E&limit=1",
+              "source": "diyona_public_supabase"
+            }
+          ],
+          "values": [
+            "VVS1"
+          ]
+        },
+        {
+          "field": "dimensions",
+          "outcome": "agreement",
+          "provenance": [
+            {
+              "locator": "https://diyona.com/pages/diamond-detail?sku=4E098A68E",
+              "source": "diyona_listing"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.4E098A68E&limit=1",
+              "source": "diyona_public_supabase"
+            },
+            {
+              "locator": "https://diyona.com/pages/diamond-detail?sku=4E098A68E",
+              "source": "diyona_listing"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.4E098A68E&limit=1",
+              "source": "diyona_public_supabase"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.4E098A68E&limit=1",
+              "source": "diyona_public_supabase"
+            },
+            {
+              "locator": "https://dnyvsyhu34v1w.cloudfront.net/pdf/LG770608271.pdf",
+              "source": "certificate_pdf"
+            }
+          ],
+          "values": [
+            [
+              7.46,
+              7.46,
+              4.91
+            ],
+            [
+              7.46,
+              7.46,
+              4.91
+            ]
+          ]
+        }
+      ],
+      "listing_url": "https://diyona.com/pages/diamond-detail?sku=4E098A68E",
+      "provenance": [
+        {
+          "locator": "https://diyona.com/pages/diamond-detail?sku=4E098A68E",
+          "source": "diyona_listing"
+        },
+        {
+          "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.4E098A68E&limit=1",
+          "source": "diyona_public_supabase"
+        }
+      ],
+      "retrieved_at": "2026-10-08T21:28:39.139426Z",
       "status": "partial"
     }
   ],
