@@ -19,6 +19,7 @@ from diamond_retrieval.motion_sources import (
     Core360RotationDownloader,
     D360RotationDownloader,
     DiajewelRotationDownloader,
+    RemoteV360RotationDownloader,
     WorkshopRotationDownloader,
 )
 from diamond_retrieval.motion import (
@@ -359,6 +360,54 @@ class ProgressiveMotionContractTests(unittest.TestCase):
             "https://example.com/vision360.html?d=NGS-05-413",
         )
         self.assertFalse(downloader.supports(wrong))
+
+
+    def test_loupe_v360_remote_media_root_downloads_original_ordered_frames(self):
+        # IGI LG781646632 was resolved by Loupe360 to this exact viewer,
+        # but previously returned "no downloader supports reference".
+        viewer = (
+            "https://v360.in/viewer4.0/vision360.html?"
+            "d=VDC-32-50&surl=https://s10.v360.in/images/company/1546/"
+        )
+        root = "https://s10.v360.in/images/company/1546/VDC-32-50"
+        responses = _progressive_source_responses(AUDITS[0], root, version=1)
+        responses[root + "/0.json?version="] = responses.pop(root + "/0.json")
+        http = FakeHttpClient(responses)
+        downloader = RemoteV360RotationDownloader(http)
+        ref = _reference("loupe360", viewer)
+
+        self.assertTrue(downloader.supports(ref))
+        raw = downloader.download(ref)
+        frames = ProgressiveRotationProcessor().process(raw)[0].frames
+        self.assertEqual(len(frames), 256)
+        self.assertEqual([f.source_index for f in frames], list(range(256)))
+        self.assertEqual(frames[0].payload, _jpeg(0))
+        self.assertEqual(raw.metadata["supplier"], "v360-remote")
+        self.assertEqual(
+            http.calls,
+            [root + "/0.json?version="]
+            + [f"{root}/{n}.json?version=1" for n in range(1, 8)],
+        )
+
+    def test_remote_v360_requires_exact_public_media_root(self):
+        valid = (
+            "https://v360.in/viewer4.0/vision360.html?"
+            "d=VDC-32-50&surl=https://s10.v360.in/images/company/1546/"
+        )
+        downloader = RemoteV360RotationDownloader(FakeHttpClient({}))
+        self.assertTrue(downloader.supports(_reference("v360", valid)))
+        for url in (
+            valid.replace("s10.v360.in", "127.0.0.1"),
+            valid.replace("s10.v360.in", "s10.v360.in.attacker.test"),
+            valid.replace("/images/company/1546/", "/private/"),
+            valid.replace("d=VDC-32-50", "d=../other"),
+            valid.replace("surl=https://", "surl=http://"),
+            valid + "&surl=https://s11.v360.in/images/company/1546/",
+            valid.replace("v360.in/viewer4.0/", "other.test/viewer4.0/"),
+        ):
+            with self.subTest(url=url):
+                self.assertFalse(downloader.supports(_reference("v360", url)))
+        self.assertEqual(downloader.http_client.calls, [])
 
     def test_progressive_downloader_rejects_incomplete_public_batch(self):
         audit = AUDITS[0]
