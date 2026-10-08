@@ -16,7 +16,7 @@ class FaceUpPublishingTests(unittest.TestCase):
         self.api=FakeGitHub()
         publish_result(result(),self.api)
         self.doc=self.api.manifest("igi-lg800667394")
-        self.frame=self.doc["evidence"][2]["frames"][0]
+        self.frame=next(e for e in self.doc["evidence"] if e["kind"] == "rotation")["frames"][0]
         self.payload=b"RIFFfake-validity-is-checked-by-thumbnail-generator"
         self.digest=hashlib.sha256(self.payload).hexdigest()
         self.source=self.frame["asset"]["sha256"]
