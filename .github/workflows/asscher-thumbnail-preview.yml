@@ -1,0 +1,56 @@
+name: asscher-thumbnail-preview
+
+on:
+  pull_request:
+    paths:
+      - "diamond_catalogue/faceup_thumbnail.py"
+      - "tests/test_faceup_thumbnail.py"
+      - "tools/build_faceup_previews.py"
+      - ".github/workflows/asscher-thumbnail-preview.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  thumbnail-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -e .
+      - run: python -m unittest tests.test_faceup_thumbnail tests.test_diamond_catalogue -v
+
+  real-published-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -e .
+      - name: Recover original saved frames and render two review candidates
+        id: previews
+        # Network and retailer asset access are best-effort; do not silently
+        # promote failures to verified thumbnails.
+        continue-on-error: true
+        run: |
+          python tools/build_faceup_previews.py \
+            --output /tmp/faceup-review \
+            igi-lg756520111 igi-lg816611062
+      - name: Upload original-color crop and thumbnail review bundle
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: faceup-review-two-published-stones
+          path: /tmp/faceup-review/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Flag preview failure, preserving the tests
+        if: steps.previews.outcome == 'failure'
+        run: |
+          echo "::warning title=Thumbnail media preview unavailable::Source media retrieval or face-up selection did not complete; inspect preview logs and keep original image fallback."

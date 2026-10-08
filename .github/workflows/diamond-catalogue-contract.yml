@@ -6,6 +6,8 @@ on:
       - "diamond_catalogue/**"
       - ".github/workflows/diamond-catalogue-ingest.yml"
       - "tests/test_diamond_catalogue*.py"
+      - "tests/test_faceup_thumbnail.py"
+      - ".github/workflows/asscher-thumbnail-preview.yml"
       - "docs/diamond-catalogue.md"
       - "pyproject.toml"
       - ".github/workflows/diamond-catalogue-contract.yml"
