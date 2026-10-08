@@ -56,6 +56,17 @@ class PagesCatalogueTests(unittest.TestCase):
         self.assertNotIn("api.github.com", model)
         self.assertNotIn("overview_thumbnail_url", player)
 
+    def test_c3b_buffers_frame_switches_and_supports_all_prefetch(self):
+        player=(ROOT / "catalogue/rotation-player.mjs").read_text(encoding="utf-8")
+        model=(ROOT / "catalogue/rotation.mjs").read_text(encoding="utf-8")
+        self.assertIn("createFrameGate", player)
+        self.assertIn("motion-viewport", player)
+        self.assertIn("Background prefetch:", player)
+        self.assertIn("Load frames", player)
+        self.assertIn('mode: "all"', model)
+        self.assertIn("maxDecoded: 24", model)
+        self.assertIn("setMode(nextMode", model)
+
     def test_generated_icons_only_affect_overview_not_original_comparison(self):
         app = (ROOT / "catalogue/app.mjs").read_text(encoding="utf-8")
         comparator = (ROOT / "catalogue/compare.mjs").read_text(encoding="utf-8")

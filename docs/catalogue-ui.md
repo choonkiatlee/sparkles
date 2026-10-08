@@ -137,3 +137,32 @@ To test model/policy behavior:
 ```sh
 node --test tests/catalogue-rotation.test.mjs
 ```
+
+
+## C3b: buffered presentation and automatic full prefetch (#153)
+
+Following live feedback that the C3a `img.src`-per-tick player was extremely
+flickery, the compare 360 player now keeps **two overlapping original-image
+layers**. It never hides or discards the displayed decoded frame until the
+next original JPEG has loaded and decoded offscreen. Obsolete requests from
+rapid scrubbing cannot overwrite a newer requested view. Loading/failure
+keeps the last image visible and the original-media row provides Retry.
+
+The **default** mode for the selected comparison is now `all` (previously
+`none`). A small `Load frames` selector permits switching at runtime among
+`All selected frames`, `Nearby frames` and `Visible frames only`.
+Full prefetch starts only after opening comparison and loading a selected
+manifest, not in the catalogue table. It prioritizes demanded and upcoming
+frames over the background queue, limits simultaneous requests to six, and
+retains at most 24 decoded images in memory instead of hundreds of 839px
+bitmaps. Background status reports loaded/total original frames and failures.
+
+The two initial 256-frame diamonds contain approximately 6.2 MB and
+11.5 MB of original JPEG payloads (about 17.7 MB combined), so full prefetch
+is useful but may consume substantial bandwidth for five stones. Switch to
+nearby/visible-only whenever bandwidth or device memory is constrained.
+
+This remains ordinal synchronization without physical angle alignment, and
+original stills, full-size evidence and provenance remain unchanged.
+Tests cover priority queueing, mode switching, decoded cache bounds, stale
+asynchronous seeks, failed frame retention and retry.

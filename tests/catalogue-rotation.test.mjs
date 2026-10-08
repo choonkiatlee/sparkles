@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {extractRotation,frameIndexAt,stepPosition,createFramePreloader,
-  FRAME_PREFETCH,PREFETCH_MODES} from "../catalogue/rotation.mjs";
+  FRAME_PREFETCH,PREFETCH_MODES,createFrameGate} from "../catalogue/rotation.mjs";
 
 const manifest = id => JSON.parse(readFileSync(new URL("../data/diamonds/"+id+".json",import.meta.url)));
 const first=manifest("igi-lg756520111"),second=manifest("igi-lg816611062");
@@ -56,7 +56,7 @@ test("incomplete, missing and video-only evidence never masquerades as rotation"
 
 test("full prefetch exists, is opt-in, loads selected frames, and respects concurrency",()=>{
   assert.deepEqual(PREFETCH_MODES,["none","nearby","all"]);
-  assert.equal(FRAME_PREFETCH.mode,"none");
+  assert.equal(FRAME_PREFETCH.mode,"all");
   const seq=extractRotation([{
     kind:"rotation",status:"success",metadata:{sequence_complete:true},
     frames:Array.from({length:8},(_,i)=>({source_index:i,
@@ -98,4 +98,113 @@ test("nearby prefetch wraps and remains bounded to neighboring image URLs",()=>{
   preloader.observe([seq],0);
   assert.deepEqual(requested.sort(),["https://github.com/assets/1.jpg","https://github.com/assets/5.jpg"]);
   preloader.stop();
+});
+
+
+test("urgent visible frame jumps ahead of hundreds of queued bulk requests",()=>{
+  const seq=extractRotation([{
+    kind:"rotation",status:"success",metadata:{sequence_complete:true},
+    frames:Array.from({length:24},(_,i)=>({source_index:i,
+      asset:{storage:{url:"https://media.test/"+i+".jpg"},media_type:"image/jpeg"}}))
+  }]);
+  const requested=[],pending=[];
+  const preloader=createFramePreloader({mode:"all",maxConcurrent:1,maxDecoded:3,
+    imageFactory:()=>{
+      const img={onload:null,onerror:null};
+      Object.defineProperty(img,"src",{set(url){requested.push(url);pending.push(img);}});
+      return img;
+    }
+  });
+  preloader.observe([seq],0);
+  assert.equal(requested.length,1);
+  assert.equal(preloader.stats().total,24);
+  const urgent=preloader.request(seq.frames[20].url,{priority:true});
+  pending[0].onload();
+  assert.equal(requested[1],seq.frames[20].url);
+  pending[1].onload();
+  return urgent.then(img=>{
+    assert.ok(img);
+    assert.equal(preloader.stats().loaded,2);
+    preloader.stop();
+  });
+});
+
+test("decoded-frame retention is bounded even when every original is prefetched",()=>{
+  const seq=extractRotation([{
+    kind:"rotation",status:"success",metadata:{sequence_complete:true},
+    frames:Array.from({length:12},(_,i)=>({source_index:i,
+      asset:{storage:{url:"https://media.test/"+i+".jpg"},media_type:"image/jpeg"}}))
+  }]);
+  const requests=[],pending=[];
+  const cache=createFramePreloader({mode:"all",maxConcurrent:2,maxDecoded:2,
+    imageFactory:()=>{
+      const img={onload:null,onerror:null};
+      Object.defineProperty(img,"src",{set(url){requests.push(url);pending.push(img);}});
+      return img;
+    }
+  });
+  cache.observe([seq],0);
+  for(let i=0;i<12;i++) pending[i].onload();
+  assert.equal(cache.stats().loaded,12);
+  assert.equal(cache.stats().decoded,2);
+  assert.equal(cache.stats().active,0);
+  assert.equal(cache.stats().queued,0);
+  cache.stop();
+});
+
+test("changing all to visible-only cancels queued bulk tasks without cancelling displayed requests",async()=>{
+  const seq=extractRotation([{
+    kind:"rotation",status:"success",metadata:{sequence_complete:true},
+    frames:Array.from({length:6},(_,i)=>({source_index:i,
+      asset:{storage:{url:"https://media.test/"+i+".jpg"},media_type:"image/jpeg"}}))
+  }]);
+  const pending=[];
+  const manager=createFramePreloader({mode:"all",maxConcurrent:1,imageFactory:()=>{
+    const img={onload:null,onerror:null};
+    Object.defineProperty(img,"src",{set(){pending.push(img);}});
+    return img;
+  }});
+  manager.observe([seq],0);
+  assert.equal(manager.stats().queued,5);
+  manager.setMode("none",[seq],0);
+  assert.equal(manager.stats().queued,0);
+  assert.equal(manager.mode,"none");
+  pending[0].onload();
+  assert.equal(manager.stats().loaded,1);
+  manager.stop();
+});
+
+test("stale fast scrubs never paint an older image and failure preserves prior displayed view",async()=>{
+  const pending=new Map(),presented=[],errors=[];
+  const gate=createFrameGate({
+    load:url=>new Promise(resolve=>pending.set(url,resolve)),
+    present:frame=>presented.push(frame.url),
+    onError:frame=>errors.push(frame.url)
+  });
+  const frame=id=>({url:"https://media.test/"+id+".jpg",ordinal:id});
+  gate.show(frame(1));
+  await Promise.resolve();
+  pending.get(frame(1).url)({ok:true});
+  await Promise.resolve();await Promise.resolve();
+  assert.deepEqual(presented,[frame(1).url]);
+  gate.show(frame(2));gate.show(frame(3));
+  await Promise.resolve();
+  pending.get(frame(3).url)({ok:true});
+  await Promise.resolve();await Promise.resolve();
+  assert.deepEqual(presented,[frame(1).url,frame(3).url]);
+  pending.get(frame(2).url)({ok:true});
+  await Promise.resolve();await Promise.resolve();
+  assert.deepEqual(presented,[frame(1).url,frame(3).url]);
+  gate.show(frame(4));
+  await Promise.resolve();
+  pending.get(frame(4).url)(null);
+  await Promise.resolve();await Promise.resolve();
+  assert.deepEqual(errors,[frame(4).url]);
+  assert.equal(gate.shownURL,frame(3).url);
+  gate.retry(frame(4));
+  await Promise.resolve();
+  pending.get(frame(4).url)({ok:true});
+  await Promise.resolve();await Promise.resolve();
+  assert.equal(gate.shownURL,frame(4).url);
+  gate.stop();
 });
