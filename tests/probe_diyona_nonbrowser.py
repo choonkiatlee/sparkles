@@ -83,8 +83,8 @@ def main():
     # Reproduce the page's public Supabase read-only query over plain HTTP.
     inline = next((x for x in parsed.inline
                    if "public_diamonds" in x and "SUPABASE_ANON" in x), "")
-    host = re.search(r"SUPABASE_URL\\s*=\\s*['\\\"](https://[a-z0-9-]+\\.supabase\\.co)['\\\"]",inline)
-    key = re.search(r"SUPABASE_ANON\\s*=\\s*['\\\"]([A-Za-z0-9._-]+)['\\\"]",inline)
+    host = re.search(r"SUPABASE_URL\s*=\s*['\"](https://[a-z0-9-]+\.supabase\.co)['\"]",inline)
+    key = re.search(r"SUPABASE_ANON\s*=\s*['\"]([A-Za-z0-9._-]+)['\"]",inline)
     print("public query config", bool(host), bool(key))
     if host and key:
         api_url = host.group(1) + "/rest/v1/public_diamonds?" + urllib.parse.urlencode({
