@@ -511,6 +511,47 @@ class RetailerEndToEndTests(unittest.TestCase):
             [attempt.status for attempt in result.attempts],
         )
 
+    def test_igi_403_preserves_verification_link_and_partial_status(self):
+        http = self.qd_http(pdf_status=403)
+        result = retrieve_diamond(QD_URL, config=default_config(http))
+        self.assertEqual(result.status, ResultStatus.PARTIAL)
+        self.assertEqual(result.certificates, ())
+        self.assertEqual(
+            result.certificate_link,
+            "https://www.igi.org/verify-your-report/?r=LG713574578",
+        )
+        self.assertEqual(len(result.stills), 1)
+        self.assertEqual(len(result.rotations), 1)
+        self.assertEqual(len(result.rotations[0].frames), 256)
+        failed = [
+            attempt
+            for attempt in result.attempts
+            if attempt.kind == CERTIFICATE and attempt.status == EvidenceStatus.DOWNLOAD_FAILED
+        ]
+        self.assertEqual(len(failed), 1)
+        self.assertEqual(
+            failed[0].locator,
+            "https://api.igi.org/viewpdf.php?r=LG713574578",
+        )
+        self.assertIn("HTTP 403", failed[0].message)
+
+    def test_direct_listing_motion_skips_loupe_resolution(self):
+        http = self.qd_http()
+        viewer = "https://vision.diajewel360.com/Vision360.html?d=VL-DIRECT-713574578"
+        root = "https://vision.diajewel360.com/imaged/VL-DIRECT-713574578"
+        html, content_type = http.responses[QD_URL]
+        http.responses[QD_URL] = (
+            html.replace(b"</body>", f'<iframe src="{viewer}"></iframe></body>'.encode()),
+            content_type,
+        )
+        http.responses.update(_progressive_source_responses(MOTION_AUDITS[0], root, version=1))
+        result = retrieve_diamond(QD_URL, config=default_config(http))
+        self.assertEqual(result.status, ResultStatus.COMPLETE)
+        self.assertEqual(len(result.rotations), 1)
+        self.assertEqual(len(result.rotations[0].frames), 256)
+        self.assertEqual(result.rotations[0].metadata["supplier"], "diajewel")
+        self.assertEqual(len(http.post_calls), 0)
+
     def test_missing_pdf_preserves_useful_partial_listing_and_still(self):
         http = self.qd_http(pdf_status=404)
         result = retrieve_diamond(QD_URL, config=default_config(http))
@@ -518,6 +559,10 @@ class RetailerEndToEndTests(unittest.TestCase):
         self.assertEqual(len(result.certificates), 0)
         self.assertEqual(len(result.stills), 1)
         self.assertEqual(result.status, ResultStatus.PARTIAL)
+        self.assertEqual(
+            result.certificate_link,
+            "https://www.igi.org/verify-your-report/?r=LG713574578",
+        )
         self.assertIn(
             EvidenceStatus.MISSING,
             [attempt.status for attempt in result.attempts],
