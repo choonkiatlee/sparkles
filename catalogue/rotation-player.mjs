@@ -1,5 +1,5 @@
-// C3b: buffered original-image comparison. Never replace a displayed frame
-// until every requested next frame has finished loading/decoding.
+// Buffered original-image comparison. Keep prior decoded frames visible until
+// every selected next frame is ready; avoid frame-by-frame DOM status updates.
 import { FRAME_PREFETCH, createFramePreloader, createBufferedFrameCoordinator,
   frameIndexAt,stepPosition } from "./rotation.mjs";
 
@@ -13,7 +13,8 @@ const el=(tag,className="",text=null)=>{
 export function createRotationPlayer({host,slots,config=FRAME_PREFETCH}) {
   const stones=new Map();
   let position=0, timer=null, playToken=0, destroyed=false;
-  let preloader, unsubscribe;
+  let preloader;
+  let scrubRaf=null, pendingScrub=null, drag=null;
   const coordinator=createBufferedFrameCoordinator(urls=>preloader.focus(urls));
 
   const top=el("div","motion-toolbar-main");
@@ -30,8 +31,7 @@ export function createRotationPlayer({host,slots,config=FRAME_PREFETCH}) {
   const slider=el("input","motion-slider");
   slider.type="range";slider.min="0";slider.max="1000";slider.step="1";slider.value="0";
   slider.setAttribute("aria-label","Shared relative rotation position");
-  const positionText=el("span","motion-position","0%");
-  sliderLabel.append(slider,positionText);
+  sliderLabel.append(slider);
   controls.append(back,play,forward,sliderLabel);
   top.append(controls);
   host.append(top);
@@ -44,44 +44,42 @@ export function createRotationPlayer({host,slots,config=FRAME_PREFETCH}) {
   prefetchToggle.setAttribute("aria-label","Preload every original rotation frame for selected stones");
   prefetchLabel.append(prefetchToggle,
     el("span","", "Preload all frames (uses more data)"));
-  const progress=el("span","motion-prefetch-progress","Waiting for saved rotations");
-  progress.setAttribute("role","status");
-  progress.setAttribute("aria-live","off");
-  loadBar.append(prefetchLabel,progress);host.append(loadBar);
+  // The old rapidly changing preload counter competed with the diamonds.
+  // Keep the user-controlled preload switch, not per-download status text.
+  loadBar.append(prefetchLabel);host.append(loadBar);
 
   const ready=()=>[...stones.values()].filter(item=>item.rotation?.status==="available");
   const steps=()=>Math.max(1,...ready().map(item=>item.rotation.frameCount));
   const allUrls=()=>ready().map(item=>item.rotation);
-  const bytes=()=>ready().reduce((sum,item)=>sum+(item.rotation.totalBytes||0),0);
-  function updateProgress(state) {
-    if(destroyed)return;
-    if(!ready().length){
-      progress.textContent="Waiting for usable saved rotations";
-      return;
-    }
-    if(state.mode==="all"){
-      const size=bytes();
-      const sizeText=size ? " · ~"+(size/1048576).toFixed(1)+" MiB source media" : "";
-      progress.textContent="Preloaded "+state.completed+" / "+state.total+" frames"+
-        (state.failed ? " · "+state.failed+" failed" : "")+sizeText;
-    }else if(state.mode==="nearby"){
-      progress.textContent="Nearby prefetch enabled · "+state.completed+" frames loaded";
-    }else{
-      progress.textContent="Loading frames on demand";
-    }
-  }
   function installPreloader(mode) {
-    unsubscribe?.();
     preloader?.stop();
     preloader=createFramePreloader({mode,nearbyRadius:config.nearbyRadius,
       maxConcurrent:config.maxConcurrent,maxDecoded:config.maxDecoded});
-    unsubscribe=preloader.subscribe(updateProgress);
-  }
+   }
   function syncControls() {
     const enabled=ready().length>0;
     for(const control of [play,back,forward,slider])control.disabled=!enabled;
-    positionText.textContent=Math.round(position*100)+"%";
-    slider.value=String(Math.round(position*1000));
+     slider.value=String(Math.round(position*1000));
+  }
+  // Pointer/slider events may arrive many times between repaints. Fetch and
+  // render only the most recent requested position once per animation frame.
+  function cancelScrub() {
+    if(scrubRaf!==null)globalThis.cancelAnimationFrame?.(scrubRaf);
+    scrubRaf=null;pendingScrub=null;
+  }
+  function queueScrub(next) {
+    if(destroyed || !Number.isFinite(next))return;
+    pendingScrub=next;
+    if(scrubRaf!==null)return;
+    if(typeof globalThis.requestAnimationFrame!=="function"){
+      pendingScrub=null;seek(next);return;
+    }
+    scrubRaf=globalThis.requestAnimationFrame(()=>{
+      scrubRaf=null;
+      const latest=pendingScrub;
+      pendingScrub=null;
+      if(latest!==null)seek(latest);
+    });
   }
   function pause() {
     playToken++;
@@ -100,9 +98,7 @@ export function createRotationPlayer({host,slots,config=FRAME_PREFETCH}) {
     item.currentURL=frame.url;
     item.currentIndex=index;
     item.error.hidden=true;
-    item.caption.textContent="Frame "+(index+1)+" / "+item.rotation.frameCount+
-      " · source "+frame.sourceIndex;
-  }
+   }
   async function seek(next) {
     if(destroyed || !Number.isFinite(next))return false;
     position=Math.max(0,Math.min(0.999999,next));
@@ -113,12 +109,6 @@ export function createRotationPlayer({host,slots,config=FRAME_PREFETCH}) {
       const index=frameIndexAt(position,item.rotation.frameCount);
       return {item,index,frame:item.rotation.frames[index]};
     });
-    for(const {item,index} of targets) {
-      if(item.currentIndex!==index){
-        item.caption.textContent="Loading frame "+(index+1)+" / "+item.rotation.frameCount+
-          " · previous frame held";
-      }
-    }
     const promise=coordinator.seek(targets.map(x=>x.frame.url),images=>{
       targets.forEach(({item,index,frame},i)=>{
         const image=images[i];
@@ -126,8 +116,7 @@ export function createRotationPlayer({host,slots,config=FRAME_PREFETCH}) {
         else {
           // Preserve the last successfully decoded frame on all network errors.
           item.error.hidden=false;
-          item.caption.textContent="Frame "+(index+1)+" unavailable · previous frame retained";
-        }
+         }
       });
     });
     // Make the requested frames high priority before scheduling bulk work.
@@ -141,28 +130,55 @@ export function createRotationPlayer({host,slots,config=FRAME_PREFETCH}) {
     if(destroyed || token!==playToken)return;
     // Wait for all selected next frames before advancing. Slow networking
     // reduces frame rate instead of presenting blank/mismatched columns.
-    timer=setTimeout(()=>playNext(token),105);
+    timer=setTimeout(()=>playNext(token),55);
   }
   function togglePlay() {
     if(timer!==null || play.textContent==="Pause"){pause();return;}
     if(!ready().length)return;
-    pause();
+    pause();cancelScrub();
     play.textContent="Pause";
     play.setAttribute("aria-label","Pause synchronized original rotations");
     const token=playToken;
     timer=setTimeout(()=>playNext(token),0);
   }
   slider.addEventListener("input",()=>{
-    pause();seek(Number(slider.value)/1000);
+    pause();queueScrub(Number(slider.value)/1000);
   });
-  back.addEventListener("click",()=>{pause();seek(stepPosition(position,steps(),-1));});
-  forward.addEventListener("click",()=>{pause();seek(stepPosition(position,steps(),1));});
+  back.addEventListener("click",()=>{pause();cancelScrub();seek(stepPosition(position,steps(),-1));});
+  forward.addEventListener("click",()=>{pause();cancelScrub();seek(stepPosition(position,steps(),1));});
   play.addEventListener("click",togglePlay);
   prefetchToggle.addEventListener("change",()=>{
-    pause();coordinator.invalidate();
+    pause();cancelScrub();coordinator.invalidate();
     installPreloader(prefetchToggle.checked?"all":"nearby");
     seek(position);
   });
+
+  // Familiar product-spin interaction: horizontal drag on any image controls
+  // the shared normalized position; vertical touch scrolling stays available.
+  function installDrag(item) {
+    const stage=item.stage;
+    stage.setAttribute("aria-label","Drag horizontally to rotate "+item.report);
+    stage.addEventListener("pointerdown",event=>{
+      if(drag || !Number.isFinite(event.clientX) ||
+         (event.pointerType==="mouse" && event.button!==0))return;
+      pause();cancelScrub();
+      drag={item,pointerId:event.pointerId,startX:event.clientX,startPosition:position};
+      stage.setPointerCapture?.(event.pointerId);
+    });
+    stage.addEventListener("pointermove",event=>{
+      if(drag?.item!==item || drag.pointerId!==event.pointerId ||
+         !Number.isFinite(event.clientX))return;
+      const turns=(event.clientX-drag.startX)/450;
+      queueScrub(((drag.startPosition+turns)%1+1)%1);
+    });
+    const finish=event=>{
+      if(drag?.item!==item || drag.pointerId!==event.pointerId)return;
+      drag=null;
+      if(event.type!=="lostpointercapture")stage.releasePointerCapture?.(event.pointerId);
+    };
+    for(const type of ["pointerup","pointercancel","lostpointercapture"])
+      stage.addEventListener(type,finish);
+  }
 
   function setStone(id,rotation,representative,report=id) {
     if(destroyed || !slots.has(id))return;
@@ -182,12 +198,13 @@ export function createRotationPlayer({host,slots,config=FRAME_PREFETCH}) {
       fallback.append(el("span","motion-unavailable",
         rotation?.reason || "No complete ordered original rotation"));
       slot.append(fallback);
-      syncControls();updateProgress(preloader.stats());
+      syncControls();
       return;
     }
     const figure=el("figure","motion-figure");
     item.stage=el("div","motion-image-stage");
     item.stage.append(el("span","motion-unavailable","Loading original frame…"));
+    installDrag(item);
     item.error=el("div","motion-frame-error");
     item.error.hidden=true;
     const retry=el("button","motion-retry","Retry frame");
@@ -198,25 +215,24 @@ export function createRotationPlayer({host,slots,config=FRAME_PREFETCH}) {
       if(!destroyed)seek(position);
     });
     item.error.append(el("span","", "Original frame failed to load"),retry);
-    item.caption=el("figcaption","motion-frame-caption","");
-    figure.append(item.stage,item.error,item.caption);
+    figure.append(item.stage,item.error);
     slot.append(figure);
     syncControls();
     seek(position);
   }
   function failStone(id) {
     if(!slots.has(id) || destroyed)return;
+    if(drag?.item===stones.get(id))drag=null;
     stones.delete(id);
     slots.get(id).replaceChildren(el("span","motion-unavailable","Motion manifest unavailable; retry this column"));
     coordinator.invalidate();
     if(!ready().length)pause();
     syncControls();
-    updateProgress(preloader.stats());
-  }
+   }
   function destroy() {
     if(destroyed)return;
-    destroyed=true;pause();coordinator.close();
-    unsubscribe?.();preloader.stop();stones.clear();
+    destroyed=true;pause();cancelScrub();coordinator.close();
+    preloader.stop();stones.clear();drag=null;
   }
 
   installPreloader(config.mode);
