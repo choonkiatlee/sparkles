@@ -467,6 +467,7 @@ def fit_from_sector_evidence(
     outer_vertices=None,
     outer_confidence=0.95,
     step_peak_policy=steps.GLOBAL_PEAK_POLICY,
+    step_rank_policy=steps.LEGACY_RANK_POLICY,
 ):
     """Fit one fixed scaffold from already-gauged multi-frame edge evidence."""
     data = np.asarray(frame_sector_evidence, float)
@@ -486,8 +487,12 @@ def fit_from_sector_evidence(
     # Original #75/#96 path is unchanged; experimental selection is opt-in.
     template = (
         steps.discover_template(data, u)
-        if step_peak_policy == steps.GLOBAL_PEAK_POLICY
-        else steps.discover_template(data, u, peak_policy=step_peak_policy)
+        if (step_peak_policy == steps.GLOBAL_PEAK_POLICY
+            and step_rank_policy == steps.LEGACY_RANK_POLICY)
+        else steps.discover_template(
+            data, u, peak_policy=step_peak_policy,
+            rank_policy=step_rank_policy,
+        )
     )
     if template["status"] == "unavailable":
         return {
@@ -759,6 +764,8 @@ def fit_from_sector_evidence(
         "pavilion_evidence": pavilion_evidence,
         "frame_evidence": frame_rows,
         "rejected_candidates": rejected,
+        **({"c3_ranking_audit": template["c3_ranking_audit"]}
+           if "c3_ranking_audit" in template else {}),
         "interpretation": (
             "One fixed stone-level image-plane semantic scaffold inferred from "
             "multiple compatible geometry views. Per-frame edge matches are "
