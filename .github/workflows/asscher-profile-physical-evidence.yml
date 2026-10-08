@@ -9,6 +9,7 @@ on:
       - "diamond360/asscher_profile_outline_changepoints.py"
       - "diamond360/asscher_profile_auto_exterior.py"
       - "diamond360/asscher_profile_auto_changepoints.py"
+      - "diamond360/asscher_profile_endpoint_candidates.py"
       - "diamond360/asscher_profile_feasibility.py"
       - "tests/test_asscher_profile_physical_evidence.py"
       - "tests/test_asscher_profile_outer_contour.py"
@@ -16,6 +17,7 @@ on:
       - "tests/test_asscher_profile_outline_changepoints.py"
       - "tests/test_asscher_profile_auto_exterior.py"
       - "tests/test_asscher_profile_auto_changepoints.py"
+      - "tests/test_asscher_profile_endpoint_candidates.py"
       - "tests/test_asscher_profile_feasibility.py"
       - "docs/360/asscher-geometry-validation/PROFILE-PHYSICAL-EVIDENCE.md"
       - "docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG"
@@ -42,7 +44,8 @@ jobs:
             tests.test_asscher_profile_assisted_review \
             tests.test_asscher_profile_outline_changepoints \
             tests.test_asscher_profile_auto_exterior \
-            tests.test_asscher_profile_auto_changepoints -v
+            tests.test_asscher_profile_auto_changepoints \
+            tests.test_asscher_profile_endpoint_candidates -v
       - name: Emit source-pinned evidence review template
         run: |
           python -m diamond360.asscher_profile_physical_evidence \
@@ -192,6 +195,29 @@ jobs:
           print("Band:", report["widest_band_candidate"])
           print("Segment counts:",
                 {k:v.get("selected_segment_count") for k,v in report["regions"].items()})
+          PY
+      - name: Generate table-cap and bottom-terminal edge candidates
+        run: |
+          python -m diamond360.asscher_profile_endpoint_candidates \
+            --image docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG \
+            --auto-json outputs/asscher-profile-physical-evidence/auto-exterior.json \
+            --joint-json outputs/asscher-profile-physical-evidence/joint-changepoints.json \
+            --output outputs/asscher-profile-physical-evidence
+      - name: Check no physical angles or forced symmetrical terminal break
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          folder=Path("outputs/asscher-profile-physical-evidence")
+          doc=json.loads((folder/"endpoint-candidates.json").read_text())
+          assert doc["top_cap_candidate"]["status"] in ("candidate_only", "unavailable")
+          assert doc["physical_facet_angle_status"] == "all_unavailable"
+          assert doc["comparison_targets_loaded"] is False
+          assert set(doc["terminal_contours"])=={"left","right"}
+          assert set(doc["last_pavilion_changepoint_candidates"])=={"left","right"}
+          assert (folder/"endpoint-review-overlay.png").is_file()
+          print("Top candidate:",doc["top_cap_candidate"]["status"])
+          print("Terminal candidates:",{s:v["status"] for s,v in doc["last_pavilion_changepoint_candidates"].items()})
           PY
       - name: Upload review template
         uses: actions/upload-artifact@v4
