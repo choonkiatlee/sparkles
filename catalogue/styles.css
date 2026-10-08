@@ -163,3 +163,7 @@ h1{font:normal clamp(42px,6vw,72px)/1.06 Georgia,"Times New Roman",serif;letter-
 .ingest-fields button{flex:0 0 auto;white-space:nowrap;font-size:12px;padding:9px 12px}
 .ingest-request .ingest-hint{font-size:11px;color:var(--muted);margin:7px 0 0}.ingest-request .ingest-error{font-size:12px;color:#8f3925;margin:7px 0 0}
 @media(max-width:700px){.ingest-request{grid-template-columns:1fr;padding:14px;gap:11px;margin-bottom:18px}.ingest-fields{flex-direction:column}.ingest-fields input{width:100%}}
+
+/* Let mobile users verify which retailer URL a pasted bare ID resolves to. */
+.ingest-request .ingest-preview{font-size:11px;color:var(--accent);font-weight:600;margin:7px 0 0;overflow-wrap:anywhere}
+.ingest-hint code{font:inherit;font-weight:650;color:var(--ink)}

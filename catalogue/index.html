@@ -26,15 +26,16 @@
     <section class="ingest-request" aria-labelledby="add-diamond-heading">
       <div class="ingest-description">
         <h2 id="add-diamond-heading">Add a diamond</h2>
-        <p>Paste an exact Quality Diamonds or Diyona listing. Sparkles will retrieve its available certificate, images and 360 evidence.</p>
+        <p>Paste a listing URL or just its ID. Sparkles will retrieve available certificates, images and 360 evidence.</p>
       </div>
       <form id="add-diamond-form">
-        <label for="diamond-request-url">Diamond listing URL</label>
+        <label for="diamond-request-url">Diamond URL or ID</label>
         <div class="ingest-fields">
-          <input id="diamond-request-url" name="diamond_url" type="url" placeholder="https://www.qualitydiamonds.co.uk/..." inputmode="url" autocomplete="url" spellcheck="false" required>
+          <input id="diamond-request-url" name="diamond_url" type="text" placeholder="Diyona SKU, 133/CE7EED747, or listing URL" autocomplete="off" spellcheck="false" aria-describedby="diamond-request-hint" required>
           <button type="submit">Continue on GitHub ↗</button>
         </div>
-        <p class="ingest-hint">Review and submit the prefilled GitHub issue. Only requests created by the repository owner launch ingestion; no token is stored on this page.</p>
+        <p class="ingest-hint" id="diamond-request-hint">One field accepts a Diyona SKU (e.g. <code>268F4881D</code>), a complete Quality Diamonds ID (e.g. <code>133/CE7EED747</code>), or either retailer's listing URL. Quality Diamonds needs the numeric prefix to distinguish it from a Diyona SKU. Confirm the generated link before submitting the GitHub issue.</p>
+        <p class="ingest-preview" id="diamond-request-preview" role="status" aria-live="polite" hidden></p>
         <p class="ingest-error" id="diamond-request-error" role="alert" hidden></p>
       </form>
     </section>
