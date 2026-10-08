@@ -206,6 +206,56 @@ class Core360RotationDownloader(_ProgressiveDownloader):
         return viewer, source_root, f"{source_root}/0.json?version="
 
 
+
+class RemoteV360RotationDownloader(_ProgressiveDownloader):
+    """Download Vision360 4.0 frames from an exact viewer and its supplied media root.
+
+    The documented `surl` parameter points to the *parent* of the item
+    directory. Only known V360 public CDN paths are accepted here: never
+    turn an untrusted viewer parameter into a general-purpose HTTP fetch.
+    """
+
+    source_name = "v360-remote"
+    _CDN_HOST = re.compile(r"^s[0-9]+\\.v360\\.in$", re.IGNORECASE)
+    _CDN_PATH = re.compile(r"^/images/company/[0-9]+/$")
+
+    def _source(self, reference: EvidenceReference) -> tuple[str, str, str]:
+        locator = reference.locator or ""
+        parts = urlsplit(locator)
+        query = parse_qs(parts.query)
+        names = query.get("d", [])
+        if (
+            parts.scheme != "https"
+            or parts.netloc.lower() not in {"v360.in", "www.v360.in"}
+            or parts.path.rstrip("/").lower() != "/viewer4.0/vision360.html"
+            or parts.fragment
+            or len(names) != 1
+            or not _ITEM_ID.fullmatch(names[0])
+        ):
+            raise ValueError("not an exact V360 4.0 viewer URL")
+
+        item_id = names[0]
+        media_urls = query.get("surl", [])
+        if len(media_urls) > 1:
+            raise ValueError("V360 viewer has ambiguous media roots")
+        if media_urls:
+            media = urlsplit(media_urls[0])
+            if (
+                media.scheme != "https"
+                or not self._CDN_HOST.fullmatch(media.netloc)
+                or not self._CDN_PATH.fullmatch(media.path)
+                or media.query
+                or media.fragment
+            ):
+                raise ValueError("V360 viewer media root is not an allowed public CDN directory")
+            source_root = f"https://{media.netloc}{media.path}{item_id}"
+        else:
+            # The documented default when no remote `surl` is supplied.
+            source_root = f"https://v360.in/viewer4.0/imaged/{item_id}"
+
+        return locator, source_root, f"{source_root}/0.json?version="
+
+
 class WorkshopRotationDownloader(_ProgressiveDownloader):
     source_name = "workshop"
 
