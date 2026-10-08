@@ -38,28 +38,30 @@ plus fail-closed policy specification** identifies the experimental branch.
 The default production method is unchanged. No per-diamond conditions,
 tuned windows, modified thresholds, target angles or learned geometry.
 
-## Required independent validation
+## Validation cadence (updated 8 October 2026)
 
-1. Generic adversarial synthetic peaks just inside and outside a semantic
-   window; demonstrate that the treatment retains the inside peak while
-   the control's global nonmaximum suppression discards it. Retain
-   an assertion that the explicit control path is identical to the default.
-2. Four-stone #89 refit, leave-one-out and fixed-ruler transfer using the
-   *same* selected frames, masks and outer octagon method:
-   [frozen #96 comparator](https://github.com/choonkiatlee/sparkles/actions/runs/37755387174).
-3. Two-stone full seven-perturbation #90 stress plus poor-view:
-   [frozen #96 comparator](https://github.com/choonkiatlee/sparkles/actions/runs/37755387140).
-4. Pair by certificate and perturbation under the *unchanged* #88 metric
-   schema, including selected indices, refit failures, maximum
-   local-tier displacement, support/provenance regressions, semantic
-   ID swaps, and exact gauge changes.
-5. Review raw camera-RGB wireframes with specific attention to crown-tier
-   spatial plausibility. Lower displacement does **not** imply correctness.
+**Fast PR gate:** run focused synthetic/frozen-method tests and the complete
+four-stone #89 stability, leave-one-out, and fixed-ruler transfer comparison.
+Preserve failures, semantic identity, and exact gauge; compare against the
+immutable #96 artifact from run 37755387174. Inspect results across **all four
+diamonds**, not just LG756520111. The source ZIPs and benchmark manifest
+must still match the exact frozen SHA-256 values.
 
-Both workflows download source bundles and verify **exact SHA-256** from the
-#88 manifest. They retrieve original immutable #96 artifacts by run ID
-rather than recomputing a moving baseline. They emit `summary.json`,
-per-stone reports and `window-peak-comparison.json`.
+**Source-stress is deliberately deferred.** The #90 two-stone seven-condition
+perturbation / poor-view benchmark takes too long for normal iteration. Both
+`asscher-window-peak-stress.yml` and the original
+`asscher-geometry-source-stress.yml` run only via `workflow_dispatch`.
+The research code and archived #96 stress evidence remain available for a
+later deliberate manual run; **source-stress is not a PR acceptance gate**.
+
+A successful stability experiment is therefore *provisional*, not a claim
+of robustness to sharpening, blur, changes of source gauge, or camera pose.
+Do not publish a global `KEEP` conclusion without revisiting that evidence.
+
+Experiments must also preserve the #88 no-numeric-pass-threshold policy and
+must never relabel a reflected/virtual contrast peak as a polished junction.
+If an experimental candidate changes the primary scaffold or results in new
+`unavailable` cases, record both the improvement and that cost.
 
 ## Interpretation
 
