@@ -20,23 +20,21 @@ jobs:
           python-version: "3.11"
       - name: Install package
         run: python -m pip install -e .
-      - name: Target-blind pinned artifact and strict comparison tests
-        run: python -m unittest tests.test_asscher_profile_external_comparison -v
-      - name: Recreate original profile evidence without external reference
+      - name: Download exact pre-comparison PR #118 artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          IMG=docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG
-          OUT=outputs/asscher-profile-post-freeze
-          mkdir -p "$OUT"
-          python -m diamond360.asscher_profile_auto_exterior --image "$IMG" --require-original --output "$OUT"
-          python -m diamond360.asscher_profile_auto_changepoints --image "$IMG" \
-            --auto-json "$OUT/auto-exterior.json" --output "$OUT"
-          python -m diamond360.asscher_profile_endpoint_candidates --image "$IMG" \
-            --auto-json "$OUT/auto-exterior.json" \
-            --joint-json "$OUT/joint-changepoints.json" --output "$OUT"
-          python -m diamond360.asscher_profile_pavilion_refinement --image "$IMG" \
-            --auto-json "$OUT/auto-exterior.json" \
-            --joint-json "$OUT/joint-changepoints.json" \
-            --endpoint-json "$OUT/endpoint-candidates.json" --output "$OUT"
+          mkdir -p outputs/asscher-profile-post-freeze
+          gh run download 37798814740 \
+            --repo choonkiatlee/sparkles \
+            --name asscher-profile-physical-evidence \
+            --dir outputs/asscher-profile-post-freeze
+          echo "Expected frozen PR #118 profile SHA: 63bebfce1c6946c375ee79bcf81fbe56404ebeb3cc71ae860787befa6265132c"
+          sha256sum outputs/asscher-profile-post-freeze/pavilion-refinement.json
+      - name: Target-blind pinned artifact and strict comparison tests
+        env:
+          SPARKLES_FROZEN_PR118_JSON: outputs/asscher-profile-post-freeze/pavilion-refinement.json
+        run: python -m unittest tests.test_asscher_profile_external_comparison -v
       - name: Open separate expert reference only after exact byte hash verification
         run: |
           python -m diamond360.asscher_profile_external_comparison \
