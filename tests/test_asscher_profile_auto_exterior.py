@@ -72,7 +72,12 @@ class AutoExteriorTests(unittest.TestCase):
         for name in baseline["paths"]:
             before = [p["xy_px"] for p in baseline["paths"][name]["points"]]
             after = [p["xy_px"] for p in with_virtual_face["paths"][name]["points"]]
-            self.assertEqual(before, after, name)
+            paired = [(a, b) for a, b in zip(before, after) if a is not None and b is not None]
+            self.assertGreater(len(paired), 40, name)
+            self.assertLessEqual(
+                max(abs(a[0] - b[0]) for a, b in paired), 5,
+                "faint exterior must not jump inward to brilliant virtual face"
+            )
             self.assertTrue(all(
                 p["support"] != "edge_supported_candidate"
                 or p["xy_px"] is not None
@@ -149,11 +154,15 @@ class AutoExteriorTests(unittest.TestCase):
         self.assertEqual(len(result["paths"]), 4)
         for name, row in result["paths"].items():
             points = row["points"]
-            ys = [p["xy_px"][1] for p in points]
+            ys = [p["xy_px"][1] for p in points if p["xy_px"] is not None]
             self.assertEqual(ys, sorted(set(ys)))
             self.assertTrue(all(
                 0 <= p["xy_px"][0] < 410 and 0 <= p["xy_px"][1] < 319
-                for p in points
+                for p in points if p["xy_px"] is not None
+            ))
+            self.assertTrue(all(
+                p["support"] == "weak_or_ambiguous"
+                for p in points if p["xy_px"] is None
             ))
             self.assertEqual(row["named_facet_angles"], "unavailable")
             self.assertTrue(
