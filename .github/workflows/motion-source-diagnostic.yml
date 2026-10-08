@@ -9,7 +9,7 @@ on:
 jobs:
   inspect:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -17,27 +17,29 @@ jobs:
           python-version: "3.11"
       - name: Install package
         run: python -m pip install -e .
-      - name: Bounded live retailer smoke
+      - name: Inspect Quality Diamonds exact media target
         run: |
           python - <<'PY'
-          from diamond_retrieval import retrieve_diamond
-          urls = [
-              ("quality-diamonds", "https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133%2FF74D0EF67"),
-              ("diyona", "https://diyona.com/pages/diamond-detail?sku=F8D42074F"),
-          ]
-          for name, url in urls:
-              print("===", name, "===")
-              try:
-                  result = retrieve_diamond(url)
-              except Exception as exc:
-                  print("error=", type(exc).__name__, str(exc))
-                  continue
-              print("report=", result.metadata.report_number)
-              print("status=", result.status.value)
-              print("certificates=", len(result.certificates))
-              print("stills=", len(result.stills))
-              print("rotations=", len(result.rotations))
-              print("videos=", len(result.videos))
-              print("rotation_frames=", [len(item.frames) for item in result.rotations])
-              print("attempts=", [(item.kind, item.status.value, item.message) for item in result.attempts])
+          import json, urllib.request
+          from diamond_retrieval.resolvers import Loupe360CertificateResolver
+          endpoint="https://g.nivoda.com/graphql-public-loupe360"
+          query='''query($cert:String!){
+            certificate_by_cert_number(cert_number:$cert) {
+              id certNumber lab video
+              v360 { url frame_count top_index id }
+            }
+          }'''
+          body=json.dumps({"query":query,"variables":{"cert":"LG713574578"}}).encode()
+          req=urllib.request.Request(
+              endpoint,data=body,method="POST",
+              headers={"User-Agent":"Mozilla/5.0 SparklesIssue100/1","Accept":"application/json","Content-Type":"application/json"},
+          )
+          with urllib.request.urlopen(req,timeout=20) as response:
+              record=json.loads(response.read())["data"]["certificate_by_cert_number"]
+          print("record=",json.dumps(record,sort_keys=True))
+          wrapped=(record.get("v360") or {}).get("url")
+          if wrapped:
+              decoded=Loupe360CertificateResolver._unwrap_v360(wrapped)
+              print("decoded_v360=",decoded)
+              print("supported=",Loupe360CertificateResolver._is_supported_rotation_url(decoded))
           PY
