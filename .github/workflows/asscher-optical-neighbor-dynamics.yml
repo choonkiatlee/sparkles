@@ -1,0 +1,113 @@
+name: asscher-optical-neighbor-dynamics
+
+concurrency:
+  group: asscher-optical-neighbor-dynamics-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+
+on:
+  pull_request:
+    paths:
+      - "diamond360/asscher_optical_neighbor_dynamics.py"
+      - "tests/test_asscher_optical_neighbor_dynamics.py"
+      - "docs/360/asscher-geometry-validation/OPTICAL-NEIGHBOR-DYNAMICS.md"
+      - ".github/workflows/asscher-optical-neighbor-dynamics.yml"
+  workflow_dispatch:
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: python -m pip install -e .
+
+      - name: Test optical-only appearance motion and physical-abstention contracts
+        run: |
+          python -m unittest \
+            tests.test_asscher_optical_neighbor_dynamics \
+            tests.test_asscher_optical_physical_provenance \
+            tests.test_asscher_facet_provenance \
+            tests.test_asscher_provenance_contract_agreement \
+            tests.test_asscher_geometry_validation -v
+
+      - name: Download immutable hash-verified original-camera RGB line evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: asscher-native-RGB-facet-line-diagnostic
+          run-id: 37813575116
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: outputs/frozen-native-RGB-lines
+
+      - name: Download immutable optical junction evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: asscher-rgb-junction-graph-diagnostic
+          run-id: 37815198934
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: outputs/frozen-RGB-junctions
+
+      - name: Measure sparse neighboring optical motion and render original RGB comparisons
+        run: |
+          python -m diamond360.asscher_optical_neighbor_dynamics \
+            --line-root outputs/frozen-native-RGB-lines \
+            --junction-root outputs/frozen-RGB-junctions \
+            --output outputs/asscher-optical-neighbor-dynamics
+
+      - name: Assert four-stone baseline and no physical facet promotion
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path("outputs/asscher-optical-neighbor-dynamics")
+          result=json.loads((root/"summary.json").read_text())
+          assert len(result["stones"])==4
+          assert not result["physical_facet_identity_from_optical_motion"]
+          assert result["no_automatic_virtual_facet_classification"]
+          assert result["no_estimator_change"]
+          total_exact=0
+          for stone in result["stones"]:
+              cert=stone["certificate"]
+              raw=json.loads((root/"per-stone"/cert/"neighbor-dynamics.json").read_text())
+              assert raw["source_indices"]==stone["source_indices"]
+              assert len(raw["source_indices"])==5
+              assert raw["complete_sequence_claim"] is False
+              assert raw["physical_geometry"]["C3_TABLE"]=="unavailable"
+              assert raw["physical_geometry"]["C2_C3"]=="unavailable"
+              assert raw["physical_geometry"]["C1_C2"]=="unavailable"
+              assert raw["no_physical_or_virtual_facet_auto_labels"]
+              assert len(raw["observed_neighbor_windows"])==stone["neighbor_windows"]
+              for pair in raw["observed_neighbor_windows"]:
+                  assert pair["frame_gap"]<=3
+                  assert pair["number_unsampled_intervening_frames"]==pair["frame_gap"]-1
+                  assert pair["semantic_interpretation"]=="optical_appearance_only"
+                  assert pair["physical_facet_identity_verified"] is False
+                  assert all(m["physical_facet_correspondence"]=="not_established"
+                             for m in pair["candidate_pairs"])
+                  assert (root/"per-stone"/cert/pair["original_RGB_QC_path"]).exists()
+              total_exact+=stone["exact_consecutive_pairs"]
+              print(cert, "crown",stone["crown_face_status"],
+                    "neighbor windows",stone["neighbor_windows"],
+                    "exact",stone["exact_consecutive_pairs"],
+                    "matched appearances",stone["candidate_pairs"],
+                    "not redetected",stone["not_redetected"],
+                    "new detections",stone["newly_detected"])
+          assert total_exact>=1, "must have genuine adjacent frames"
+          PY
+
+      - name: Upload optical-only frame movement evidence and original RGB comparison images
+        uses: actions/upload-artifact@v4
+        with:
+          name: asscher-optical-neighbor-dynamics
+          path: outputs/asscher-optical-neighbor-dynamics
+          retention-days: 90
+          if-no-files-found: error
