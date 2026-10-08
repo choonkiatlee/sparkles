@@ -223,16 +223,7 @@ def main():
     args=p.parse_args()
     manifest=json.loads(args.manifest.read_text())
     for sid in SAMPLES:
-        try:
-            result=run_external(sid,manifest,args.archive_root,args.out/sid)
-        except (ValueError,FileNotFoundError) as ex:
-            # Source/method incompatibilities are recorded as explicit
-            # invalid/unavailable, NEVER replaced by ideal synthetic data.
-            result=_status(sid,"source_or_scaffold_unavailable:"+str(ex),
-                           {"sample_id":sid,"unverified":True})
-            target=args.out/sid
-            target.mkdir(parents=True,exist_ok=True)
-            (target/"external-result.json").write_text(json.dumps(result,indent=2,sort_keys=True)+"\n")
+        result=run_external(sid,manifest,args.archive_root,args.out/sid)
         print(json.dumps({"sample":sid,"status":result["status"],
                           "reason":result.get("reason"),
                           "source_frames":len(result.get("traces",[])),
