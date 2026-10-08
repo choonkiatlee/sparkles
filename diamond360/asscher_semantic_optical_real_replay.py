@@ -128,23 +128,35 @@ def draw_traces(report, destination):
             draw.line((left,py,right,py),fill=(224,226,230),width=1)
             draw.text((42,py-7),f"{level:.2f}",fill=(82,89,100))
         indices=record["selected_source_indices"]
-        for j,index in enumerate(indices):
-            x=left+int((right-left)*j/max(1,len(indices)-1))
-            draw.text((x-10,bottom+12),str(index),fill=(65,70,79))
+        # Honor actual cyclic frame spacing. 255/0 are adjacent, whereas
+        # 0→13 is NOT a contiguous sample; never invent interpolation
+        # across the unsampled phase interval or the 19→255 gap.
+        wrap=(255 in indices and 0 in indices)
+        def position(idx):
+            return idx-256 if wrap and idx>=240 else idx
+        ordered=sorted(zip(indices,record["frames"]),key=lambda pair:position(pair[0]))
+        lo=min(position(idx) for idx,_ in ordered)
+        hi=max(position(idx) for idx,_ in ordered)
+        def xpos(idx):
+            return left+int((right-left)*(position(idx)-lo)/max(1,hi-lo))
+        for idx,_ in ordered:
+            x=xpos(idx)
+            draw.text((x-10,bottom+12),str(idx),fill=(65,70,79))
         for entity,color in zip(HIGHLIGHTS,SWATCHES):
             samples=[]
-            for j,frame in enumerate(record["frames"]):
+            for idx,frame in ordered:
                 row=next((x for x in frame["entities"] if x["semantic_id"]==entity),None)
                 if row is None or row["raw_mean_brightness"] is None:
-                    samples.append(None)
+                    samples.append((idx,None))
                 else:
-                    x=left+int((right-left)*j/max(1,len(indices)-1))
+                    x=xpos(idx)
                     val=max(0,min(1,float(row["raw_mean_brightness"])))
-                    samples.append((x,bottom-int((bottom-top)*val)))
-            for p,q in zip(samples,samples[1:]):
-                if p is not None and q is not None:
+                    samples.append((idx,(x,bottom-int((bottom-top)*val))))
+            for (index,p),(next_index,q) in zip(samples,samples[1:]):
+                if (p is not None and q is not None
+                    and position(next_index)-position(index)<=4):
                     draw.line((*p,*q),fill=color,width=3)
-            for xy in samples:
+            for idx,xy in samples:
                 if xy is not None:
                     x,y=xy
                     draw.ellipse((x-4,y-4,x+4,y+4),fill=color)
