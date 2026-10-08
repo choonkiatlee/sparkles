@@ -40,6 +40,7 @@ POLICY = {
     "minimum_valid_fraction": 0.80,
     "maximum_side_fraction_spread_for_polygon": 0.18,
     "minimum_detected_sides_for_polygon": 8,
+    "maximum_corner_extrapolation_from_supported_segment": 0.06,
     "vertices": "intersections_of_measured_neighbor_line_equations",
     "no_unobserved_side_infill": True,
     "no_radial_peak_selection": True,
@@ -271,6 +272,18 @@ def intersect_measured_sides(outer, sides):
             corner=center+np.linalg.solve(matrix,offset)
         except np.linalg.LinAlgError:
             return None
+        # Require each geometric intersection to be backed by observed
+        # contiguous line evidence, not a long extrapolation from an
+        # unrelated image gradient crossing through a facet interior.
+        for side_index in ((i-1)%8, i):
+            segment=sides[side_index]["selected_line"]
+            tangent=families[side_index]["tangent"]
+            start=float(np.dot(np.asarray(segment["sample_start"]),tangent))
+            end=float(np.dot(np.asarray(segment["sample_end"]),tangent))
+            projected=float(np.dot(corner,tangent))
+            allowance=POLICY["maximum_corner_extrapolation_from_supported_segment"]
+            if projected<min(start,end)-allowance or projected>max(start,end)+allowance:
+                return None
         vertices.append(corner)
     vertices=np.asarray(vertices,float)
     cross=np.cross(np.roll(vertices,-1,axis=0)-vertices,
