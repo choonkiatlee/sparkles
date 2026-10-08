@@ -29,22 +29,6 @@ jobs:
           python -m unittest \
             tests.test_asscher_semantic_optical_handoff \
             tests.test_asscher_real_semantic_replay -v
-      - name: Download exact frozen #89 primary scaffold and frame transfer
-        env:
-          GH_TOKEN: \${{ github.token }}
-        run: |
-          mkdir -p outputs/asscher-real-replay/frozen
-          gh run download 37830584391 \
-            --repo choonkiatlee/sparkles \
-            --name asscher-geometry-stability-outer-v2 \
-            --dir outputs/asscher-real-replay/frozen
-          python - <<'PY'
-          from pathlib import Path
-          from diamond360 import asscher_real_semantic_replay as r
-          p=Path("outputs/asscher-real-replay/frozen/per-stone/IGI-LG756520111")
-          _,records=r.verify_frozen_archive(p/"primary-wireframe.json",p/"transfer.json")
-          print("Original #89 archived primary and transfer records verified:", len(records))
-          PY
       - name: Download only one pinned original 360 source bundle
         run: |
           python - <<'PY'
@@ -63,13 +47,11 @@ jobs:
           with zipfile.ZipFile(archive) as z:z.extractall(dest)
           print("Only one source bundle verified, exact SHA:",item["sha256"])
           PY
-      - name: Replay actual crown frames using frozen 89 scaffold without fitting
+      - name: Reproduce one frozen-method scaffold; replay crown frames without per-frame fitting
         run: |
           python -m diamond360.asscher_real_semantic_replay \
             --source outputs/asscher-real-replay/source/IGI-LG756520111 \
             --source-manifest docs/360/benchmark/per-stone/IGI-LG756520111/source-manifest.json \
-            --frozen-primary outputs/asscher-real-replay/frozen/per-stone/IGI-LG756520111/primary-wireframe.json \
-            --frozen-transfer outputs/asscher-real-replay/frozen/per-stone/IGI-LG756520111/transfer.json \
             --output outputs/asscher-real-replay/result
       - name: Verify actual support was sampled without moving geometry
         run: |
@@ -82,7 +64,10 @@ jobs:
           assert report["source_frame_indices"]==[4,8,12,16,20,24,28]
           assert report["counts"]["frames"]==7
           assert report["reprocessed_gauge_equals_original"]
-          assert report["has_any_new_geometry_fits"] is False
+          assert report["frozen_method_primary_fit_count"]==1
+          assert report["per_frame_geometry_refit_count"]==0
+          assert report["frozen_89_source_selection_verified"] is True
+          assert report["frozen_89_7_frame_status_counts_verified"] is True
           assert report["physical_inner_facets_verified"] is False
           assert report["quality_or_optical_score_computed"] is False
           assert any(row["raw_mean_brightness"] is not None
