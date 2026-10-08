@@ -63,14 +63,14 @@ class ConditionalSymmetryTests(unittest.TestCase):
             if diagnostic["status"] == "image_only_compatible_not_pose_proof"
             else "counterfactual_mirror_preview_not_applied"
         )
-        self.assertEqual(r["right_terminal_symmetry_hypothesis"]["status"], expected)
+        self.assertEqual(r["right_crown_terminal_symmetry_hypothesis"]["status"], expected)
         self.assertEqual(r["independent_crown_terminal_candidates"]["right"],
                          self.ends["last_crown_changepoint_candidates"]["right"])
         self.assertEqual(r["physical_facet_angles"], "all_unavailable")
         if expected == "conditional_symmetry_model_inferred":
             axis = diagnostic["axis_x_px"]
-            left = self.ends["last_pavilion_changepoint_candidates"]["left"]["xy_px"]
-            right = r["right_terminal_symmetry_hypothesis"]["xy_px"]
+            left = self.ends["last_crown_changepoint_candidates"]["left"]["xy_px"]
+            right = r["right_crown_terminal_symmetry_hypothesis"]["xy_px"]
             self.assertAlmostEqual(right[0], 2*axis-left[0], places=2)
             self.assertAlmostEqual(right[1], left[1])
 
@@ -83,15 +83,15 @@ class ConditionalSymmetryTests(unittest.TestCase):
 
     def test_mirrored_right_must_not_overwrite_independent_observation(self):
         ends = deepcopy(self.ends)
-        ends["last_pavilion_changepoint_candidates"]["right"] = {
+        ends["last_crown_changepoint_candidates"]["right"] = {
             "status": "candidate_only",
             "xy_px": [314.0, 271],
             "reason": "hypothetical independent observed right external change",
         }
         result = symmetric.analyse(self.contour, self.joint, ends, self.pose())
-        self.assertEqual(result["right_terminal_symmetry_hypothesis"]["status"],
+        self.assertEqual(result["right_crown_terminal_symmetry_hypothesis"]["status"],
                          "counterfactual_mirror_preview_not_applied")
-        self.assertIn("already_has_independent", result["right_terminal_symmetry_hypothesis"]["reason"])
+        self.assertIn("already_has_independent", result["right_crown_terminal_symmetry_hypothesis"]["reason"])
         self.assertEqual(result["independent_terminal_candidates"]["right"]["xy_px"],
                          [314.0, 271])
 
@@ -104,13 +104,13 @@ class ConditionalSymmetryTests(unittest.TestCase):
         self.assertEqual(result["image_only_symmetry_diagnostic"]["status"],
                          "image_only_inconsistent")
         self.assertEqual(result["status"], "preview_only_not_adopted")
-        self.assertIn("gate_not_met", result["right_terminal_symmetry_hypothesis"]["reason"])
+        self.assertIn("gate_not_met", result["right_crown_terminal_symmetry_hypothesis"]["reason"])
 
     def test_missing_left_candidate_does_not_force_any_break(self):
         ends = deepcopy(self.ends)
-        ends["last_pavilion_changepoint_candidates"]["left"] = {"status": "unavailable"}
+        ends["last_crown_changepoint_candidates"]["left"] = {"status": "unavailable"}
         result = symmetric.analyse(self.contour, self.joint, ends, self.pose())
-        self.assertEqual(result["right_terminal_symmetry_hypothesis"]["status"],
+        self.assertEqual(result["right_crown_terminal_symmetry_hypothesis"]["status"],
                          "unavailable")
 
     def test_reject_expert_target_and_forged_pose(self):
