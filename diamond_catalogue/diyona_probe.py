@@ -113,6 +113,41 @@ def run():
                                 '[LITERAL]',fragment)
                 print("INLINE structure",index,term,fragment[:230])
 
+    # Query the same public Supabase PostgREST resource used by the site.
+    # The browser-visible anon credential is used only in the request headers,
+    # never printed or persisted.
+    source="\\n".join(parsed.inline)
+    url_match=re.search(r'SUPABASE_URL\\s*=\\s*([\\x27\\x22])([^\\x27\\x22]+)\\1',source)
+    anon_match=re.search(r'SUPABASE_ANON\\s*=\\s*([\\x27\\x22])([^\\x27\\x22]+)\\1',source)
+    print("SUPABASE settings found",bool(url_match),bool(anon_match))
+    if url_match and anon_match:
+        base=url_match.group(2).rstrip("/")
+        anon=anon_match.group(2)
+        if urlsplit(base).hostname=="ofjwrrqzzbcnmkkmlawl.supabase.co":
+            from urllib.parse import urlencode
+            api=base+"/rest/v1/public_diamonds?"+urlencode(
+                {"select":"*","sku":"eq.A69835AA4","limit":"2"})
+            try:
+                rr=c._request(api,timeout=20,method="GET",headers={
+                    "apikey":anon,"Authorization":"Bearer "+anon,
+                    "Accept":"application/json"})
+                print("API status",rr.status_code,"bytes",len(rr.content))
+                payload=json.loads(rr.content)
+                if isinstance(payload,list):
+                    print("API rows",len(payload))
+                    for row in payload[:2]:
+                        print("API fields",sorted(row)[:65])
+                        print("API sku_match",str(row.get("sku","")).upper()=="A69835AA4")
+                        print("API identity candidates",{
+                            k:str(v)[:45] for k,v in row.items()
+                            if any(t in k.lower() for t in ("cert","report","igi"))
+                        })
+                elif isinstance(payload,dict):
+                    print("API error keys",sorted(payload)[:15])
+            except Exception as exc:
+                print("API request failure category",type(exc).__name__)
+        else:
+            print("SUPABASE host mismatch; refusing request")
     # Limit front-end JS to same-host or CDN-origin scripts advertised by the
     # public HTML and do not execute JS. Log only regex-discovered generic API
     # route literals and external API hostnames, never query parameters.
