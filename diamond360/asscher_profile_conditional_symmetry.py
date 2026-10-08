@@ -268,7 +268,7 @@ def main():
         "pose": r["pose_review"]["status"],
         "image_only_symmetry_proxy": r["image_only_symmetry_diagnostic"]["status"],
         "right_mirrored": r["right_crown_terminal_symmetry_hypothesis"]["status"],
-        "mirror_xy_px": r["right_terminal_symmetry_hypothesis"]["xy_px"],
+        "mirror_xy_px": r["right_crown_terminal_symmetry_hypothesis"]["xy_px"],
     }, sort_keys=True))
 
 
