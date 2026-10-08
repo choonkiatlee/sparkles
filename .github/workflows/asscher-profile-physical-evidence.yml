@@ -8,12 +8,14 @@ on:
       - "diamond360/asscher_profile_assisted_review.py"
       - "diamond360/asscher_profile_outline_changepoints.py"
       - "diamond360/asscher_profile_auto_exterior.py"
+      - "diamond360/asscher_profile_auto_changepoints.py"
       - "diamond360/asscher_profile_feasibility.py"
       - "tests/test_asscher_profile_physical_evidence.py"
       - "tests/test_asscher_profile_outer_contour.py"
       - "tests/test_asscher_profile_assisted_review.py"
       - "tests/test_asscher_profile_outline_changepoints.py"
       - "tests/test_asscher_profile_auto_exterior.py"
+      - "tests/test_asscher_profile_auto_changepoints.py"
       - "tests/test_asscher_profile_feasibility.py"
       - "docs/360/asscher-geometry-validation/PROFILE-PHYSICAL-EVIDENCE.md"
       - "docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG"
@@ -39,7 +41,8 @@ jobs:
             tests.test_asscher_profile_outer_contour \
             tests.test_asscher_profile_assisted_review \
             tests.test_asscher_profile_outline_changepoints \
-            tests.test_asscher_profile_auto_exterior -v
+            tests.test_asscher_profile_auto_exterior \
+            tests.test_asscher_profile_auto_changepoints -v
       - name: Emit source-pinned evidence review template
         run: |
           python -m diamond360.asscher_profile_physical_evidence \
@@ -161,6 +164,34 @@ jobs:
                      for r in side.values())
           print("Auto-proposed external contour only; no expert targets or physical-angle claims.")
           print({k: v["supported_fraction"] for k,v in result["paths"].items()})
+          PY
+      - name: Fit joint projected-contour changepoints without virtual facets
+        run: |
+          python -m diamond360.asscher_profile_auto_changepoints \
+            --image docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG \
+            --auto-json outputs/asscher-profile-physical-evidence/auto-exterior.json \
+            --output outputs/asscher-profile-physical-evidence
+      - name: Assert girdle interval and change points are only candidates
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path("outputs/asscher-profile-physical-evidence")
+          report = json.loads((root / "joint-changepoints.json").read_text())
+          assert report["physical_facet_angles"] == "all_unavailable"
+          assert report["comparison_targets_loaded"] is False
+          assert report["widest_band_candidate"]["status"] in ("candidate_only","unavailable")
+          for region in report["regions"].values():
+              if region["status"] == "review":
+                  assert region["selected_segment_count"] <= 3
+                  assert region["physical_facet_correspondence"] == "not_established"
+                  assert all(mark["status"] == "candidate_only"
+                             for mark in region["candidate_breakpoints"])
+          assert (root / "joint-changepoints-overlay.png").is_file()
+          print("Joint exterior changepoints candidate-only, no physical angles.")
+          print("Band:", report["widest_band_candidate"])
+          print("Segment counts:",
+                {k:v.get("selected_segment_count") for k,v in report["regions"].items()})
           PY
       - name: Upload review template
         uses: actions/upload-artifact@v4
