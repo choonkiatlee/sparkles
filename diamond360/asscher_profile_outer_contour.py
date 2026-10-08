@@ -176,7 +176,7 @@ def analyse_image(image_path, expected_sha256=None):
         "upper_profile_width_region": _candidate_window(
             rows, *POLICY["candidate_upper_rows_fraction"], h, key="min_width"
         ),
-        "maximum_outer_width_region": _candidate_window(
+        "widest_cross_threshold_stable_region": _candidate_window(
             rows, *POLICY["candidate_outer_width_rows_fraction"], h, key="max_width"
         ),
     }
@@ -211,6 +211,11 @@ def analyse_image(image_path, expected_sha256=None):
             "sensitive_fraction_among_detected_rows": round(proportion, 5),
         },
         "anatomical_candidates": windows,
+        "region_caveat": (
+            "The widest stable row is not necessarily the widest actual stone "
+            "outline: the projected girdle region can be threshold-sensitive "
+            "and excluded. This is NOT a girdle locator."
+        ),
         "physical_landmark_status": {
             key: {"status": "unavailable", "reason": "no_independent_anatomical_correspondence"}
             for key in ("table", "girdle", "culet")
