@@ -159,7 +159,7 @@ export function createComparisonView({container, grid, fetcher}) {
     outer.setAttribute("role","region");
     outer.setAttribute("aria-label","Selected diamond comparison; scroll horizontally for more columns");
     const table=el("table","compare-table");
-    table.style.setProperty("--stone-count",String(matching.length));
+    table.style.minWidth = (170 + matching.length * 255) + "px";
     const thead=el("thead");
     const first=el("tr");
     const title=el("th","compare-row-label","Stone");
