@@ -8,6 +8,10 @@ on:
   pull_request:
     paths:
       - "diamond360/asscher_optical_physical_provenance.py"
+      - "diamond360/asscher_facet_provenance.py"
+      - "tests/test_asscher_facet_provenance.py"
+      - "tests/test_asscher_provenance_contract_agreement.py"
+      - "docs/360/asscher-geometry-validation/PROVENANCE-CONTRACT-AGREEMENT.md"
       - "tests/test_asscher_optical_physical_provenance.py"
       - "docs/360/asscher-geometry-validation/OPTICAL-PHYSICAL-PROVENANCE.md"
       - ".github/workflows/asscher-optical-physical-provenance.yml"
@@ -29,6 +33,8 @@ jobs:
         run: |
           python -m unittest \
             tests.test_asscher_optical_physical_provenance \
+            tests.test_asscher_facet_provenance \
+            tests.test_asscher_provenance_contract_agreement \
             tests.test_asscher_geometry_rgb_lines \
             tests.test_asscher_geometry_junction_graph \
             tests.test_asscher_semantic_optical_handoff -v
@@ -55,6 +61,39 @@ jobs:
             --line-root outputs/frozen-lines \
             --junction-root outputs/frozen-junctions \
             --output outputs/asscher-optical-physical-provenance
+
+      - name: Replay second shipped provenance schema and require four-stone agreement
+        run: |
+          python -m diamond360.asscher_facet_provenance \
+            --line-root outputs/frozen-lines \
+            --junction-root outputs/frozen-junctions \
+            --output outputs/asscher-facet-provenance
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          first=Path("outputs/asscher-facet-provenance")
+          second=Path("outputs/asscher-optical-physical-provenance")
+          a=json.loads((first/"summary.json").read_text())
+          b=json.loads((second/"summary.json").read_text())
+          assert len(a["stones"])==len(b["stones"])==4
+          for ca,cb in zip(a["stones"],b["stones"]):
+              assert ca["certificate"]==cb["certificate"]
+              assert ca["selected_source_indices"]==cb["source_indices"]
+              assert ca["crown_face_identity"]==cb["face_identity"]
+              x=json.loads((first/ca["provenance_path"]).read_text())
+              y=json.loads((second/"per-stone"/ca["certificate"]/"provenance.json").read_text())
+              assert x["physical_geometry"]["silhouette"]["vertices_image_plane_normalized"]==y["physical_geometry"]["external_silhouette"]["vertices_topology_order"]
+              assert x["counts"]["optical_segment_observations"]==cb["optical_line_count"]
+              assert x["counts"]["optical_junction_observations"]==cb["optical_junction_count"]
+              assert x["counts"]["physical_interior_boundaries_validated"]==0
+              assert y["physical_interior_facet_status"]=="unavailable"
+              for name in ("C1_C2","C2_C3","C3_TABLE"):
+                  assert y["physical_geometry"]["interior_boundaries"][name]["status"]=="unavailable"
+              print(ca["certificate"],"shared optical lines",cb["optical_line_count"],
+                    "junctions",cb["optical_junction_count"],
+                    "physical interiors unavailable")
+          PY
 
       - name: Verify no optical candidate is promoted to a physical facet
         run: |

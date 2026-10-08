@@ -16,13 +16,14 @@ def fixtures():
         sides=[]
         for sector in range(8):
             candidates=[]
-            if sector==0 and i<2:
+            if (sector==0 and i<2) or (sector==7 and i==1):
                 candidates=[{
                     "fraction":.55+.01*i,
                     "coverage":.7,
                     "longest_contiguous_fraction":.6,
                     "sample_start":[.1,-.3],
                     "sample_end":[.1,.3],
+                    "rendered_segment_policy":"only_contiguous_observed_RGB_gradient_pixels",
                 }]
             sides.append({"side":sector,"detected_candidates":candidates})
         line_rows.append({
@@ -33,22 +34,28 @@ def fixtures():
         nodes=[{
             "id":0,"corner_index":7,
             "position_gauge_normalized_xy":[.3,.25],
+            "line_candidate_indices":{"7":0,"0":0},
         }] if i==1 else []
         junction_rows.append({
             "source_index":source,
             "source_camera_QC":f"source-{source}-junction-RGB.jpg",
-            "junction_evidence":{"nodes":nodes},
+            "junction_evidence":{"nodes":nodes, "polygon":None,
+                                 "physical_facet_identity_verified":False},
         })
     lines={
         "certificate":"IGI-LG000000001",
         "selected_source_indices":selected,
         "outer_vertices_topology_order":outer,
+        "original_outer_method_unchanged":True,
+        "physical_facet_claim":False,
         "frames":line_rows,
     }
     graph={
         "certificate":"IGI-LG000000001",
         "selected_source_indices":selected,
         "face_identity":{"status":"uncertain","selection_status":"not_needed"},
+        "production_estimator_changed":False,
+        "physical_facet_identity_verified":False,
         "frames":junction_rows,
     }
     return lines,graph
@@ -74,7 +81,7 @@ class ProvenanceBoundaryTests(unittest.TestCase):
         lines,graph=fixtures()
         report=p.build_stone_record(lines,graph)
         optical=report["optical_appearance"]
-        self.assertEqual(len(optical["segments"]),2)
+        self.assertEqual(len(optical["segments"]),3)
         self.assertEqual(len(optical["junction_candidates"]),1)
         for row in optical["segments"]+optical["junction_candidates"]:
             self.assertEqual(row["physical_facet_correspondence"],"not_established")
@@ -136,6 +143,26 @@ class ProvenanceBoundaryTests(unittest.TestCase):
         self.assertEqual(out["cross_view_optical_consistency"]["per_side"]["0"]
                          ["observed_source_count"],0)
         self.assertEqual(out["counts"]["physical_silhouette_count"],1)
+
+
+    def test_untrusted_rgb_source_cannot_claim_physical_facet(self):
+        for mutation in ("line_claim","junction_claim","local_claim",
+                         "polygon","invented_junction_line","line_extension"):
+            lines,graph=fixtures()
+            if mutation=="line_claim":
+                lines["physical_facet_claim"]=True
+            elif mutation=="junction_claim":
+                graph["physical_facet_identity_verified"]=True
+            elif mutation=="local_claim":
+                graph["frames"][1]["junction_evidence"]["physical_facet_identity_verified"]=True
+            elif mutation=="polygon":
+                graph["frames"][1]["junction_evidence"]["polygon"]=[[0,0]]
+            elif mutation=="invented_junction_line":
+                graph["frames"][1]["junction_evidence"]["nodes"][0]["line_candidate_indices"]["7"]=10
+            else:
+                lines["frames"][1]["sides"][7]["detected_candidates"][0]["rendered_segment_policy"]="invented_extension"
+            with self.subTest(mutation=mutation), self.assertRaises(ValueError):
+                p.build_stone_record(lines,graph)
 
     def test_malformed_line_provenance_or_corners_fail_closed(self):
         lines,graph=fixtures()

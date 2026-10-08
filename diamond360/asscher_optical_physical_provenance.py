@@ -212,12 +212,18 @@ def adapt_stone(line, junction):
 
 
 def require_physical_boundary(report, boundary):
-    """Fail closed: optical candidates cannot serve as geometry consumers."""
-    row=report["physical_geometry"]["interior_boundaries"][boundary]
-    if (row["status"] != "ok" or row["provenance_class"]
-            != "independently_validated_physical_junction"):
-        raise ValueError(f"{boundary}: independently corroborated physical geometry unavailable")
-    return row["vertices_topology_order"]
+    """Reject *all* interior geometry from this observational RGB adapter.
+
+    In particular, editing archived JSON fields to say "ok" or
+    "independently_validated_physical_junction" cannot upgrade optical
+    candidates. Actual independently measured facets require a distinct
+    validated evidence path outside this adapter.
+    """
+    if report.get("schema_version") != SCHEMA or boundary not in INTERIOR_BOUNDARIES:
+        raise ValueError("unrecognized Asscher RGB provenance report or boundary")
+    raise ValueError(
+        f"{boundary}: independently corroborated physical geometry unavailable"
+    )
 
 
 def adapt_archive(line_root, junction_root, output):
