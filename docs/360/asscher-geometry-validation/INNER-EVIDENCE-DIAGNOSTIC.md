@@ -27,6 +27,42 @@ centering and nonphysical interior reflections could move peaks in `u`.
 These hypotheses are **not exclusive**. Observed image contrast alone
 cannot resolve physical versus optical/virtual facets.
 
+## Frozen diagnostic finding (reproduced on pinned original)
+
+The first completed run of this diagnostic (see PR #127's evidence artifact)
+reproduced both #115 values: all-five C3/table at `u=0.578616`; omit-16
+at `u=0.477987`. Crucially **the 0.578616 contrast peak does not vanish**
+when frame 16 is excluded.
+
+The original fitter calls `find_peaks(consensus, distance=15)` *before*
+filtering by the C3 semantic window `[0.42,0.60]`. A competing peak just
+outside the C3 window overtakes the inner peak when frame 16 is dropped:
+
+| | 5 frames | Without frame 16 |
+|---|---:|---:|
+| C3 candidate peak u | 0.578616 | 0.578616 (exists, suppressed) |
+| Smoothed edge magnitude at 0.579 | 0.012455 | 0.012420 |
+| Competing outside-window peak | 0.6226 (0.012290) | 0.6289 (0.012887) |
+| Survives global 15-sample peak suppression? | yes | **no** |
+| Selected available C3 candidate | 0.578616 | **0.477987** |
+
+That is a **specific cross-semantic-window suppression mechanism** behind the
+discrete ~0.10 normalized-radius C3 jump. A new predeclared synthetic test
+replays the mechanism without relying on a particular diamond image.
+
+Normalized silhouette-ray deviations across the five views are small but
+measurable (RMS about **0.54–1.41%** relative to median, and maximum
+about **1.91–3.23%**); those figures support additional registration research
+but cannot justify asserting that the 0.10 jump is a true camera-tilt
+correction. The peak **selection logic** is demonstrably responsible for
+discarding the continuing 0.579 feature. Neither feature is known to be a
+polished facet junction.
+
+**No change to `asscher_steps.discover_template` is made here.**
+Any candidate fix (such as applying peak separation within *each*
+predeclared semantic window) must be a separately frozen estimator revision,
+tested across all retained stones and under #89/#90 validation.
+
 ## Exact diagnostic
 
 - Re-run the pinned original LG756520111 256-frame source through the
