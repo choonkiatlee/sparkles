@@ -3,7 +3,11 @@ from __future__ import annotations
 
 import io
 import os
+import socket
+import ssl
 import unittest
+from decimal import InvalidOperation
+from urllib.error import URLError
 from contextlib import redirect_stderr
 from unittest.mock import patch
 
@@ -106,6 +110,81 @@ class IngestionDiagnosticTests(unittest.TestCase):
         self.assertEqual(code, 1)
         publish.assert_not_called()
         self.assertIn("listing_missing_identity", output.getvalue())
+
+
+    def test_quality_diamonds_known_parse_failure(self):
+        issue = wrapped_retrieval_error(
+            "Quality Diamonds exact listing does not expose certificate-bound diamond data"
+        )
+        code, hint = safe_failure(issue)
+        self.assertEqual(code, "listing_missing_identity")
+        self.assertNotIn("example.com", hint)
+
+    @staticmethod
+    def chained(cause):
+        try:
+            raise cause
+        except Exception as inner:
+            try:
+                raise RetrievalError(
+                    "Listing retrieval failed for https://example.com?access_token=DO_NOT_LEAK"
+                ) from inner
+            except RetrievalError as outer:
+                return outer
+
+    def test_dns_validation_value_error_is_actionable_and_safe(self):
+        err = self.chained(ValueError("Unable to resolve public hostname: secret.internal"))
+        code, hint = safe_failure(err)
+        self.assertEqual(code, "listing_dns_failure")
+        self.assertNotIn("secret.internal", hint)
+
+    def test_public_destination_rejection_does_not_leak_hostname(self):
+        err = self.chained(ValueError("Refusing non-public destination: secret.internal"))
+        code, hint = safe_failure(err)
+        self.assertEqual(code, "listing_unsafe_redirect")
+        self.assertNotIn("secret.internal", hint)
+
+    def test_size_limit_is_classified_without_echoing_metadata(self):
+        err = self.chained(ValueError("HTTP response exceeds 26214400 bytes"))
+        self.assertEqual(safe_failure(err)[0], "listing_response_too_large")
+
+    def test_temporary_dns_error_classification(self):
+        err = self.chained(socket.gaierror("secret-host DO_NOT_LEAK"))
+        code, hint = safe_failure(err)
+        self.assertEqual(code, "listing_dns_failure")
+        self.assertNotIn("DO_NOT_LEAK", hint)
+
+    def test_tls_failure_classification(self):
+        err = self.chained(ssl.SSLError("certificate for secret.example invalid"))
+        self.assertEqual(safe_failure(err)[0], "listing_tls_failure")
+
+    def test_nested_urllib_error_classification(self):
+        try:
+            raise URLError("Authorization: DO_NOT_LEAK")
+        except URLError as inner:
+            try:
+                raise ValueError("opaque") from inner
+            except ValueError as outer:
+                wrapped = self.chained(outer)
+        code, hint = safe_failure(wrapped)
+        self.assertEqual(code, "listing_network_failure")
+        self.assertNotIn("DO_NOT_LEAK", hint)
+
+    def test_numeric_parse_failure_is_specific(self):
+        err = self.chained(InvalidOperation("private data"))
+        self.assertEqual(safe_failure(err)[0], "listing_price_parse_failure")
+
+    def test_keyerror_is_classified_but_never_quoted(self):
+        err = self.chained(KeyError("Authorization=DO_NOT_LEAK"))
+        code, hint = safe_failure(err)
+        self.assertEqual(code, "listing_parser_error")
+        self.assertNotIn("DO_NOT_LEAK", hint)
+
+    def test_unexpected_valueerror_hides_secret(self):
+        err = self.chained(ValueError("token=DO_NOT_LEAK"))
+        code, hint = safe_failure(err)
+        self.assertEqual(code, "listing_value_error")
+        self.assertNotIn("DO_NOT_LEAK", hint)
 
 
 if __name__ == "__main__":

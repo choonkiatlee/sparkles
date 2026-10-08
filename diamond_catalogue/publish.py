@@ -5,7 +5,10 @@ import argparse
 import os
 import re
 import sys
-from urllib.error import URLError
+import socket
+import ssl
+from decimal import InvalidOperation
+from urllib.error import URLError, HTTPError
 
 from dataclasses import replace
 
@@ -49,18 +52,15 @@ _KNOWN_LISTING_ERRORS = {
 }
 
 
-def safe_failure(exc: Exception) -> tuple[str, str]:
-    """Return only fixed, non-secret public diagnostics."""
-    if isinstance(exc, ValueError) and str(exc) == "IGI report input must be a full LG report number":
-        return ("invalid_report_hint", "Supply the complete IGI LG report number.")
-    if isinstance(exc, UnsupportedInputError):
-        return ("unsupported_input",
-                "Use one exact supported Diyona or Quality Diamonds listing URL.")
-    if isinstance(exc, IdentityConflictError):
-        return ("identity_conflict",
-                "Certified diamond identity observations disagree; publication was stopped.")
-    if isinstance(exc, RetrievalError):
-        cause = exc.__cause__ or exc
+def _listing_exception(exc: RetrievalError) -> tuple[str, str]:
+    """Walk provider/network exception chains without exposing message contents.
+
+    DiamondRetriever wraps exceptions and includes the listing URL in its text.
+    Classify only known exception *types* and exact in-repo messages.
+    Do not render unknown upstream strings, redirects, tokens or HTML.
+    """
+    cause: BaseException = exc
+    for _ in range(8):
         if isinstance(cause, RetrievalError):
             message = str(cause)
             if message in _KNOWN_LISTING_ERRORS:
@@ -76,11 +76,60 @@ def safe_failure(exc: Exception) -> tuple[str, str]:
                             f"Retailer returned HTTP {status}; do not bypass upstream access controls.")
                 return ("listing_http_failure",
                         f"Retailer returned HTTP {status}; the listing cannot be retrieved.")
-        if isinstance(cause, (URLError, TimeoutError)):
-            return ("listing_network_failure",
-                    "The listing request failed at network or transport level.")
-        return ("listing_retrieval_failure",
-                "Listing retrieval failed before a certified diamond identity was established.")
+        if cause.__cause__ is None or cause.__cause__ is cause:
+            break
+        cause = cause.__cause__
+
+    # Categorize the deepest cause, not its potentially sensitive message.
+    if isinstance(cause, HTTPError):
+        return ("listing_http_failure", f"Listing HTTP request returned status {cause.code}.")
+    if isinstance(cause, (socket.gaierror,)):
+        return ("listing_dns_failure", "Public listing hostname DNS resolution failed.")
+    if isinstance(cause, (ssl.SSLError,)):
+        return ("listing_tls_failure", "The listing connection failed TLS verification/negotiation.")
+    if isinstance(cause, (URLError, TimeoutError, ConnectionError, OSError)):
+        return ("listing_network_failure", "Network/connection failure while fetching listing.")
+    if isinstance(cause, InvalidOperation):
+        return ("listing_price_parse_failure", "Retailer supplied an invalid numeric field.")
+    if isinstance(cause, ValueError):
+        error = str(cause)
+        if error.startswith("Unable to resolve public hostname:"):
+            return ("listing_dns_failure", "Public listing hostname DNS resolution failed.")
+        if error.startswith("Refusing non-public destination:"):
+            return ("listing_unsafe_redirect",
+                    "Public-URL guard rejected a non-public resolved address or redirect.")
+        if error.startswith("HTTP response exceeds "):
+            return ("listing_response_too_large",
+                    "Listing HTML exceeded the configured download limit.")
+        if error in {
+            "Only public http(s) URLs are supported",
+            "URL must include a hostname",
+            "Credential-bearing URLs are not allowed",
+            "Invalid URL port",
+        }:
+            return ("listing_invalid_url",
+                    "The requested listing URL or redirect failed public-URL validation.")
+        return ("listing_value_error",
+                "Listing parsing/validation raised ValueError (message withheld).")
+    if isinstance(cause, (KeyError, IndexError, TypeError, AttributeError)):
+        return ("listing_parser_error",
+                f"Retailer adapter raised {type(cause).__name__} while parsing listing.")
+    return ("listing_retrieval_failure",
+            f"Listing retrieval failed with {type(cause).__name__ if type(cause) in {RuntimeError, AssertionError, LookupError} else 'an unclassified exception'}.")
+
+
+def safe_failure(exc: Exception) -> tuple[str, str]:
+    """Return only fixed, non-secret public diagnostics."""
+    if isinstance(exc, ValueError) and str(exc) == "IGI report input must be a full LG report number":
+        return ("invalid_report_hint", "Supply the complete IGI LG report number.")
+    if isinstance(exc, UnsupportedInputError):
+        return ("unsupported_input",
+                "Use one exact supported Diyona or Quality Diamonds listing URL.")
+    if isinstance(exc, IdentityConflictError):
+        return ("identity_conflict",
+                "Certified diamond identity observations disagree; publication was stopped.")
+    if isinstance(exc, RetrievalError):
+        return _listing_exception(exc)
     if isinstance(exc, GitHubError):
         if exc.status in {401, 403}:
             return ("github_permission_denied",
