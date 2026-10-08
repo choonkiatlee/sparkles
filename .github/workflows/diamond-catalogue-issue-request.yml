@@ -1,0 +1,43 @@
+name: diamond-catalogue-issue-request
+
+on:
+  issues:
+    types: [opened]
+
+permissions: {}
+
+jobs:
+  dispatch-ingestion:
+    # Never allow untrusted issue authors to run an ingestion workflow that
+    # publishes releases and commits to the default branch.
+    if: >-
+      github.repository == 'choonkiatlee/sparkles' &&
+      github.event.issue.user.login == 'choonkiatlee' &&
+      github.event.issue.title == 'Ingest diamond'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: write
+      issues: write
+    steps:
+      - name: Checkout the trusted request validator
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          persist-credentials: false
+      - name: Validate issue and exact listing URL
+        id: request
+        run: python tools/parse_diamond_ingest_issue.py --event "$GITHUB_EVENT_PATH" --github-output "$GITHUB_OUTPUT"
+      - name: Dispatch existing ingestion workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DIAMOND_URL: ${{ steps.request.outputs.diamond_url }}
+        run: gh workflow run diamond-catalogue-ingest.yml --repo "$GITHUB_REPOSITORY" --ref master --field diamond_url="$DIAMOND_URL"
+      - name: Link to ingestion workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body \
+            "Ingestion requested. Check the [diamond-catalogue-ingest runs](https://github.com/choonkiatlee/sparkles/actions/workflows/diamond-catalogue-ingest.yml) for status; the saved catalogue updates after publication succeeds. The separate GitHub Pages deployment may finish later."
