@@ -11,6 +11,7 @@ from .motion_sources import (
     Core360RotationDownloader,
     D360RotationDownloader,
     DiajewelRotationDownloader,
+    RemoteV360RotationDownloader,
     WorkshopRotationDownloader,
 )
 from .identity import DiamondIdentityValidator
@@ -74,6 +75,7 @@ def default_config(http_client: HttpClient | None = None) -> RetrievalConfig:
             DiajewelRotationDownloader(client),
             WorkshopRotationDownloader(client),
             Core360RotationDownloader(client),
+            RemoteV360RotationDownloader(client),
             D360RotationDownloader(client),
             DirectVideoDownloader(client),
         ),
