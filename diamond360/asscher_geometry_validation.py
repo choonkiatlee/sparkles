@@ -61,6 +61,7 @@ FROZEN_WIREFRAME_SPECIFICATION = {
 LEGACY_METHOD = "initial_v1"
 OUTER_METHOD = "outer_octagon_v2"
 WINDOW_METHOD = "window_local_peaks_v3_experiment"
+FRAME_RANK_METHOD = "c3_frame_coherence_v4_experiment"
 FROZEN_OUTER_WIREFRAME_REVISION = "6334cc9d0c7e2c9a26854bfaeec7a8ebbb6fc668"
 FROZEN_OUTER_WIREFRAME_SPEC_SHA256 = (
     "aaf8a885efe039b203330f9592dcccdb41ba11f3a731eb31143fa6de06b4e42e"
@@ -133,6 +134,27 @@ FROZEN_WINDOW_EXPERIMENT_POLICY = {
 }
 
 
+FROZEN_C3_FRAME_RANK_EXPERIMENT_POLICY = {
+    "schema_version": "diamond360-asscher-c3-frame-ranking/1",
+    "policy": "c3_frame_consistency_v1",
+    "c3_window": [.42, .60],
+    "peak_policy": "semantic_window_local_v1",
+    "per_frame_peak_search_radius_u": .035,
+    "local_z_min": .8,
+    "frame_supported_sector_fraction": .5,
+    "angular_coherence_radius_u": .045,
+    "score_formula": (
+        "unchanged global log1p(prominence / global_prominence_scale) "
+        "+ 1.25 * median_sector_support "
+        "+ 1.25 * fraction_of_frames_with_4_of_8_supported_sectors "
+        "- 1.25 * median_sector_misalignment / semantic_window_width"
+    ),
+    "coefficient_source": "reuse existing frozen 1.25 sector-support weight",
+    "scope": "C3/table only; all other crown tier rankers unchanged",
+    "physical_facet_claim": False,
+}
+
+
 def _method_profile(method):
     if method == LEGACY_METHOD:
         return (
@@ -140,7 +162,7 @@ def _method_profile(method):
             FROZEN_WIREFRAME_SPEC_SHA256,
             FROZEN_WIREFRAME_SPECIFICATION,
         )
-    if method in (OUTER_METHOD, WINDOW_METHOD):
+    if method in (OUTER_METHOD, WINDOW_METHOD, FRAME_RANK_METHOD):
         return (
             FROZEN_OUTER_WIREFRAME_REVISION,
             FROZEN_OUTER_WIREFRAME_SPEC_SHA256,
@@ -182,7 +204,7 @@ def assert_frozen_method(method=OUTER_METHOD):
             "wireframe specification differs from declared frozen method; "
             "run the historical checkout or declare a new method revision"
         )
-    if method == WINDOW_METHOD:
+    if method in (WINDOW_METHOD, FRAME_RANK_METHOD):
         if (
             steps.GLOBAL_PEAK_POLICY != "global_v1"
             or steps.WINDOW_PEAK_POLICY != "semantic_window_local_v1"
@@ -190,6 +212,11 @@ def assert_frozen_method(method=OUTER_METHOD):
             != FROZEN_WINDOW_EXPERIMENT_POLICY
         ):
             raise RuntimeError("experimental peak policy differs from frozen contract")
+    if method == FRAME_RANK_METHOD:
+        if (steps.FRAME_RANK_POLICY != "c3_frame_consistency_v1"
+                or steps.experimental_frame_rank_specification()
+                    != FROZEN_C3_FRAME_RANK_EXPERIMENT_POLICY):
+            raise RuntimeError("experimental C3 ranking differs from frozen contract")
     if topology.SCAFFOLD_SCHEMA != current["topology_schema"]:
         raise RuntimeError("semantic scaffold schema differs from frozen contract")
     if sequence_gauge.SCHEMA != "diamond360-asscher-sequence-gauge/1":
@@ -247,7 +274,12 @@ def frozen_method_record(method=OUTER_METHOD):
     return {
         "method_revision": method,
         "peak_selection_policy": (deepcopy(FROZEN_WINDOW_EXPERIMENT_POLICY)
-                                  if method == WINDOW_METHOD else None),
+                                  if method in (WINDOW_METHOD, FRAME_RANK_METHOD)
+                                  else None),
+        "candidate_rank_policy": (
+            deepcopy(FROZEN_C3_FRAME_RANK_EXPERIMENT_POLICY)
+            if method == FRAME_RANK_METHOD else None
+        ),
         "wireframe_revision": revision,
         "wireframe_schema": wireframe.SCHEMA,
         "wireframe_specification": deepcopy(specification),
