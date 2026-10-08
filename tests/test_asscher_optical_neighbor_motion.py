@@ -84,6 +84,32 @@ class NeighborOpticalMotionTests(unittest.TestCase):
         self.assertEqual(report["status"],"unavailable")
         self.assertEqual(report["reason"],"insufficient_common_interior")
 
+    def test_rgb_change_heatmap_masks_off_stone_and_mismatched_edges(self):
+        from PIL import Image
+        # The two masks disagree at the edge; the diagnostic heat panel
+        # must not display artificial bright motion outside their common
+        # interior, even though their source camera crops remain original.
+        a=np.full((144,144),.4)
+        b=np.full((144,144),.45)
+        mask_a=np.zeros_like(a,bool)
+        mask_b=np.zeros_like(a,bool)
+        mask_a[10:130,10:130]=True
+        mask_b[18:140,18:140]=True
+        report=motion.measure_pair(a,b,mask_a,mask_b,mask_a,mask_b)
+        self.assertEqual(report["status"],"observed")
+        source_a=Image.fromarray(np.uint8(a*255)).convert("RGB")
+        source_b=Image.fromarray(np.uint8(b*255)).convert("RGB")
+        panel=motion.render_pair(
+            source_a,source_b,mask_a,mask_b,np.eye(3),np.eye(3),
+            a,b,report,(15,16)
+        )
+        # The heatmap is drawn in third panel with a fixed padding.
+        panel_w=max(source_a.width,source_b.width,220)
+        heat_start=2*(panel_w+6)
+        self.assertEqual(
+            panel.getpixel((heat_start+2,60)),(10,14,24)
+        )
+
     def test_invalid_pose_neighbor_remains_unavailable(self):
         rec={"assessment":{"status":"ok"},
              "canonical":{"path":"canonical/0000.npz"},
