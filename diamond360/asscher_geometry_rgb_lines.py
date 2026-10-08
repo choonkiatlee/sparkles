@@ -185,6 +185,8 @@ def extract_frame_lines(gray, valid, mask, outer):
     gradient=np.hypot(gx,gy)
     base=float(np.percentile(gradient[interior],78))
     if base<1e-5:
+        base=float(np.percentile(gradient[interior],99))*.65
+    if base<1e-5:
         return {"status":"unavailable","reason":"no_detectable_RGB_gradients",
                 "sides":[],"polygon":None}
     center,scale=normalized_gauge(mask)
