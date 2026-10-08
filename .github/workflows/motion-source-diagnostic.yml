@@ -15,27 +15,27 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Inspect minimal Loupe360 media fields
+      - name: Verify exact-certificate Loupe360 media lookup
         run: |
           python - <<'PY'
           import json, urllib.request
           url="https://g.nivoda.com/graphql-public-loupe360"
-          def query(q, variables=None):
-              req=urllib.request.Request(
-                  url,
-                  data=json.dumps({"query":q,"variables":variables or {}}).encode(),
-                  method="POST",
-                  headers={
-                      "User-Agent":"Mozilla/5.0 SparklesIssue100/1",
-                      "Accept":"application/json",
-                      "Content-Type":"application/json",
-                  },
-              )
-              with urllib.request.urlopen(req,timeout=20) as r:
-                  return json.loads(r.read())
-          q='''query($name:String!){ __type(name:$name) { fields { name type { kind name ofType { kind name } } } } }'''
-          for typename in ("Certificate","V360Info"):
-              data=query(q,{"name":typename})
-              fields=((data.get("data") or {}).get("__type") or {}).get("fields") or []
-              print(typename+"_fields=",json.dumps(fields,sort_keys=True))
+          query='''query($cert:String!){
+            certificate_by_cert_number(cert_number:$cert) {
+              id certNumber lab image video pdfUrl
+              v360 { url frame_count top_index id }
+            }
+          }'''
+          body=json.dumps({"query":query,"variables":{"cert":"LG836619414"}}).encode()
+          req=urllib.request.Request(
+              url,data=body,method="POST",
+              headers={
+                  "User-Agent":"Mozilla/5.0 SparklesIssue100/1",
+                  "Accept":"application/json",
+                  "Content-Type":"application/json",
+              },
+          )
+          with urllib.request.urlopen(req,timeout=20) as r:
+              data=json.loads(r.read())
+          print("lookup=",json.dumps(data,sort_keys=True))
           PY
