@@ -253,9 +253,18 @@ def render_pair(source_a,source_b,mask_a,mask_b,matrix_a,matrix_b,
     if measurement["status"]=="observed":
         g0,g1=measurement["raw_median_luminance"]
         normalized=np.abs(a/g0-b/g1)
+        # Display ONLY the common, eroded stone interior that was
+        # eligible for quantitative comparison. Unregistered silhouette
+        # margins and off-stone pixels otherwise form fictitious orange
+        # "motion" bars at the boundary of a heatmap.
+        common=np.asarray(mask_a,bool)&np.asarray(mask_b,bool)
+        common=ndi.binary_erosion(
+            common,iterations=max(3,int(min(a.shape)*.015))
+        )
         mag=np.clip(normalized/0.75,0,1)
         rgb_map=np.stack([mag*255, np.sqrt(mag)*100,
                           (1-mag)*36],axis=-1).astype(np.uint8)
+        rgb_map[~common]=(10,14,24)
         heat=Image.fromarray(rgb_map).resize((w,h),Image.Resampling.NEAREST)
         d=ImageDraw.Draw(heat)
         sy=h/a.shape[0]; sx=w/a.shape[1]
