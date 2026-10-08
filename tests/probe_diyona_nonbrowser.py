@@ -66,6 +66,20 @@ def main():
         if any(k in s.lower() for k in ("diamond","api","graphql","nivoda","report")):
             print("Inline candidate",i,"bytes",len(s))
             print_hits("inline",s)
+    # Diagnose public page frontend request shapes without logging API credentials.
+    # Show a small bounded code window around the selected query functions.
+    for i in (45, 46, 50):
+        if i >= len(parsed.inline): continue
+        body = parsed.inline[i]
+        print("inline request trace",i)
+        patterns = ("getDiamond", "get-diamond", "diamond-by", "diamond-ring-builder-flax", ".from(", "supabase", "fetch(", "API_BASE", "api/diamond")
+        for term in patterns:
+            positions=[m.start() for m in re.finditer(re.escape(term),body,re.I)]
+            for pos in positions[:5]:
+                # Never display credentials, full URL query parameters or secrets.
+                snippet=body[max(0,pos-100):min(len(body),pos+210)].replace("\\n"," ")
+                snippet=re.sub(r"""(?i)(?:apikey|access_token|authorization|anon_key|password)\\s*[:=]\\s*["'][^"']+["']""","[redacted]",snippet)
+                print("    ",term,repr(snippet[:310]))
     # A handful of scripts only, bounded by total response size.
     for i,s in enumerate(parsed.scripts[:24]):
         if s.startswith("https://") and urllib.parse.urlsplit(s).hostname in {"diyona.com","www.diyona.com","cdn.shopify.com"}:
