@@ -344,3 +344,87 @@ does **not** change the frozen #75 Asscher geometry estimator, consume
 DiaGem/Sergey angle targets, or declare physical facet-angle estimates.
 If the photograph cannot support a segment, \`unavailable\` is the
 appropriate result.
+
+
+## B2d — automatic exterior proposals, independently of internal virtual facets
+
+The user cannot conveniently hand-trace the source. An *automatic,
+review-first* silhouette proposer therefore precedes human adjudication.
+
+Implementation: \`diamond360.asscher_profile_auto_exterior\`, schema
+\`diamond360-asscher-auto-exterior/1\`. Source usage: exact original JPEG
+sha-pinned by \`--require-original\`. **This is a prototype for this
+standardized, approximately centered profile framing**; it is not a generic
+view-independent, physically calibrated Asscher renderer.
+
+### Algorithm and provenance
+
+- Smooth the original RGB photo; estimate **row-dependent background**
+  from image margins, rather than treating every outside pixel as the same
+  RGB constant.
+- For left/right crown and pavilion independently, search a broad corridor
+  around a weak, normalized kite-shaped profile prior (top, widest equatorial
+  zone, narrowing lower pavilion). The prior only initializes a corridor;
+  it is not a polished-facet angle or accepted geometry. Its normalized
+  anchor fractions and every penalty/threshold are explicitly frozen in
+  the serialized output policy.
+- Score *outside-to-inside* RGB background separation and local cross-edge
+  contrast; prefer a continuous source-image path via dynamic programming
+  and a moderate tangent/slope-change penalty.
+- Repeat the search with three predeclared optical-evidence weightings.
+  For each source pixel row, retain actual suggested xy position,
+  cross-gradient strength, inside/outside separation, and disagreement among
+  the model variants.
+- **Green** overlay spans are \`edge_supported_candidate\` with sufficient
+  local evidence and cross-variant stability. **Orange** spans are
+  \`weak_or_ambiguous\`: those coordinates may be prior-guided extrapolation,
+  virtual/overlapping feature contamination or an unsupported edge.
+  All paths, even green ones, are unverified hypotheses.
+- Optional initial change-point fits operate only on contiguous *supported*
+  source-image runs, without filling weak gaps. These retain null semantic
+  facet IDs, exploratory image-plane tangent directions and raw support
+  residuals. A three-tier pavilion acts only as the upper bound on how many
+  straight stretches could be distinguishable, **not an enforced three-facet
+  fit**.
+
+The fitter receives NO PR A Hough peaks, internal brightness-band labels,
+human-derived angles or \`ground-truth.json\`. Dedicated adversarial tests
+modify bright horizontal/diagonal internal bands while leaving the true
+exterior unchanged; proposed contour coordinates must remain unchanged.
+Blank photos are explicitly unavailable even if the path prior generates
+a mathematical curve.
+
+### Evaluate and falsify on the original
+
+\`\`\`bash
+python -m unittest tests.test_asscher_profile_auto_exterior -v
+python -m diamond360.asscher_profile_auto_exterior \
+  --image docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG \
+  --require-original \
+  --output outputs/asscher-profile-auto-exterior
+\`\`\`
+
+Inspect:
+
+- \`auto-exterior-overlay.png\`: direct source photo with strong vs weak
+  automatic outside-contour suggestions, separately for crown/pavilion.
+- \`auto-exterior.json\`: every per-row xy point, evidence, variant spread,
+  support status and only **exploratory** supported-run changepoints.
+
+The source photograph's lower pavilion blends into the platform/shadow;
+**do not infer its true culet** from the normalized image prior.
+Green does not prove physical facet junctions or calibrated 3-D angle.
+Human visual validation can use the generated overlay as a reference without
+requiring them to draw the entire contour. If a region is visibly off-outline,
+reject it and record the uncertainty rather than adjusting policy to agree
+with Sergey's target angles. A versioned future iteration may improve
+contour extraction on an independent validation set.
+
+Original profile "edge support fraction" is a *detector-side evidence rate*,
+not a segmentation precision/recall or a confidence probability. Comparing
+variants only explores three predetermined photometric assumptions; it does
+not cover all true source uncertainty or camera projection ambiguity.
+
+The separate interior virtual-facet research is #123. The photographed
+physical pavilion plane identifiers and all eight P1/P2/P3/C1 physical
+angles remain unavailable until independently supported.
