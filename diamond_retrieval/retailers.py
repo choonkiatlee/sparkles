@@ -14,6 +14,7 @@ from .models import (
     CERTIFICATE,
     ROTATION,
     STILL,
+    VIDEO,
     DiamondMetadata,
     EvidenceReference,
     FieldAttribution,
@@ -175,10 +176,78 @@ def _igi_certificate_reference(
     )
 
 
+def _direct_rotation_locator(value: str) -> bool:
+    parts = urlsplit(value)
+    if parts.scheme not in {"http", "https"}:
+        return False
+    host = parts.netloc.lower()
+    query = parse_qs(parts.query)
+    if (
+        host == "vision.diajewel360.com"
+        and parts.path.lower().rstrip("/") == "/vision360.html"
+        and bool(query.get("d", [""])[0])
+    ):
+        return True
+    if host == "workshop.360view.link":
+        if parts.path.startswith("/view/") and len(parts.path.rstrip("/").split("/")) >= 3:
+            return True
+        return (
+            parts.path.lower().rstrip("/") == "/360viewer/360view.html"
+            and bool(query.get("d", [""])[0])
+        )
+    return (
+        host == "d360.tech"
+        and parts.path.lower().rstrip("/") == "/view.html"
+        and bool(query.get("d", [""])[0])
+    )
+
+
+def _direct_video_locator(value: str) -> bool:
+    parts = urlsplit(value)
+    return (
+        parts.scheme in {"http", "https"}
+        and bool(parts.netloc)
+        and parts.path.lower().endswith((".mp4", ".m4v", ".mov", ".webm"))
+    )
+
+
 def _motion_reference(source: str, url: str, report_number: str, parsed: _ParsedHtml) -> EvidenceReference | None:
+    values = (*parsed.hrefs, *parsed.media)
+    direct_rotation = next(
+        (value for value in values if _direct_rotation_locator(value)),
+        None,
+    )
+    if direct_rotation:
+        return EvidenceReference(
+            identifier=f"{source}:{report_number}:rotation",
+            kind=ROTATION,
+            retrieval_key=direct_rotation,
+            locator=direct_rotation,
+            provenance=(ProvenanceStep(source, url),),
+            metadata={"lab": "IGI", "report_number": report_number},
+        )
+
+    direct_video = next(
+        (value for value in values if _direct_video_locator(value)),
+        None,
+    )
+    if direct_video:
+        return EvidenceReference(
+            identifier=f"{source}:{report_number}:video",
+            kind=VIDEO,
+            retrieval_key=direct_video,
+            locator=direct_video,
+            provenance=(ProvenanceStep(source, url),),
+            metadata={
+                "lab": "IGI",
+                "report_number": report_number,
+                "format": "video",
+            },
+        )
+
     candidates = [
         value
-        for value in (*parsed.hrefs, *parsed.media)
+        for value in values
         if "loupe360.com" in urlsplit(value).netloc.lower()
     ]
     if candidates:
@@ -189,7 +258,11 @@ def _motion_reference(source: str, url: str, report_number: str, parsed: _Parsed
             retrieval_key=locator,
             locator=locator,
             provenance=(ProvenanceStep(source, url),),
-            metadata={"lab": "IGI", "report_number": report_number},
+            metadata={
+                "lab": "IGI",
+                "report_number": report_number,
+                "resolver": "loupe360_certificate",
+            },
         )
     if "360°" in parsed.text or "Loading 360" in parsed.text or "360 View" in parsed.text:
         return EvidenceReference(
