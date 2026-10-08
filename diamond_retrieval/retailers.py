@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import html
+import math
 import re
 from dataclasses import dataclass
 from decimal import Decimal
@@ -116,32 +117,122 @@ def _dimensions(text: str) -> tuple[float, float, float] | None:
 
 
 def _field(text: str, label: str) -> str | None:
-    match = re.search(rf"\b{re.escape(label)}\s*:?[ ]*([^\s<]+)", text, re.I)
+    # A word boundary is required on both sides of the label: "Polish" must
+    # not match the start of "Polished" or "Cut" part of "Cutting".
+    match = re.search(rf"\b{re.escape(label)}\b\s*:?\s*([^\s<]+)", text, re.I)
     return match.group(1).strip() if match else None
 
 
+_MISSING_PROPORTION_VALUES = frozenset({
+    "", "-", "--", "—", "–", "N/A", "NA", "NULL", "NONE GIVEN",
+    "NOT GRADED", "NOT AVAILABLE", "UNAVAILABLE", "UNKNOWN", "UNDEFINED",
+})
+_GRADE_NAMES = {
+    "ID": "Ideal", "IDEAL": "Ideal",
+    "EX": "Excellent", "EXC": "Excellent", "EXCELLENT": "Excellent",
+    "VG": "Very Good", "VERY GOOD": "Very Good",
+    "GD": "Good", "G": "Good", "GOOD": "Good",
+    "F": "Fair", "FAIR": "Fair",
+    "P": "Poor", "POOR": "Poor",
+}
+_FLUORESCENCE_NAMES = {
+    "N": "None", "NON": "None", "NONE": "None",
+    "F": "Faint", "FNT": "Faint", "FAINT": "Faint",
+    "MED": "Medium", "MEDIUM": "Medium",
+    "S": "Strong", "STG": "Strong", "STRONG": "Strong",
+    "VS": "Very Strong", "VST": "Very Strong",
+    "VERY STRONG": "Very Strong",
+}
+_CULET_NAMES = {
+    "NONE": "None", "POINTED": "Pointed", "VERY SMALL": "Very Small",
+    "SMALL": "Small", "MEDIUM": "Medium", "SLIGHTLY LARGE": "Slightly Large",
+    "LARGE": "Large", "VERY LARGE": "Very Large",
+}
+_GIRDLE_TERM = r"(?:Extremely Thin|Very Thin|Slightly Thin|Thin|Medium|Slightly Thick|Thick|Very Thick|Extremely Thick)"
+_GIRDLE_RE = re.compile(
+    rf"^({_GIRDLE_TERM})(?:\s+(?:to|-|–)\s+({_GIRDLE_TERM}))?(?![A-Za-z])",
+    re.I,
+)
+
+
+def _normalize_proportion(key: str, value) -> str | float | None:
+    """Accept only meaningful reported values; never treat placeholders as grades.
+
+    "None" is a *real* fluorescence/culet observation, unlike "-" or N/A.
+    Inputs must be complete grades or recognized terms, not substrings of prose.
+    """
+    if value is None:
+        return None
+    text = re.sub(r"\s+", " ", str(value)).strip()
+    if text.upper() in _MISSING_PROPORTION_VALUES:
+        return None
+    if key in {"table_percent", "depth_percent", "length_width_ratio"}:
+        try:
+            number = float(text.rstrip("%").strip())
+        except ValueError:
+            return None
+        if not (math.isfinite(number) and number > 0):
+            return None
+        if key in {"table_percent", "depth_percent"} and number > 100:
+            return None
+        return number
+    names = {
+        "cut": _GRADE_NAMES, "polish": _GRADE_NAMES,
+        "symmetry": _GRADE_NAMES, "fluorescence": _FLUORESCENCE_NAMES,
+        "culet": _CULET_NAMES,
+    }
+    if key in names:
+        return names[key].get(text.upper())
+    if key == "girdle":
+        match = _GIRDLE_RE.fullmatch(text)
+        if match:
+            def standard(x: str) -> str:
+                return " ".join(word.title() for word in x.split())
+            return standard(match.group(1)) + (
+                " to " + standard(match.group(2)) if match.group(2) else ""
+            )
+    return None
+
+
 def _proportions(text: str) -> dict[str, str | float]:
+    """Parse known grades only at whole label boundaries, never surrounding prose."""
     result: dict[str, str | float] = {}
     numeric_patterns = {
-        "table_percent": r"\bTable\s*%?\s*:?[ ]*([0-9.]+)\s*%",
-        "depth_percent": r"\bDepth\s*%?\s*:?[ ]*([0-9.]+)\s*%",
-        "length_width_ratio": r"\b(?:L/W Ratio|Ratio)\s*:?[ ]*([0-9.]+)",
+        "table_percent": r"\bTable\b\s*%?\s*:?\s*([0-9.]+)\s*%",
+        "depth_percent": r"\bDepth\b\s*%?\s*:?\s*([0-9.]+)\s*%",
+        "length_width_ratio": r"\b(?:L/W Ratio|Ratio)\b\s*:?\s*([0-9.]+)",
     }
     for key, pattern in numeric_patterns.items():
-        match = re.search(pattern, text, re.I)
-        if match:
-            result[key] = float(match.group(1))
+        for match in re.finditer(pattern, text, re.I):
+            value = _normalize_proportion(key, match.group(1))
+            if value is not None:
+                result[key] = value
+                break
+
+    # Find the first recognized value following a complete label. In
+    # particular, "Polished" must not yield polish="ed", and prose such as
+    # "Asscher Cut and Polish" must not yield cut="and".
     for label, key in (
-        ("Cut", "cut"),
-        ("Polish", "polish"),
-        ("Symmetry", "symmetry"),
-        ("Fluorescence", "fluorescence"),
-        ("Girdle", "girdle"),
-        ("Culet", "culet"),
+        ("Cut", "cut"), ("Polish", "polish"), ("Symmetry", "symmetry"),
+        ("Fluorescence", "fluorescence"), ("Girdle", "girdle"), ("Culet", "culet"),
     ):
-        value = _field(text, label)
-        if value and value != "-":
-            result[key] = value
+        for label_match in re.finditer(rf"\b{label}\b\s*:?\s*", text, re.I):
+            tail = text[label_match.end():label_match.end() + 45]
+            # Match only complete known values; don't absorb the next field.
+            if key in {"cut", "polish", "symmetry"}:
+                option = r"(?:Excellent|Very Good|Good|Fair|Poor|Ideal|EXC|EX|VG|GD|ID|G|F|P)"
+            elif key == "fluorescence":
+                option = r"(?:Very Strong|Strong|Medium|Faint|None|Non|VST|STG|MED|FNT|VS|S|F|N)"
+            elif key == "culet":
+                option = r"(?:Slightly Large|Very Large|Very Small|Pointed|Medium|Small|Large|None)"
+            else:
+                option = rf"{_GIRDLE_TERM}(?:\s+(?:to|-|–)\s+{_GIRDLE_TERM})?"
+            candidate = re.match(rf"({option})(?![A-Za-z])", tail, re.I)
+            if candidate:
+                value = _normalize_proportion(key, candidate.group(1))
+                if value is not None:
+                    result[key] = value
+                    break
     return result
 
 
@@ -377,11 +468,9 @@ def _diyona_public_record_as_listing(
     }
     proportions = {}
     for key, name in proportion_names.items():
-        value = data.get(key)
-        if value is not None and str(value).strip():
-            proportions[name] = float(value) if key in {
-                "ratio", "depth_percent", "table_percent"
-            } else str(value)
+        value = _normalize_proportion(name, data.get(key))
+        if value is not None:
+            proportions[name] = value
 
     fields = ["report_number", "lab", "retailer_sku"]
     if shape:
@@ -688,6 +777,7 @@ class QualityDiamondsListingProvider:
             fields.append("origin")
         if dimensions:
             fields.append("dimensions")
+        fields.append("reported_proportions")
         if price is not None:
             fields.extend(("price", "currency", "tax_basis"))
 
