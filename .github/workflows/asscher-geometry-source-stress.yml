@@ -8,23 +8,9 @@ permissions:
   contents: read
   actions: read
 
+# Source-stress is a slow, optional deep validation. It is intentionally
+# not a PR gate during iterative geometry experiments.
 on:
-  pull_request:
-    paths:
-      - "diamond360/asscher_geometry_source_stress.py"
-      - "diamond360/asscher_geometry_stability.py"
-      - "diamond360/asscher_geometry_validation.py"
-      - "diamond360/asscher_geometry_method_comparison.py"
-      - "diamond360/asscher_wireframe.py"
-      - "diamond360/asscher_pose_sequence.py"
-      - "diamond360/asscher_sequence_gauge.py"
-      - "diamond360/pipeline.py"
-      - "docs/360/benchmark/source-bundles.json"
-      - "docs/360/asscher-geometry-validation/SOURCE-STRESS.md"
-      - "tests/test_asscher_geometry_source_stress.py"
-      - "tests/test_asscher_geometry_method_comparison.py"
-      - "tests/test_asscher_geometry_outer_revision.py"
-      - ".github/workflows/asscher-geometry-source-stress.yml"
   workflow_dispatch:
 
 jobs:
