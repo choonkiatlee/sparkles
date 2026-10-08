@@ -48,5 +48,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python -m diamond_catalogue.publish
 
-      # GitHub Pages deployment is #108: GITHUB_TOKEN commits do not fire
-      # new push workflows; #108 must explicitly deploy as part of ingestion.
+  deploy-pages:
+    needs: publish
+    uses: ./.github/workflows/catalogue-pages.yml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write

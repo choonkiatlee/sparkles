@@ -1,0 +1,35 @@
+name: catalogue-ui-contract
+
+on:
+  pull_request:
+    paths:
+      - "catalogue/**"
+      - "tests/catalogue-core.test.mjs"
+      - "tests/test_catalogue_pages_site.py"
+      - "tools/build_catalogue_pages.py"
+      - "index.html"
+      - ".github/workflows/catalogue-pages.yml"
+      - ".github/workflows/catalogue-ui-contract.yml"
+      - ".github/workflows/diamond-catalogue-ingest.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  static-catalogue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check browser modules
+        run: |
+          node --check catalogue/core.mjs
+          node --check catalogue/app.mjs
+      - name: Test catalogue selection and view logic
+        run: node --test tests/catalogue-core.test.mjs
+      - name: Validate published site artifact and source links
+        run: python -m unittest tests.test_catalogue_pages_site -v

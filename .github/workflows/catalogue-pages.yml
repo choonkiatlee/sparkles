@@ -1,0 +1,54 @@
+name: catalogue-pages
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "index.html"
+      - ".nojekyll"
+      - "catalogue/**"
+      - "data/catalog.json"
+      - "data/diamonds/**"
+      - "evaluations/**"
+      - "resources/**"
+      - "tools/build_catalogue_pages.py"
+      - ".github/workflows/catalogue-pages.yml"
+  workflow_dispatch:
+  workflow_call:
+
+permissions: {}
+
+concurrency:
+  group: sparkles-catalogue-pages-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      # A GITHUB_TOKEN commit during ingestion cannot trigger another push
+      # workflow. Explicit workflow_call checks out updated master afterwards.
+      - name: Checkout published catalogue and website
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          persist-credentials: false
+      - name: Assemble Pages site with existing reports
+        run: python tools/build_catalogue_pages.py --dest _site
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload static site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
