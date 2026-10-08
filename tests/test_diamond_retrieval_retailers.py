@@ -1,4 +1,6 @@
+import base64
 import io
+import json
 import unittest
 from pathlib import Path
 
@@ -24,6 +26,8 @@ from diamond_retrieval.retailers import (
 
 
 FIXTURES = Path(__file__).parent / "fixtures" / "diamond_retrieval"
+MOTION_AUDITS = json.loads((FIXTURES / "motion-audits.json").read_text())["audits"]
+GRAPHQL_URL = "https://g.nivoda.com/graphql-public-loupe360"
 DIYONA_URL = "https://diyona.com/pages/diamond-detail?sku=B934F4533"
 QD_URL = (
     "https://www.qualitydiamonds.co.uk/loose-diamonds/"
@@ -39,9 +43,11 @@ QD_STILL = (
 
 
 class FakeHttpClient:
-    def __init__(self, responses):
+    def __init__(self, responses, *, post_responses=None):
         self.responses = dict(responses)
+        self.post_responses = dict(post_responses or {})
         self.calls = []
+        self.post_calls = []
 
     def get(self, url, *, timeout):
         self.calls.append(url)
@@ -52,6 +58,16 @@ class FakeHttpClient:
             return value
         content, media_type = value
         return HttpResponse(200, url, {"Content-Type": media_type}, content)
+
+    def post(self, url, *, timeout, content, headers=None):
+        self.post_calls.append((url, content, dict(headers or {})))
+        value = self.post_responses.get(url)
+        if value is None:
+            return HttpResponse(404, url, {"Content-Type": "application/json"}, b"{}")
+        if isinstance(value, HttpResponse):
+            return value
+        payload, media_type = value
+        return HttpResponse(200, url, {"Content-Type": media_type}, payload)
 
 
 def _fixture(name):
@@ -65,6 +81,74 @@ def _jpeg_bytes():
     image.putpixel((1, 1), (120, 120, 120))
     image.save(buffer, format="JPEG", quality=95)
     return buffer.getvalue()
+
+
+def _motion_jpeg(index):
+    buffer = io.BytesIO()
+    image = Image.new(
+        "RGB",
+        (8, 8),
+        (index % 251, (index * 7) % 251, (index * 13) % 251),
+    )
+    image.putpixel((index % 8, (index // 8) % 8), (255, 255, 255))
+    image.save(buffer, format="JPEG", quality=95)
+    return buffer.getvalue()
+
+
+def _progressive_source_responses(audit, source_root, *, version, workshop=False):
+    by_batch = {}
+    for frame in audit["frames"]:
+        by_batch.setdefault(frame["batch"], []).append(frame)
+    bootstrap = {
+        "width": 8,
+        "height": 8,
+        "quality": 4,
+        "version": version,
+        "scramble": audit["encrypted_scramble"],
+        "image": base64.b64encode(_motion_jpeg(0)).decode("ascii"),
+    }
+    metadata_url = source_root + "/0.json" + ("?version=" if workshop else "")
+    responses = {
+        metadata_url: (
+            json.dumps(bootstrap, separators=(",", ":")).encode(),
+            "application/json",
+        )
+    }
+    for batch in range(1, 8):
+        frames = sorted(by_batch[batch], key=lambda item: item["stored_position"])
+        encoded = [
+            base64.b64encode(_motion_jpeg(frame["source_index"])).decode("ascii")
+            for frame in frames
+        ]
+        responses[f"{source_root}/{batch}.json?version={version}"] = (
+            json.dumps(encoded, separators=(",", ":")).encode(),
+            "application/json",
+        )
+    return responses
+
+
+def _loupe_payload(report, viewer, *, cert_id):
+    return json.dumps(
+        {
+            "data": {
+                "certificate_by_cert_number": {
+                    "id": cert_id,
+                    "certNumber": report,
+                    "lab": "IGI",
+                    "image": None,
+                    "video": f"https://loupe360.com/diamond/{cert_id}/video/500/500",
+                    "pdfUrl": f"https://example.test/{report}.pdf",
+                    "v360": {
+                        "url": viewer,
+                        "frame_count": 256,
+                        "top_index": "252",
+                        "id": f"motion-{cert_id}",
+                    },
+                }
+            }
+        },
+        separators=(",", ":"),
+    ).encode()
 
 
 def _pdf_bytes(
@@ -231,6 +315,24 @@ class RetailerProviderTests(unittest.TestCase):
         )
         self.assertEqual(record.references[1].locator, QD_STILL)
 
+    def test_direct_supplier_viewer_on_listing_is_preserved_without_loupe_inference(self):
+        direct = "https://d360.tech/view.html?d=DIRECT-D360-1"
+        html = _fixture("diyona-detail.html").decode().replace(
+            "</body>",
+            f'<iframe src="{direct}"></iframe></body>',
+        ).encode()
+        http = FakeHttpClient(
+            {DIYONA_URL: (html, "text/html; charset=utf-8")}
+        )
+        record = DiyonaListingProvider(http).fetch(DIYONA_URL)
+        motion = next(ref for ref in record.references if ref.kind == ROTATION)
+        self.assertEqual(motion.locator, direct)
+        self.assertEqual(motion.retrieval_key, direct)
+        self.assertNotEqual(
+            motion.metadata.get("resolver"),
+            "loupe360_certificate",
+        )
+
     def test_providers_reject_non_exact_routes(self):
         http = FakeHttpClient({})
         diyona = DiyonaListingProvider(http)
@@ -245,12 +347,17 @@ class RetailerProviderTests(unittest.TestCase):
 class RetailerEndToEndTests(unittest.TestCase):
     def qd_http(self, *, pdf=None, pdf_status=200):
         pdf_url = "https://api.igi.org/viewpdf.php?r=LG713574578"
+        viewer = "https://workshop.360view.link/view/QD-TEST-713574578"
+        root = "https://data1.360view.link/data/1/imaged/QD-TEST-713574578"
         responses = {
             QD_URL: (
                 _fixture("quality-diamonds-detail.html"),
                 "text/html; charset=utf-8",
             ),
             QD_STILL: (_jpeg_bytes(), "image/jpeg"),
+            **_progressive_source_responses(
+                MOTION_AUDITS[1], root, version=2, workshop=True
+            ),
         }
         if pdf_status == 200:
             responses[pdf_url] = (pdf if pdf is not None else _qd_pdf(), "application/pdf")
@@ -258,36 +365,69 @@ class RetailerEndToEndTests(unittest.TestCase):
             responses[pdf_url] = HttpResponse(
                 pdf_status, pdf_url, {"Content-Type": "text/plain"}, b"missing"
             )
-        return FakeHttpClient(responses)
+        return FakeHttpClient(
+            responses,
+            post_responses={
+                GRAPHQL_URL: (
+                    _loupe_payload(
+                        "LG713574578",
+                        viewer,
+                        cert_id="qd-fixture-certificate",
+                    ),
+                    "application/json",
+                )
+            },
+        )
 
     def diyona_http(self, *, pdf=None):
         pdf_url = "https://api.igi.org/viewpdf.php?r=LG800667394"
+        viewer = "https://vision.diajewel360.com/Vision360.html?d=VL-TEST-800667394"
+        root = "https://vision.diajewel360.com/imaged/VL-TEST-800667394"
+        responses = {
+            DIYONA_URL: (
+                _fixture("diyona-detail.html"),
+                "text/html; charset=utf-8",
+            ),
+            pdf_url: (
+                pdf if pdf is not None else _diyona_pdf(),
+                "application/pdf",
+            ),
+            **_progressive_source_responses(
+                MOTION_AUDITS[0], root, version=1
+            ),
+        }
         return FakeHttpClient(
-            {
-                DIYONA_URL: (
-                    _fixture("diyona-detail.html"),
-                    "text/html; charset=utf-8",
-                ),
-                pdf_url: (
-                    pdf if pdf is not None else _diyona_pdf(),
-                    "application/pdf",
-                ),
-            }
+            responses,
+            post_responses={
+                GRAPHQL_URL: (
+                    _loupe_payload(
+                        "LG800667394",
+                        viewer,
+                        cert_id="diyona-fixture-certificate",
+                    ),
+                    "application/json",
+                )
+            },
         )
 
-    def test_default_composition_quality_diamonds_returns_certificate_still_and_partial_motion(self):
+    def test_default_composition_quality_diamonds_returns_complete_ordered_motion(self):
         http = self.qd_http()
         result = retrieve_diamond(QD_URL, config=default_config(http))
-        self.assertEqual(result.status, ResultStatus.PARTIAL)
+        self.assertEqual(result.status, ResultStatus.COMPLETE)
         self.assertEqual(len(result.certificates), 1)
         self.assertEqual(len(result.stills), 1)
+        self.assertEqual(len(result.rotations), 1)
         self.assertEqual(result.certificates[0].payload, _qd_pdf())
         self.assertEqual(result.stills[0].payload, _jpeg_bytes())
         self.assertEqual(result.stills[0].dimensions, (3, 2))
-        self.assertIn(
-            EvidenceStatus.UNSUPPORTED,
-            [attempt.status for attempt in result.attempts],
+        rotation = result.rotations[0]
+        self.assertEqual(len(rotation.frames), 256)
+        self.assertEqual(
+            [frame.source_index for frame in rotation.frames],
+            list(range(256)),
         )
+        self.assertEqual(rotation.metadata["supplier"], "workshop")
+        self.assertEqual(len(http.post_calls), 1)
         outcomes = {item.field: item.outcome for item in result.identity_comparisons}
         for field in (
             "report_number",
@@ -301,12 +441,16 @@ class RetailerEndToEndTests(unittest.TestCase):
         ):
             self.assertEqual(outcomes[field], IdentityOutcome.AGREEMENT)
 
-    def test_default_composition_diyona_returns_matched_certificate_and_partial_motion(self):
+    def test_default_composition_diyona_returns_complete_ordered_motion(self):
         http = self.diyona_http()
         result = retrieve_diamond(DIYONA_URL, config=default_config(http))
-        self.assertEqual(result.status, ResultStatus.PARTIAL)
+        self.assertEqual(result.status, ResultStatus.COMPLETE)
         self.assertEqual(len(result.certificates), 1)
+        self.assertEqual(len(result.rotations), 1)
         self.assertEqual(result.certificates[0].extracted_fields["report_number"], "LG800667394")
+        self.assertEqual(result.rotations[0].metadata["supplier"], "diajewel")
+        self.assertEqual(len(result.rotations[0].frames), 256)
+        self.assertEqual(len(http.post_calls), 1)
         outcomes = {item.field: item.outcome for item in result.identity_comparisons}
         self.assertEqual(outcomes["shape"], IdentityOutcome.AGREEMENT)
         self.assertEqual(outcomes["report_number"], IdentityOutcome.AGREEMENT)
