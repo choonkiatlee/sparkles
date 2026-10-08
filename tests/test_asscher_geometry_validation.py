@@ -70,7 +70,7 @@ class AsscherGeometryValidationTests(unittest.TestCase):
         frozen = validation.frozen_method_record()
         self.assertEqual(
             frozen["wireframe_revision"],
-            "8bbbbf64754f2bcbb48ab435b731bdf95f7722bc",
+            "6334cc9d0c7e2c9a26854bfaeec7a8ebbb6fc668",
         )
         self.assertEqual(
             frozen["wireframe_specification_sha256"],
