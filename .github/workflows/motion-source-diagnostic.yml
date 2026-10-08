@@ -15,31 +15,53 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Inspect public Loupe360 GraphQL schema entry
+      - name: Inspect public Loupe360 certificate return contract
         run: |
           python - <<'PY'
           import json, urllib.request
           url="https://g.nivoda.com/graphql-public-loupe360"
-          query='''{ __type(name: "Query") { fields { name args { name type { kind name ofType { kind name } } } } } }'''
+          query='''{
+            __type(name: "Query") {
+              fields {
+                name
+                type {
+                  kind
+                  name
+                  ofType { kind name ofType { kind name } }
+                }
+              }
+            }
+          }'''
           body=json.dumps({"query":query}).encode()
           req=urllib.request.Request(
-              url,
-              data=body,
+              url,data=body,method="POST",
               headers={
                   "User-Agent":"Mozilla/5.0 SparklesIssue100/1",
                   "Accept":"application/json",
                   "Content-Type":"application/json",
               },
-              method="POST",
           )
-          try:
-              with urllib.request.urlopen(req,timeout=20) as r:
-                  raw=r.read()
-              data=json.loads(raw)
-              fields=((data.get("data") or {}).get("__type") or {}).get("fields") or []
-              matches=[field for field in fields if "certificate" in field.get("name","").lower()]
-              print("certificate_fields=",json.dumps(matches,sort_keys=True))
-              print("errors=",json.dumps(data.get("errors"),sort_keys=True))
-          except Exception as exc:
-              print("error=",type(exc).__name__,str(exc))
+          with urllib.request.urlopen(req,timeout=20) as r:
+              data=json.loads(r.read())
+          fields=((data.get("data") or {}).get("__type") or {}).get("fields") or []
+          target=next(field for field in fields if field.get("name")=="certificate_by_cert_number")
+          print("query_field=",json.dumps(target,sort_keys=True))
+          typename=(target.get("type") or {}).get("name") or (((target.get("type") or {}).get("ofType") or {}).get("name"))
+          print("return_type=",typename)
+          query2='''query($name:String!){ __type(name:$name) { fields { name type { kind name ofType { kind name } } } } }'''
+          req2=urllib.request.Request(
+              url,
+              data=json.dumps({"query":query2,"variables":{"name":typename}}).encode(),
+              method="POST",
+              headers={
+                  "User-Agent":"Mozilla/5.0 SparklesIssue100/1",
+                  "Accept":"application/json",
+                  "Content-Type":"application/json",
+              },
+          )
+          with urllib.request.urlopen(req2,timeout=20) as r:
+              data2=json.loads(r.read())
+          fields2=((data2.get("data") or {}).get("__type") or {}).get("fields") or []
+          wanted={"id","cert_number","certificate_number","report","report_url","image","image_url","video","video_url","v360","frame_count","top_index","lab"}
+          print("media_fields=",json.dumps([field for field in fields2 if field.get("name") in wanted],sort_keys=True))
           PY
