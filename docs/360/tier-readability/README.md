@@ -153,3 +153,71 @@ PR A/A2 still does **not**:
 
 Those decisions belong to later #57 slices after this measurement primitive is
 stable enough to calibrate.
+
+
+---
+
+## PR C — genuine frame-level human calibration
+
+PR C does not reuse `docs/360/calibration/human-observations.json` as ground
+truth. That legacy file is explicitly AI-derived. Tier readability requires a
+new genuinely human-entered frame set.
+
+The calibration workflow therefore has two stages.
+
+### 1. Blinded label packet
+
+CI regenerates the four-stone PR-B measurement field, then selects exactly five
+informative wide-window frames per stone before any human labels exist:
+
+- consensus-low separation across all six candidate separation formulations;
+- consensus-high separation across all six candidate separation formulations;
+- maximum rank disagreement across those formulations;
+- largest joint weakest-link penalty as a targeted nested-collapse stress case;
+- a fixed near-face-up phase anchor independent of descriptor magnitude.
+
+The consensus/disagreement roles use coarse whole-band, #49 broad-sector,
+boundary-local median/Q25 and joint median/Q25 together, so PR-B candidates do
+not define the evaluation set they are later compared on. Duplicate source
+frames are replaced by the next candidate for that selection role. The
+resulting 20 frames are shuffled into stable opaque IDs
+(`T01 ... T20`) using a hash of certificate + source index.
+
+The human-facing contact sheet exposes only the source image and opaque ID.
+Descriptor values, stone grouping and selection magnitudes are not shown.
+
+For every item the reviewer supplies:
+
+- `separation = collapsed | partial | clear`;
+- `three_layers = ambiguous | obvious`.
+
+### 2. Leakage-safe benchmark
+
+A label file is accepted only when its provenance says:
+
+- `kind = human_entered`;
+- `ai_assistance = false`;
+- `status = complete`;
+- a non-empty reviewer session is recorded;
+- every packet item is labelled exactly once.
+
+The benchmark compares:
+
+- coarse whole-band weakest boundary;
+- #49 broad-sector median weakest boundary;
+- boundary-local median weakest boundary;
+- boundary-local Q25 weakest boundary;
+- joint weakest-link median;
+- joint weakest-link Q25;
+- monotonic-order fraction;
+- alternating inner-extremum fraction;
+- dominant-order concentration.
+
+Validation is **leave-one-diamond-out**. All frames from the held-out diamond
+remain together. Descriptor direction is learned only from the three training
+diamonds using the sign of Spearman association; no threshold, regression
+magnitude or composite score is fit. Held-out discrimination is measured by
+within-diamond pairwise concordance, with score ties receiving half credit.
+
+Until genuine labels are committed, CI stops after producing the packet and
+uploads it as an artifact. Production integration remains blocked.

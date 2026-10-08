@@ -1,4 +1,4 @@
-name: tier-readability-b
+name: tier-readability-c
 
 on:
   pull_request:
@@ -7,15 +7,18 @@ on:
       - "diamond360/regions.py"
       - "diamond360/tier_contrast.py"
       - "diamond360/tier_contrast_benchmark.py"
+      - "diamond360/tier_readability_calibration.py"
+      - "docs/360/tier-readability/**"
       - "tests/test_asscher_steps.py"
       - "tests/test_regions.py"
       - "tests/test_tier_contrast.py"
       - "tests/test_tier_contrast_benchmark.py"
+      - "tests/test_tier_readability_calibration.py"
       - ".github/workflows/tier-readability-a.yml"
   workflow_dispatch:
 
 concurrency:
-  group: tier-readability-b-${{ github.event.pull_request.number || github.ref }}
+  group: tier-readability-c-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -32,13 +35,14 @@ jobs:
       - name: Install package
         run: python -m pip install -e .
 
-      - name: Run issue 57 PR B tests
+      - name: Run issue 57 PR C tests
         run: |
           python -m unittest \
             tests.test_asscher_steps \
             tests.test_regions \
             tests.test_tier_contrast \
             tests.test_tier_contrast_benchmark \
+            tests.test_tier_readability_calibration \
             -v
 
       - name: Record full-suite status
@@ -71,19 +75,47 @@ jobs:
                   bundle.extractall(destination)
           PY
 
-      - name: Run four-stone PR B benchmark
+      - name: Run four-stone PR C measurement benchmark
         run: |
           python -m diamond360.tier_contrast_benchmark \
             --source-root outputs/tier-readability-sources \
-            --output outputs/tier-readability-b
-          cat outputs/tier-readability-b/comparison.csv
-          echo "--- PR B profile ---"
-          cat outputs/tier-readability-b/readability-profile.csv
+            --output outputs/tier-readability-c
+          echo "--- PR B descriptors consumed by PR C ---"
+          cat outputs/tier-readability-c/readability-profile.csv
 
-      - name: Upload PR B benchmark
+      - name: Build blinded human-label packet
+        run: |
+          python -m diamond360.tier_readability_calibration packet \
+            --benchmark-root outputs/tier-readability-c \
+            --source-root outputs/tier-readability-sources \
+            --output outputs/tier-readability-c/label-packet
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          packet = json.loads(
+              Path("outputs/tier-readability-c/label-packet/manifest.json").read_text()
+          )
+          print("label packet items:", len(packet["items"]))
+          print("contact sheet: outputs/tier-readability-c/label-packet/contact-sheet.jpg")
+          PY
+
+      - name: Run human calibration when committed labels are complete
+        run: |
+          if [ -f docs/360/tier-readability/human-labels.json ]; then
+            python -m diamond360.tier_readability_calibration calibrate \
+              --benchmark-root outputs/tier-readability-c \
+              --manifest outputs/tier-readability-c/label-packet/manifest.json \
+              --labels docs/360/tier-readability/human-labels.json \
+              --output outputs/tier-readability-c/calibration
+            cat outputs/tier-readability-c/calibration/calibration.csv
+          else
+            echo "No committed human labels yet; packet generation is the current PR-C gate."
+          fi
+
+      - name: Upload PR C benchmark and label packet
         uses: actions/upload-artifact@v4
         with:
-          name: tier-readability-b-benchmark
-          path: outputs/tier-readability-b
+          name: tier-readability-c-calibration
+          path: outputs/tier-readability-c
           if-no-files-found: error
           retention-days: 90
