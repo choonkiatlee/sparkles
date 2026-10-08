@@ -252,3 +252,95 @@ more views are still required to establish actual physical facet families.
 at least the outer regions B/C and ambiguous lower regions D/E/F, and return
 the export JSON or written verdicts. Only after the evidence is reviewed should
 we attempt angle extraction; ambiguous optical bands should stay excluded.
+
+
+## B2c — trace outer contours first, then find change points
+
+The profile silhouette should carry substantially more weight than interior
+virtual-facet/brightness lines. The fitting problem is separated into two
+auditable stages, and interior-feature analysis is now a *different issue*:
+[#123](https://github.com/choonkiatlee/sparkles/issues/123).
+
+### Stage 1: explicitly traced left/right external profiles
+
+Use \`asscher_profile_outline_changepoints\`'s standalone
+\`exterior-tracer.html\`, which embeds the hash-pinned **original** source.
+A reviewer traces **separate** ordered image-only point sequences:
+
+- \`left_crown\`, \`right_crown\`;
+- \`left_pavilion\`, \`right_pavilion\`.
+
+Annotate only external stone/background contours supported by the source, with
+a reason and \`reviewed_image_only\` provenance. Empty strokes remain
+\`unavailable\`; ambiguous/hidden portions should not be bridged across.
+The tracing tool has no interior gradient proposals, P1/P2/P3/C1 labels,
+expert estimates or assumed three-step break locations.
+
+The exported JSON is \`diamond360-asscher-exterior-traces/1\`: exact source
+SHA-256, original pixel coordinates, four independent stroke slots and
+reviewer notes. The parser rejects non-finite/off-image points, wrong
+left/right side, non-increasing y, extra (possibly target-bearing) input
+fields or unreviewed traces. It is a candidate appearance-of-the-outline
+record, not a validated 3-D physical angle.
+
+### Stage 2: parsimonious piecewise contour and changepoints
+
+\`diamond360-asscher-exterior-changepoints/1\` uses the reviewed source
+coordinates alone. It fits independent left/right crown/pavilion strokes
+with orthogonal total-least-squares straight segments and predeclared
+penalized dynamic programming. The hard cap is **three straight segments per
+side/region** (two internal breakpoints); fewer or none are valid. The first
+pass fixes an additional-segment penalty of 40 pixel² and requires at least
+six supported points across a minimum 12-pixel y-span per segment. It records
+the raw source endpoints, orthogonal residual, apparent image-plane tangent,
+candidate change-point coordinates and a runner-up model cost.
+
+The presence of **three physical pavilion tiers** is a *topological upper
+bound*, NOT three guaranteed visible profile lines and definitely not three
+guaranteed observed facets in this projection. In an oblique view a
+silhouette is an *envelope* of facets; a change in the projected extremal
+boundary need not equal the junction of adjacent pavilion facets. Treat
+the fitted segments and bends as exploratory external-profile hypotheses
+until camera/projection and facet identity are independently corroborated.
+
+The reported model-selection cost margin is **not a calibrated confidence
+interval**. Uncertainty from tracing, occlusion, and projection remains a
+future requirement; we are not using this initial model to claim precise
+P1/P2/P3 angles.
+
+### Falsification and usage
+
+Focused synthetic tests cover one, two and three identifiable slope segments,
+smooth profiles without genuine changepoints, left/right asymmetry, source
+pinning and null physical-angle outputs. The fitting API accepts only
+reviewed external point traces—not image intensity, Hough peaks or a file of
+expert angle targets. This proves a deliberate separation of inputs; it does
+not yet demonstrate that the actual DiaGem profile has three distinguishable
+physical pavilion slopes.
+
+Generate the original-photo trace worksheet and an empty, auditable
+pre-review changepoint result:
+
+\`\`\`bash
+python -m diamond360.asscher_profile_outline_changepoints \
+  --image docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG \
+  --output outputs/asscher-profile-physical-evidence
+\`\`\`
+
+Open the generated \`exterior-tracer.html\` in a browser and export
+\`exterior-traces.json\` after tracing *only the supported outside edges*. To
+fit the **reviewed image-only traces**:
+
+\`\`\`bash
+python -m diamond360.asscher_profile_outline_changepoints \
+  --image docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG \
+  --traces path/to/exterior-traces.json \
+  --output outputs/asscher-profile-reviewed-traces
+\`\`\`
+
+The resulting \`exterior-changepoints-overlay.png\` shows the independently
+traced contour paths and any image-slope change-point candidates. This
+does **not** change the frozen #75 Asscher geometry estimator, consume
+DiaGem/Sergey angle targets, or declare physical facet-angle estimates.
+If the photograph cannot support a segment, \`unavailable\` is the
+appropriate result.
