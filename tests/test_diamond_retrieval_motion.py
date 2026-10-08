@@ -16,6 +16,7 @@ from diamond_retrieval import (
     RawEvidence,
 )
 from diamond_retrieval.motion_sources import (
+    Core360RotationDownloader,
     D360RotationDownloader,
     DiajewelRotationDownloader,
     WorkshopRotationDownloader,
@@ -329,6 +330,33 @@ class ProgressiveMotionContractTests(unittest.TestCase):
                     [root + "/0.json?version="]
                     + [f"{root}/{batch}.json?version=2" for batch in range(1, 8)],
                 )
+
+    def test_core360_downloader_uses_same_origin_progressive_transport(self):
+        audit = AUDITS[0]
+        viewer = "https://v3603703.v360.in/vision360.html?d=NGS-05-413"
+        root = "https://v3603703.v360.in/imaged/NGS-05-413"
+        http = FakeHttpClient(
+            _progressive_source_responses(audit, root, version=1, workshop=True)
+        )
+        downloader = Core360RotationDownloader(http)
+        ref = _reference("core360", viewer)
+
+        self.assertTrue(downloader.supports(ref))
+        raw = downloader.download(ref)
+        rotation = ProgressiveRotationProcessor().process(raw)[0]
+        self.assertEqual(len(rotation.frames), 256)
+        self.assertEqual(rotation.metadata["supplier"], "core360")
+        self.assertEqual(
+            http.calls,
+            [root + "/0.json?version="]
+            + [f"{root}/{batch}.json?version=1" for batch in range(1, 8)],
+        )
+
+        wrong = _reference(
+            "core360",
+            "https://example.com/vision360.html?d=NGS-05-413",
+        )
+        self.assertFalse(downloader.supports(wrong))
 
     def test_progressive_downloader_rejects_incomplete_public_batch(self):
         audit = AUDITS[0]
