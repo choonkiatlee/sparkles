@@ -76,7 +76,7 @@ def verify_frozen_archive(primary_path, transfer_path):
 
 def _plot_traces(report, destination):
     """Simple plot with transparent missing points; no line through unavailable."""
-    selected=["C1_N", "C2_N", "C3_N", "P1_N", "TABLE"]
+    selected=["C1", "C2", "C3", "P1", "TABLE"]
     # #74 uses compass orientations: north may be N or one of the diagonals,
     # never substitute a different ID silently; choose the first matching
     # fixed orientation BEFORE inspecting optical brightness.
@@ -92,13 +92,16 @@ def _plot_traces(report, destination):
     img=Image.new("RGB",(width,height),(250,251,252))
     d=ImageDraw.Draw(img)
     d.text((25,18),"REAL 360 CROWN-VIEW REPLAY: image-plane brightness / FIXED semantic ruler",fill=(20,28,45))
-    d.text((25,38),"LG756520111 | original #89 scaffold, no refit | brightness not physical-facet attribution",fill=(65,70,88))
+    d.text((25,38),"LG756520111 | one frozen-method primary fit, zero per-frame refits | image support only",fill=(65,70,88))
+    d.text((25,55),"Y axis ZOOMED 0.70–1.00; C3/table physical identity NOT verified.",fill=(91,96,111))
     x0,x1,y0,y1=85,1030,85,410
     d.line((x0,y0,x0,y1,x1,y1),fill=(75,85,97),width=2)
+    ymin,ymax=.70,1.0
     for k in range(5):
-        py=int(y1 - k/4*(y1-y0))
+        val=ymin+(ymax-ymin)*k/4
+        py=int(y1 - (val-ymin)/(ymax-ymin)*(y1-y0))
         d.line((x0,py,x1,py),fill=(226,229,233),width=1)
-        d.text((48,py-8),f"{k/4:.2f}",fill=(85,90,102))
+        d.text((43,py-8),f"{val:.3f}",fill=(85,90,102))
     colors=[(30,150,70),(12,106,219),(219,103,15),(145,63,196),(171,42,70)]
     frames=report["frames"]
     n=len(frames)
@@ -113,7 +116,7 @@ def _plot_traces(report, destination):
             record=next(x for x in frame["entities"] if x["semantic_id"]==semantic)
             x=int(x0+(i/(n-1) if n>1 else 0)*(x1-x0))
             b=record["raw_mean_brightness"]
-            points.append(None if b is None else (x,int(y1-np.clip(b,0,1)*(y1-y0))))
+            points.append(None if b is None else (x,int(y1-np.clip((b-ymin)/(ymax-ymin),0,1)*(y1-y0))))
         for p,q in zip(points,points[1:]):
             if p is not None and q is not None:
                 d.line((*p,*q),fill=color,width=3)
@@ -123,6 +126,7 @@ def _plot_traces(report, destination):
         d.text((65+idx*206,475),f"{semantic}",fill=color)
     d.text((380,506),"Source frame / approximate rotation phase; missing brightness is not plotted",fill=(73,75,88))
     img.save(destination)
+    return selected
 
 
 def _render_examples(processed_path, record_map, report, frozen_scaffold, output):
