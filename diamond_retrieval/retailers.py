@@ -10,6 +10,7 @@ from typing import Iterable
 from urllib.parse import parse_qs, urlsplit
 
 from .errors import RetrievalError
+from .diyona_public import query_public_diyona_record
 from .models import (
     CERTIFICATE,
     ROTATION,
@@ -38,7 +39,13 @@ _SECRET_PATTERN = re.compile(
 
 
 def _sanitize_retained_html(text: str) -> str:
-    return _SECRET_PATTERN.sub(r"\1[redacted]\3", text)
+    clean = _SECRET_PATTERN.sub(r"\1[redacted]\3", text)
+    # Shopify's public page embeds a Supabase anonymous JWT. It is public
+    # and needed only for the live read, never in persisted source HTML.
+    return re.sub(
+        r"""(?i)(\bSUPABASE_ANON\s*=\s*['"])[^'"]+(['"])""",
+        r"\1[redacted]\2", clean,
+    )
 
 
 class _SnapshotParser(HTMLParser):
@@ -331,6 +338,136 @@ def _still_references(
     return tuple(refs)
 
 
+def _diyona_public_record_as_listing(
+    http_client: HttpClient, *, url: str, expected_sku: str,
+    raw_html: str, response, timeout: float,
+) -> ListingRecord:
+    """Build an exact certificate-bound listing from Diyona's own public API."""
+    record = query_public_diyona_record(
+        http_client, page_html=raw_html, sku=expected_sku, timeout=timeout,
+    )
+    data = record.data
+    report = str(data["certificate_number"]).strip().upper()
+
+    def as_decimal(name):
+        value = data.get(name)
+        return Decimal(str(value)) if value is not None and str(value).strip() else None
+
+    def as_text(name):
+        value = data.get(name)
+        return str(value).strip() if value is not None and str(value).strip() else None
+
+    carat = as_decimal("carat")
+    shape = as_text("shape")
+    colour = as_text("color")
+    clarity = as_text("clarity")
+    dimensions = None
+    dims = [as_decimal(k) for k in ("length", "width", "depth_mm")]
+    if all(x is not None and x > 0 for x in dims):
+        dimensions = tuple(float(x) for x in dims)
+    price = as_decimal("markup_price")
+    if price is None:
+        price = as_decimal("price_usd")
+
+    proportion_names = {
+        "ratio": "length_width_ratio", "depth_percent": "depth_percent",
+        "table_percent": "table_percent", "cut": "cut",
+        "polish": "polish", "symmetry": "symmetry",
+        "fluorescence": "fluorescence",
+    }
+    proportions = {}
+    for key, name in proportion_names.items():
+        value = data.get(key)
+        if value is not None and str(value).strip():
+            proportions[name] = float(value) if key in {
+                "ratio", "depth_percent", "table_percent"
+            } else str(value)
+
+    fields = ["report_number", "lab", "retailer_sku"]
+    if shape:
+        fields.append("shape")
+    if carat is not None:
+        fields.append("carat")
+    if colour:
+        fields.append("colour")
+    if clarity:
+        fields.append("clarity")
+    if dimensions:
+        fields.append("dimensions")
+    if proportions:
+        fields.append("reported_proportions")
+    if price is not None:
+        fields.extend(("price", "currency", "tax_basis"))
+    attribution = _attribution("diyona_public_supabase", record.url, fields)
+    attribution["origin"] = FieldAttribution("diyona_listing", url)
+    metadata = DiamondMetadata(
+        report_number=report,
+        lab="IGI",
+        retailer_sku=expected_sku,
+        origin="lab-grown",
+        shape=shape, carat=carat,
+        colour=colour.upper() if colour else None,
+        clarity=clarity.upper() if clarity else None,
+        dimensions=dimensions,
+        reported_proportions=proportions,
+        price=price, currency="USD" if price is not None else None,
+        tax_basis="public API USD price; storefront/tax basis not verified" if price is not None else None,
+        attribution=attribution,
+    )
+    source = "diyona_public_supabase"
+    certificate_url = as_text("certificate_url")
+    cert_parts = urlsplit(certificate_url or "")
+    # Retailer's exact PDF URL is a public CloudFront PDF with a matching
+    # report in the filename. Retain as original evidence; validate PDF identity.
+    trusted_pdf = (
+        cert_parts.scheme == "https"
+        and cert_parts.hostname == "dnyvsyhu34v1w.cloudfront.net"
+        and cert_parts.path.lower() == f"/pdf/{report.lower()}.pdf"
+        and not cert_parts.username and not cert_parts.password
+    )
+    if trusted_pdf:
+        references = [EvidenceReference(
+            identifier=f"{source}:{report}:certificate",
+            kind=CERTIFICATE, retrieval_key=certificate_url, locator=certificate_url,
+            provenance=(record.provenance,),
+            metadata={"lab": "IGI", "report_number": report, "format": "pdf"},
+        )]
+    else:
+        references = [_igi_certificate_reference(
+            source=source, url=record.url,
+            report_number=report, hrefs=(),
+        )]
+
+    image_url = as_text("image_url")
+    video_url = as_text("video_url")
+    parsed_media = _ParsedHtml(
+        text="360° View",
+        hrefs=(video_url,) if video_url else (),
+        images=((image_url, "Diamond"),) if image_url else (),
+        media=(),
+    )
+    references.extend(_still_references(
+        source=source, url=record.url, sku=expected_sku, parsed=parsed_media,
+    ))
+    references.extend(_motion_references(
+        source, record.url, report, parsed_media,
+    ))
+    # Never persist the publicly embedded anonymous API key in the raw HTML.
+    return ListingRecord(
+        url=url,
+        metadata=metadata,
+        references=tuple(references),
+        provenance=(ProvenanceStep("diyona_listing", url), record.provenance),
+        raw_responses=(
+            SourceResponse(
+                "diyona_listing", _sanitize_retained_html(raw_html),
+                response.url, response.headers.get("Content-Type"), True,
+            ),
+            record.source_response,
+        ),
+    )
+
+
 class DiyonaListingProvider:
     """Parse Diyona's exact public /pages/diamond-detail?sku=... route."""
 
@@ -355,8 +492,20 @@ class DiyonaListingProvider:
         response = self.http_client.get(url, timeout=self.timeout)
         if response.status_code < 200 or response.status_code >= 300:
             raise RetrievalError(f"Diyona listing returned HTTP {response.status_code}")
-        raw, parsed = _parse_html(response.content)
+        raw = response.content.decode("utf-8", "replace")
+        # Diyona's live storefront renders stone details from public_diamonds.
+        # Use that public exact-SKU API by default. HTML is fetched only to
+        # discover its published anonymous configuration, never as a first
+        # attempt to parse client-rendered certificate/stone data.
+        if "SUPABASE_URL" in raw and "SUPABASE_ANON" in raw:
+            return _diyona_public_record_as_listing(
+                self.http_client, url=url, expected_sku=expected_sku,
+                raw_html=raw, response=response, timeout=self.timeout,
+            )
 
+        # Historical snapshots/fully server-rendered pages remain supported.
+        # This path is *not* tried for a page advertising the live JSON API.
+        _, parsed = _parse_html(response.content)
         header = re.search(
             r"([0-9]+(?:\.[0-9]+)?)ct\s+([A-Za-z][A-Za-z -]+?)\s+Lab Diamond",
             parsed.text,

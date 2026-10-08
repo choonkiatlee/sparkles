@@ -29,6 +29,7 @@ jobs:
           python -m unittest tests.test_diamond_catalogue_publisher -v
           python -m unittest tests.test_diamond_catalogue_diagnostics -v
           python -m unittest tests.test_diyona_report_hint -v
+          python -m unittest tests.test_diyona_public_api -v
           python -m unittest tests.test_diamond_retrieval -v
           python -m unittest tests.test_diamond_retrieval_retailers -v
           python -m unittest tests.test_diamond_retrieval_motion -v
