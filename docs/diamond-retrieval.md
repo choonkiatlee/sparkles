@@ -31,6 +31,14 @@ Certificate PDFs are retained byte-for-byte. The network-free PDF processor extr
 
 Linked still images are downloaded without resizing. Pillow validates the original bytes in memory and records original dimensions and SHA-256.
 
+If an upstream IGI PDF returns HTTP 403 (or is unavailable), retrieval retains the original retailer-supplied IGI verification link when present, otherwise the attempted exact-report PDF URL. Consumers can use `result.certificate_link` to offer a manual link; the failed certificate attempt also retains its `locator`, provenance and HTTP error. This is a link only, not a downloaded/identity-validated certificate: `result.certificates` remains empty and the standard-policy result remains `partial`.
+
+```python
+result = retrieve_diamond(url)
+if not result.certificates and result.certificate_link:
+    print("Certificate unavailable for automatic validation:", result.certificate_link)
+```
+
 ## Identity reconciliation
 
 The production validator compares report number, lab, origin, shape, carat, colour, clarity and dimensions wherever both listing and evidence provide them. Normalization is intentionally narrow:
@@ -43,22 +51,25 @@ The production validator compares report number, lab, origin, shape, carat, colo
 
 A real disagreement raises `IdentityConflictError` with source-linked comparisons before result assembly.
 
-## Loupe360 and the PR B limitation
+## Supplier motion and Loupe360 resolution
 
-When an exact listing advertises motion but does not expose a concrete supported viewer URL, the framework may create an exact-certificate Loupe360 reference using the already established full report number. This is resolution only. PR B does **not** download or decode supplier motion.
+The default factory registers Diajewel, Workshop/Core360, D360 and direct public video downloaders. Progressive rotations are decoded and validated as complete ordered 256-frame sequences, preserving original JPEG bytes, dimensions, hashes and source positions; video bytes are retained without frame decoding. Unknown valid source IDs do not require registration or a hardcoded allowlist.
 
-Accordingly, under the standard policy, Diyona and Quality Diamonds can return useful metadata + matched certificate + available still evidence but remain `partial` while the selected motion reference is unsupported. A certificate-only injected policy can complete without making a motion request. Diajewel, Workshop/Core360 and D360 motion download/processing belong to #100.
+When an exact listing advertises motion without an exposed supported viewer URL, the certificate-bound Loupe360/Nivoda public resolver can locate the actual supplier viewer (or a direct supported video) using the full report identity. It does not search unrelated records or guess supplier IDs. Both direct listing links and Loupe360-resolved sources work through the same default `retrieve_diamond(url)` API. Where the source is inaccessible or format validation fails, existing evidence is returned as `partial`.
+
+The default completion policy still requires a successfully downloaded and identity-matched certificate plus validated motion. A certificate URL alone is not sufficient for `complete`. Callers can supply an injected certificate-only policy if appropriate.
 
 ## Public HTTP safety
 
 The default HTTP client uses finite timeouts, rejects non-HTTP(S), credential-bearing, local/private/reserved destinations and validates redirect destinations under the same rule. Components receive this client through constructor injection; processors perform no network reads.
 
-## Bounded live verification on 2026-10-07
+## Bounded live verification on 2026-10-07 and 2026-10-08
 
 - Quality Diamonds: the exact `d=133/F74D0EF67` listing route was publicly readable and exposed LG713574578, 3.32ct Oval D/VVS1, measurements, an inc-VAT GBP price, an IGI verification link and a Nivoda still. The public listing price changed between crawls, so fixtures intentionally test structure and attribution rather than asserting a live price.
 - Diyona: the exact `sku=B934F4533` route remained reachable but the stone had become unavailable by the live check. A recent public snapshot had exposed the full LG800667394 identity and displayed specifications; that sanitized snapshot is the reproducible parser fixture.
-- IGI: the public verification link was visible from the retailer page. Automated access to the IGI verification/PDF endpoint may be refused by the upstream service; such access failures are returned as explicit partial evidence status rather than retried through alternate hosts or credentials.
+- IGI: on 2026-10-08 Quality Diamonds' exact-linked PDF request returned HTTP 403, so the one-call result was correctly `partial` while retaining the human verification URL; the blocked download is not considered a matched PDF.
+- Supplier motion (2026-10-08 GitHub Actions diagnostic): Quality Diamonds/Core360, direct Diajewel and direct D360 each recovered 256 original ordered frames. Quality Diamonds also returned metadata and a still. The Diyona sample was no longer publicly certificate-bound, so current live Diyona retrieval is unverified; its stored fixture covers the parser and end-to-end behavior.
 
 ## Extension contract
 
-Providers, resolvers, policy, downloaders, processors, validator and assembler remain explicitly injected. Evidence kinds remain extensible string identifiers, registration is unambiguous, resolution is bounded and policy is reapplied to every resolved reference. Supplier-media work in #100 should register against these contracts rather than add retailer/viewer branches to `DiamondRetriever`.
+Providers, resolvers, policy, downloaders, processors, validator and assembler remain explicitly injected. Evidence kinds remain extensible string identifiers, registration is unambiguous, resolution is bounded and policy is reapplied to every resolved reference. Supplier-media downloaders register against these contracts without retailer/viewer branches in `DiamondRetriever`.

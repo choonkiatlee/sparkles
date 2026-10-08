@@ -57,40 +57,72 @@ class UrllibHttpClient:
         self.user_agent = user_agent
         self.max_bytes = max_bytes
 
-    def get(self, url: str, *, timeout: float) -> HttpResponse:
+    def _request(
+        self,
+        url: str,
+        *,
+        timeout: float,
+        method: str,
+        content: bytes | None = None,
+        headers: dict[str, str] | None = None,
+    ) -> HttpResponse:
         if timeout <= 0:
             raise ValueError("timeout must be positive")
         validate_public_http_url(url)
+        request_headers = {
+            "User-Agent": self.user_agent,
+            "Accept": "*/*",
+            **(headers or {}),
+        }
         request = Request(
             url,
-            headers={
-                "User-Agent": self.user_agent,
-                "Accept": "*/*",
-            },
-            method="GET",
+            data=content,
+            headers=request_headers,
+            method=method,
         )
         opener = build_opener(_PublicRedirectHandler())
         try:
             response = opener.open(request, timeout=timeout)
         except HTTPError as exc:
-            content = exc.read(self.max_bytes + 1)
-            if len(content) > self.max_bytes:
-                content = content[: self.max_bytes]
+            response_content = exc.read(self.max_bytes + 1)
+            if len(response_content) > self.max_bytes:
+                response_content = response_content[: self.max_bytes]
             return HttpResponse(
                 status_code=exc.code,
                 url=exc.geturl(),
                 headers=dict(exc.headers.items()),
-                content=content,
+                content=response_content,
             )
         with response:
             final_url = response.geturl()
             validate_public_http_url(final_url)
-            content = response.read(self.max_bytes + 1)
-            if len(content) > self.max_bytes:
+            response_content = response.read(self.max_bytes + 1)
+            if len(response_content) > self.max_bytes:
                 raise ValueError(f"HTTP response exceeds {self.max_bytes} bytes")
             return HttpResponse(
                 status_code=response.status,
                 url=final_url,
                 headers=dict(response.headers.items()),
-                content=content,
+                content=response_content,
             )
+
+    def get(self, url: str, *, timeout: float) -> HttpResponse:
+        return self._request(url, timeout=timeout, method="GET")
+
+    def post(
+        self,
+        url: str,
+        *,
+        timeout: float,
+        content: bytes,
+        headers: dict[str, str] | None = None,
+    ) -> HttpResponse:
+        if not isinstance(content, bytes) or not content:
+            raise ValueError("POST content must contain non-empty bytes")
+        return self._request(
+            url,
+            timeout=timeout,
+            method="POST",
+            content=content,
+            headers=headers,
+        )

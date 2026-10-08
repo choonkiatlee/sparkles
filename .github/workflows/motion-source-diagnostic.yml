@@ -1,0 +1,92 @@
+name: motion-source-diagnostic
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/motion-source-diagnostic.yml"
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install package
+        run: python -m pip install -e .
+      - name: Bounded live motion smoke
+        run: |
+          python - <<'PY'
+          from diamond_retrieval import (
+              ROTATION,
+              D360RotationDownloader,
+              DiajewelRotationDownloader,
+              EvidenceReference,
+              ProgressiveRotationProcessor,
+              ProvenanceStep,
+              UrllibHttpClient,
+              retrieve_diamond,
+          )
+
+          print("=== quality-diamonds exact listing ===")
+          qd="https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133%2FF74D0EF67"
+          try:
+              result=retrieve_diamond(qd)
+              print("report=",result.metadata.report_number)
+              print("status=",result.status.value)
+              print("certificates=",len(result.certificates))
+              print("stills=",len(result.stills))
+              print("rotations=",len(result.rotations))
+              print("rotation_frames=",[len(x.frames) for x in result.rotations])
+              print("rotation_suppliers=",[x.metadata.get("supplier") for x in result.rotations])
+              print("attempts=",[(x.kind,x.status.value,x.message) for x in result.attempts])
+          except Exception as exc:
+              print("error=",type(exc).__name__,str(exc))
+
+          client=UrllibHttpClient(max_bytes=16*1024*1024)
+          processor=ProgressiveRotationProcessor()
+
+          def ref(url,name):
+              return EvidenceReference(
+                  identifier=name,
+                  kind=ROTATION,
+                  retrieval_key=url,
+                  locator=url,
+                  provenance=(ProvenanceStep("live_smoke",url),),
+              )
+
+          print("=== diajewel exact viewer ===")
+          dj="https://vision.diajewel360.com/Vision360.html?d=PD-249203"
+          try:
+              raw=DiajewelRotationDownloader(client).download(ref(dj,"diajewel-live"))
+              rotation=processor.process(raw)[0]
+              print("supplier=",rotation.metadata.get("supplier"))
+              print("frames=",len(rotation.frames))
+              print("dimensions=",rotation.metadata.get("dimensions"))
+              print("first_sha256=",rotation.frames[0].sha256)
+          except Exception as exc:
+              print("error=",type(exc).__name__,str(exc))
+
+          print("=== d360 exact viewer ===")
+          d360="https://d360.tech/view.html?d=79-BB-5159600"
+          try:
+              raw=D360RotationDownloader(client).download(ref(d360,"d360-live"))
+              rotation=processor.process(raw)[0]
+              print("supplier=",rotation.metadata.get("supplier"))
+              print("frames=",len(rotation.frames))
+              print("dimensions=",rotation.metadata.get("dimensions"))
+              print("first_sha256=",rotation.frames[0].sha256)
+          except Exception as exc:
+              print("error=",type(exc).__name__,str(exc))
+
+          print("=== diyona exact listing availability ===")
+          diyona="https://diyona.com/pages/diamond-detail?sku=B934F4533"
+          try:
+              result=retrieve_diamond(diyona)
+              print("report=",result.metadata.report_number,"status=",result.status.value)
+          except Exception as exc:
+              print("error=",type(exc).__name__,str(exc))
+          PY

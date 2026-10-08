@@ -201,6 +201,7 @@ class DiamondRetriever:
             status=status,
             provenance=reference.provenance,
             message=message,
+            locator=reference.locator,
         )
 
     @staticmethod

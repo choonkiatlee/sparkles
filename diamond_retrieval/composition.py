@@ -6,6 +6,13 @@ from dataclasses import dataclass, field
 from .assembler import StandardResultAssembler
 from .downloaders import LinkedEvidenceDownloader
 from .http import UrllibHttpClient
+from .motion import ProgressiveRotationProcessor
+from .motion_sources import (
+    Core360RotationDownloader,
+    D360RotationDownloader,
+    DiajewelRotationDownloader,
+    WorkshopRotationDownloader,
+)
 from .identity import DiamondIdentityValidator
 from .policy import StandardRetrievalPolicy
 from .processors import PdfCertificateProcessor, StillImageProcessor
@@ -21,6 +28,7 @@ from .protocols import (
 )
 from .resolvers import IgiReportPdfResolver, Loupe360CertificateResolver
 from .retailers import DiyonaListingProvider, QualityDiamondsListingProvider
+from .video import DirectVideoDownloader, DirectVideoProcessor
 from .retriever import DiamondRetriever
 
 
@@ -58,13 +66,22 @@ def default_config(http_client: HttpClient | None = None) -> RetrievalConfig:
         ),
         resolvers=(
             IgiReportPdfResolver(),
-            Loupe360CertificateResolver(),
+            Loupe360CertificateResolver(client),
         ),
         policy=StandardRetrievalPolicy(),
-        downloaders=(LinkedEvidenceDownloader(client),),
+        downloaders=(
+            LinkedEvidenceDownloader(client),
+            DiajewelRotationDownloader(client),
+            WorkshopRotationDownloader(client),
+            Core360RotationDownloader(client),
+            D360RotationDownloader(client),
+            DirectVideoDownloader(client),
+        ),
         processors=(
             PdfCertificateProcessor(),
             StillImageProcessor(),
+            ProgressiveRotationProcessor(),
+            DirectVideoProcessor(),
         ),
         identity_validator=DiamondIdentityValidator(),
         assembler=StandardResultAssembler(),
