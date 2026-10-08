@@ -19,6 +19,7 @@ from .http import UrllibHttpClient, validate_public_http_url
 from .identity import DiamondIdentityValidator, StrictIdentityValidator
 from .motion import ProgressiveRotationProcessor, decode_vision360_scramble
 from .motion_sources import (
+    Core360RotationDownloader,
     D360RotationDownloader,
     DiajewelRotationDownloader,
     WorkshopRotationDownloader,
@@ -81,6 +82,7 @@ __all__ = [
     "CertificateEvidence",
     "CompletionAssessment",
     "ConfigurationError",
+    "Core360RotationDownloader",
     "DiamondIdentityValidator",
     "DiamondMetadata",
     "DiamondResult",
