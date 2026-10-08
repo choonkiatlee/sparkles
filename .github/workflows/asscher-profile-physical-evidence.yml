@@ -5,9 +5,11 @@ on:
     paths:
       - "diamond360/asscher_profile_physical_evidence.py"
       - "diamond360/asscher_profile_outer_contour.py"
+      - "diamond360/asscher_profile_assisted_review.py"
       - "diamond360/asscher_profile_feasibility.py"
       - "tests/test_asscher_profile_physical_evidence.py"
       - "tests/test_asscher_profile_outer_contour.py"
+      - "tests/test_asscher_profile_assisted_review.py"
       - "tests/test_asscher_profile_feasibility.py"
       - "docs/360/asscher-geometry-validation/PROFILE-PHYSICAL-EVIDENCE.md"
       - "docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG"
@@ -30,7 +32,8 @@ jobs:
           python -m unittest \
             tests.test_asscher_profile_feasibility \
             tests.test_asscher_profile_physical_evidence \
-            tests.test_asscher_profile_outer_contour -v
+            tests.test_asscher_profile_outer_contour \
+            tests.test_asscher_profile_assisted_review -v
       - name: Emit source-pinned evidence review template
         run: |
           python -m diamond360.asscher_profile_physical_evidence \
@@ -78,6 +81,31 @@ jobs:
           print("B2 physical contour isolated; anatomical landmarks/angles remain unverified.")
           print("QC rows:", record["qc"])
           print("Region proposals:", record["anatomical_candidates"])
+          PY
+      - name: Generate assisted anatomical annotation worksheet
+        run: |
+          python -m diamond360.asscher_profile_assisted_review \
+            --image docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG \
+            --output outputs/asscher-profile-physical-evidence
+      - name: Assert review workflow preserves unavailable physical angles
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          directory = Path("outputs/asscher-profile-physical-evidence")
+          p = json.loads((directory / "assisted-worksheet.json").read_text())
+          assert p["source"]["original_verified"] is True
+          assert p["comparison_targets_loaded"] is False
+          assert len(p["region_proposals"]) == 7
+          assert all(r["reviewer_verdict"] == "unreviewed"
+                     and r["independently_verified_physical_junction"] is False
+                     for r in p["region_proposals"])
+          assert all(x["status"] == "unavailable"
+                     for side in p["semantic_measurements"].values()
+                     for x in side.values())
+          assert (directory / "assisted-review-regions.png").is_file()
+          assert (directory / "assisted-review.html").is_file()
+          print("Image-only human worksheet verified; no numerical facets made up.")
           PY
       - name: Upload review template
         uses: actions/upload-artifact@v4
