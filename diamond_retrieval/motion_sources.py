@@ -248,7 +248,7 @@ class RemoteV360RotationDownloader(_ProgressiveDownloader):
                 or media.fragment
             ):
                 raise ValueError("V360 viewer media root is not an allowed public CDN directory")
-            source_root = f"https://{media.netloc}{media.path}{item_id}"
+            source_root = f"https://{media.netloc}{media.path}imaged/{item_id}"
         else:
             # The documented default when no remote `surl` is supplied.
             source_root = f"https://v360.in/viewer4.0/imaged/{item_id}"
