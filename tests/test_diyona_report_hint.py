@@ -25,7 +25,7 @@ from diamond_retrieval import (
     IdentityOutcome, ProvenanceStep, EvidenceStatus, default_config, retrieve_diamond,
 )
 from diamond_retrieval.errors import RetrievalError, UnsupportedInputError
-from diamond_retrieval.models import IdentityObservation, EvidenceReference, HttpResponse
+from diamond_retrieval import HttpResponse
 from diamond_retrieval.retailers import DiyonaListingProvider
 from tests.test_diamond_retrieval_retailers import (
     GRAPHQL_URL, RetailerEndToEndTests, _diyona_pdf, _loupe_payload
