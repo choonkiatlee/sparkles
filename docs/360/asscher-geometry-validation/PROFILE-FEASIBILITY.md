@@ -157,3 +157,22 @@ whether pure automation can realistically recover all eight families.
 Anything ambiguous should remain unavailable. The post-162 rejected image
 (rejected in post 163) can be recovered in parallel, as PR C's negative
 control; it must not be replaced by an unauthenticated screenshot.
+
+
+## Visual feasibility review — 2026-10-08 (PR A)
+
+The artifact generated from the pinned original at [asscher-profile-feasibility CI run](https://github.com/choonkiatlee/sparkles/actions/runs/37755251229) was inspected visually. A previous audit overlaid full-width Hough lines, despite those lines having local support only; this was corrected by emitting and drawing bounded, contiguous, directly supported spans. The refined audit remains **review**, never geometrically accepted.
+
+Observed in the source and gradient map (image-only, no Sergey-value consultation):
+
+- A fairly distinct *upper central horizontal edge* at roughly image y=77, source x≈165–247: a plausible table-edge candidate, **not automatically verified as the physical table plane**. The pale upper cap also contains an apparent roof/apex above this edge and some overlapping reflections.
+- Several reasonably strong central horizontal edges around y≈131, 163, 176 and 186. They are useful line candidates, but their optical/physical facet-family assignments are not independently established.
+- The wide equatorial contour near y≈215 and lateral silhouette around x≈42–370 is visibly useful as an **outline/girdle region hypothesis**, but not yet a fitted polygon. The lower-central automatically selected band around y≈205–209 is *inside* that wider zone; **it must not be mislabeled as the girdle**.
+- Diagonal structures on both sides are present, but outer edges overlap with reflections/virtual-facet contrast. Their membership in left/right P1/P2/P3 cannot be asserted from the Hough score alone.
+- The lower center and potential culet are bright/soft and not securely localized by the generic edge detector. Strong lower horizontal lines may also include platform/shadow artifacts.
+
+**Conclusion:** The photograph is feasible for a controlled, possibly assisted *line-family identification* experiment, but this image-only PR A does not establish reliable fully automated P1/P2/P3/C1 identification on both sides. PR B should prioritize independently verified table level and outer/girdle silhouette, then consider user-assisted positive/negative line annotations if automatic separation of true facet boundaries from bright/dark optical edges remains ambiguous. Preserve all eight slots as unavailable until then. The candidate count (14) is not an anatomical-facet count or accuracy metric.
+
+### Frozen-validation CI interaction
+
+Two existing #88/#89 geometry workflow checks fail on current `master` because merged **PR #96** introduced a revised outer-octagon-first `asscher_wireframe.specification()` while the old #88 validation function still insists on the original #75 specification fingerprint. This is a **real method-version mismatch**, not a finding about PR A's new profile-photo algorithm; do not update the #88 hash to conceal it. The separate draft [PR #115](https://github.com/choonkiatlee/sparkles/pull/115) is already handling an explicit method-v2 validation comparison. Until that work lands, the legacy jobs may remain red on unrelated PRs. The focused PR A job is green, and PR A changes no frozen geometry code.
