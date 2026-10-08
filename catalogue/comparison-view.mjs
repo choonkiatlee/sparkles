@@ -2,6 +2,7 @@
 import { comparisonRows, createManifestLoader, projectComparison,
   publicUrl, dateText } from "./compare.mjs";
 import { displayValue, priceText } from "./core.mjs";
+import { createRotationPlayer } from "./rotation-player.mjs";
 
 const el = (tag, className="", text=null) => {
   const element = document.createElement(tag);
@@ -143,12 +144,15 @@ export function createComparisonView({container, grid, fetcher}) {
   const load = createManifestLoader(fetcher);
   let signature = "";
   let generation=0;
+  let player=null;
   function update(rows,selected,comparing) {
     const show = comparing && selected.length >= 2;
     container.hidden=!show;
     const nextSignature = show ? selected.join(",") : "";
     if (signature===nextSignature) return;
     signature=nextSignature;
+    player?.destroy();
+    player=null;
     generation++;
     const currentGeneration=generation;
     grid.replaceChildren();
@@ -176,7 +180,7 @@ export function createComparisonView({container, grid, fetcher}) {
     thead.append(first); table.append(thead);
     const tbody=el("tbody");
     const fieldRows=[
-      ...comparisonRows,["certificate","Certificate"],["source","Source listings"],
+      ["rotation","Original rotation"],...comparisonRows,["certificate","Certificate"],["source","Source listings"],
       ["provenance","Provenance"]
     ];
     fieldRows.forEach(([key,label])=>{
@@ -191,15 +195,22 @@ export function createComparisonView({container, grid, fetcher}) {
     });
     table.append(tbody);
     outer.append(table);
-    grid.append(outer);
+    const toolbar=el("div","motion-toolbar");
+    grid.append(toolbar,outer);
+    player=createRotationPlayer({
+      host:toolbar,
+      slots:new Map(columns.map(col=>[col.row.id,col.cells.get("rotation")]))
+    });
     async function loadColumn(column) {
       column.head.append(el("span","sr-only","Loading manifest"));
       try {
         const data = projectComparison(column.row,await load(column.row));
         if (generation !== currentGeneration) return;
         fillColumn(column,data);
+        player?.setStone(column.row.id,data.rotation,data.representative);
       } catch(error) {
         if (generation !== currentGeneration) return;
+        player?.failStone(column.row.id);
         failColumn(column,error.message,()=>{
           column.head.replaceChildren(el("span","subtle","Retrying…"));
           loadColumn(column);

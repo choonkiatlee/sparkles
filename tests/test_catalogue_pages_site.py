@@ -14,6 +14,7 @@ class PagesCatalogueTests(unittest.TestCase):
                 "index.html", ".nojekyll", "catalogue/index.html",
                 "catalogue/core.mjs", "catalogue/app.mjs", "catalogue/styles.css",
                 "catalogue/compare.mjs", "catalogue/comparison-view.mjs",
+                "catalogue/rotation.mjs", "catalogue/rotation-player.mjs",
                 "data/catalog.json", "data/diamonds/igi-lg756520111.json",
                 "data/diamonds/igi-lg816611062.json",
             ):
@@ -38,6 +39,22 @@ class PagesCatalogueTests(unittest.TestCase):
         self.assertIn("../data/diamonds/", comparison)
         self.assertNotIn("api.github.com", comparison)
         self.assertIn("createManifestLoader", comparison)
+
+    def test_c3a_ordinal_viewer_is_manifest_based_without_full_prefetch_by_default(self):
+        html=(ROOT / "catalogue/index.html").read_text(encoding="utf-8")
+        comparison=(ROOT / "catalogue/comparison-view.mjs").read_text(encoding="utf-8")
+        player=(ROOT / "catalogue/rotation-player.mjs").read_text(encoding="utf-8")
+        model=(ROOT / "catalogue/rotation.mjs").read_text(encoding="utf-8")
+        self.assertIn("shared controls", html)
+        self.assertIn("createRotationPlayer", comparison)
+        self.assertIn('"rotation","Original rotation"', comparison)
+        self.assertIn("stepPosition", player)
+        self.assertIn("setInterval", player)
+        self.assertIn('mode: "none"', model)
+        self.assertIn('"all"', model)
+        self.assertIn("asset?.storage?.url", model)
+        self.assertNotIn("api.github.com", model)
+        self.assertNotIn("overview_thumbnail_url", player)
 
     def test_generated_icons_only_affect_overview_not_original_comparison(self):
         app = (ROOT / "catalogue/app.mjs").read_text(encoding="utf-8")

@@ -114,3 +114,32 @@ h1{font:normal clamp(42px,6vw,72px)/1.06 Georgia,"Times New Roman",serif;letter-
   .report-link{font-size:12px}
   .intro{padding-top:18px}
 }
+
+
+/* C3a: shared ordinal player sits above the aligned C2 metadata table. */
+.motion-toolbar{border:1px solid var(--line);background:var(--card);border-radius:11px;margin:17px 0 10px;padding:14px 16px}
+.motion-toolbar-main{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 20px}
+.motion-toolbar-intro{min-width:210px;flex:1}
+.motion-toolbar-intro strong{font-size:14px}
+.motion-toolbar-intro p{font-size:11px;margin:3px 0;max-width:650px}
+.motion-controls{display:flex;flex-wrap:wrap;align-items:center;gap:7px;flex:2;justify-content:flex-end}
+.motion-controls button,.motion-retry{font-size:12px;padding:7px 10px;white-space:nowrap}
+.motion-step{background:transparent;color:var(--accent)}
+.motion-step:hover:not(:disabled){background:var(--pale)}
+.motion-range-label{display:flex;align-items:center;gap:10px;font-weight:650;font-size:12px;min-width:185px;flex:1}
+.motion-slider{accent-color:var(--accent);min-width:95px;flex:1;cursor:pointer}
+.motion-slider:disabled{cursor:not-allowed}
+.motion-position{min-width:35px;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+.motion-figure{margin:0}
+.motion-image,.motion-static{display:block;width:100%;height:195px;object-fit:contain;background:#e9ece6;border:1px solid var(--line);border-radius:7px}
+.motion-frame-caption{margin-top:7px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.motion-empty{display:flex;flex-direction:column;gap:7px}
+.motion-unavailable{font-size:12px;color:var(--muted);display:block}
+.motion-frame-error{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:#8f3925;font-size:12px;padding:18px 0}
+.compare-table .motion-figure,.compare-table .motion-empty{min-width:0}
+@media(max-width:700px){
+  .motion-toolbar{padding:12px}
+  .motion-controls{width:100%;justify-content:flex-start}
+  .motion-range-label{flex-basis:100%}
+  .motion-image,.motion-static{height:175px}
+}
