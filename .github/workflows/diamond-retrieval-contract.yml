@@ -37,6 +37,28 @@ jobs:
           python -m unittest tests.test_diamond_retrieval_media -v
           python -m unittest tests.test_d360_source -v
 
+      - name: Diagnose legacy V360 media layout
+        run: |
+          python - <<'PY'
+          from diamond_retrieval import UrllibHttpClient
+          http = UrllibHttpClient()
+          root = "https://s10.v360.in/images/company/1546/VDC-32-50"
+          roots = [
+              root,
+              "https://s10.v360.in/images/company/1546/imaged/VDC-32-50",
+              "https://v360.in/viewer4.0/imaged/VDC-32-50",
+          ]
+          for base in roots:
+              for suffix in ("0.js", "0.json", "0.json?version=", "1.js", "1.json", "1.jpg"):
+                  url = base + "/" + suffix
+                  try:
+                      resp = http.get(url, timeout=5)
+                      print("PROBE", resp.status_code, len(resp.content), url,
+                            repr(resp.content[:140]), flush=True)
+                  except Exception as exc:
+                      print("PROBE_ERROR", url, type(exc).__name__, str(exc), flush=True)
+          PY
+
       # Non-gating: upstream media availability is external, but logs prove
       # whether the exact Loupe360-linked V360 source is presently recoverable.
       - name: Bounded LG781646632 supplier-motion smoke
