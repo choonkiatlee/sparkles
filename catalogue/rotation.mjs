@@ -95,7 +95,7 @@ export function createFramePreloader({
 
   let stopped=false, active=0;
   const entries=new Map(), decoded=new Map(), completed=new Set(), failures=new Set();
-  const background=[], backgroundSet=new Set(), listeners=new Set();
+  const background=[], backgroundSet=new Set(), listeners=new Set(), frameListeners=new Set();
   let urgent=[];
   let previousFullSignature="";
 
@@ -104,6 +104,9 @@ export function createFramePreloader({
     decoded:decoded.size});
   const notify=()=>{const state=stats();for(const fn of listeners) fn(state);};
   const subscribe=fn=>{listeners.add(fn);fn(stats());return ()=>listeners.delete(fn);};
+  // Each original is decoded once before full-resolution LRU eviction.
+  // A Canvas viewer can create a lightweight preview at this moment.
+  const subscribeFrames=fn=>{frameListeners.add(fn);return ()=>frameListeners.delete(fn);};
 
   function hold(url,image) {
     decoded.delete(url);
@@ -151,7 +154,11 @@ export function createFramePreloader({
           if(successful){
             record.state="fetched";record.image=image;
             completed.add(url);failures.delete(url);
-            hold(url,image);record.resolve(image);
+            hold(url,image);
+            for(const listener of frameListeners){
+              try{listener(url,image);}catch{/* Preview failures cannot break the original. */}
+            }
+            record.resolve(image);
           } else {
             record.state="failed";record.image=null;failures.add(url);
             record.resolve(null);
@@ -258,9 +265,9 @@ export function createFramePreloader({
       // Any active request will settle itself when its browser event fires;
       // detach every callback from the player by clearing subscribers.
     }
-    listeners.clear();decoded.clear();
+    listeners.clear();frameListeners.clear();decoded.clear();
   }
-  return {mode,observe,focus,retry,stop,stats,subscribe};
+  return {mode,observe,focus,retry,stop,stats,subscribe,subscribeFrames};
 }
 
 // Serial number invalidates slower earlier seek operations. A completed
