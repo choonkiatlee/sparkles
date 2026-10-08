@@ -19,6 +19,7 @@ from PIL import Image, ImageDraw
 from . import asscher_geometry_stability as stability
 from . import asscher_geometry_validation as validation
 from . import asscher_wireframe as wireframe
+from . import asscher_outer_octagon as outer_octagon
 from . import pipeline
 from .asscher_pose_sequence import analyse_processed_sequence
 
@@ -343,13 +344,21 @@ def run_stone(processed, pose_dir, out, *, certificate):
         "frames":[],
         "physical_facet_identity_claim":False,
     }
-    if len(selected)<3 or primary.get("scaffold") is None:
-        result["reason"]="no_frozen_outer_scaffold"
+    if len(selected)<3:
+        result["reason"]="fewer_than_three_frozen_outer_views"
     else:
-        outer=np.asarray([
-            primary["scaffold"]["vertices"][f"GIRDLE_OUTLINE_V{i}"]
-            for i in range(8)
-        ],float)
+        # Outer silhouette can be trusted even when the *inner* radial
+        # estimator is unavailable. Do not accidentally suppress source-RGB
+        # line observations because a C3 contour was not identifiable.
+        _, _, masks, _, metadata = stability._load_evidence(pose_dir, selected)
+        physical_outline = outer_octagon.fit_consensus(
+            masks, frame_metadata=metadata
+        )
+        outer=np.asarray(
+            physical_outline["vertices_topology_order"],float
+        )
+        result["outer_outline_origin"]="frozen_outer_octagon_fit_consensus"
+        result["outer_outline_confidence"]=physical_outline.get("confidence")
         thumbs=[]
         for record in selected:
             _,mask,_=stability._load_gauged_arrays(pose_dir,record)
