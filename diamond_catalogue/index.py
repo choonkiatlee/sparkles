@@ -26,11 +26,10 @@ def index_row(manifest: dict) -> dict:
                 break
         if thumbnail:
             break
-    # Reviewed/approved derivatives are opt-in and never replace original evidence.
-    derived = (manifest.get("derived_media") or {}).get("face_up_thumbnail") or {}
-    face_up_thumbnail = None
-    if (derived.get("review") or {}).get("status") == "verified":
-        face_up_thumbnail = (derived.get("asset") or {}).get("storage", {}).get("url")
+    # Optional automatically generated icon; leave source thumbnail and original
+    # comparison evidence unmodified.
+    derived = (manifest.get("derived_media") or {}).get("overview_thumbnail") or {}
+    overview_thumbnail = (derived.get("asset") or {}).get("storage", {}).get("url")
     metadata = manifest["diamond_metadata"]
     return {
         "id": manifest["id"], "manifest_path": f"data/diamonds/{manifest['id']}.json",
@@ -46,7 +45,7 @@ def index_row(manifest: dict) -> dict:
         "has_motion": any(e["kind"] in {"rotation", "video"} and e["status"] == "success"
                           and (e.get("frames") or e.get("payload_asset")) for e in manifest["evidence"]),
         "thumbnail_url": thumbnail,
-        **({"face_up_thumbnail_url": face_up_thumbnail} if face_up_thumbnail else {}),
+        **({"overview_thumbnail_url": overview_thumbnail} if overview_thumbnail else {}),
     }
 
 

@@ -227,17 +227,17 @@ class CatalogueTests(unittest.TestCase):
                 "storage":{"backend":"r2","locator":"thumb","url":"https://assets.example.test/thumb.webp"}},
             "source":{"sha256":"b"*64,"source_index":0,"frame_position":0},
             "crop_source_bbox_xyxy":[10,10,200,200],
-            "review":{"status":"verified","method":"human_visual","candidate_sha256":"a"*64},
+            "generation":{"status":"automatic","algorithm":"v1"},
         }
-        stored["derived_media"]={"face_up_thumbnail":thumb}
-        self.assertEqual(build_index([stored])["diamonds"][0]["face_up_thumbnail_url"],
+        stored["derived_media"]={"overview_thumbnail":thumb}
+        self.assertEqual(build_index([stored])["diamonds"][0]["overview_thumbnail_url"],
                          "https://assets.example.test/thumb.webp")
         merged = merge_manifest(stored,publish(result(url="https://diyona.com/new?sku=1"))[1])
         self.assertEqual(merged["derived_media"],stored["derived_media"])
-        unreviewed=copy.deepcopy(stored)
-        unreviewed["derived_media"]["face_up_thumbnail"]["review"]["status"]="candidate"
-        with self.assertRaisesRegex(CatalogueError,"Unverified"):
-            build_index([unreviewed])
+        damaged=copy.deepcopy(stored)
+        damaged["derived_media"]["overview_thumbnail"]["asset"]["storage"]=None
+        with self.assertRaisesRegex(CatalogueError,"Unpublished"):
+            build_index([damaged])
 
 
 if __name__ == "__main__":

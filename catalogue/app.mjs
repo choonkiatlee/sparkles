@@ -55,14 +55,14 @@ function makeRow(row) {
   identity.scope="row";
   const detail = node("div","diamond-identity");
   const thumb = node("span","mini-photo");
-  const approvedFaceUp = Boolean(row.face_up_thumbnail_url);
-  const imageURL = httpUrl(row.face_up_thumbnail_url || row.thumbnail_url);
+  const generatedIcon = Boolean(row.overview_thumbnail_url);
+  const imageURL = httpUrl(row.overview_thumbnail_url || row.thumbnail_url);
   if (imageURL) {
     const img=node("img");
     img.src=imageURL;
-    img.alt=approvedFaceUp ? "Reviewed crown-facing source crop" : "Representative saved diamond image (not yet face-up verified)";
+    img.alt=generatedIcon ? "Automatically cropped diamond overview thumbnail" : "Representative saved diamond image";
     img.loading="lazy"; img.decoding="async";
-    img.title=approvedFaceUp ? "Human-reviewed, source-traced image" : "Representative evidence (viewpoint unverified)";
+    img.title=generatedIcon ? "Automatic source-hash-traced crop; orientation uncalibrated" : "Original representative image";
     img.addEventListener("error",()=>thumb.replaceChildren(node("span","photo-empty","◇")));
     thumb.append(img);
   } else {

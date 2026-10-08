@@ -1,10 +1,10 @@
-"""Reproducible Asscher overview thumbnail candidates from original saved frames.
+"""Automatically generate provenance-traced Asscher overview icons from saved frames.
 
 Select the *outer* stone contour using existing geometry, not the bright table.
 Use the existing complete-sequence pose/face-lobe policy before claiming a
 likely crown-facing view. Images remain colour originals until the final crop.
 
-Candidates are NEVER marked human-verified by this module.
+The output is display-only and makes no assertion of a calibrated face-up angle.
 """
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont, ImageOps, UnidentifiedImageError
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 from diamond360 import asscher_pose, asscher_pose_sequence, asscher_outer_octagon
 from diamond360 import segmentation
@@ -27,8 +27,7 @@ SIZE = 128
 ANALYSIS_SIZE = 320
 SAMPLES = 32
 MAX_SOURCE_BYTES = 6 * 1024 * 1024
-# A reviewed candidate is an explicit editorial operation, never inferred from
-# pose fit, geometry score, or the unreliable face_up_hint field.
+# Face-pose confidence is recorded as metadata, never advertised as verified.
 
 
 @dataclass(frozen=True)
@@ -123,7 +122,7 @@ def assess_image(image: Image.Image, *, position: int) -> dict:
 
 
 def choose_frame(assessments: list[dict], *, sequence_complete: bool) -> dict:
-    """Select a likely crown view where resolved, otherwise review-only crop."""
+    """Prefer an outer-supported crown lobe, otherwise a usable display-only view."""
     records = [a["record"] for a in assessments]
     if len(records) < 16 or [r["position"] for r in records] != list(range(len(records))):
         return {"status": "unavailable", "reason": "incomplete_sample_set"}
@@ -155,8 +154,7 @@ def choose_frame(assessments: list[dict], *, sequence_complete: bool) -> dict:
         candidates = robust_candidates
         method = "outer_usable_face_unresolved"
     elif review_candidates:
-        # Display-only fallback: candidate still comes from the observed outer
-        # contour; it is NOT verified geometry or an approved crown view.
+        # Preserve a useful small preview even if no trustworthy crown lobe exists.
         candidates = review_candidates
         method = "rejected_outer_geometry_review_only"
     else:
@@ -183,9 +181,8 @@ def crop_color_original(image: Image.Image, *, padding: float = 0.12) -> tuple[I
     """Re-fit original outer silhouette for crop bounds, preserving colour pixels."""
     assessment = assess_image(image, position=0)
     outline = assessment["record"]["assessment"]["outline"]
-    # Derivative previews may retain a flagged, rejected outline, but cannot
-    # call it an approved face-up silhouette. Use the observed foreground
-    # boundary if an eight-sided fit was rejected.
+    # When the octagon fit rejects, crop to the observed foreground envelope.
+    # Never choose the bright interior table as the diamond boundary.
     reduced = image.copy()
     reduced.thumbnail((ANALYSIS_SIZE, ANALYSIS_SIZE), Image.Resampling.LANCZOS)
     segmented = segmentation.segment(np.asarray(reduced.convert("RGB")))
@@ -229,12 +226,45 @@ def encode_icon(image: Image.Image, size: int = SIZE) -> bytes:
     return output.getvalue()
 
 
+def _still_fallback(manifest: dict, fetch_bytes):
+    """Try a source-verified still when complete rotation evidence is unavailable."""
+    for still in manifest.get("evidence", []):
+        if still.get("kind") != "still" or still.get("status") != "success":
+            continue
+        asset = still.get("payload_asset") or {}
+        url=(asset.get("storage") or {}).get("url")
+        digest=asset.get("sha256")
+        if not url or not digest:
+            continue
+        source=SourceFrame(-1,-1,None,digest,url)
+        image=verified_image(fetch_bytes(url),source)
+        try:
+            crop,bbox=crop_color_original(image)
+        except ValueError:
+            continue
+        payload=encode_icon(crop)
+        return ({
+            "schema":SCHEMA,"diamond_id":manifest["id"],
+            "status":"unverified_still_crop","pose_verification":"not_calibrated",
+            "algorithm":{"silhouette":"diamond360.geometry.fit_asscher_outline",
+                         "segmentation":"diamond360.segmentation.segment",
+                         "sampling":"single_still"},
+            "source":{"evidence_kind":"still","sha256":digest},
+            "derivative":{"media_type":"image/webp","sha256":sha256(payload).hexdigest(),
+                "byte_count":len(payload),"size_px":SIZE,
+                "crop_source_bbox_xyxy":bbox,"padding_fraction":0.12,
+                "colour_source":"original_source_RGB",
+                "physical_angle_calibrated":False},
+        },payload,crop)
+    return ({"schema":SCHEMA,"diamond_id":manifest["id"],
+             "status":"unavailable","reason":"no_suitable_original_media"},None,None)
+
+
 def generate_candidate(manifest: dict, *, fetch_bytes, sample_count: int = SAMPLES) -> tuple[dict, bytes | None, Image.Image | None]:
-    """Fetch verified, uniformly spaced original frames; emit preview, not approval."""
+    """Compute a deterministic thumbnail; caller decides whether to publish."""
     sources = source_frames(manifest, sample_count=sample_count)
     if not sources:
-        return ({"schema": SCHEMA, "diamond_id": manifest["id"],
-                 "status": "unavailable", "reason": "no_complete_ordered_rotation"}, None, None)
+        return _still_fallback(manifest, fetch_bytes)
     analyses = []
     cache = {}
     for i, frame in enumerate(sources):
@@ -248,7 +278,7 @@ def generate_candidate(manifest: dict, *, fetch_bytes, sample_count: int = SAMPL
         "schema": SCHEMA,
         "diamond_id": manifest["id"],
         "status": selection["status"],
-        "review_status": "unverified",
+        "pose_verification": "not_calibrated",
         "algorithm": {
             "segmentation": "diamond360.segmentation.segment",
             "silhouette": "diamond360.geometry.fit_asscher_outline",
@@ -273,33 +303,7 @@ def generate_candidate(manifest: dict, *, fetch_bytes, sample_count: int = SAMPL
         ],
     }
     if selection["status"] == "unavailable":
-        # Distinct fallback: usable still image, no frame/crown claim at all.
-        for still in manifest.get("evidence", []):
-            if still.get("kind") != "still" or still.get("status") != "success":
-                continue
-            asset=still.get("payload_asset") or {}
-            url=(asset.get("storage") or {}).get("url")
-            digest=asset.get("sha256")
-            if not url or not digest:
-                continue
-            source=SourceFrame(-1,-1,None,digest,url)
-            image=verified_image(fetch_bytes(url),source)
-            try:
-                crop,bbox=crop_color_original(image)
-            except ValueError:
-                continue
-            thumb=encode_icon(crop)
-            summary["status"]="unverified_still_crop"
-            summary["source"]={"evidence_kind":"still","sha256":digest}
-            summary["derivative"]={
-                "media_type":"image/webp","sha256":sha256(thumb).hexdigest(),
-                "byte_count":len(thumb),"size_px":SIZE,
-                "crop_source_bbox_xyxy":bbox,"padding_fraction":0.12,
-                "colour_source":"original_source_RGB",
-                "physical_angle_calibrated":False,
-            }
-            return summary,thumb,crop
-        return summary,None,None
+        return _still_fallback(manifest, fetch_bytes)
     picked = sources[selection["sample_index"]]
     cropped, bbox = crop_color_original(cache[selection["sample_index"]])
     payload = encode_icon(cropped)
