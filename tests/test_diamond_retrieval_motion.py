@@ -346,6 +346,8 @@ class ProgressiveMotionContractTests(unittest.TestCase):
         rotation = ProgressiveRotationProcessor().process(raw)[0]
         self.assertEqual(len(rotation.frames), 256)
         self.assertEqual(rotation.metadata["supplier"], "core360")
+        self.assertEqual(rotation.metadata["dimensions"], (8, 8))
+        self.assertFalse(rotation.metadata["physical_angle_calibrated"])
         self.assertEqual(
             http.calls,
             [root + "/0.json?version="]
