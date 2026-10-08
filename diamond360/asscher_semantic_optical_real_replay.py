@@ -18,6 +18,7 @@ from . import asscher_geometry_stability as stability
 from . import asscher_semantic_optical_handoff as handoff
 from . import asscher_pose_sequence as pose
 from . import pipeline
+from . import asscher_wireframe as wireframe
 
 SCHEMA = "diamond360-asscher-real-fixed-ruler-brightness-replay/1"
 FROZEN_89_RUN_ID = 37830584391
@@ -101,7 +102,11 @@ def replay_stone(cert, source, source_manifest, frozen_root, output):
     by_source = {int(row["source_index"]): row for row in poses["frames"]}
     if len(by_source) != len(poses["frames"]):
         raise ValueError("reconstructed sequence has duplicate source indexes")
-    gauge = poses.get("sequence_gauge", {}).get("gauge_id")
+    # Global #80 reference frame and quarter-turn are independently checked
+    # before any photometry is sampled from the new pose registration.
+    reconstructed_gauge = wireframe._gauge_id(poses)
+    if reconstructed_gauge != primary["semantic_gauge_id"]:
+        raise ValueError("reconstructed #80 gauge ID differs from archived #89")
     # The #89 transfer has the authoritative fixed semantic gauge ID; each
     # canonical frame is only used when its per-source gauge record agrees.
     rows = []
