@@ -36,6 +36,7 @@ POLICY = {
     "per_frame_estimator_refit_count": 0,
     "reference_89_original_selected_source_indices": [13,16,17,18,19],
     "reference_89_original_semantic_gauge_id": "asscher-sequence-gauge-v1:253:0",
+    "reference_89_original_source_quarter_turns": [3,0,0,0,0,0,0],
     "brightness": "real_original_source_canonical_lowpass_brightness",
     "preprocessing": "recompute_source_gauge_only_using_frozen_89_code",
     "source_camera_for_qc": "original_rgb_optional_unchanged_scaffold_projection",
@@ -194,13 +195,16 @@ def replay(source_dir, source_manifest, output):
         if meta["source_index"] != index or meta["position"] != index:
             raise ValueError("reprocessed source position differs from frozen #89")
         expected_phase=(index+3)*360.0/256.0
+        frozen_quarter_turn=POLICY["reference_89_original_source_quarter_turns"][
+            list(SELECTED_SOURCE_INDICES).index(index)]
         if (meta["rotation_phase_deg"] is None
              or abs(meta["rotation_phase_deg"]-expected_phase)>1e-8
-             or meta["gauge_quarter_turn"]!=0):
+             or meta["gauge_quarter_turn"]!=frozen_quarter_turn):
             raise ValueError(f"reprocessed source {index}: #80 phase/turn differs from #89: "
                              f"observed phase={meta['rotation_phase_deg']!r}, "
                              f"expected phase={expected_phase!r}, "
-                             f"observed quarter_turn={meta['gauge_quarter_turn']!r}")
+                             f"observed quarter_turn={meta['gauge_quarter_turn']!r}, "
+                             f"expected quarter_turn={frozen_quarter_turn!r}")
         transfer=stability.transfer_fixed_ruler_frame(
             frame_evidence,u,primary,frame_metadata=meta,
             crown_peak_position=crown_peak,
