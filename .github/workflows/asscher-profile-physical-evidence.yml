@@ -4,8 +4,10 @@ on:
   pull_request:
     paths:
       - "diamond360/asscher_profile_physical_evidence.py"
+      - "diamond360/asscher_profile_outer_contour.py"
       - "diamond360/asscher_profile_feasibility.py"
       - "tests/test_asscher_profile_physical_evidence.py"
+      - "tests/test_asscher_profile_outer_contour.py"
       - "tests/test_asscher_profile_feasibility.py"
       - "docs/360/asscher-geometry-validation/PROFILE-PHYSICAL-EVIDENCE.md"
       - "docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG"
@@ -27,7 +29,8 @@ jobs:
         run: |
           python -m unittest \
             tests.test_asscher_profile_feasibility \
-            tests.test_asscher_profile_physical_evidence -v
+            tests.test_asscher_profile_physical_evidence \
+            tests.test_asscher_profile_outer_contour -v
       - name: Emit source-pinned evidence review template
         run: |
           python -m diamond360.asscher_profile_physical_evidence \
@@ -50,6 +53,31 @@ jobs:
                      for side in doc["semantic_measurements"].values()
                      for facet in side.values())
           print("Physical correspondence remains unverified, and all 8 angle slots are unavailable.")
+          PY
+      - name: Generate independent exterior-contour QC
+        run: |
+          python -m diamond360.asscher_profile_outer_contour \
+            --image docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG \
+            --require-original \
+            --output outputs/asscher-profile-physical-evidence
+      - name: Assert contour never promoted to facet angles
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          directory = Path("outputs/asscher-profile-physical-evidence")
+          record = json.loads((directory / "outer-contour.json").read_text())
+          assert record["source"]["original_verified"]
+          assert record["status"] in {"review", "unavailable"}
+          assert (directory / "outer-contour-candidates.png").is_file()
+          assert record["physical_landmark_status"]["table"]["status"] == "unavailable"
+          assert record["physical_landmark_status"]["girdle"]["status"] == "unavailable"
+          assert all(row["physical_angle_deg"] is None
+                     for side in record["semantic_measurements"].values()
+                     for row in side.values())
+          print("B2 physical contour isolated; anatomical landmarks/angles remain unverified.")
+          print("QC rows:", record["qc"])
+          print("Region proposals:", record["anatomical_candidates"])
           PY
       - name: Upload review template
         uses: actions/upload-artifact@v4
