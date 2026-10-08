@@ -144,6 +144,61 @@ class CatalogueTests(unittest.TestCase):
         self.assertTrue(build_index([merged])["diamonds"][0]["has_motion"])
         self.assertEqual(merged["retrievals"][-1]["attempts"][0]["message"], "upstream unavailable")
 
+    def test_reingestion_adds_new_proportion_fields_without_erasing_old(self):
+        stored = publish(result())[1]
+        # A manually cleaned historical manifest can lack genuine fields now
+        # recovered by an improved retailer parser.
+        stored["diamond_metadata"]["reported_proportions"] = {
+            "table_percent": 64, "depth_percent": 64.6,
+            "symmetry": "Excellent",
+        }
+        fresh_result = result(retrieved_at=datetime(2026, 10, 8, 9, tzinfo=timezone.utc))
+        fresh_result = replace(fresh_result, metadata=replace(
+            fresh_result.metadata, reported_proportions={
+                "table_percent": 64.0, "depth_percent": 64.6,
+                "symmetry": "Excellent", "fluorescence": "None",
+            },
+        ))
+        incoming = publish(fresh_result)[1]
+        merged = merge_manifest(stored, incoming)
+        self.assertEqual(merged["diamond_metadata"]["reported_proportions"], {
+            "table_percent": 64, "depth_percent": 64.6,
+            "symmetry": "Excellent", "fluorescence": "None",
+        })
+        self.assertEqual(len(merged["retrievals"]), 2)
+        self.assertEqual(len(merged["listings"]), 2)
+        self.assertEqual(stored["diamond_metadata"]["reported_proportions"], {
+            "table_percent": 64, "depth_percent": 64.6, "symmetry": "Excellent",
+        })
+        self.assertEqual(merge_manifest(merged, incoming), merged)
+
+    def test_reingestion_missing_reported_keys_retains_historical_values(self):
+        stored = publish(result())[1]
+        stored["diamond_metadata"]["reported_proportions"] = {
+            "table_percent": 64, "depth_percent": 64.6, "fluorescence": "None",
+        }
+        fresh = publish(result(retrieved_at=datetime(
+            2026, 10, 8, 9, tzinfo=timezone.utc)))[1]
+        fresh["diamond_metadata"]["reported_proportions"] = {"table_percent": 64.0}
+        merged = merge_manifest(stored, fresh)
+        self.assertEqual(merged["diamond_metadata"]["reported_proportions"],
+                         stored["diamond_metadata"]["reported_proportions"])
+
+    def test_reingestion_conflicting_reported_measurement_fails_closed(self):
+        stored = publish(result())[1]
+        stored["diamond_metadata"]["reported_proportions"] = {
+            "table_percent": 64.0, "depth_percent": 64.6,
+        }
+        new = publish(result(retrieved_at=datetime(
+            2026, 10, 8, 9, tzinfo=timezone.utc)))[1]
+        new["diamond_metadata"]["reported_proportions"] = {
+            "table_percent": 65.0, "depth_percent": 64.6,
+        }
+        with self.assertRaisesRegex(CatalogueError,
+                                    "Conflicting reported proportion: table_percent"):
+            merge_manifest(stored, new)
+        self.assertEqual(stored["diamond_metadata"]["reported_proportions"]["table_percent"], 64.0)
+
     def test_unresolved_and_conflicting_identity_fails_closed(self):
         with self.assertRaises(CatalogueError):
             plan_publication(replace(result(), metadata=replace(result().metadata, report_number=None)))
