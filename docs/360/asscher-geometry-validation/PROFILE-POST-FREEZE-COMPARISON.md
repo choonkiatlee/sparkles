@@ -80,33 +80,37 @@ no extra geometry confidence is borrowed from those traces.
 This PR does **not** modify #75, #88, #118, #149, the frozen output,
 geometry templates, expert measurements or method thresholds.
 
-## Reproduction
+## Reproduction (exact original archived output only)
 
-First regenerate the image-only output (using the same immutable pinned
-original) with the already merged #118 stages:
+This comparison is **strictly post-freeze**. Download the originally
+published artifact from PR #118 *without rerunning the extractor*, because
+regenerating in a changed environment has been shown to yield a different
+JSON byte digest. That regenerated output MUST NOT silently replace the
+frozen baseline.
 
 \`\`\`bash
-mkdir -p outputs/asscher-profile-physical-evidence
-IMG=docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG
-OUT=outputs/asscher-profile-physical-evidence
-python -m diamond360.asscher_profile_auto_exterior \
-  --image "$IMG" --require-original --output "$OUT"
-python -m diamond360.asscher_profile_auto_changepoints \
-  --image "$IMG" --auto-json "$OUT/auto-exterior.json" --output "$OUT"
-python -m diamond360.asscher_profile_endpoint_candidates \
-  --image "$IMG" --auto-json "$OUT/auto-exterior.json" \
-  --joint-json "$OUT/joint-changepoints.json" --output "$OUT"
-python -m diamond360.asscher_profile_pavilion_refinement \
-  --image "$IMG" --auto-json "$OUT/auto-exterior.json" \
-  --joint-json "$OUT/joint-changepoints.json" \
-  --endpoint-json "$OUT/endpoint-candidates.json" --output "$OUT"
+mkdir -p outputs/asscher-profile-post-freeze
+gh run download 37798814740 \
+  --repo choonkiatlee/sparkles \
+  --name asscher-profile-physical-evidence \
+  --dir outputs/asscher-profile-post-freeze
+sha256sum outputs/asscher-profile-post-freeze/pavilion-refinement.json
+# Expected: 63bebfce1c6946c375ee79bcf81fbe56404ebeb3cc71ae860787befa6265132c
 
-# Post-freeze stage ONLY: it cannot refit or alter the image source.
+export SPARKLES_FROZEN_PR118_JSON=outputs/asscher-profile-post-freeze/pavilion-refinement.json
+python -m unittest tests.test_asscher_profile_external_comparison -v
 python -m diamond360.asscher_profile_external_comparison \
-  --frozen-profile-json "$OUT/pavilion-refinement.json" \
+  --frozen-profile-json "$SPARKLES_FROZEN_PR118_JSON" \
   --reference-json docs/360/geometry-ground-truth/diagem-2008-asscher/ground-truth.json \
-  --output "$OUT/post-freeze-comparison.json"
+  --output outputs/asscher-profile-post-freeze/post-freeze-comparison.json
 \`\`\`
+
+The comparison stage refuses any byte-different profile report; future
+source/extractor changes must undergo a new, explicitly versioned
+independent validation rather than retconning the previously frozen
+evidence. The original artifact remains independently retrievable via
+GitHub Actions run 37798814740; long-term archiving of its exact bytes
+could be undertaken later to avoid artifact expiration.
 
 A separately runnable focused test (also in CI) authenticates exact
 artifact bytes and asserts every reference is preserved without
