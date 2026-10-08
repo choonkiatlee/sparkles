@@ -597,3 +597,79 @@ tests, source-hash/method-version checks, and emits
 composited over the previous joint-fit image. Green lower points are
 supported *candidates*; orange points are shadow-limited. The top cap and
 terminal-change proposals require source-image visual review.
+
+
+## B2g — apex correction and conditional head-on mirror symmetry
+
+Source-image review identified that the uppermost 8–9-pixel-wide
+near-horizontal appearance is plausibly the rasterized **projected apex
+(point-like silhouette)**, not a verified physical flat table edge. It also
+must **not** be called the culet: the photo's top/bottom orientation and the
+particular polishing topology must be established independently. The
+existing source-y contact points are retained for backward compatibility,
+but the endpoint schema now records \`projected_apex_xy_px\` and explicitly
+\`physical_table_identity=not_established\` and
+\`physical_culet_identity=not_established\`. The overlay renders **one**
+apex marker, not two presumed physical table corners.
+
+The user's suggested symmetric fit is useful, but only **conditionally**:
+
+1. **Image-plane outline consistency diagnostic:** Estimate a candidate
+   vertical reflection axis from *independently observed* left/right extrema
+   in the broad maximum projected-width band, and compute observed paired
+   crown contour midpoint offsets from that axis. Also check how far the
+   projected top apex lies from that same axis. These diagnostics can **reject**
+   gross asymmetry; they cannot prove the camera is head-on.
+2. **Independent camera/stone assumptions:** To adopt mirror symmetry as a
+   geometric model, separately record that the camera was verified to be
+   approximately head-on **and** that mirror-symmetric stone geometry is a
+   modeling assumption. A photograph can look approximately symmetric yet
+   have tilt or genuine left/right facet-angle asymmetry. The full provenance
+   and rationale belong in a source-hashed \`pose-review-template.json\`
+   that the reviewer may explicitly fill. Numeric expert target angles
+   are forbidden here.
+3. **Missing right terminal only:** If an independent left terminal
+   changepoint is observed in the image, right remains unsupported, the
+   source outline's observed left/right consistency checks pass, and **both**
+   independent assumptions above are explicitly confirmed, propose
+   \`right_x = 2*axis_x - left_x\`, \`right_y = left_y\`.
+   Output status \`conditional_symmetry_model_inferred\`, never
+   \`observed\`. Preserve every actual right-side observed point and do not
+   overwrite independently extracted right changepoints. If the review
+   is absent, publish only a clearly marked counterfactual mirrored
+   preview, **not** a replacement for the detected right outline.
+4. **Asymmetric observation retained:** Preserve source-image asymmetry
+   in the independently detected profiles. Mirror-model values never
+   count as evidence of a polished facet junction or recovered P1/P2/P3
+   physical angle, and they cannot improve validation by matching
+   Sergey's external photo estimates.
+
+Implementation: \`diamond360.asscher_profile_conditional_symmetry\`,
+schema \`diamond360-asscher-conditional-profile-symmetry/1\`. It takes only
+the source-hash-pinned auto-exterior v2, joint-width report and endpoint
+reports, plus an **optional** explicit source-matching pose review.
+
+To inspect the *counterfactual* without claiming a head-on determination:
+
+\`\`\`bash
+python -m diamond360.asscher_profile_conditional_symmetry \
+  --image docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG \
+  --auto-json outputs/asscher-profile-physical-evidence/auto-exterior.json \
+  --joint-json outputs/asscher-profile-physical-evidence/joint-changepoints.json \
+  --endpoint-json outputs/asscher-profile-physical-evidence/endpoint-candidates.json \
+  --output outputs/asscher-profile-physical-evidence
+\`\`\`
+
+The overlay draws a center-axis guide and a distinctly colored **unapplied
+right-side mirror hypothesis**. Only a separate \`--pose-review\` with a
+properly sourced, human-reviewed head-on assessment and an explicit
+mirror-symmetric-stone modeling assumption can elevate that hypothesis to
+a *conditional inferred* point. Green/bright-line agreement alone is not
+pose confirmation.
+
+The focused suite verifies no symmetric inference without both assumptions,
+no overwriting an independent right-side candidate, rejection of inconsistent
+observed symmetry, no expert-angle leakage, and preservation of all physical
+angle unavailability. This lets us examine whether symmetry could help
+recover an obscured bottom-right change without smuggling an optical prior
+into the evidence.
