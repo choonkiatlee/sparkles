@@ -991,7 +991,8 @@ def main():
         default=Path("docs/360/benchmark/source-bundles.json"),
     )
     parser.add_argument(
-        "--method", choices=(validation.LEGACY_METHOD, validation.OUTER_METHOD),
+        "--method", choices=(validation.LEGACY_METHOD, validation.OUTER_METHOD,
+                   validation.WINDOW_METHOD),
         default=validation.OUTER_METHOD,
     )
     args = parser.parse_args()
