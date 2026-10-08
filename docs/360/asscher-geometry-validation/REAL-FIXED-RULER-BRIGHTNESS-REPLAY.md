@@ -28,3 +28,58 @@ We must assess the resulting traces **without** assigning polished facet ownersh
 The dedicated workflow \`asscher-real-fixed-ruler-optical-replay.yml\` downloads the original artifacts and the two pinned source archives; checks SHA and source-index/gauge consistency; replays no other stones; uploads only two JSON reports and two PNG traces (not thousands of new canonical frame arrays).
 
 The original #89 source window, frozen geometry, #91 post-freeze negative angle result and #124/123 internal boundary uncertainties remain unchanged. This is the next auditable input for the eventual #92 disposition and #79 optical research.
+
+
+## #92 small generalization gate: exposure/reference and fixed-support sensitivity
+
+This replay also **predeclares a small sensitivity check** for the two
+already-selected original diamonds and 11 source frames. The baseline output
+\`real-fixed-ruler-brightness.json\` is unchanged; the separate output
+\`exposure-support-sensitivity.json\` and two-panel PNG are diagnostics.
+
+1. **A descriptive within-frame exposure/reference proxy**, not vendor
+   photometric calibration: compute p10, median and p90 over *all valid
+   canonical stone pixels*, using the existing fixed #80 gauge/mask. For
+   each semantic support mean \`I\`, record \`(I - p10) / (p90 - p10)\`.
+   If the denominator is flat or the region is unsupported, return
+   \`null\`. Values outside [0,1] are retained; no clipping or output tuning.
+   Per-stone p10/p50/p90 variation is reported to reveal global brightness
+   shifts. Changes after referencing **cannot** be uniquely attributed
+   to exposure: global optical behaviour, illumination, clipping and
+   vendor processing can also alter the stone-pixel distribution.
+2. **A geometrically fixed, alternative sampling zone**: erode the *same*
+   original frozen #89 semantic support polygon **2 image pixels inward**,
+   before intersecting with the original valid stone mask. Compare this
+   interior mean to the full-support mean, record surviving pixel count
+   and frame-by-frame absolute differences. No new boundary is searched,
+   rotated, fitted, or matched to a visual reflection. If erosion empties
+   a region, the eroded brightness is \`null\`.
+3. Across the 11 frames, record raw and within-frame-reference amplitude,
+   mean/max absolute erosion effect, and **descriptive** Spearman rank
+   agreement where at least four nonconstant paired observations exist.
+   These diagnostics are not pass/fail thresholds or stone-quality scores.
+4. Plot four predeclared supports (\`C1_N\`, \`C3_N\`, \`P1_N\`, \`P2_N\`)
+   both raw and frame-relative, with faint dotted 2px-inset trajectories.
+   Keep actual missing observations as gaps rather than connecting them.
+
+A controlled synthetic test verifies **affine gain and offset invariance**
+of the frame-relative index when no pixel clipping occurs. This is an
+algebraic sanity check, **not proof of real-vendor comparability**.
+Source scaling, normalization/exposure and uncertainty of physical polished
+C3/table correspondence remain open issues. The orientation-unresolved
+LG756580087 must not be treated as a verified crown.
+
+This work deliberately reuses the **same existing real-data replay** and
+does not introduce another full-rotation benchmark, synthetic renderer,
+facet fitting method, or source-specific ROI correction.
+
+### Scientific decision enabled
+
+If core-vs-full support means disagree markedly, it indicates **polygon
+boundary sensitivity** rather than a verified physical facet difference.
+If the within-frame contrast index behaves differently from the raw trace,
+global/reference brightness variation contributes to the original trace.
+Neither observation alone proves which optical ray/facet caused a change.
+The #92 handoff should therefore still be assessed **REVISE** for exclusive
+physical-facet claims while nonexclusive time-varying image support may
+remain useful for downstream optical research.
