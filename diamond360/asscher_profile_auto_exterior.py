@@ -1,10 +1,11 @@
-"""Automated *proposals* for the outside of an Asscher profile (issue #91).
+"""Automatic Asscher profile OUTSIDE edge proposals from background-first evidence.
 
-Use the background/interior transition, a weak framed-profile path prior and
-left/right path continuity; never use PR A Hough peaks, internal facet labels
-or expert target angles. A traced silhouette is not automatically a physical
-pavilion plane. This fixture-focused v1 is deliberately not a general 360
-profile recognizer: normalized framing assumptions are serialized as policy.
+Do not maximize brightness or gradient magnitude: brilliant virtual facets
+are often a stronger *interior* edge than the physical outside silhouette.
+Find the first sustained foreground contact from each constant-color exterior
+image margin, separately on left/right. A soft medoid filter only removes
+row-level glitches. It may NEVER select a stronger interior edge to fix
+an unstable outline. All source-derived paths remain unverified.
 """
 from __future__ import annotations
 
@@ -19,216 +20,180 @@ from scipy import ndimage as ndi
 from . import asscher_profile_feasibility as feasibility
 from . import asscher_profile_outline_changepoints as changepoints
 
-SCHEMA = "diamond360-asscher-auto-exterior/1"
+SCHEMA = "diamond360-asscher-auto-exterior/2"
 POLICY = {
-    "expected_framing": "centered_approximately_side_on_profile_with_horizontal_girdle",
-    "prior_role": "soft_symmetric_top_girdle_bottom_kite_envelope_not_measured_facet_angles",
-    "top_y_fraction": 0.188,
-    "girdle_y_fraction": 0.665,
-    "lower_y_fraction": 0.906,
-    "top_left_x_fraction": 0.490,
-    "top_right_x_fraction": 0.510,
-    "girdle_left_x_fraction": 0.105,
-    "girdle_right_x_fraction": 0.895,
-    "lower_left_x_fraction": 0.435,
-    "lower_right_x_fraction": 0.565,
-    "corridor_halfwidth_px": 28,
-    "smooth_sigma_px": 1.3,
-    "inside_outside_sample_px": 7,
-    "gradient_span_px": 3,
-    "prior_penalty_per_px2": 0.10,
-    "tangent_change_penalty": 2.0,
-    "max_dx_per_y_px": 5,
-    "minimum_local_cross_gradient_rgb": 3.0,
-    "minimum_local_separation_rgb": 3.0,
-    "uncertainty_variants": [[0.45, 0.70, 0.30], [0.70, 0.50, 0.50], [0.40, 1.00, 0.20]],
-    "spread_review_px": 6.0,
-    "max_unsupported_fraction_for_review": 0.70,
-    "min_supported_contiguous_run_for_exploratory_changepoints": 18,
-    "trace_status_policy": "all_paths_proposals_even_when_review",
-    "angle_policy": "all_physical_facet_angles_unavailable",
-    "internal_optical_data_policy": "not_read",
+    "source_type": "approximately_side_on_centered_profile_on_nearly_constant_background",
+    "edge_selection": "FIRST_PERSISTENT_FOREGROUND_CONTACT_FROM_IMAGE_MARGIN",
+    "outside_background_model": "independent_row_median_from_both_horizontal_image_margins",
+    "background_smoothing_sigma_px": 1.0,
+    "left_right_background_probe_width_px": 22,
+    "min_border_inset_px": 22,
+    "first_contact_thresholds_rgb": [7.0, 9.0, 12.0],
+    "persistent_contact_window_px": 7,
+    "persistent_contact_required_px": 5,
+    "median_contour_smoothing_rows": 5,
+    "max_threshold_endpoint_spread_px": 7.0,
+    "max_smoothed_vs_raw_offset_px": 5.0,
+    "bottom_shadow_unreliable_at_y_fraction": 0.868,
+    "crown_first_y_fraction": 0.188,
+    "crown_last_y_fraction": 0.665,
+    "pavilion_first_y_fraction": 0.665,
+    "pavilion_last_y_fraction": 0.878,
+    "phase_break_is_candidate": "the fixed crown_pavilion_phase_split is NOT a verified girdle",
+    "minimum_supported_fraction_for_review": 0.45,
+    "min_contiguous_support_for_exploratory_slope_fit": 18,
+    "uncertainty_policy": "threshold_variant_disagreement_and_missing_source_evidence_not_calibrated_interval",
+    "prior_policy": "NO_INTERNAL_OPTICAL_GRADIENTS_NO_BRIGHTEST_LINE_NO_ANGLE_TARGET_PRIORS",
+    "semantic_policy": "all_physical_P1_P2_P3_C1_angles_unavailable",
 }
 SIDES = ("left", "right")
 PHASES = ("crown", "pavilion")
 
 
-def _signals(rgb):
+def _background_distance(rgb):
     h, w = rgb.shape[:2]
     smooth = ndi.gaussian_filter(
-        rgb.astype(float),
-        sigma=(POLICY["smooth_sigma_px"], POLICY["smooth_sigma_px"], 0),
+        rgb.astype(float), sigma=(POLICY["background_smoothing_sigma_px"],)*2 + (0,)
     )
-    radius = POLICY["gradient_span_px"]
-    cross = np.linalg.norm(
-        np.roll(smooth, -radius, axis=1) - np.roll(smooth, radius, axis=1), axis=2
+    width = POLICY["left_right_background_probe_width_px"]
+    left = smooth[:, 4:width + 4]
+    right = smooth[:, w - width - 4:w - 4]
+    # The background is sampled OUTSIDE, never from the bright central face.
+    reference = np.median(np.concatenate((left, right), axis=1), axis=1)
+    difference = np.linalg.norm(smooth - reference[:, None, :], axis=2)
+    return difference, reference
+
+
+def _outside_first_contact(distance, side, threshold):
+    """First persistent deviation from background, not the strongest edge.
+
+    A sustained contact condition removes isolated background JPEG pixels.
+    Searching only from each extreme toward the center prevents bright,
+    internal reflection boundaries from winning a stronger-gradient contest.
+    """
+    h, w = distance.shape
+    rows = distance[:, :w // 2] if side == "left" else distance[:, w // 2:][:, ::-1]
+    margin = POLICY["min_border_inset_px"]
+    limit = rows.shape[1] - POLICY["persistent_contact_window_px"]
+    if margin >= limit:
+        raise ValueError("source too narrow for first-contact tracing")
+    above = (rows >= threshold).astype(np.int16)
+    counts = ndi.convolve1d(
+        above, weights=np.ones(POLICY["persistent_contact_window_px"], dtype=np.int16),
+        axis=1, mode="constant", cval=0, origin=-POLICY["persistent_contact_window_px"] // 2 + 1
     )
-    background = np.stack([
-        np.median(
-            np.concatenate((
-                smooth[y, 4:max(5, int(0.065 * w))],
-                smooth[y, min(w-5, int(0.94*w)):w-4],
-            )), axis=0,
-        )
-        for y in range(h)
-    ])
-    distance = np.linalg.norm(smooth - background[:, None, :], axis=2)
-    return cross, distance
+    # Explicit forward window preserves exact first-contact semantics and
+    # avoids any one-sided filter kernel alignment ambiguity.
+    counts = sum(
+        above[:, margin + shift:limit + shift]
+        for shift in range(POLICY["persistent_contact_window_px"])
+    )
+    eligible = counts >= POLICY["persistent_contact_required_px"]
+    any_contact = np.any(eligible, axis=1)
+    first = margin + np.argmax(eligible, axis=1)
+    x = first if side == "left" else (w - 1 - first)
+    return np.where(any_contact, x, np.nan).astype(float)
 
 
-def _geometry(side, phase, h, w):
-    top = round(h * POLICY["top_y_fraction"])
-    girdle = round(h * POLICY["girdle_y_fraction"])
-    lower = round(h * POLICY["lower_y_fraction"])
-    y0, y1 = (top, girdle) if phase == "crown" else (girdle, lower)
-    start = ("top_" if phase == "crown" else "girdle_") + side + "_x_fraction"
-    end = ("girdle_" if phase == "crown" else "lower_") + side + "_x_fraction"
-    x0, x1 = POLICY[start] * w, POLICY[end] * w
-    ys = np.arange(y0, y1 + 1, dtype=int)
-    prior = x0 + (ys - y0) * (x1 - x0) / (y1 - y0)
-    return ys, prior, float((x1 - x0) / (y1 - y0))
-
-
-def _path(cross, dist, side, phase, weights):
-    h, w = cross.shape
-    ys, prior, slope = _geometry(side, phase, h, w)
-    inner_sign = 1 if side == "left" else -1
-    radius = POLICY["inside_outside_sample_px"]
-    margin = radius + POLICY["gradient_span_px"] + 2
-    xs = np.arange(margin, w - margin)
-    emission = []
-    for i, y in enumerate(ys):
-        inner = xs + inner_sign * radius
-        outside = xs - inner_sign * radius
-        evidence = (
-            weights[0] * cross[y, xs]
-            + weights[1] * np.maximum(dist[y, inner] - dist[y, outside], 0)
-            - weights[2] * np.clip(dist[y, outside] - 8, 0, 60)
-        )
-        local = np.where(
-            np.abs(xs - prior[i]) <= POLICY["corridor_halfwidth_px"],
-            -evidence + POLICY["prior_penalty_per_px2"] * (xs - prior[i]) ** 2,
-            np.inf,
-        )
-        emission.append(local)
-    costs = emission[0].copy()
-    backwards = []
-    for i in range(1, len(ys)):
-        best = np.full_like(costs, np.inf)
-        back = np.full(len(xs), -1, dtype=int)
-        for dx in range(-POLICY["max_dx_per_y_px"], POLICY["max_dx_per_y_px"] + 1):
-            old = np.arange(len(xs)) - dx
-            allowed = (old >= 0) & (old < len(xs))
-            candidate = np.full_like(costs, np.inf)
-            candidate[allowed] = (
-                costs[old[allowed]]
-                + POLICY["tangent_change_penalty"] * (dx - slope) ** 2
-            )
-            better = candidate < best
-            best[better], back[better] = candidate[better], old[better]
-        costs = best + emission[i]
-        backwards.append(back)
-    if not np.isfinite(costs).any():
-        return None
-    index = int(np.argmin(costs))
-    chosen = [index]
-    for back in reversed(backwards):
-        index = int(back[index])
-        chosen.append(index)
-    return ys, xs[np.asarray(chosen[::-1])]
+def _phase_rows(height, phase):
+    lo, hi = (
+        (POLICY["crown_first_y_fraction"], POLICY["crown_last_y_fraction"])
+        if phase == "crown" else
+        (POLICY["pavilion_first_y_fraction"], POLICY["pavilion_last_y_fraction"])
+    )
+    return np.arange(round(lo * height), round(hi * height) + 1, dtype=int)
 
 
 def _supported_runs(points):
-    """Never fit a straight stretch across ambiguous/missing edge intervals."""
     runs, current = [], []
-    for point in points:
-        if point["support"] == "edge_supported_candidate":
-            current.append(point["xy_px"])
+    for item in points:
+        if item["support"] == "edge_supported_candidate" and item["xy_px"] is not None:
+            current.append(item["xy_px"])
         elif current:
             runs.append(current)
             current = []
     if current:
         runs.append(current)
-    result = []
-    for run in runs:
-        if len(run) < POLICY["min_supported_contiguous_run_for_exploratory_changepoints"]:
+    output = []
+    for points_in_run in runs:
+        if len(points_in_run) < POLICY["min_contiguous_support_for_exploratory_slope_fit"]:
             continue
-        # Shape-change fits are only to *supported* source outline points,
-        # and are clearly not reviewer-confirmed physical facet identities.
-        fitted = changepoints.fit_stroke(run)
-        if fitted["status"] == "unavailable":
+        fitted = changepoints.fit_stroke(points_in_run)
+        if fitted["status"] != "review":
             continue
-        result.append({
-            "first_xy_px": run[0],
-            "last_xy_px": run[-1],
-            "point_count": len(run),
+        output.append({
             "status": "exploratory_contiguous_image_slope_only",
+            "first_xy_px": points_in_run[0],
+            "last_xy_px": points_in_run[-1],
+            "point_count": len(points_in_run),
             "fitted": fitted,
         })
-    return result
+    return output
 
 
 def analyse_array(rgb):
-    rgb = np.asarray(rgb, dtype=np.uint8)
-    if rgb.ndim != 3 or rgb.shape[-1] != 3:
+    arr = np.asarray(rgb)
+    if arr.ndim != 3 or arr.shape[-1] != 3:
         raise ValueError("expected RGB source image")
-    h, w = rgb.shape[:2]
+    h, w = arr.shape[:2]
     if min(w, h) < 160:
-        raise ValueError("source too small for framed-profile soft-prior experiment")
-    cross, dist = _signals(rgb)
+        raise ValueError("source too small for outside-background profile experiment")
+    distance, background = _background_distance(arr)
     paths = {}
     for side in SIDES:
+        variants = np.vstack([
+            _outside_first_contact(distance, side, threshold)
+            for threshold in POLICY["first_contact_thresholds_rgb"]
+        ])
         for phase in PHASES:
             name = f"{side}_{phase}"
-            variations = [
-                _path(cross, dist, side, phase, weights)
-                for weights in POLICY["uncertainty_variants"]
-            ]
-            if any(value is None for value in variations):
-                paths[name] = {
-                    "status": "unavailable",
-                    "reason": "no_continuous_guided_path",
-                    "points": [],
-                    "supported_runs": [],
-                }
-                continue
-            ys = variations[0][0]
-            stack = np.stack([value[1] for value in variations])
-            x = np.rint(np.median(stack, axis=0)).astype(int)
-            direction = 1 if side == "left" else -1
-            radius = POLICY["inside_outside_sample_px"]
-            inner = np.clip(x + direction * radius, 0, w - 1)
-            outside = np.clip(x - direction * radius, 0, w - 1)
-            gradient = cross[ys, x]
-            separation = dist[ys, inner] - dist[ys, outside]
-            spread = np.ptp(stack, axis=0)
+            ys = _phase_rows(h, phase)
+            values = variants[:, ys]
+            finite = np.isfinite(values)
+            enough = np.count_nonzero(finite, axis=0) >= 2
+            # Median prioritizes the earliest consistent background departure;
+            # disagreement with the more conservative threshold is disclosed.
+            raw = np.full(len(ys), np.nan)
+            for i in np.flatnonzero(enough):
+                raw[i] = np.median(values[finite[:, i], i])
+            # Short filter suppresses background JPEG grains; it cannot cross
+            # a missing row or convert it into a physical contour observation.
+            valid_indices = np.flatnonzero(np.isfinite(raw))
+            smoothed = raw.copy()
+            for i in valid_indices:
+                neighbors = raw[max(0, i - 2):min(len(raw), i + 3)]
+                smoothed[i] = np.median(neighbors[np.isfinite(neighbors)])
+            spreads = np.full(len(ys), np.inf)
+            for i in valid_indices:
+                candidates = values[finite[:, i], i]
+                spreads[i] = float(np.max(candidates) - np.min(candidates))
+            bottom_safe = ys < int(round(h * POLICY["bottom_shadow_unreliable_at_y_fraction"]))
             supported = (
-                (gradient >= POLICY["minimum_local_cross_gradient_rgb"])
-                & (separation >= POLICY["minimum_local_separation_rgb"])
-                & (spread <= POLICY["spread_review_px"])
+                enough & (spreads <= POLICY["max_threshold_endpoint_spread_px"])
+                & (np.abs(smoothed - raw) <= POLICY["max_smoothed_vs_raw_offset_px"])
+                & bottom_safe
             )
-            points = [
-                {
-                    "xy_px": [int(px), int(y)],
-                    "support": "edge_supported_candidate" if ok else "weak_or_ambiguous",
-                    "cross_gradient_rgb": round(float(contrast), 3),
-                    "in_out_background_separation_rgb": round(float(delta), 3),
-                    "variant_disagreement_px": int(disagreement),
-                }
-                for y, px, ok, contrast, delta, disagreement in zip(
-                    ys, x, supported, gradient, separation, spread
-                )
-            ]
+            points = []
+            for i, y in enumerate(ys):
+                x = int(np.rint(smoothed[i])) if np.isfinite(smoothed[i]) else None
+                points.append({
+                    "xy_px": [x, int(y)] if x is not None else None,
+                    "support": "edge_supported_candidate" if supported[i] else "weak_or_ambiguous",
+                    "threshold_disagreement_px": round(float(spreads[i]), 3) if np.isfinite(spreads[i]) else None,
+                    "first_contact_count": int(finite[:, i].sum()),
+                    "reason": (
+                        "persistent_source_background_transition"
+                        if supported[i] else
+                        ("lower_platform_shadow_proximity" if not bottom_safe[i]
+                         else "missing_or_inconsistent_background_contact")
+                    ),
+                })
             fraction = float(np.mean(supported))
             paths[name] = {
-                "status": (
-                    "review"
-                    if fraction >= 1.0 - POLICY["max_unsupported_fraction_for_review"]
-                    else "unavailable"
-                ),
-                "provenance": "automated_guided_exterior_candidate_not_human_confirmed",
+                "status": "review" if fraction >= POLICY["minimum_supported_fraction_for_review"] else "unavailable",
+                "provenance": "automated_first_background_contact_not_human_verified",
                 "supported_fraction": round(fraction, 4),
-                "candidate_model": "background_transition_continuous_kite_guided_path",
+                "candidate_model": "exterior_margin_connected_background_contact",
                 "points": points,
                 "supported_runs": _supported_runs(points),
                 "physical_facet_correspondence": "not_established",
@@ -239,23 +204,19 @@ def analyse_array(rgb):
         "policy": POLICY,
         "policy_sha256": feasibility.canonical_sha256(POLICY),
         "source_dimensions_xy_px": [w, h],
-        "status": (
-            "review" if all(path["status"] == "review" for path in paths.values())
-            else "partial_or_unavailable"
-        ),
+        "status": "review" if all(row["status"] == "review" for row in paths.values()) else "partial_or_unavailable",
         "paths": paths,
         "comparison_targets_loaded": False,
         "semantic_measurements": {
-            side: {
-                facet: {"status": "unavailable", "physical_angle_deg": None}
-                for facet in feasibility.SLOTS
-            }
+            side: {facet: {"status": "unavailable", "physical_angle_deg": None}
+                   for facet in feasibility.SLOTS}
             for side in SIDES
         },
         "interpretation": (
-            "Contour proposals guided by image-only outside/background evidence. "
-            "Normalized framing is an explicit soft prior, not measured geometry; "
-            "internal virtual-facet gradients and Sergey target angles are not used."
+            "Outermost sustained deviation from row-wise measured background, NOT the "
+            "strongest photo gradient. No interior virtual-feature detection, named "
+            "facet identity, physical angle, or expert comparison. The fixed phase "
+            "split does not establish physical girdle location."
         ),
     }
 
@@ -266,12 +227,12 @@ def render_overlay(result, rgb):
     for row in result["paths"].values():
         previous = None
         for point in row["points"]:
+            if point["xy_px"] is None:
+                previous = None
+                continue
             xy = tuple(point["xy_px"])
-            color = (
-                (20, 211, 80)
-                if point["support"] == "edge_supported_candidate"
-                else (250, 135, 30)
-            )
+            color = ((15, 224, 75) if point["support"] == "edge_supported_candidate"
+                     else (250, 132, 22))
             draw.point(xy, fill=color)
             if previous and previous[1] == point["support"]:
                 draw.line((previous[0], xy), fill=color, width=2)
@@ -313,14 +274,9 @@ def main():
     print(json.dumps({
         "status": result["status"],
         "original_verified": result["original_verified"],
-        "paths": {
-            name: {
-                "status": record["status"],
-                "supported_fraction": record.get("supported_fraction"),
-                "exploratory_supported_runs": len(record.get("supported_runs", [])),
-            }
-            for name, record in result["paths"].items()
-        },
+        "paths": {key: {"status": row["status"],
+                        "supported_fraction": row.get("supported_fraction")}
+                  for key, row in result["paths"].items()},
     }, sort_keys=True))
 
 
