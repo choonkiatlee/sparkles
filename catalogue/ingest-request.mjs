@@ -10,6 +10,19 @@ export function normalizeListingUrl(input) {
   if (/[^\x20-\x7e]/.test(trimmed)) {
     throw new Error("The listing URL contains unsupported characters.");
   }
+  // Quality Diamonds' exact public ID includes its numeric prefix (e.g.
+  // 133/CE7EED747). Bare 9-character values cannot distinguish its suffix
+  // from Diyona SKUs, so unprefixed values are explicitly Diyona SKUs.
+  if (/^[0-9]+\/[a-z0-9]+$/i.test(trimmed)) {
+    return normalizeListingUrl(
+      "https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=" + trimmed
+    );
+  }
+  if (/^[a-z0-9_-]+$/i.test(trimmed)) {
+    return normalizeListingUrl(
+      "https://diyona.com/pages/diamond-detail?sku=" + trimmed
+    );
+  }
   let url;
   try { url = new URL(trimmed); }
   catch { throw new Error("Enter a valid HTTPS listing URL."); }
