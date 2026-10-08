@@ -146,6 +146,8 @@ def validate_worksheet(data):
         verdict = row.get("reviewer_verdict")
         if verdict not in VERDICTS:
             raise ValueError("unknown reviewer verdict")
+        if kind == "pavilion_culet_point_region" and verdict in {"possible_table_edge", "possible_girdle_edge"}:
+            raise ValueError("pointed upper pavilion tip cannot be a table or girdle proposal")
         if kind == "interior_appearance_control" and verdict in PHYSICAL_REVIEW:
             raise ValueError("internal optical band cannot be certified as exterior contour")
         trace = row.get("reviewer_trace_xy_px")
@@ -287,7 +289,7 @@ function change(){
 selected=region.value;const r=doc.region_proposals.find(x=>x.region_id===selected);
 document.getElementById('question').textContent=r.review_question;
 verdict.replaceChildren();
-for(const label of classes.filter(x=>r.hypothesis!=='interior_appearance_control' || !['likely_external_contour','possible_table_edge','possible_girdle_edge'].includes(x))){
+for(const label of classes.filter(x=>(r.hypothesis!=='interior_appearance_control' || !['likely_external_contour','possible_table_edge','possible_girdle_edge'].includes(x)) && (r.hypothesis!=='pavilion_culet_point_region' || !['possible_table_edge','possible_girdle_edge'].includes(x)))){
 const o=document.createElement('option');o.value=label;o.textContent=label.replaceAll('_',' ');verdict.appendChild(o);}
 const d=decisions[selected];verdict.value=d?.verdict||'unreviewed';note.value=d?.note||'';
 points=(d?.trace_xy_px||[]).map(x=>x.slice());status.textContent='Image-only proposal, not a verified facet.';draw();
