@@ -264,10 +264,8 @@ def analyse(rgb, contour, joint_report):
     }
 
 
-def render_overlay(rgb, joint_report, result):
-    original = Image.fromarray(np.asarray(rgb, dtype=np.uint8))
-    image = joint.render_overlay_image if False else None
-    image = original.resize((1230, 957))
+def render_overlay(base_image, result):
+    image = base_image.copy()
     draw = ImageDraw.Draw(image)
     top = result["top_cap_candidate"]
     if top["status"] == "candidate_only":
@@ -303,7 +301,7 @@ def write_report(image_path, auto_json, joint_json, output):
     output.mkdir(parents=True, exist_ok=True)
     (output/"endpoint-candidates.json").write_text(
         json.dumps(result,indent=2,sort_keys=True)+"\n",encoding="utf-8")
-    render_overlay(rgb, primary, result).save(output/"endpoint-review-overlay.png")
+    render_overlay(joint.render_overlay(path, primary), result).save(output/"endpoint-review-overlay.png")
     return result
 
 
