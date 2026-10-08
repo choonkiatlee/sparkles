@@ -190,7 +190,7 @@ def render_traces(payload, output):
     d.text((32, 18), title, fill=(20, 30, 42))
     d.text((32, 38), "Brightness is image-plane support, NOT polished facet light return.", fill=(75, 80, 87))
     d.text((32, 55), "Same geometry ruler; null/missing points stay unconnected. No physical facet scores.", fill=(75,80,87))
-    x0, y0, w, h = 72, 100, 1020, 420
+    x0, y0, w, h = 72, 100, 1020, 375
     for val in (0, .25, .5, .75, 1):
         y = y0+h*(1-val)
         d.line((x0,y,x0+w,y),fill=(228,231,236),width=1)
