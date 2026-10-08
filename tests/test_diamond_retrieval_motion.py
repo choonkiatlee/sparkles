@@ -369,7 +369,7 @@ class ProgressiveMotionContractTests(unittest.TestCase):
             "https://v360.in/viewer4.0/vision360.html?"
             "d=VDC-32-50&surl=https://s10.v360.in/images/company/1546/"
         )
-        root = "https://s10.v360.in/images/company/1546/VDC-32-50"
+        root = "https://s10.v360.in/images/company/1546/imaged/VDC-32-50"
         responses = _progressive_source_responses(AUDITS[0], root, version=1)
         responses[root + "/0.json?version="] = responses.pop(root + "/0.json")
         http = FakeHttpClient(responses)
