@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "diamond_catalogue/**"
+      - ".github/workflows/diamond-catalogue-ingest.yml"
       - "tests/test_diamond_catalogue*.py"
       - "docs/diamond-catalogue.md"
       - "pyproject.toml"
@@ -25,6 +26,7 @@ jobs:
         run: |
           python -m unittest tests.test_diamond_catalogue -v
           python -m unittest tests.test_diamond_catalogue_integration -v
+          python -m unittest tests.test_diamond_catalogue_publisher -v
           python -m unittest tests.test_diamond_retrieval -v
           python -m unittest tests.test_diamond_retrieval_retailers -v
           python -m unittest tests.test_diamond_retrieval_motion -v

@@ -1,0 +1,47 @@
+name: diamond-catalogue-ingest
+
+on:
+  workflow_dispatch:
+    inputs:
+      diamond_url:
+        description: "One exact supported Diyona or Quality Diamonds listing URL"
+        required: true
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: sparkles-diamond-catalogue-master-publisher
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout publishing code
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Sparkles
+        run: python -m pip install -e .
+
+      - name: Ingest and publish one certified diamond
+        env:
+          DIAMOND_URL: ${{ inputs.diamond_url }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF: refs/heads/master
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python -m diamond_catalogue.publish
+
+      # GitHub Pages deployment is #108: GITHUB_TOKEN commits do not fire
+      # new push workflows; #108 must explicitly deploy as part of ingestion.
