@@ -16,6 +16,7 @@ import numpy as np
 from . import asscher_sequence_gauge as sequence_gauge
 from . import asscher_topology as topology
 from . import asscher_wireframe as wireframe
+from . import asscher_steps as steps
 
 SCHEMA = "diamond360-asscher-geometry-validation/1"
 CONTRACT_SCHEMA = "diamond360-asscher-geometry-validation-contract/1"
@@ -59,6 +60,7 @@ FROZEN_WIREFRAME_SPECIFICATION = {
 # separate, explicitly frozen method revision, *not* a rewritten #75 result.
 LEGACY_METHOD = "initial_v1"
 OUTER_METHOD = "outer_octagon_v2"
+WINDOW_METHOD = "window_local_peaks_v3_experiment"
 FROZEN_OUTER_WIREFRAME_REVISION = "6334cc9d0c7e2c9a26854bfaeec7a8ebbb6fc668"
 FROZEN_OUTER_WIREFRAME_SPEC_SHA256 = (
     "aaf8a885efe039b203330f9592dcccdb41ba11f3a731eb31143fa6de06b4e42e"
@@ -107,6 +109,30 @@ FROZEN_OUTER_WIREFRAME_SPECIFICATION.update({
 })
 
 
+# This is a research policy layered over the exact frozen outer-v2 estimator
+# specification. It has a distinct method_revision, not a replacement for #96.
+FROZEN_WINDOW_EXPERIMENT_POLICY = {
+    "schema_version": "diamond360-asscher-step-window-peaks/1",
+    "policy": "semantic_window_local_v1",
+    "boundary_windows": [[.42, .60], [.64, .82], [.82, .92]],
+    "distance_u_fraction": .095,
+    "minimum_distance_samples": 3,
+    "selection_policy": (
+        "apply find_peaks minimum-separation independently within each "
+        "predeclared semantic window, not globally before filtering"
+    ),
+    "fallback_policy": (
+        "do not manufacture a missing boundary from the highest raw "
+        "pixel: keep unobserved semantic windows unavailable"
+    ),
+    "prominence_policy": (
+        "measure selected peak prominence on the original global "
+        "consensus for comparability with the frozen score"
+    ),
+    "physical_facet_claim": False,
+}
+
+
 def _method_profile(method):
     if method == LEGACY_METHOD:
         return (
@@ -114,7 +140,7 @@ def _method_profile(method):
             FROZEN_WIREFRAME_SPEC_SHA256,
             FROZEN_WIREFRAME_SPECIFICATION,
         )
-    if method == OUTER_METHOD:
+    if method in (OUTER_METHOD, WINDOW_METHOD):
         return (
             FROZEN_OUTER_WIREFRAME_REVISION,
             FROZEN_OUTER_WIREFRAME_SPEC_SHA256,
@@ -156,6 +182,14 @@ def assert_frozen_method(method=OUTER_METHOD):
             "wireframe specification differs from declared frozen method; "
             "run the historical checkout or declare a new method revision"
         )
+    if method == WINDOW_METHOD:
+        if (
+            steps.GLOBAL_PEAK_POLICY != "global_v1"
+            or steps.WINDOW_PEAK_POLICY != "semantic_window_local_v1"
+            or steps.experimental_peak_policy_specification()
+            != FROZEN_WINDOW_EXPERIMENT_POLICY
+        ):
+            raise RuntimeError("experimental peak policy differs from frozen contract")
     if topology.SCAFFOLD_SCHEMA != current["topology_schema"]:
         raise RuntimeError("semantic scaffold schema differs from frozen contract")
     if sequence_gauge.SCHEMA != "diamond360-asscher-sequence-gauge/1":
@@ -212,6 +246,8 @@ def frozen_method_record(method=OUTER_METHOD):
     revision, specification_sha, specification = _method_profile(method)
     return {
         "method_revision": method,
+        "peak_selection_policy": (deepcopy(FROZEN_WINDOW_EXPERIMENT_POLICY)
+                                  if method == WINDOW_METHOD else None),
         "wireframe_revision": revision,
         "wireframe_schema": wireframe.SCHEMA,
         "wireframe_specification": deepcopy(specification),
