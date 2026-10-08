@@ -26,6 +26,26 @@ class InnerEvidenceDiagnosticsTests(unittest.TestCase):
         )
         self.assertTrue(all(.42 <= r["u"] <= .60 for r in ranked))
 
+    def test_global_nonmaximum_suppression_can_delete_valid_c3_peak(self):
+        u = np.linspace(0, 1, 160)
+        near_c3 = np.exp(-0.5*((u - .579)/.008)**2)
+        outside_window = np.exp(-0.5*((u - .629)/.008)**2)
+        full = near_c3*1.05 + outside_window*1.00
+        without = near_c3*1.00 + outside_window*1.05
+        baseline = diagnostic.suppression_trace(full, u)
+        dropped = diagnostic.suppression_trace(without, u)
+        near_baseline = min(baseline["raw_near_c3"],
+                            key=lambda r: abs(r["u"]-.579))
+        near_without = min(dropped["raw_near_c3"],
+                           key=lambda r: abs(r["u"]-.579))
+        self.assertTrue(near_baseline["survived_global_peak_suppression"])
+        self.assertFalse(near_without["survived_global_peak_suppression"])
+        self.assertTrue(near_without["in_c3_semantic_window"])
+        self.assertTrue(near_without["suppressor_outside_c3_window"])
+        self.assertAlmostEqual(near_without["suppressor_u"], .629, delta=.0063)
+        self.assertEqual(dropped["minimum_peak_separation_samples"], 15)
+        # This is a diagnostic replay of the bad ordering, not a proposed fix.
+
     def test_per_sector_peaks_remain_unassigned_image_contrast(self):
         u = np.linspace(0, 1, 160)
         profile = np.zeros(160)
