@@ -20,7 +20,7 @@ from scipy import ndimage as ndi
 from . import asscher_profile_feasibility as feasibility
 from . import asscher_profile_outline_changepoints as changepoints
 
-SCHEMA = "diamond360-asscher-auto-exterior/2"
+SCHEMA = "diamond360-asscher-auto-exterior/3"
 POLICY = {
     "source_type": "approximately_side_on_centered_profile_on_nearly_constant_background",
     "edge_selection": "FIRST_PERSISTENT_FOREGROUND_CONTACT_FROM_IMAGE_MARGIN",
@@ -35,11 +35,12 @@ POLICY = {
     "max_threshold_endpoint_spread_px": 7.0,
     "max_smoothed_vs_raw_offset_px": 5.0,
     "bottom_shadow_unreliable_at_y_fraction": 0.868,
-    "crown_first_y_fraction": 0.188,
-    "crown_last_y_fraction": 0.665,
-    "pavilion_first_y_fraction": 0.665,
-    "pavilion_last_y_fraction": 0.878,
-    "phase_break_is_candidate": "the fixed crown_pavilion_phase_split is NOT a verified girdle",
+    "pavilion_first_y_fraction": 0.188,
+    "pavilion_last_y_fraction": 0.665,
+    "crown_first_y_fraction": 0.665,
+    "crown_last_y_fraction": 0.878,
+    "phase_break_is_candidate": "the fixed pavilion_crown_phase_split is NOT a verified girdle",
+    "source_orientation": "pointed_upper_pavilion_broad_lower_crown",
     "minimum_supported_fraction_for_review": 0.45,
     "min_contiguous_support_for_exploratory_slope_fit": 18,
     "uncertainty_policy": "threshold_variant_disagreement_and_missing_source_evidence_not_calibrated_interval",
@@ -47,7 +48,7 @@ POLICY = {
     "semantic_policy": "all_physical_P1_P2_P3_C1_angles_unavailable",
 }
 SIDES = ("left", "right")
-PHASES = ("crown", "pavilion")
+PHASES = ("pavilion", "crown")
 
 
 def _background_distance(rgb):
@@ -94,7 +95,7 @@ def _outside_first_contact(distance, side, threshold):
 def _phase_rows(height, phase):
     lo, hi = (
         (POLICY["crown_first_y_fraction"], POLICY["crown_last_y_fraction"])
-        if phase == "crown" else
+        if phase == "pavilion" else
         (POLICY["pavilion_first_y_fraction"], POLICY["pavilion_last_y_fraction"])
     )
     return np.arange(round(lo * height), round(hi * height) + 1, dtype=int)
@@ -212,7 +213,8 @@ def analyse_array(rgb):
             "Outermost sustained deviation from row-wise measured background, NOT the "
             "strongest photo gradient. No interior virtual-feature detection, named "
             "facet identity, physical angle, or expert comparison. The fixed phase "
-            "split does not establish physical girdle location."
+            "split does not establish physical girdle location. "
+            "Upper pointed part is PAVILION; shorter lower part is CROWN."
         ),
     }
 
@@ -245,6 +247,7 @@ def write_qc(image_path, output, expected_sha256=None):
         rgb = np.asarray(image.convert("RGB"), dtype=np.uint8)
     result = analyse_array(rgb)
     result["source_sha256"] = source_sha
+    result["source_orientation"] = POLICY["source_orientation"]
     result["original_verified"] = (
         source_sha == feasibility.ORIGINAL_PROFILE_SHA256
         and rgb.shape[:2][::-1] == feasibility.ORIGINAL_PROFILE_SIZE
