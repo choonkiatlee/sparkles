@@ -97,7 +97,8 @@ def _fit_records(pose_output, records, gauge_id, *, method=validation.OUTER_METH
     evidence, u, masks, brightness, metadata = _load_evidence(
         pose_output, records
     )
-    if method in (validation.OUTER_METHOD, validation.WINDOW_METHOD):
+    if method in (validation.OUTER_METHOD, validation.WINDOW_METHOD,
+                   validation.FRAME_RANK_METHOD):
         outer_fit = outer_octagon.fit_consensus(
             masks, frame_metadata=metadata
         )
@@ -120,8 +121,14 @@ def _fit_records(pose_output, records, gauge_id, *, method=validation.OUTER_METH
         outer_confidence=outer_confidence,
         step_peak_policy=(
             wireframe.steps.WINDOW_PEAK_POLICY
-            if method == validation.WINDOW_METHOD
+            if method in (validation.WINDOW_METHOD,
+                          validation.FRAME_RANK_METHOD)
             else wireframe.steps.GLOBAL_PEAK_POLICY
+        ),
+        step_rank_policy=(
+            wireframe.steps.FRAME_RANK_POLICY
+            if method == validation.FRAME_RANK_METHOD
+            else wireframe.steps.LEGACY_RANK_POLICY
         ),
     )
     result["selected_frames"] = metadata
@@ -139,7 +146,8 @@ def _primary_fit(pose_output, pose_payload, *, method=validation.OUTER_METHOD):
             "reason": "stable_sequence_gauge_unavailable",
             "scaffold": None,
         }, [], [], []
-    if method in (validation.OUTER_METHOD, validation.WINDOW_METHOD):
+    if method in (validation.OUTER_METHOD, validation.WINDOW_METHOD,
+                   validation.FRAME_RANK_METHOD):
         coarse = wireframe._select_geometry_records(
             pose_payload, max_frames=None
         )
@@ -1172,7 +1180,8 @@ def main():
     )
     parser.add_argument(
         "--method", choices=(validation.LEGACY_METHOD, validation.OUTER_METHOD,
-                   validation.WINDOW_METHOD),
+                   validation.WINDOW_METHOD,
+                   validation.FRAME_RANK_METHOD),
         default=validation.OUTER_METHOD,
     )
     args = parser.parse_args()
