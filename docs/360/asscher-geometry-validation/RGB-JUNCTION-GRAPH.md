@@ -74,3 +74,24 @@ Document KEEP/REVISE/REJECT from this evidence.
 The deliverable is credible observational support with explicit
 unavailability and a testable decision on whether physical facet topology
 can be recovered from these images. No #90 source-stress runs.
+
+
+## Completed four-stone evidence and virtual-facet review (2026-10-08)
+
+[Workflow 37815198934](https://github.com/choonkiatlee/sparkles/actions/runs/37815198934) passed the focused unit tests, frozen view-selection checks and hash-pinned four-stone native-camera RGB replay. Its downloadable artifact is `asscher-rgb-junction-graph-diagnostic`.
+
+| Certificate | Total candidate junctions, five frames | Connected graph edges | Crown-face identity |
+| --- | ---: | ---: | --- |
+| LG756520111 | 0 | 0 | likely crown |
+| LG756580087 | 8 | 1 | uncertain |
+| LG818659722 | 4 | 1 | likely crown |
+| LG836619414 | 1 | 0 | uncertain |
+| **Total** | **13** | **2** | |
+
+No frame yielded a connected eight-corner polygon, and LG756520111 (the original C3 instability) had no supported junctions at all.
+
+**Source-RGB visual QC and user review:** Some detected straight segments follow **virtual facets / optical reflections**, not the physical facet-to-facet junctions sought by this geometry estimator. The observed connections are too sparse to establish physical boundary identity. A two-orientation image gradient at an intersection and graph continuity are therefore **insufficient positive controls** for physical facet labels. This is a provenance/identifiability limitation, not simply a parameter-tuning issue.
+
+**Research decision: REVISE / no geometry promotion.** Retain the diagnostic and negative result, but do not interpret `junction_evidence.nodes` or `edges` as observed polished-facet junctions: their permitted provenance remains `optical_or_structural_unresolved`. Mark all physical interior facet identities **unavailable** pending independent corroboration. Preserve the frozen #96 outer contour as the only directly supported physical outline. If work continues, prioritize #123's separation of optical/virtual-facet appearance from externally or multi-view corroborated physical geometry. Avoid further peak/line threshold relaxation or an octagon fit engineered around these examples.
+
+No production estimator, method dispatch, or source-stress policy change.
