@@ -61,62 +61,8 @@ const sequence = (size,prefix="https://example.test/")=>extractRotation([{
     asset:{media_type:"image/jpeg",storage:{url:prefix+i+".jpg"}}}))
 }]);
 
-test("full prefetch is default ONLY on selected observed sequences, with concurrency caps",async()=>{
-  assert.deepEqual(PREFETCH_MODES,["none","nearby","all"]);
-  assert.equal(FRAME_PREFETCH.mode,"all");
-  const requests=[],pending=[];
-  const factory=()=>{
-    const image={onload:null,onerror:null};
-    Object.defineProperty(image,"src",{set(url){requests.push(url);pending.push(image);}});
-    return image;
-  };
-  const p=createFramePreloader({mode:"all",maxConcurrent:2,maxDecodedImages:3,imageFactory:factory});
-  assert.equal(p.stats().total,0);
-  const a=sequence(8),b=sequence(4,"https://r2.example.test/");
-  p.observe([a,b],0);
-  assert.equal(requests.length,2);
-  assert.equal(p.stats().queued,10);
-  for(let i=0;i<12;i++)pending[i].onload();
-  assert.equal(requests.length,12);
-  assert.equal(p.stats().loaded,12);
-  assert.equal(p.stats().total,12);
-  assert.ok(p.stats().retained<=3);
-  p.observe([a,b],0.5);
-  assert.equal(requests.length,12,"full mode must not requeue evicted frames on seek");
-  p.stop();
-  assert.equal(p.stats().total,0);
-});
-
-test("demand priority, retry, dedup and safe cleanup",async()=>{
-  const pending=[],requests=[];
-  const factory=()=>{
-    const image={onload:null,onerror:null};
-    Object.defineProperty(image,"src",{set(url){requests.push(url);pending.push(image);}});
-    return image;
-  };
-  const p=createFramePreloader({mode:"all",maxConcurrent:1,maxDecodedImages:2,imageFactory:factory});
-  const seq=sequence(5);
-  p.observe([seq],0);
-  const fourth=seq.frames[4].url;
-  const promise=p.ensure(fourth);
-  pending[0].onload();
-  assert.equal(requests[1],fourth,"demand should jump ahead of background queue");
-  pending[1].onerror();
-  assert.equal(await promise,null);
-  assert.equal(p.stats().failed,1);
-  const promise2=p.ensure(fourth,{retry:true});
-  // A previously failed frame is retried after active background network work.
-  let ix=2;
-  while(requests.at(-1)!==fourth && ix<10){pending[ix].onload();ix++;}
-  assert.equal(requests.at(-1),fourth);
-  pending.at(-1).onload();
-  assert.equal((await promise2)!==null,true);
-  p.stop();
-  const p2=createFramePreloader({mode:"none",imageFactory:factory});
-  p2.observe([seq],0);
-  assert.equal(p2.stats().total,0);
-  p2.stop();
-});
+// C3b network priority, retry, decoded-LRU and full-default contracts are
+// exercised below with the public focus/retry/stats API.
 
 test("nearby mode limits requests to just requested neighbors with wrap",async()=>{
   const requests=[];
