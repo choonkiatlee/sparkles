@@ -133,32 +133,48 @@ def choose_frame(assessments: list[dict], *, sequence_complete: bool) -> dict:
     size = len(records)
     crown = face.get("likely_crown_peak_position")
     radius = face.get("lobe_radius_frames", 0)
-    candidates = []
+    crown_candidates = []
+    robust_candidates = []
+    review_candidates = []
     for i, detail in enumerate(assessments):
         assessment = records[i]["assessment"]
         outer = detail["outer"]
-        if assessment["status"] not in {"ok", "review"} or not outer["hard_usable"]:
+        if assessment.get("outline") is None or detail["segmentation_status"] == "failed":
             continue
-        if face.get("status") == "resolved":
-            dist = min(abs(i - crown), size - abs(i - crown))
-            if dist > radius:
-                continue
-        candidates.append(i)
-    if not candidates:
-        return {"status": "unavailable", "reason": "no_reliable_outer_silhouette",
+        review_candidates.append(i)
+        if assessment["status"] in {"ok", "review"} and outer["hard_usable"]:
+            robust_candidates.append(i)
+            if face.get("status") == "resolved":
+                dist = min(abs(i - crown), size - abs(i - crown))
+                if dist <= radius:
+                    crown_candidates.append(i)
+    if crown_candidates:
+        candidates = crown_candidates
+        method = "outer_verified_crown_lobe"
+    elif robust_candidates:
+        candidates = robust_candidates
+        method = "outer_usable_face_unresolved"
+    elif review_candidates:
+        # Display-only fallback: candidate still comes from the observed outer
+        # contour; it is NOT verified geometry or an approved crown view.
+        candidates = review_candidates
+        method = "rejected_outer_geometry_review_only"
+    else:
+        return {"status": "unavailable", "reason": "no_segmented_outer_contour",
                 "face_selection": face}
     selected = min(candidates, key=lambda i: (
         assessments[i]["outer"].get("face_on_error", float("inf")),
         -records[i]["assessment"]["score"], i,
     ))
+    is_crown = method == "outer_verified_crown_lobe"
     return {
-        "status": "likely_crown_candidate" if face.get("status") == "resolved"
-                  else "unverified_pose_candidate",
+        "status": "likely_crown_candidate" if is_crown else "unverified_pose_candidate",
         "reason": face.get("reason", "crown_orientation_not_resolved"),
+        "selection_method": method,
         "sample_index": selected,
         "face_selection": face,
         "outer_quality": assessments[selected]["outer"]["quality"],
-        "face_on_error": assessments[selected]["outer"]["face_on_error"],
+        "face_on_error": assessments[selected]["outer"].get("face_on_error"),
         "pose_status": records[selected]["assessment"]["status"],
     }
 
@@ -167,11 +183,22 @@ def crop_color_original(image: Image.Image, *, padding: float = 0.12) -> tuple[I
     """Re-fit original outer silhouette for crop bounds, preserving colour pixels."""
     assessment = assess_image(image, position=0)
     outline = assessment["record"]["assessment"]["outline"]
-    if not outline or not assessment["outer"]["hard_usable"]:
-        raise ValueError("Original image has no reliable outer octagon")
+    # Derivative previews may retain a flagged, rejected outline, but cannot
+    # call it an approved face-up silhouette. Use the observed foreground
+    # boundary if an eight-sided fit was rejected.
+    reduced = image.copy()
+    reduced.thumbnail((ANALYSIS_SIZE, ANALYSIS_SIZE), Image.Resampling.LANCZOS)
+    segmented = segmentation.segment(np.asarray(reduced.convert("RGB")))
+    if outline and assessment["outer"]["hard_usable"]:
+        bounds = np.asarray(outline["vertices_xy"], float)
+    elif segmented["status"] != "failed" and int(segmented["mask"].sum()) > 100:
+        ys,xs=np.nonzero(segmented["mask"])
+        bounds = np.asarray([[xs.min(),ys.min()],[xs.max(),ys.max()]],float)
+    else:
+        raise ValueError("No reliable contour even for an unverified preview")
     src_w, src_h = image.size
     w, h = assessment["analysis_dimensions"]
-    corners = np.asarray(outline["vertices_xy"], float)
+    corners = bounds.copy()
     corners[:, 0] *= src_w / w
     corners[:, 1] *= src_h / h
     left, top = corners.min(axis=0)
@@ -246,6 +273,32 @@ def generate_candidate(manifest: dict, *, fetch_bytes, sample_count: int = SAMPL
         ],
     }
     if selection["status"] == "unavailable":
+        # Distinct fallback: usable still image, no frame/crown claim at all.
+        for still in manifest.get("evidence", []):
+            if still.get("kind") != "still" or still.get("status") != "success":
+                continue
+            asset=still.get("payload_asset") or {}
+            url=(asset.get("storage") or {}).get("url")
+            digest=asset.get("sha256")
+            if not url or not digest:
+                continue
+            source=SourceFrame(-1,-1,None,digest,url)
+            image=verified_image(fetch_bytes(url),source)
+            try:
+                crop,bbox=crop_color_original(image)
+            except ValueError:
+                continue
+            thumb=encode_icon(crop)
+            summary["status"]="unverified_still_crop"
+            summary["source"]={"evidence_kind":"still","sha256":digest}
+            summary["derivative"]={
+                "media_type":"image/webp","sha256":sha256(thumb).hexdigest(),
+                "byte_count":len(thumb),"size_px":SIZE,
+                "crop_source_bbox_xyxy":bbox,"padding_fraction":0.12,
+                "colour_source":"original_source_RGB",
+                "physical_angle_calibrated":False,
+            }
+            return summary,thumb,crop
         return summary,None,None
     picked = sources[selection["sample_index"]]
     cropped, bbox = crop_color_original(cache[selection["sample_index"]])

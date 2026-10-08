@@ -58,3 +58,5 @@ class ThumbnailTests(unittest.TestCase):
         self.assertIn(result["record"]["assessment"]["status"],
                       ("ok","review","rejected","failed"))
         self.assertIn(result["outer"]["status"],("candidate","rejected"))
+        self.assertIn(choose_frame([result],sequence_complete=True)["status"],
+                      ("unavailable",))
