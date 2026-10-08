@@ -81,11 +81,19 @@ class PagesCatalogueTests(unittest.TestCase):
         self.assertIn('thumbnail_url', app)
         self.assertIn('comparisonView.update', app)
 
-    def test_ingestion_invokes_pages_after_publishing(self):
+    def test_pages_deployment_is_manual_only(self):
         ingest = (ROOT / ".github/workflows/diamond-catalogue-ingest.yml").read_text(encoding="utf-8")
+        thumbs = (ROOT / ".github/workflows/catalogue-thumbnail-auto.yml").read_text(encoding="utf-8")
         pages = (ROOT / ".github/workflows/catalogue-pages.yml").read_text(encoding="utf-8")
-        self.assertIn("needs: publish", ingest)
-        self.assertIn("uses: ./.github/workflows/catalogue-pages.yml", ingest)
-        self.assertIn("workflow_call:", pages)
+        for workflow in (ingest, thumbs):
+            self.assertNotIn("  deploy-pages:", workflow)
+            self.assertNotIn("uses: ./.github/workflows/catalogue-pages.yml", workflow)
+            self.assertNotIn("pages: write", workflow)
+        self.assertIn("  publish:", ingest)
+        self.assertIn("  generate:", thumbs)
+        triggers = pages.split("on:\n", 1)[-1].split("permissions:", 1)[0]
+        self.assertIn("  workflow_dispatch:", triggers)
+        self.assertNotIn("  push:", triggers)
+        self.assertNotIn("  workflow_call:", triggers)
         self.assertIn("ref: master", pages)
         self.assertIn("actions/deploy-pages@v4", pages)
