@@ -44,6 +44,73 @@ def _nullable(values):
     raise ValueError("expected one or two-dimensional evidence")
 
 
+def suppression_trace(consensus, u):
+    """Replicate frozen global nonmaximum suppression, without changing it.
+
+    discover_template finds peaks over the *entire* radial profile at a
+    minimum spacing before any C3 semantic-window filter. A stronger peak
+    outside [.42, .60] can therefore delete a valid C3 candidate. Both
+    unsuppressed and retained local maxima are reported, not fitted anew.
+    """
+    curve = np.asarray(consensus, float)
+    u = np.asarray(u, float)
+    min_distance = max(3, int(round(.095 * (len(u) - 1))))
+    raw, _ = find_peaks(curve, distance=1)
+    retained, _ = find_peaks(curve, distance=min_distance)
+    inside = lambda idx: .16 <= float(u[idx]) <= .92
+    retained = [int(idx) for idx in retained if inside(idx)]
+    raw = [int(idx) for idx in raw if .40 <= float(u[idx]) <= .68]
+    rows = []
+    for index in raw:
+        retained_flag = index in retained
+        competitors = [
+            other for other in retained
+            if other != index and abs(other - index) < min_distance
+            and curve[other] >= curve[index]
+        ]
+        suppressor = (
+            max(competitors, key=lambda other: curve[other])
+            if competitors and not retained_flag else None
+        )
+        rows.append({
+            "index": index,
+            "u": float(u[index]),
+            "height": float(curve[index]),
+            "in_c3_semantic_window": (
+                C3_WINDOW[0] <= float(u[index]) <= C3_WINDOW[1]
+            ),
+            "survived_global_peak_suppression": retained_flag,
+            "suppressor_u": (
+                None if suppressor is None else float(u[suppressor])
+            ),
+            "suppressor_height": (
+                None if suppressor is None else float(curve[suppressor])
+            ),
+            "distance_to_suppressor_samples": (
+                None if suppressor is None else abs(index - suppressor)
+            ),
+            "suppressor_outside_c3_window": (
+                None if suppressor is None else not (
+                    C3_WINDOW[0] <= u[suppressor] <= C3_WINDOW[1]
+                )
+            ),
+        })
+    return {
+        "minimum_peak_separation_samples": min_distance,
+        "minimum_peak_separation_u": float(min_distance / (len(u) - 1)),
+        "raw_near_c3": rows,
+        "surviving_near_c3": [
+            row for row in rows if row["survived_global_peak_suppression"]
+        ],
+        "suppressed_inside_c3_by_outside_candidate": [
+            row for row in rows
+            if (row["in_c3_semantic_window"]
+                and not row["survived_global_peak_suppression"]
+                and row["suppressor_outside_c3_window"])
+        ],
+    }
+
+
 def candidate_rows(template):
     """Replay discover_template's *unchanged* C3 candidate score."""
     values = [r["prominence"] for r in template.get("candidates", [])]
@@ -89,6 +156,7 @@ def template_summary(data, u):
         "reason": template.get("reason"),
         "c3_selected_global_u": selected,
         "c3_candidates": candidate_rows(template),
+        "global_peak_suppression": suppression_trace(template["consensus"], u),
         "consensus_profile": _nullable(template["consensus"]),
         "raw_sector_median_profile": _nullable(raw),
         "per_sector_evidence": _nullable(sector_medians),
