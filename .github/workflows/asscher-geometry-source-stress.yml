@@ -4,12 +4,17 @@ concurrency:
   group: asscher-geometry-source-stress-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  actions: read
+
 on:
   pull_request:
     paths:
       - "diamond360/asscher_geometry_source_stress.py"
       - "diamond360/asscher_geometry_stability.py"
       - "diamond360/asscher_geometry_validation.py"
+      - "diamond360/asscher_geometry_method_comparison.py"
       - "diamond360/asscher_wireframe.py"
       - "diamond360/asscher_pose_sequence.py"
       - "diamond360/asscher_sequence_gauge.py"
@@ -17,6 +22,8 @@ on:
       - "docs/360/benchmark/source-bundles.json"
       - "docs/360/asscher-geometry-validation/SOURCE-STRESS.md"
       - "tests/test_asscher_geometry_source_stress.py"
+      - "tests/test_asscher_geometry_method_comparison.py"
+      - "tests/test_asscher_geometry_outer_revision.py"
       - ".github/workflows/asscher-geometry-source-stress.yml"
   workflow_dispatch:
 
@@ -39,7 +46,9 @@ jobs:
           python -m unittest \
             tests.test_asscher_geometry_source_stress \
             tests.test_asscher_geometry_validation \
-            tests.test_asscher_geometry_stability -v
+            tests.test_asscher_geometry_stability \
+            tests.test_asscher_geometry_method_comparison \
+            tests.test_asscher_geometry_outer_revision -v
 
       - name: Download representative frozen benchmark bundles
         run: |
@@ -74,7 +83,8 @@ jobs:
         run: |
           python -m diamond360.asscher_geometry_source_stress \
             --source-root outputs/asscher-geometry-source-stress-sources \
-            --output outputs/asscher-geometry-source-stress
+            --output outputs/asscher-geometry-source-stress \
+            --method outer_octagon_v2
 
       - name: Print source sensitivity tables
         run: |
@@ -128,6 +138,22 @@ jobs:
                   )
           PY
 
+      - name: Retrieve original pinned #75 validation evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: asscher-geometry-source-stress
+          run-id: 37687610094
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: outputs/frozen-initial-stress
+
+      - name: Compare #75 and #96 using unchanged #88 metrics
+        run: |
+          python -m diamond360.asscher_geometry_method_comparison \
+            --kind stress \
+            --before outputs/frozen-initial-stress/summary.json \
+            --after outputs/asscher-geometry-source-stress/summary.json \
+            --output outputs/asscher-geometry-source-stress/method-comparison.json
+
       - name: Record full-suite status
         continue-on-error: true
         run: python -m unittest discover -s tests -v
@@ -135,7 +161,7 @@ jobs:
       - name: Upload stress outputs
         uses: actions/upload-artifact@v4
         with:
-          name: asscher-geometry-source-stress
+          name: asscher-geometry-source-stress-outer-v2
           path: outputs/asscher-geometry-source-stress
           if-no-files-found: error
           retention-days: 90
