@@ -25,6 +25,29 @@
       "thumbnail_url": "https://github.com/choonkiatlee/sparkles/releases/download/sparkles-diamond-igi-lg756520111/asset-3e9e442756ebc1545db66048f6108cc8ebde5a9c8fd82f1051fbf084bfdad95f.jpg"
     },
     {
+      "carat": "2.52",
+      "clarity": "VVS1",
+      "colour": "D",
+      "currency": "USD",
+      "dimensions": [
+        7.58,
+        7.56,
+        4.84
+      ],
+      "has_motion": true,
+      "id": "igi-lg756580087",
+      "lab": "IGI",
+      "manifest_path": "data/diamonds/igi-lg756580087.json",
+      "price": "691.65",
+      "report_number": "LG756580087",
+      "retailer": "diyona.com",
+      "retrieval_status": "complete",
+      "shape": "Asscher",
+      "source_url": "https://diyona.com/pages/diamond-detail?sku=268F4881D",
+      "tax_basis": "public API USD price; storefront/tax basis not verified",
+      "thumbnail_url": "https://github.com/choonkiatlee/sparkles/releases/download/sparkles-diamond-igi-lg756580087/asset-2d868ebd8c18877c30e2c5f0b72ea07d041df15df23a9cc5a3a6f5fbaf4db7e2.jpg"
+    },
+    {
       "carat": "2.60",
       "clarity": "VVS1",
       "colour": "E",
