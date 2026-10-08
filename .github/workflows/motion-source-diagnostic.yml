@@ -14,10 +14,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Extract Core360 player transport constants
+      - name: Decode Core360 player string table
         run: |
           python - <<'PY'
-          import re, urllib.request
+          import codecs, re, urllib.request
           url="https://v3603703.v360.in/js/vision360.js"
           viewer="https://v3603703.v360.in/vision360.html?d=NGS-05-413"
           req=urllib.request.Request(
@@ -26,19 +26,22 @@ jobs:
           )
           with urllib.request.urlopen(req,timeout=20) as response:
               body=response.read().decode("utf-8","replace")
-          print("bytes=",len(body))
-          for needle in ("imaged","0.json",".json","version=","data/1","data1","v360.in"):
-              positions=[m.start() for m in re.finditer(re.escape(needle),body,re.I)]
-              print("needle=",needle,"positions=",positions[:30])
-              for pos in positions[:8]:
-                  print("CONTEXT",pos)
-                  print(body[max(0,pos-1500):min(len(body),pos+3000)])
-          literals=re.findall(r'["\']([^"\']{1,300})["\']',body)
-          interesting=[
-              value for value in literals
-              if any(token in value.lower() for token in ("imaged","json","version","data/","http","vision360"))
-          ]
-          print("interesting_literals_count=",len(interesting))
-          for value in interesting[:200]:
-              print("LITERAL",repr(value))
+          start=body.find("var _0xc0fe=[")
+          end=body.find("];var dno=",start)
+          print("table_bounds=",start,end)
+          table=body[start:end]
+          raw_values=re.findall(r'"((?:\\.|[^"\\])*)"',table)
+          values=[]
+          for raw in raw_values:
+              try:
+                  values.append(codecs.decode(raw,"unicode_escape"))
+              except Exception:
+                  values.append(raw)
+          print("table_entries=",len(values))
+          interesting=("imaged","json","version","data/","http","vision360","scramble",".jpg")
+          for index,value in enumerate(values):
+              if any(token in value.lower() for token in interesting):
+                  print("ENTRY",index,repr(value))
+          for index in range(40,min(100,len(values))):
+              print("CORE",index,repr(values[index]))
           PY
