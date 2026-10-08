@@ -4,10 +4,11 @@ on:
   pull_request:
     paths:
       - "diamond360/asscher_semantic_optical_real_replay.py"
-      - "diamond360/asscher_semantic_optical_handoff.py"
-      - "tests/test_asscher_semantic_optical_real_replay.py"
       - "diamond360/asscher_semantic_optical_sensitivity.py"
       - "tests/test_asscher_semantic_optical_sensitivity.py"
+      - "docs/360/asscher-geometry-validation/FIXED-RULER-BRIGHTNESS-SENSITIVITY.md"
+      - "diamond360/asscher_semantic_optical_handoff.py"
+      - "tests/test_asscher_semantic_optical_real_replay.py"
       - "docs/360/asscher-geometry-validation/REAL-FIXED-RULER-BRIGHTNESS-REPLAY.md"
       - ".github/workflows/asscher-real-fixed-ruler-optical-replay.yml"
   workflow_dispatch:
@@ -99,24 +100,25 @@ jobs:
                          and row["normalized_mean_brightness"] is None
                          for f in data["frames"] for row in f["entities"])
               assert (src/c/"real-fixed-ruler-traces.png").is_file()
+              sensitivity=json.loads((src/c/"real-support-sensitivity.json").read_text())
+              assert sensitivity["scaffold_refitted"] is False
+              assert sensitivity["source_indices"]==data["sampled_source_indices"]
+              assert sensitivity["outlier_threshold_or_quality_score"] is None
+              assert sensitivity["physical_facet_angle_claim"] is False
+              assert len(sensitivity["frames"])==len(data["frames"])
+              assert set(sensitivity["entities"])=={row["semantic_id"] for row in data["frames"][0]["entities"]}
+              assert all(set(e["variants"])=={"baseline","inset_1px","inset_2px","outset_1px"}
+                         for frame in sensitivity["frames"] for e in frame["entities"])
+              assert all(e["physical_facet_correspondence"]=="not_established"
+                         and e["no_physical_facet_partition"] is True
+                         for frame in sensitivity["frames"] for e in frame["entities"])
+              assert (src/c/"real-support-sensitivity.png").is_file()
+              print(c,"stone median span",
+                    round(max(x["median"] for x in sensitivity["stone_intensity_reference"])
+                         -min(x["median"] for x in sensitivity["stone_intensity_reference"]),5))
               measured=sum(row["raw_mean_brightness"] is not None for f in data["frames"] for row in f["entities"])
               print(c,data["archived_crown_face_selection"],"observed",measured,
                     "of",11*55,"possible source-frame semantic rows")
-              sensitivity=json.loads((src/c/"exposure-support-sensitivity.json").read_text())
-              assert sensitivity["scaffold_refitted"] is False
-              assert sensitivity["optical_quality_score"] is None
-              assert sensitivity["frame_count"]==11
-              assert sensitivity["entity_count"]==55
-              assert sensitivity["source_indices"]==data["sampled_source_indices"]
-              assert sensitivity["frozen_geometry_artifact_sha256"]==data["frozen_artifact_sha256"]
-              assert (src/c/"exposure-support-sensitivity.png").is_file()
-              assert all(row["physical_facet_correspondence"]=="not_established"
-                         and row["normalization_calibrated"] is False
-                         and row["eroded_2px_pixel_count"]<=row["full_pixel_count"]
-                         for frame in sensitivity["frames"] for row in frame["entities"])
-              print(c,"stone-reference p50 variation",
-                    sensitivity["frame_reference_variation"]["p50_amplitude"],
-                    "P2_N sensitivity",sensitivity["entity_sensitivity"]["P2_N"])
           PY
       - name: Upload small real-source trace and provenance reports, not intermediate 256-frame arrays
         uses: actions/upload-artifact@v4
@@ -125,10 +127,10 @@ jobs:
           path: |
             outputs/real-fixed-ruler-replay/IGI-LG756520111/real-fixed-ruler-brightness.json
             outputs/real-fixed-ruler-replay/IGI-LG756520111/real-fixed-ruler-traces.png
-            outputs/real-fixed-ruler-replay/IGI-LG756520111/exposure-support-sensitivity.json
-            outputs/real-fixed-ruler-replay/IGI-LG756520111/exposure-support-sensitivity.png
+            outputs/real-fixed-ruler-replay/IGI-LG756520111/real-support-sensitivity.json
+            outputs/real-fixed-ruler-replay/IGI-LG756520111/real-support-sensitivity.png
             outputs/real-fixed-ruler-replay/IGI-LG756580087/real-fixed-ruler-brightness.json
             outputs/real-fixed-ruler-replay/IGI-LG756580087/real-fixed-ruler-traces.png
-            outputs/real-fixed-ruler-replay/IGI-LG756580087/exposure-support-sensitivity.json
-            outputs/real-fixed-ruler-replay/IGI-LG756580087/exposure-support-sensitivity.png
+            outputs/real-fixed-ruler-replay/IGI-LG756580087/real-support-sensitivity.json
+            outputs/real-fixed-ruler-replay/IGI-LG756580087/real-support-sensitivity.png
           if-no-files-found: error
