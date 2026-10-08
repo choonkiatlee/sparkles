@@ -92,9 +92,12 @@
     ],
     "origin": "lab-grown",
     "reported_proportions": {
+      "cut": "Excellent",
       "depth_percent": 64.6,
       "fluorescence": "None",
+      "girdle": "Medium",
       "length_width_ratio": 1,
+      "polish": "Excellent",
       "symmetry": "Excellent",
       "table_percent": 64
     },
@@ -5059,6 +5062,15 @@
       "retailer_sku": "133/9155264EA",
       "tax_basis": "inc. VAT",
       "url": "https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/9155264EA"
+    },
+    {
+      "currency": "GBP",
+      "observed_at": "2026-10-08T20:35:53.014988Z",
+      "price": "685.00",
+      "retailer": "www.qualitydiamonds.co.uk",
+      "retailer_sku": "133/9155264EA",
+      "tax_basis": "inc. VAT",
+      "url": "https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/9155264EA"
     }
   ],
   "retrievals": [
@@ -5304,6 +5316,250 @@
         }
       ],
       "retrieved_at": "2026-10-08T10:16:03.430921Z",
+      "status": "partial"
+    },
+    {
+      "attempts": [
+        {
+          "kind": "certificate",
+          "locator": "https://www.igi.org/verify-your-report/?r=LG756520111",
+          "message": null,
+          "provenance": [
+            {
+              "locator": "https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/9155264EA",
+              "source": "quality_diamonds_listing"
+            },
+            {
+              "locator": "https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/9155264EA",
+              "source": "quality_diamonds_listing"
+            }
+          ],
+          "reference_identifier": "quality_diamonds_listing:LG756520111:certificate",
+          "retrieval_key": "igi-report:LG756520111",
+          "status": "resolved"
+        },
+        {
+          "kind": "still",
+          "locator": "https://assets-images-saas.nivoda.com/c6bd5e82-96a4-4483-a49a-36897b7aaab7.jpg?d_id=62799f37-3ac9-4395-b23f-aae8a7e5d631&c_id=95095175-f466-48c3-b90d-8979575bb8ae&f_id=24c9640d-d795-498f-b870-f69e02eb85fa&type=csv",
+          "message": null,
+          "provenance": [
+            {
+              "locator": "https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/9155264EA",
+              "source": "quality_diamonds_listing"
+            },
+            {
+              "locator": "https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/9155264EA",
+              "source": "quality_diamonds_listing"
+            }
+          ],
+          "reference_identifier": "quality_diamonds_listing:133-9155264EA:still:0",
+          "retrieval_key": "https://assets-images-saas.nivoda.com/c6bd5e82-96a4-4483-a49a-36897b7aaab7.jpg?d_id=62799f37-3ac9-4395-b23f-aae8a7e5d631&c_id=95095175-f466-48c3-b90d-8979575bb8ae&f_id=24c9640d-d795-498f-b870-f69e02eb85fa&type=csv",
+          "status": "success"
+        },
+        {
+          "kind": "rotation",
+          "locator": "loupe360-report:LG756520111",
+          "message": null,
+          "provenance": [
+            {
+              "locator": "https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/9155264EA",
+              "source": "quality_diamonds_listing"
+            },
+            {
+              "locator": "https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/9155264EA",
+              "source": "quality_diamonds_listing"
+            }
+          ],
+          "reference_identifier": "quality_diamonds_listing:LG756520111:loupe360:rotation",
+          "retrieval_key": "loupe360-report:LG756520111",
+          "status": "resolved"
+        },
+        {
+          "kind": "video",
+          "locator": "loupe360-report:LG756520111",
+          "message": "resolution already visited",
+          "provenance": [
+            {
+              "locator": "https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/9155264EA",
+              "source": "quality_diamonds_listing"
+            },
+            {
+              "locator": "https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/9155264EA",
+              "source": "quality_diamonds_listing"
+            }
+          ],
+          "reference_identifier": "quality_diamonds_listing:LG756520111:loupe360:video",
+          "retrieval_key": "loupe360-report:LG756520111",
+          "status": "duplicate"
+        },
+        {
+          "kind": "certificate",
+          "locator": "https://api.igi.org/viewpdf.php?r=LG756520111",
+          "message": "Evidence returned HTTP 403: https://api.igi.org/viewpdf.php?r=LG756520111",
+          "provenance": [
+            {
+              "locator": "https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/9155264EA",
+              "source": "quality_diamonds_listing"
+            },
+            {
+              "locator": "https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/9155264EA",
+              "source": "quality_diamonds_listing"
+            },
+            {
+              "locator": "https://api.igi.org/viewpdf.php?r=LG756520111",
+              "source": "igi_exact_report"
+            }
+          ],
+          "reference_identifier": "quality_diamonds_listing:LG756520111:certificate:pdf",
+          "retrieval_key": "igi-pdf:LG756520111",
+          "status": "download_failed"
+        },
+        {
+          "kind": "rotation",
+          "locator": "https://workshop.360view.link/view/2612250-YK-808",
+          "message": null,
+          "provenance": [
+            {
+              "locator": "https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/9155264EA",
+              "source": "quality_diamonds_listing"
+            },
+            {
+              "locator": "https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/9155264EA",
+              "source": "quality_diamonds_listing"
+            },
+            {
+              "locator": "https://g.nivoda.com/graphql-public-loupe360",
+              "source": "loupe360_exact_certificate"
+            }
+          ],
+          "reference_identifier": "quality_diamonds_listing:LG756520111:loupe360:rotation:supplier-rotation",
+          "retrieval_key": "https://workshop.360view.link/view/2612250-YK-808",
+          "status": "success"
+        }
+      ],
+      "certificate_link": "https://www.igi.org/verify-your-report/?r=LG756520111",
+      "completion_reasons": [
+        "missing successful certificate evidence",
+        "one or more requested evidence assets failed"
+      ],
+      "identity_comparisons": [
+        {
+          "field": "report_number",
+          "outcome": "missing",
+          "provenance": [
+            {
+              "locator": "https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/9155264EA",
+              "source": "quality_diamonds_listing"
+            }
+          ],
+          "values": [
+            "LG756520111"
+          ]
+        },
+        {
+          "field": "lab",
+          "outcome": "missing",
+          "provenance": [
+            {
+              "locator": "https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/9155264EA",
+              "source": "quality_diamonds_listing"
+            }
+          ],
+          "values": [
+            "IGI"
+          ]
+        },
+        {
+          "field": "origin",
+          "outcome": "missing",
+          "provenance": [
+            {
+              "locator": "https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/9155264EA",
+              "source": "quality_diamonds_listing"
+            }
+          ],
+          "values": [
+            "lab-grown"
+          ]
+        },
+        {
+          "field": "shape",
+          "outcome": "missing",
+          "provenance": [
+            {
+              "locator": "https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/9155264EA",
+              "source": "quality_diamonds_listing"
+            }
+          ],
+          "values": [
+            "Asscher"
+          ]
+        },
+        {
+          "field": "carat",
+          "outcome": "missing",
+          "provenance": [
+            {
+              "locator": "https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/9155264EA",
+              "source": "quality_diamonds_listing"
+            }
+          ],
+          "values": [
+            "2.59"
+          ]
+        },
+        {
+          "field": "colour",
+          "outcome": "missing",
+          "provenance": [
+            {
+              "locator": "https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/9155264EA",
+              "source": "quality_diamonds_listing"
+            }
+          ],
+          "values": [
+            "F"
+          ]
+        },
+        {
+          "field": "clarity",
+          "outcome": "missing",
+          "provenance": [
+            {
+              "locator": "https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/9155264EA",
+              "source": "quality_diamonds_listing"
+            }
+          ],
+          "values": [
+            "VVS1"
+          ]
+        },
+        {
+          "field": "dimensions",
+          "outcome": "missing",
+          "provenance": [
+            {
+              "locator": "https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/9155264EA",
+              "source": "quality_diamonds_listing"
+            }
+          ],
+          "values": [
+            [
+              7.58,
+              7.55,
+              4.88
+            ]
+          ]
+        }
+      ],
+      "listing_url": "https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/9155264EA",
+      "provenance": [
+        {
+          "locator": "https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/9155264EA",
+          "source": "quality_diamonds_listing"
+        }
+      ],
+      "retrieved_at": "2026-10-08T20:35:53.014988Z",
       "status": "partial"
     }
   ],
