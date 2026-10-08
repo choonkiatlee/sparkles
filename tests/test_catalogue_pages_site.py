@@ -39,6 +39,13 @@ class PagesCatalogueTests(unittest.TestCase):
         self.assertNotIn("api.github.com", comparison)
         self.assertIn("createManifestLoader", comparison)
 
+    def test_generated_icons_only_affect_overview_not_original_comparison(self):
+        app = (ROOT / "catalogue/app.mjs").read_text(encoding="utf-8")
+        comparator = (ROOT / "catalogue/compare.mjs").read_text(encoding="utf-8")
+        self.assertIn("overview_thumbnail_url || row.thumbnail_url", app)
+        self.assertIn("const original = httpUrl(row.thumbnail_url)", app)
+        self.assertNotIn("overview_thumbnail_url", comparator)
+
     def test_compact_table_has_real_selection_and_future_score_placeholders(self):
         html = (ROOT / "catalogue/index.html").read_text(encoding="utf-8")
         app = (ROOT / "catalogue/app.mjs").read_text(encoding="utf-8")

@@ -63,7 +63,16 @@ function makeRow(row) {
     img.alt=generatedIcon ? "Automatically cropped diamond overview thumbnail" : "Representative saved diamond image";
     img.loading="lazy"; img.decoding="async";
     img.title=generatedIcon ? "Automatic source-hash-traced crop; orientation uncalibrated" : "Original representative image";
-    img.addEventListener("error",()=>thumb.replaceChildren(node("span","photo-empty","◇")));
+    img.addEventListener("error",()=>{
+      // A temporary derived-asset issue should never hide the original saved image.
+      const original = httpUrl(row.thumbnail_url);
+      if (generatedIcon && original && img.src !== original) {
+        img.src = original;
+        img.alt = "Original representative diamond image (generated icon unavailable)";
+        return;
+      }
+      thumb.replaceChildren(node("span","photo-empty","◇"));
+    });
     thumb.append(img);
   } else {
     thumb.append(node("span","photo-empty","◇"));
