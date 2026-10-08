@@ -64,7 +64,7 @@ class GitHubCatalogue:
         return head, tree_sha, manifests, old_index
 
     def attach_generated_thumbnail(self, diamond_id: str, derivative: dict) -> PublishReceipt:
-        """Commit an explicitly generated, already-uploaded thumbnail + index."""
+        """Atomically attach a generated icon if one is not already published."""
         from .merge import _check_manifest
         import copy
         path = MANIFEST_PREFIX + diamond_id + ".json"
@@ -73,12 +73,10 @@ class GitHubCatalogue:
             existing = manifests.get(path)
             if not existing:
                 raise CatalogueError("Cannot attach thumbnail without a certified manifest")
-            if (existing.get("derived_media") or {}).get("overview_thumbnail"):
-                current = existing["derived_media"]["overview_thumbnail"]
-                if current != derivative:
-                    raise CatalogueError("Refusing to replace existing auto thumbnail")
-                return PublishReceipt(diamond_id, path, 0, len(manifests), head,
-                                      False, existing["retrievals"][-1]["status"])
+            current = (existing.get("derived_media") or {}).get("overview_thumbnail")
+            if current is not None:
+                return PublishReceipt(diamond_id,path,0,len(manifests),head,False,
+                                      existing["retrievals"][-1]["status"])
             revised = copy.deepcopy(existing)
             revised.setdefault("derived_media", {})["overview_thumbnail"] = copy.deepcopy(derivative)
             _check_manifest(revised)
@@ -94,7 +92,7 @@ class GitHubCatalogue:
                 ],
             })
             commit = self.api.post_json(f"{self.api.prefix}/git/commits", {
-                "message":f"Catalogue: generate overview thumbnail for {diamond_id}",
+                "message":f"Catalogue: auto-generate overview thumbnail for {diamond_id}",
                 "tree":tree["sha"], "parents":[head],
             })
             try:
