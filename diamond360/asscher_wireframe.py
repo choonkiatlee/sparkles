@@ -467,6 +467,7 @@ def fit_from_sector_evidence(
     outer_vertices=None,
     outer_confidence=0.95,
     step_peak_policy=steps.GLOBAL_PEAK_POLICY,
+    candidate_rank_policy=steps.LEGACY_RANK_POLICY,
 ):
     """Fit one fixed scaffold from already-gauged multi-frame edge evidence."""
     data = np.asarray(frame_sector_evidence, float)
@@ -484,11 +485,16 @@ def fit_from_sector_evidence(
         raise ValueError("stable sequence gauge_id is required")
 
     # Original #75/#96 path is unchanged; experimental selection is opt-in.
-    template = (
-        steps.discover_template(data, u)
-        if step_peak_policy == steps.GLOBAL_PEAK_POLICY
-        else steps.discover_template(data, u, peak_policy=step_peak_policy)
-    )
+    if (step_peak_policy == steps.GLOBAL_PEAK_POLICY
+            and candidate_rank_policy == steps.LEGACY_RANK_POLICY):
+        template = steps.discover_template(data, u)
+    elif candidate_rank_policy == steps.LEGACY_RANK_POLICY:
+        template = steps.discover_template(data, u, peak_policy=step_peak_policy)
+    else:
+        template = steps.discover_template(
+            data, u, peak_policy=step_peak_policy,
+            candidate_rank_policy=candidate_rank_policy,
+        )
     if template["status"] == "unavailable":
         return {
             "schema_version": SCHEMA,
@@ -500,6 +506,8 @@ def fit_from_sector_evidence(
                 key: _compact_control(value)
                 for key, value in template.get("partial_controls", {}).items()
             },
+            **({"candidate_ranking": template.get("ranking_evidence", {})}
+               if candidate_rank_policy == steps.TEMPORAL_RANK_POLICY else {}),
         }
 
     controls = template["controls"]
@@ -759,6 +767,8 @@ def fit_from_sector_evidence(
         "pavilion_evidence": pavilion_evidence,
         "frame_evidence": frame_rows,
         "rejected_candidates": rejected,
+        **({"candidate_ranking": template.get("ranking_evidence", {})}
+           if candidate_rank_policy == steps.TEMPORAL_RANK_POLICY else {}),
         "interpretation": (
             "One fixed stone-level image-plane semantic scaffold inferred from "
             "multiple compatible geometry views. Per-frame edge matches are "
