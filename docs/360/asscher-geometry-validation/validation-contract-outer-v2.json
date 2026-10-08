@@ -1,0 +1,55 @@
+{
+  "schema_version": "diamond360-asscher-geometry-validation-contract/1",
+  "result_schema": "diamond360-asscher-geometry-validation/1",
+  "frozen_method": {
+    "wireframe_revision": "6334cc9d0c7e2c9a26854bfaeec7a8ebbb6fc668",
+    "wireframe_schema": "diamond360-asscher-wireframe-fit/1",
+    "wireframe_specification_sha256": "aaf8a885efe039b203330f9592dcccdb41ba11f3a731eb31143fa6de06b4e42e",
+    "topology_contract_schema": "diamond360-asscher-topology-contract/1",
+    "topology_scaffold_schema": "diamond360-asscher-semantic-scaffold/1",
+    "sequence_gauge_schema": "diamond360-asscher-sequence-gauge/1",
+    "method_revision": "outer_octagon_v2",
+    "outer_octagon_schema": "diamond360-asscher-outer-octagon/1"
+  },
+  "benchmark_manifest": {
+    "path": "docs/360/benchmark/source-bundles.json",
+    "canonical_sha256": "4e9fb4b51d8b2f628ca678ee309bc04e5fc3b0ca22ee0b1a1d35489685cb88f1",
+    "bundle_sha256": {
+      "IGI-LG756580087": "d3a0ed93af5e2a089d2bf108a01fceafe21edf191f3bb79f6fc627718ec23016",
+      "IGI-LG756520111": "b45647292c207d46fab8871b66ff62c3aa4a7652c910c5cd975fce10f3c5fc90",
+      "IGI-LG818659722": "dbee1b288573d425c8f487a4e8b5965bf69d460e5c259ca63017abb202738939",
+      "IGI-LG836619414": "8de35bbc0193a18c183c037b3b8f3a61ace503a23d8ee4e0953d45399f9bf596"
+    }
+  },
+  "metric_policy": {
+    "coordinate_space": "canonical_image_xy_normalized",
+    "boundary_displacement": "corresponding semantic vertex Euclidean displacement",
+    "local_tier_normalization": "displacement divided by minimum adjacent crown-tier radial spacing at the same orientation index",
+    "entity_displacement": "semantic-support centroid displacement; crown families normalized where local tier spacing is defined",
+    "identity_consistency": "semantic IDs, support associations and sequence gauge remain stable",
+    "confidence_change": "candidate minus reference confidence",
+    "numeric_pass_fail_thresholds": null
+  },
+  "status_policy": {
+    "ok": "valid topology/identity with no explicit evidence-state regression",
+    "review": "valid topology/identity with provenance, observation-state or validity regression",
+    "unavailable": "missing or invalid scaffold, topology failure, or semantic/gauge identity failure"
+  },
+  "anti_leakage": {
+    "validation_input": "already-produced wireframe/scaffold dictionaries",
+    "image_fitting_available_in_validation_module": false,
+    "external_target_loading_available_in_validation_module": false,
+    "external_targets_may_only_be_compared_after_independent_extraction": true
+  },
+  "validation_campaign": {
+    "baseline_method": "initial_v1",
+    "candidate_method": "outer_octagon_v2",
+    "baseline_stability_run": 37683160270,
+    "baseline_stability_artifact": "asscher-geometry-stability",
+    "baseline_stress_run": 37687610094,
+    "baseline_stress_artifact": "asscher-geometry-source-stress",
+    "anti_leakage": "no parameter tuning from baseline comparison, stored Sergey targets, or new stress outcomes",
+    "numeric_displacement_pass_fail_threshold": null,
+    "interpretation": "Direct paired descriptive comparison of frozen estimator revisions; no automatic quality or accuracy claim"
+  }
+}
