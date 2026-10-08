@@ -34,7 +34,7 @@ class EndpointTests(unittest.TestCase):
         self.assertGreaterEqual(cap["observed_width_px"], 5)
         self.assertLessEqual(cap["observed_width_px"], 20)
         self.assertLess(cap["top_source_y_px"], 60)
-        self.assertEqual(cap["physical_table_identity"], "not_established")
+        self.assertEqual(cap["physical_table_identity"], "lower_broad_end_not_yet_verified")
         self.assertTrue(all(
             p[1] <= cap["top_source_y_px"] + 1 for p in cap["source_xy_px"]
         ))
@@ -62,9 +62,9 @@ class EndpointTests(unittest.TestCase):
         altered[125:132, 165:245] = [255, 255, 255]
         a = endpoint.analyse(self.source, self.profile, self.joint)
         b = endpoint.analyse(altered, self.profile, self.joint)
-        self.assertEqual(a["top_cap_candidate"], b["top_cap_candidate"])
+        self.assertEqual(a["top_pavilion_tip_candidate"], b["top_pavilion_tip_candidate"])
         self.assertEqual(a["terminal_contours"], b["terminal_contours"])
-        self.assertEqual(a["last_pavilion_changepoint_candidates"], b["last_pavilion_changepoint_candidates"])
+        self.assertEqual(a["last_crown_changepoint_candidates"], b["last_crown_changepoint_candidates"])
 
     def test_flat_blank_source_has_no_top_pavilion_tip(self):
         fake = np.full((319,410,3), 205, dtype=np.uint8)
