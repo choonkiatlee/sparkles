@@ -140,6 +140,31 @@ class LoupeResolutionTests(unittest.TestCase):
         with self.assertRaises(ValueError, msg="certificate mismatch"):
             Loupe360CertificateResolver(http).resolve(_listing(), _loupe_reference())
 
+    def test_supported_rotation_and_direct_video_are_both_resolved(self):
+        direct = "https://media.example.test/exact-stone.mp4"
+        http = FakeHttpClient(
+            posts={
+                GRAPHQL_URL: (
+                    _graphql_payload(video=direct),
+                    "application/json",
+                )
+            }
+        )
+        children = Loupe360CertificateResolver(http).resolve(
+            _listing(), _loupe_reference()
+        )
+        self.assertEqual([item.kind for item in children], [ROTATION, VIDEO])
+        self.assertEqual(
+            [item.locator for item in children],
+            [DIAJEWEL_VIEWER, direct],
+        )
+        self.assertEqual(len([call for call in http.calls if call[0] == "POST"]), 1)
+        for child in children:
+            self.assertEqual(child.metadata["report_number"], REPORT)
+            self.assertEqual(child.provenance[0].source, "loupe360_exact_certificate")
+        self.assertEqual(children[1].metadata["format"], "video")
+        self.assertNotIn("format", children[0].metadata)
+
     def test_direct_video_is_used_only_when_no_supported_v360_exists(self):
         direct = "https://media.example.test/exact-stone.mp4"
         http = FakeHttpClient(
