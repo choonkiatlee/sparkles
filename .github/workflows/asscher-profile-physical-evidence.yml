@@ -11,6 +11,7 @@ on:
       - "diamond360/asscher_profile_auto_changepoints.py"
       - "diamond360/asscher_profile_endpoint_candidates.py"
       - "diamond360/asscher_profile_conditional_symmetry.py"
+      - "diamond360/asscher_profile_pavilion_refinement.py"
       - "diamond360/asscher_profile_pavilion_fit.py"
       - "diamond360/asscher_profile_feasibility.py"
       - "tests/test_asscher_profile_physical_evidence.py"
@@ -21,6 +22,7 @@ on:
       - "tests/test_asscher_profile_auto_changepoints.py"
       - "tests/test_asscher_profile_endpoint_candidates.py"
       - "tests/test_asscher_profile_conditional_symmetry.py"
+      - "tests/test_asscher_profile_pavilion_refinement.py"
       - "tests/test_asscher_profile_pavilion_fit.py"
       - "tests/test_asscher_profile_feasibility.py"
       - "docs/360/asscher-geometry-validation/PROFILE-PHYSICAL-EVIDENCE.md"
@@ -282,6 +284,35 @@ jobs:
                                         for side,m in report["independent_pavilion_models"].items()})
           print("Pavilion paired QC:",report["pavilion_paired_alignment"])
           print("Mirrored-only points:",len(report["shared_symmetry_model"]["inferred_right_points_only_where_no_right_source_support"]))
+          PY
+      - name: Pavilion-specific independent versus optional symmetry model
+        run: |
+          python -m diamond360.asscher_profile_pavilion_refinement \
+            --image docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG \
+            --auto-json outputs/asscher-profile-physical-evidence/auto-exterior.json \
+            --joint-json outputs/asscher-profile-physical-evidence/joint-changepoints.json \
+            --endpoint-json outputs/asscher-profile-physical-evidence/endpoint-candidates.json \
+            --output outputs/asscher-profile-physical-evidence
+      - name: Verify observed pavilion remains separate from symmetry
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path("outputs/asscher-profile-physical-evidence")
+          r=json.loads((root/"pavilion-refinement.json").read_text())
+          assert r["physical_facet_angles"] == "all_unavailable"
+          assert r["comparison_targets_loaded"] is False
+          assert r["conditional_pavilion_model"]["status"] == "not_adopted_pose_unconfirmed"
+          assert all(r["independent_pavilion"][side]["status"] in {"review","unavailable"}
+                     for side in ("left","right"))
+          assert all(r["conditional_pavilion_model"]["right_terminal_candidate"]["provenance"]
+                         == "MODEL_INFERRED_from_left_NOT_observed_right"
+                     for _ in [0])
+          assert (root/"pavilion-observed-vs-symmetry.png").is_file()
+          print("Observed, endpoint-only and unadopted mirror kept separate")
+          print({k: {"segments":v.get("selected_segment_count"),
+                     "breaks":[m["xy_px"] for m in v.get("breakpoints",[])]}
+                 for k,v in r["independent_pavilion"].items()})
           PY
       - name: Upload review template
         uses: actions/upload-artifact@v4
