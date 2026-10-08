@@ -1,0 +1,117 @@
+name: asscher-semantic-optical-real-source-smoke
+
+on:
+  pull_request:
+    paths:
+      - "diamond360/asscher_semantic_optical_real_replay.py"
+      - "tests/test_asscher_semantic_optical_real_replay.py"
+      - "docs/360/optical-handoff/REAL-FIXED-RULER-REPLAY.md"
+      - ".github/workflows/asscher-semantic-optical-real-source-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  real-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install package
+        run: python -m pip install -e .
+      - name: Retrieve exact #89 fixed scaffold and per-frame transfer
+        env:
+          GH_TOKEN: \${{ github.token }}
+        run: |
+          mkdir -p outputs/frozen-89-stability
+          gh run download 37830584391 \
+            --repo choonkiatlee/sparkles \
+            --name asscher-geometry-stability-outer-v2 \
+            --dir outputs/frozen-89-stability
+          test -f outputs/frozen-89-stability/per-stone/IGI-LG756520111/transfer.json
+          test -f outputs/frozen-89-stability/per-stone/IGI-LG756580087/primary-wireframe.json
+      - name: Test archived identities and no-refit contract
+        env:
+          SPARKLES_FROZEN_STABILITY_ROOT: outputs/frozen-89-stability
+        run: python -m unittest tests.test_asscher_semantic_optical_real_replay -v
+      - name: Download and SHA-256 verify only two original 256-frame bundles
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import urllib.request
+          import zipfile
+          from pathlib import Path
+          from diamond360.asscher_semantic_optical_real_replay import SELECTED
+          manifest=json.loads(Path("docs/360/benchmark/source-bundles.json").read_text())
+          root=Path("outputs/real-source-bundles")
+          root.mkdir(parents=True,exist_ok=True)
+          for entry in manifest["bundles"]:
+              if entry["certificate"] not in SELECTED: continue
+              archive=root/entry["filename"]
+              urllib.request.urlretrieve(entry["download_url"],archive)
+              if archive.stat().st_size != entry["bytes"]:
+                  raise ValueError("source bundle size mismatch")
+              if hashlib.sha256(archive.read_bytes()).hexdigest() != entry["sha256"]:
+                  raise ValueError("source bundle SHA-256 mismatch")
+              destination=root/entry["certificate"]
+              destination.mkdir(parents=True,exist_ok=True)
+              with zipfile.ZipFile(archive) as z:
+                  z.extractall(destination)
+              print(entry["certificate"],"pinned source bundle verified")
+          PY
+      - name: Replay raw canonical brightness on fixed #89 source frames
+        run: |
+          python -m diamond360.asscher_semantic_optical_real_replay \
+            --source-root outputs/real-source-bundles \
+            --manifest docs/360/benchmark/source-bundles.json \
+            --frozen-stability-root outputs/frozen-89-stability \
+            --output outputs/real-ruler-optical-smoke
+      - name: Assert fixed IDs, no fabrication, source-role metadata preserved
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path("outputs/real-ruler-optical-smoke")
+          report=json.loads((root/"real-fixed-ruler-smoke.json").read_text())
+          assert report["counts"]=={"stones":2,"frames":8}
+          assert report["physical_facet_angles_inferred"] is False
+          assert report["final_92_disposition"]=="pending"
+          assert report["normalized_brightness_available"] is False
+          assert (root/"real-fixed-ruler-traces.png").is_file()
+          for stone in report["stones"]:
+              expected=stone["selected_source_indices"]
+              assert len(stone["frames"])==len(expected)
+              assert stone["primary_geometry_frozen"]
+              assert stone["pose_reconstructed_not_geometry_refit"]
+              assert all(row["refit_performed"] is False for row in stone["frames"])
+              assert all(row["scaffold_unchanged"] for row in stone["frames"])
+              expected_ids=set(stone["frames"][0]["fixed_semantic_ids"]) if "fixed_semantic_ids" in stone["frames"][0] else set(
+                  r["semantic_id"] for r in stone["frames"][0]["entities"])
+              for frame in stone["frames"]:
+                  assert set(row["semantic_id"] for row in frame["entities"])==expected_ids
+                  assert all(row["physical_facet_correspondence"]=="not_established"
+                             and row["normalized_mean_brightness"] is None
+                             for row in frame["entities"])
+                  assert all(row["raw_mean_brightness"] is None
+                             for row in frame["entities"] if row["geometry_support_status"]=="unavailable")
+              if stone["certificate"]=="IGI-LG756580087":
+                  assert set(stone["face_roles"])=={"unresolved"}
+              else:
+                  assert set(stone["face_roles"])=={"likely_crown_lobe"}
+          print("Eight REAL source frames, no semantic ID changes, zero geometry refits.")
+          PY
+      - name: Upload real-data trace and audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: asscher-semantic-optical-real-fixed-ruler-smoke
+          path: |
+            outputs/real-ruler-optical-smoke/real-fixed-ruler-smoke.json
+            outputs/real-ruler-optical-smoke/real-fixed-ruler-traces.png
+          if-no-files-found: error
+          retention-days: 90
