@@ -7,11 +7,13 @@ on:
       - "diamond360/asscher_profile_outer_contour.py"
       - "diamond360/asscher_profile_assisted_review.py"
       - "diamond360/asscher_profile_outline_changepoints.py"
+      - "diamond360/asscher_profile_auto_exterior.py"
       - "diamond360/asscher_profile_feasibility.py"
       - "tests/test_asscher_profile_physical_evidence.py"
       - "tests/test_asscher_profile_outer_contour.py"
       - "tests/test_asscher_profile_assisted_review.py"
       - "tests/test_asscher_profile_outline_changepoints.py"
+      - "tests/test_asscher_profile_auto_exterior.py"
       - "tests/test_asscher_profile_feasibility.py"
       - "docs/360/asscher-geometry-validation/PROFILE-PHYSICAL-EVIDENCE.md"
       - "docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG"
@@ -36,7 +38,8 @@ jobs:
             tests.test_asscher_profile_physical_evidence \
             tests.test_asscher_profile_outer_contour \
             tests.test_asscher_profile_assisted_review \
-            tests.test_asscher_profile_outline_changepoints -v
+            tests.test_asscher_profile_outline_changepoints \
+            tests.test_asscher_profile_auto_exterior -v
       - name: Emit source-pinned evidence review template
         run: |
           python -m diamond360.asscher_profile_physical_evidence \
@@ -131,6 +134,33 @@ jobs:
           assert (root/"exterior-tracer.html").is_file()
           assert (root/"exterior-changepoints-overlay.png").is_file()
           print("No physical contours or angles invented without separately reviewed traces.")
+          PY
+      - name: Generate automatically traced source silhouette
+        run: |
+          python -m diamond360.asscher_profile_auto_exterior \
+            --image docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG \
+            --require-original \
+            --output outputs/asscher-profile-physical-evidence
+      - name: Check automatic tracing remains an unverified proposal
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path("outputs/asscher-profile-physical-evidence")
+          result=json.loads((p/"auto-exterior.json").read_text())
+          assert result["original_verified"] and not result["comparison_targets_loaded"]
+          assert len(result["paths"]) == 4
+          assert (p/"auto-exterior-overlay.png").is_file()
+          for record in result["paths"].values():
+              assert record["physical_facet_correspondence"] == "not_established"
+              assert record["named_facet_angles"] == "unavailable"
+              for run in record["supported_runs"]:
+                  assert all(s["semantic_facet_id"] is None for s in run["fitted"]["segments"])
+          assert all(r["physical_angle_deg"] is None
+                     for side in result["semantic_measurements"].values()
+                     for r in side.values())
+          print("Auto-proposed external contour only; no expert targets or physical-angle claims.")
+          print({k: v["supported_fraction"] for k,v in result["paths"].items()})
           PY
       - name: Upload review template
         uses: actions/upload-artifact@v4
