@@ -18,11 +18,11 @@ ORIGINAL = (
 )
 
 
-def synthetic_auto(three_crown_stretches=3, internal_noise=False):
+def synthetic_auto(three_pavilion_stretches=3, internal_noise=False):
     """Synthetic image-only outside paths, with a short shared widest band."""
-    points = {"left_crown": [], "right_crown": [],
-              "left_pavilion": [], "right_pavilion": []}
-    if three_crown_stretches == 1:
+    points = {"left_pavilion": [], "right_pavilion": [],
+              "left_crown": [], "right_crown": []}
+    if three_pavilion_stretches == 1:
         anchors = [(60, 205), (200, 40)]
     elif three_crown_stretches == 2:
         anchors = [(60, 205), (130, 150), (200, 40)]
@@ -37,7 +37,7 @@ def synthetic_auto(three_crown_stretches=3, internal_noise=False):
             if y <= y1:
                 return x0 + (x1 - x0) * (y - y0) / (y1 - y0)
         return 40.0
-    for phase, ys in (("crown", range(60, 213)), ("pavilion", range(212, 277))):
+    for phase, ys in (("pavilion", range(60, 213)), ("crown", range(212, 277))):
         for y in ys:
             # Small holes must not split the model into independent fragments.
             if y in (89, 90, 91, 143, 144):
@@ -53,6 +53,7 @@ def synthetic_auto(three_crown_stretches=3, internal_noise=False):
                 })
     return {
         "schema_version": auto.SCHEMA,
+        "policy": auto.POLICY,
         "policy_sha256": feasibility.canonical_sha256(auto.POLICY),
         "source_dimensions_xy_px": [410, 319],
         "comparison_targets_loaded": False,
@@ -80,10 +81,10 @@ class JointAutoChangepointsTests(unittest.TestCase):
         for k in (1, 2, 3):
             with self.subTest(k=k):
                 result = change.analyse(synthetic_auto(k))
-                self.assertEqual(result["regions"]["left_crown"]["selected_segment_count"], k)
-                self.assertEqual(result["regions"]["right_crown"]["selected_segment_count"], k)
-                self.assertEqual(len(result["regions"]["left_crown"]["candidate_breakpoints"]), k-1)
-                self.assertLess(result["regions"]["left_crown"]["unsupported_rows_between_observations"], 8)
+                self.assertEqual(result["regions"]["left_pavilion"]["selected_segment_count"], k)
+                self.assertEqual(result["regions"]["right_pavilion"]["selected_segment_count"], k)
+                self.assertEqual(len(result["regions"]["left_pavilion"]["candidate_breakpoints"]), k-1)
+                self.assertLess(result["regions"]["left_pavilion"]["unsupported_rows_between_observations"], 8)
 
     def test_virtual_appearance_is_not_a_fitting_input(self):
         a = change.analyse(synthetic_auto(3, internal_noise=False))
@@ -104,16 +105,16 @@ class JointAutoChangepointsTests(unittest.TestCase):
 
     def test_missing_one_side_fails_girdle_closed(self):
         record = synthetic_auto()
-        record["paths"]["right_crown"]["points"] = []
         record["paths"]["right_pavilion"]["points"] = []
+        record["paths"]["right_crown"]["points"] = []
         result = change.analyse(record)
         self.assertEqual(result["widest_band_candidate"]["status"], "unavailable")
         self.assertTrue(all(r["status"] == "unavailable" for r in result["regions"].values()))
 
     def test_only_background_first_v2_without_target_data_is_accepted(self):
         record = synthetic_auto()
-        record["schema_version"] = "diamond360-asscher-auto-exterior/1"
-        with self.assertRaisesRegex(ValueError, "auto-exterior/2"):
+        record["schema_version"] = "diamond360-asscher-auto-exterior/2"
+        with self.assertRaisesRegex(ValueError, "auto-exterior/3"):
             change.analyse(record)
         record = synthetic_auto()
         record["comparison_targets_loaded"] = True
@@ -132,8 +133,8 @@ class JointAutoChangepointsTests(unittest.TestCase):
             result = change.analyse(source)
             self.assertEqual(result["widest_band_candidate"]["status"], "candidate_only")
             self.assertEqual(result["physical_facet_angles"], "all_unavailable")
-            self.assertIn(result["regions"]["left_crown"]["selected_segment_count"], (1, 2, 3))
-            self.assertIn(result["regions"]["right_crown"]["selected_segment_count"], (1, 2, 3))
+            self.assertIn(result["regions"]["left_pavilion"]["selected_segment_count"], (1, 2, 3))
+            self.assertIn(result["regions"]["right_pavilion"]["selected_segment_count"], (1, 2, 3))
             output = change.write_report(ORIGINAL, tmp / "auto-exterior.json", tmp / "derived")
             self.assertEqual(output, result)
             self.assertTrue((tmp / "derived" / "joint-changepoints-overlay.png").is_file())
