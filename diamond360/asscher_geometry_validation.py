@@ -61,6 +61,7 @@ FROZEN_WIREFRAME_SPECIFICATION = {
 LEGACY_METHOD = "initial_v1"
 OUTER_METHOD = "outer_octagon_v2"
 WINDOW_METHOD = "window_local_peaks_v3_experiment"
+TEMPORAL_METHOD = "temporal_candidate_v4_experiment"
 FROZEN_OUTER_WIREFRAME_REVISION = "6334cc9d0c7e2c9a26854bfaeec7a8ebbb6fc668"
 FROZEN_OUTER_WIREFRAME_SPEC_SHA256 = (
     "aaf8a885efe039b203330f9592dcccdb41ba11f3a731eb31143fa6de06b4e42e"
@@ -133,6 +134,28 @@ FROZEN_WINDOW_EXPERIMENT_POLICY = {
 }
 
 
+
+# The v4 experiment reuses the immutable v3 peak candidates and #96 geometry;
+# only the intra-window candidate ranking differs. Never a production default.
+FROZEN_TEMPORAL_EXPERIMENT_POLICY = {
+    "schema_version": "diamond360-asscher-step-candidate-rank/1",
+    "policy": "frame_sector_persistence_v1",
+    "baseline_policy": "aggregate_prominence_v1",
+    "peak_policy": "semantic_window_local_v1",
+    "local_search_radius_u": 0.025,
+    "minimum_sector_z": 0.8,
+    "minimum_supported_sectors_per_frame": 4,
+    "minimum_supported_frames": 1,
+    "rank_priority": [
+        "number_of_frames_with_four_supported_sectors",
+        "number_of_supported_frame_sector_pairs",
+        "negative_median_radial_offset_for_supported_pairs",
+        "original_log_prominence_plus_sector_support_score",
+    ],
+    "use_future_or_heldout_frames": False,
+    "physical_facet_claim": False,
+}
+
 def _method_profile(method):
     if method == LEGACY_METHOD:
         return (
@@ -140,7 +163,7 @@ def _method_profile(method):
             FROZEN_WIREFRAME_SPEC_SHA256,
             FROZEN_WIREFRAME_SPECIFICATION,
         )
-    if method in (OUTER_METHOD, WINDOW_METHOD):
+    if method in (OUTER_METHOD, WINDOW_METHOD, TEMPORAL_METHOD):
         return (
             FROZEN_OUTER_WIREFRAME_REVISION,
             FROZEN_OUTER_WIREFRAME_SPEC_SHA256,
@@ -182,7 +205,7 @@ def assert_frozen_method(method=OUTER_METHOD):
             "wireframe specification differs from declared frozen method; "
             "run the historical checkout or declare a new method revision"
         )
-    if method == WINDOW_METHOD:
+    if method in (WINDOW_METHOD, TEMPORAL_METHOD):
         if (
             steps.GLOBAL_PEAK_POLICY != "global_v1"
             or steps.WINDOW_PEAK_POLICY != "semantic_window_local_v1"
@@ -190,6 +213,14 @@ def assert_frozen_method(method=OUTER_METHOD):
             != FROZEN_WINDOW_EXPERIMENT_POLICY
         ):
             raise RuntimeError("experimental peak policy differs from frozen contract")
+    if method == TEMPORAL_METHOD:
+        if (
+            steps.LEGACY_RANK_POLICY != "aggregate_prominence_v1"
+            or steps.TEMPORAL_RANK_POLICY != "frame_sector_persistence_v1"
+            or steps.experimental_candidate_rank_specification()
+            != FROZEN_TEMPORAL_EXPERIMENT_POLICY
+        ):
+            raise RuntimeError("experimental candidate rank contract differs")
     if topology.SCAFFOLD_SCHEMA != current["topology_schema"]:
         raise RuntimeError("semantic scaffold schema differs from frozen contract")
     if sequence_gauge.SCHEMA != "diamond360-asscher-sequence-gauge/1":
@@ -247,7 +278,9 @@ def frozen_method_record(method=OUTER_METHOD):
     return {
         "method_revision": method,
         "peak_selection_policy": (deepcopy(FROZEN_WINDOW_EXPERIMENT_POLICY)
-                                  if method == WINDOW_METHOD else None),
+                                  if method in (WINDOW_METHOD, TEMPORAL_METHOD) else None),
+        "candidate_rank_policy": (deepcopy(FROZEN_TEMPORAL_EXPERIMENT_POLICY)
+                                  if method == TEMPORAL_METHOD else None),
         "wireframe_revision": revision,
         "wireframe_schema": wireframe.SCHEMA,
         "wireframe_specification": deepcopy(specification),

@@ -219,7 +219,96 @@ def _window_local_peak_indices(consensus, u, distance):
     return np.asarray(sorted(chosen), dtype=int)
 
 
-def discover_template(frame_sector_evidence, u, *, peak_policy=GLOBAL_PEAK_POLICY):
+# Experimental frame-wise corroboration. Suppression remains window-local;
+# the only changed dimension in v4 versus v3 is candidate ranking.
+LEGACY_RANK_POLICY = "aggregate_prominence_v1"
+TEMPORAL_RANK_POLICY = "frame_sector_persistence_v1"
+
+
+def experimental_candidate_rank_specification():
+    return {
+        "schema_version": "diamond360-asscher-step-candidate-rank/1",
+        "policy": TEMPORAL_RANK_POLICY,
+        "baseline_policy": LEGACY_RANK_POLICY,
+        "peak_policy": WINDOW_PEAK_POLICY,
+        "local_search_radius_u": 0.025,
+        "minimum_sector_z": 0.8,
+        "minimum_supported_sectors_per_frame": 4,
+        "minimum_supported_frames": 1,
+        "rank_priority": [
+            "number_of_frames_with_four_supported_sectors",
+            "number_of_supported_frame_sector_pairs",
+            "negative_median_radial_offset_for_supported_pairs",
+            "original_log_prominence_plus_sector_support_score",
+        ],
+        "use_future_or_heldout_frames": False,
+        "physical_facet_claim": False,
+    }
+
+
+def candidate_frame_persistence(data, u, candidate):
+    """Corroboration of a radial image-edge candidate in independent views.
+
+    Each view contributes at most one vote (at least four of eight sectors
+    support the same radial hypothesis). This is NOT polished-facet identity.
+    """
+    data = np.asarray(data, float)
+    u = np.asarray(u, float)
+    target = float(candidate["u"])
+    rows = []
+    offsets = []
+    supporting_pair_count = 0
+    frame_vote_count = 0
+    for frame in data:
+        peaks = [
+            _local_peak(frame[sector], u, target, radius=.025)
+            for sector in range(8)
+        ]
+        accepted = [
+            (sector, peak) for sector, peak in enumerate(peaks)
+            if peak is not None
+            and peak["z"] is not None
+            and peak["z"] >= .8
+        ]
+        offsets.extend(abs(p["u"] - target) for _, p in accepted)
+        supporting_pair_count += len(accepted)
+        supported_frame = len(accepted) >= 4
+        frame_vote_count += int(supported_frame)
+        rows.append({
+            "supported_sector_count": len(accepted),
+            "supports_candidate": supported_frame,
+            "sector_peak_u": [
+                None if peak is None else float(peak["u"])
+                for peak in peaks
+            ],
+            "supported_sector_indices": [index for index, _ in accepted],
+        })
+    return {
+        "u": target,
+        "frame_vote_count": frame_vote_count,
+        "frame_count": len(data),
+        "supported_sector_frame_pairs": supporting_pair_count,
+        "median_radial_offset_u": (
+            float(np.median(offsets)) if offsets else None
+        ),
+        "frames": rows,
+    }
+
+
+def candidate_temporal_rank_key(row):
+    """Predeclared lexicographic evidence priority; no target-dependent tuning."""
+    info = row["temporal_evidence"]
+    offset = info["median_radial_offset_u"]
+    return (
+        int(info["frame_vote_count"]),
+        int(info["supported_sector_frame_pairs"]),
+        -float(offset) if offset is not None else -1.0,
+        float(row["original_selection_score"]),
+    )
+
+
+def discover_template(frame_sector_evidence, u, *, peak_policy=GLOBAL_PEAK_POLICY,
+                      candidate_rank_policy=LEGACY_RANK_POLICY):
     """Discover three ordered persistent boundaries and 8-sector control points."""
     data = np.asarray(frame_sector_evidence, float)
     if data.ndim != 3 or data.shape[1] != 8 or data.shape[2] != len(u):
@@ -266,19 +355,59 @@ def discover_template(frame_sector_evidence, u, *, peak_policy=GLOBAL_PEAK_POLIC
 
     prom_values = np.array([c["prominence"] for c in candidates])
     prom_scale = max(float(np.median(prom_values[prom_values > 0])) if np.any(prom_values > 0) else 0.0, 1e-6)
+    if candidate_rank_policy not in (LEGACY_RANK_POLICY, TEMPORAL_RANK_POLICY):
+        raise ValueError(f"unknown candidate rank policy {candidate_rank_policy}")
+    if (candidate_rank_policy == TEMPORAL_RANK_POLICY
+            and peak_policy != WINDOW_PEAK_POLICY):
+        raise ValueError("temporal ranking requires declared window-local peaks")
+    ranking_evidence = {}
+    if candidate_rank_policy == TEMPORAL_RANK_POLICY:
+        for candidate in candidates:
+            candidate["original_selection_score"] = float(
+                np.log1p(candidate["prominence"] / prom_scale)
+                + 1.25 * candidate["sector_support"]
+            )
+            candidate["temporal_evidence"] = candidate_frame_persistence(
+                data, u, candidate
+            )
     selected = []
     missing = []
     for name, (lo, hi) in zip(BOUNDARIES, BOUNDARY_WINDOWS):
         options = [c for c in candidates
                    if lo <= c["u"] <= hi and c["sector_support"] >= .25]
-        if not options:
+        if candidate_rank_policy == TEMPORAL_RANK_POLICY:
+            considered = options
+            options = [
+                c for c in options
+                if c["temporal_evidence"]["frame_vote_count"] >= 1
+            ]
+            winning = max(options, key=candidate_temporal_rank_key) if options else None
+            ranking_evidence[name] = {
+                "selected_u": None if winning is None else float(winning["u"]),
+                "candidates": [
+                    {
+                        "u": float(c["u"]),
+                        "prominence": float(c["prominence"]),
+                        "sector_support": float(c["sector_support"]),
+                        "original_selection_score": c["original_selection_score"],
+                        "eligible_frame_corroboration": (
+                            c["temporal_evidence"]["frame_vote_count"] >= 1
+                        ),
+                        **c["temporal_evidence"],
+                    }
+                    for c in considered
+                ],
+            }
+        else:
+            winning = max(
+                options,
+                key=lambda c: np.log1p(c["prominence"] / prom_scale) + 1.25 * c["sector_support"],
+            ) if options else None
+        if winning is None:
             selected.append(None)
             missing.append(name)
             continue
-        selected.append(max(
-            options,
-            key=lambda c: np.log1p(c["prominence"] / prom_scale) + 1.25 * c["sector_support"],
-        ))
+        selected.append(winning)
     partial_controls = {
         name: _control_from_candidate(boundary, window, u)
         for name, boundary, window in zip(BOUNDARIES, selected, BOUNDARY_WINDOWS)
@@ -288,6 +417,7 @@ def discover_template(frame_sector_evidence, u, *, peak_policy=GLOBAL_PEAK_POLIC
         return dict(
             status="unavailable",
             reason=f"no_supported_{missing[0]}_edge",
+            ranking_evidence=ranking_evidence,
             consensus=consensus,
             sectors=sectors,
             candidates=candidates,
@@ -295,7 +425,7 @@ def discover_template(frame_sector_evidence, u, *, peak_policy=GLOBAL_PEAK_POLIC
         )
     if np.min(np.diff([c["u"] for c in selected])) < .075:
         return dict(status="unavailable", reason="semantic_boundaries_not_separable",
-                    consensus=consensus, sectors=sectors, candidates=candidates,
+                    ranking_evidence=ranking_evidence, consensus=consensus, sectors=sectors, candidates=candidates,
                     partial_controls=partial_controls)
     controls = [
         _control_from_candidate(boundary, window, u)
@@ -319,7 +449,7 @@ def discover_template(frame_sector_evidence, u, *, peak_policy=GLOBAL_PEAK_POLIC
         status = "review"
         reason = "semantic_window_edge"
     return dict(status=status, reason=reason, consensus=consensus, sectors=sectors,
-                candidates=candidates, controls=controls)
+                candidates=candidates, controls=controls, ranking_evidence=ranking_evidence)
 
 
 def boundary_alignment(frame_sector_evidence, u, controls):
