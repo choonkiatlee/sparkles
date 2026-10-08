@@ -13,6 +13,7 @@ class PagesCatalogueTests(unittest.TestCase):
             for path in (
                 "index.html", ".nojekyll", "catalogue/index.html",
                 "catalogue/core.mjs", "catalogue/app.mjs", "catalogue/styles.css",
+                "catalogue/compare.mjs", "catalogue/comparison-view.mjs",
                 "data/catalog.json", "data/diamonds/igi-lg756520111.json",
                 "data/diamonds/igi-lg816611062.json",
             ):
@@ -33,6 +34,10 @@ class PagesCatalogueTests(unittest.TestCase):
         self.assertIn('fetch("../data/catalog.json"', app)
         self.assertNotIn("api.github.com", app)
         self.assertNotIn("releases/latest", app)
+        comparison = (ROOT / "catalogue/compare.mjs").read_text(encoding="utf-8")
+        self.assertIn("../data/diamonds/", comparison)
+        self.assertNotIn("api.github.com", comparison)
+        self.assertIn("createManifestLoader", comparison)
 
     def test_ingestion_invokes_pages_after_publishing(self):
         ingest = (ROOT / ".github/workflows/diamond-catalogue-ingest.yml").read_text(encoding="utf-8")

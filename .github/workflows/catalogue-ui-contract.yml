@@ -5,6 +5,7 @@ on:
     paths:
       - "catalogue/**"
       - "tests/catalogue-core.test.mjs"
+      - "tests/catalogue-compare.test.mjs"
       - "tests/test_catalogue_pages_site.py"
       - "tools/build_catalogue_pages.py"
       - "index.html"
@@ -29,7 +30,9 @@ jobs:
         run: |
           node --check catalogue/core.mjs
           node --check catalogue/app.mjs
+          node --check catalogue/compare.mjs
+          node --check catalogue/comparison-view.mjs
       - name: Test catalogue selection and view logic
-        run: node --test tests/catalogue-core.test.mjs
+        run: node --test tests/catalogue-core.test.mjs tests/catalogue-compare.test.mjs
       - name: Validate published site artifact and source links
         run: python -m unittest tests.test_catalogue_pages_site -v
