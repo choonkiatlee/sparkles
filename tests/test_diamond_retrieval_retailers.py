@@ -24,6 +24,8 @@ from diamond_retrieval import (
 from diamond_retrieval.retailers import (
     DiyonaListingProvider,
     QualityDiamondsListingProvider,
+    _proportions,
+    _normalize_proportion,
 )
 
 
@@ -261,6 +263,80 @@ class CertificateOnlyPolicy:
             complete,
             () if complete else ("matched certificate required",),
         )
+
+
+class RetailerProportionNormalizationTests(unittest.TestCase):
+    def test_legitimate_quality_diamonds_fixture_proportions(self):
+        http = FakeHttpClient({
+            QD_URL: (_fixture("quality-diamonds-detail.html"), "text/html")
+        })
+        meta = QualityDiamondsListingProvider(http).fetch(QD_URL).metadata
+        self.assertEqual(meta.reported_proportions, {
+            "table_percent": 60.0, "depth_percent": 60.6,
+            "length_width_ratio": 1.42, "polish": "Excellent",
+            "symmetry": "Excellent", "fluorescence": "None",
+            "girdle": "Medium to Thick",
+        })
+        self.assertNotIn("cut", meta.reported_proportions)
+        self.assertNotIn("culet", meta.reported_proportions)
+        self.assertEqual(meta.attribution["reported_proportions"].source,
+                         "quality_diamonds_listing")
+
+    def test_no_substring_or_prose_grades(self):
+        text = (
+            "Asscher Cut and Polished Diamond Culet Asscher, "
+            "Girdle Girdle: Polish polished "
+            "Cut and Polish: Excellent Symmetry: Very Good "
+            "Fluorescence: None Table 64% Depth 64.6% L/W Ratio 1.00"
+        )
+        parsed = _proportions(text)
+        self.assertNotIn("cut", parsed)
+        self.assertNotIn("culet", parsed)
+        self.assertNotIn("girdle", parsed)
+        self.assertEqual(parsed["polish"], "Excellent")
+        self.assertEqual(parsed["symmetry"], "Very Good")
+        self.assertEqual(parsed["fluorescence"], "None")
+        self.assertEqual(parsed["table_percent"], 64.0)
+
+    def test_ungraded_missing_not_invented(self):
+        text = ("Cut: - Polish: N/A Symmetry: Not Graded "
+                "Fluorescence: Unknown Culet: -- Girdle: N/A")
+        self.assertEqual(_proportions(text), {})
+        for key in ("cut", "polish", "symmetry", "fluorescence", "girdle", "culet"):
+            self.assertIsNone(_normalize_proportion(key, "-"))
+            self.assertIsNone(_normalize_proportion(key, "n/a"))
+        # None is an actual reported fluorescence/culeting observation.
+        self.assertEqual(_normalize_proportion("fluorescence", "NON"), "None")
+        self.assertEqual(_normalize_proportion("culet", "None"), "None")
+        self.assertIsNone(_normalize_proportion("fluorescence", "Unknown"))
+
+    def test_grade_aliases_multiword_and_ranges(self):
+        self.assertEqual(_proportions(
+            "Cut Ideal Polish EX Symmetry VG "
+            "Fluorescence faint Girdle: Very Thin to Slightly Thick "
+            "Culet: Very Small"
+        ), {
+            "cut": "Ideal", "polish": "Excellent", "symmetry": "Very Good",
+            "fluorescence": "Faint", "girdle": "Very Thin to Slightly Thick",
+            "culet": "Very Small",
+        })
+        for x in ("and", "ed", "Asscher,", "Girdle:", "NaN", "Infinity"):
+            self.assertIsNone(_normalize_proportion("polish", x))
+        self.assertIsNone(_normalize_proportion("depth_percent", "Infinity"))
+        self.assertIsNone(_normalize_proportion("table_percent", "101"))
+
+    def test_diyona_ungraded_api_cut_removed_but_fluorescence_retained(self):
+        from tests.test_diyona_public_api import HTTP, PAGE, ROW
+        client = HTTP(rows=[{**ROW, "cut": "-", "polish": "EX",
+                             "fluorescence": "NON", "symmetry": "VG"}])
+        record = DiyonaListingProvider(client).fetch(PAGE)
+        props = record.metadata.reported_proportions
+        self.assertNotIn("cut", props)
+        self.assertEqual(props["polish"], "Excellent")
+        self.assertEqual(props["symmetry"], "Very Good")
+        self.assertEqual(props["fluorescence"], "None")
+        self.assertEqual(props["table_percent"], 65.0)
+        self.assertEqual(str(record.metadata.price), "749.77")
 
 
 class RetailerProviderTests(unittest.TestCase):
