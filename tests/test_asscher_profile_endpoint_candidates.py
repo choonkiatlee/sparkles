@@ -43,8 +43,8 @@ class EndpointTests(unittest.TestCase):
         result = endpoint.analyse(self.source, self.profile, self.joint)
         self.assertEqual(result["physical_facet_angle_status"], "all_unavailable")
         self.assertEqual(set(result["last_crown_changepoint_candidates"]), {"left","right"})
-        left = result["last_pavilion_changepoint_candidates"]["left"]
-        right = result["last_pavilion_changepoint_candidates"]["right"]
+        left = result["last_crown_changepoint_candidates"]["left"]
+        right = result["last_crown_changepoint_candidates"]["right"]
         # The two sides are independent: no mirrored break may be invented.
         self.assertIn(left["status"], {"candidate_only", "ambiguous", "unavailable"})
         self.assertIn(right["status"], {"candidate_only", "ambiguous", "unavailable"})
@@ -63,7 +63,7 @@ class EndpointTests(unittest.TestCase):
         a = endpoint.analyse(self.source, self.profile, self.joint)
         b = endpoint.analyse(altered, self.profile, self.joint)
         self.assertEqual(a["top_pavilion_tip_candidate"], b["top_pavilion_tip_candidate"])
-        self.assertEqual(a["terminal_contours"], b["terminal_contours"])
+        self.assertEqual(a["lower_crown_contours"], b["lower_crown_contours"])
         self.assertEqual(a["last_crown_changepoint_candidates"], b["last_crown_changepoint_candidates"])
 
     def test_flat_blank_source_has_no_top_pavilion_tip(self):
