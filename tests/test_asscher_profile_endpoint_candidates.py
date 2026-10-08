@@ -1,4 +1,4 @@
-"""Target-blind upper table-cap and terminal pavilion-changepoint proposals."""
+"""Target-blind upper pavilion tip and lower crown endpoint proposals."""
 from copy import deepcopy
 import json
 from pathlib import Path
@@ -27,9 +27,9 @@ class EndpointTests(unittest.TestCase):
         cls.profile["source_sha256"] = feasibility.ORIGINAL_PROFILE_SHA256
         cls.joint = joint.analyse(cls.profile)
 
-    def test_detects_short_top_cap_without_certifying_table(self):
+    def test_detects_point_like_pavilion_tip_without_certifying_polished_culet(self):
         result = endpoint.analyse(self.source, self.profile, self.joint)
-        cap = result["top_cap_candidate"]
+        cap = result["top_pavilion_tip_candidate"]
         self.assertEqual(cap["status"], "candidate_only")
         self.assertGreaterEqual(cap["observed_width_px"], 5)
         self.assertLessEqual(cap["observed_width_px"], 20)
@@ -39,17 +39,17 @@ class EndpointTests(unittest.TestCase):
             p[1] <= cap["top_source_y_px"] + 1 for p in cap["source_xy_px"]
         ))
 
-    def test_late_pavilion_break_may_be_missing_on_shadow_side(self):
+    def test_late_crown_break_may_be_missing_on_shadow_side(self):
         result = endpoint.analyse(self.source, self.profile, self.joint)
         self.assertEqual(result["physical_facet_angle_status"], "all_unavailable")
-        self.assertEqual(set(result["last_pavilion_changepoint_candidates"]), {"left","right"})
+        self.assertEqual(set(result["last_crown_changepoint_candidates"]), {"left","right"})
         left = result["last_pavilion_changepoint_candidates"]["left"]
         right = result["last_pavilion_changepoint_candidates"]["right"]
         # The two sides are independent: no mirrored break may be invented.
         self.assertIn(left["status"], {"candidate_only", "ambiguous", "unavailable"})
         self.assertIn(right["status"], {"candidate_only", "ambiguous", "unavailable"})
         for side in ("left","right"):
-            p = result["terminal_contours"][side]["points"]
+            p = result["lower_crown_contours"][side]["points"]
             self.assertTrue(all(
                 row["status"] in ("candidate_only", "weak_or_shadow_contaminated")
                 for row in p
@@ -66,7 +66,7 @@ class EndpointTests(unittest.TestCase):
         self.assertEqual(a["terminal_contours"], b["terminal_contours"])
         self.assertEqual(a["last_pavilion_changepoint_candidates"], b["last_pavilion_changepoint_candidates"])
 
-    def test_flat_blank_source_has_no_top_table(self):
+    def test_flat_blank_source_has_no_top_pavilion_tip(self):
         fake = np.full((319,410,3), 205, dtype=np.uint8)
         cap = endpoint._top_cap(endpoint._signals(fake))
         self.assertEqual(cap["status"], "unavailable")
