@@ -4,10 +4,15 @@ concurrency:
   group: asscher-geometry-stability-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  actions: read
+
 on:
   pull_request:
     paths:
       - "diamond360/asscher_geometry_validation.py"
+      - "diamond360/asscher_geometry_method_comparison.py"
       - "diamond360/asscher_geometry_stability.py"
       - "diamond360/asscher_wireframe.py"
       - "diamond360/asscher_topology.py"
@@ -16,6 +21,8 @@ on:
       - "docs/360/benchmark/source-bundles.json"
       - "docs/360/asscher-geometry-validation/**"
       - "tests/test_asscher_geometry_validation.py"
+      - "tests/test_asscher_geometry_method_comparison.py"
+      - "tests/test_asscher_geometry_outer_revision.py"
       - "tests/test_asscher_geometry_stability.py"
       - ".github/workflows/asscher-geometry-stability.yml"
   workflow_dispatch:
@@ -38,7 +45,9 @@ jobs:
         run: |
           python -m unittest \
             tests.test_asscher_geometry_validation \
-            tests.test_asscher_geometry_stability -v
+            tests.test_asscher_geometry_stability \
+            tests.test_asscher_geometry_method_comparison \
+            tests.test_asscher_geometry_outer_revision -v
 
       - name: Download frozen benchmark source bundles
         run: |
@@ -70,7 +79,8 @@ jobs:
         run: |
           python -m diamond360.asscher_geometry_stability \
             --source-root outputs/asscher-geometry-stability-sources \
-            --output outputs/asscher-geometry-stability
+            --output outputs/asscher-geometry-stability \
+            --method outer_octagon_v2
 
       - name: Print research summary
         run: |
@@ -102,6 +112,22 @@ jobs:
               print("  wrap:", transfer.get("wrap_check"))
           PY
 
+      - name: Retrieve original pinned #75 validation evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: asscher-geometry-stability
+          run-id: 37683160270
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: outputs/frozen-initial-stability
+
+      - name: Compare #75 and #96 using unchanged #88 metrics
+        run: |
+          python -m diamond360.asscher_geometry_method_comparison \
+            --kind stability \
+            --before outputs/frozen-initial-stability/summary.json \
+            --after outputs/asscher-geometry-stability/summary.json \
+            --output outputs/asscher-geometry-stability/method-comparison.json
+
       - name: Record full-suite status
         continue-on-error: true
         run: python -m unittest discover -s tests -v
@@ -109,7 +135,7 @@ jobs:
       - name: Upload geometry stability outputs
         uses: actions/upload-artifact@v4
         with:
-          name: asscher-geometry-stability
+          name: asscher-geometry-stability-outer-v2
           path: outputs/asscher-geometry-stability
           if-no-files-found: error
           retention-days: 90

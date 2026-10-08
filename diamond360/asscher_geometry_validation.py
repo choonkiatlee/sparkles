@@ -54,6 +54,74 @@ FROZEN_WIREFRAME_SPECIFICATION = {
     ),
 }
 
+
+# Keep #88's original snapshot intact as an audit baseline.  #96 is a
+# separate, explicitly frozen method revision, *not* a rewritten #75 result.
+LEGACY_METHOD = "initial_v1"
+OUTER_METHOD = "outer_octagon_v2"
+FROZEN_OUTER_WIREFRAME_REVISION = "6334cc9d0c7e2c9a26854bfaeec7a8ebbb6fc668"
+FROZEN_OUTER_WIREFRAME_SPEC_SHA256 = (
+    "aaf8a885efe039b203330f9592dcccdb41ba11f3a731eb31143fa6de06b4e42e"
+)
+FROZEN_OUTER_WIREFRAME_SPECIFICATION = deepcopy(FROZEN_WIREFRAME_SPECIFICATION)
+FROZEN_OUTER_WIREFRAME_SPECIFICATION.update({
+    "outer_octagon_schema": "diamond360-asscher-outer-octagon/1",
+    "outer_octagon": {
+        "schema_version": "diamond360-asscher-outer-octagon/1",
+        "purpose": (
+            "fit and validate the physical silhouette before using any "
+            "interior optical edge as semantic geometry"
+        ),
+        "selection_thresholds": {
+            "minimum_edge_visibility_score": 0.72,
+            "maximum_normalized_q90_boundary_residual": 0.040,
+            "maximum_cardinal_parallelism_error_deg": 6.0,
+            "maximum_abs_log_aspect": 0.10,
+            "face_on_aspect_scale": 0.050,
+            "face_on_parallelism_scale_deg": 3.0,
+            "preferred_face_on_core_frames": 5,
+        },
+        "consensus_policy": (
+            "outline residual, edge visibility, aspect and cardinal "
+            "parallelism are absolute reliability gates; among reliable "
+            "silhouettes the full outer-octagon projection-consistency score "
+            "is used only as a within-stone ranking signal, never as a "
+            "cross-stone rejection threshold; a robust medoid/MAD gate "
+            "separately removes shape outliers"
+        ),
+        "stone_outline_policy": (
+            "the stone-level GIRDLE_OUTLINE is the coordinate-wise median of "
+            "the selected per-frame fitted octagons after centre/scale "
+            "normalization in the stable sequence gauge"
+        ),
+        "physical_geometry_claim": (
+            "2-D observed silhouette only; no physical camera angle or "
+            "projective rectification is inferred"
+        ),
+    },
+    "geometry_policy": (
+        "fit the observed outer octagon first; use it to reject projection/"
+        "silhouette outliers and define one stone-level coordinate anchor; "
+        "only then infer inward crown/table support from persistent edges"
+    ),
+})
+
+
+def _method_profile(method):
+    if method == LEGACY_METHOD:
+        return (
+            FROZEN_WIREFRAME_REVISION,
+            FROZEN_WIREFRAME_SPEC_SHA256,
+            FROZEN_WIREFRAME_SPECIFICATION,
+        )
+    if method == OUTER_METHOD:
+        return (
+            FROZEN_OUTER_WIREFRAME_REVISION,
+            FROZEN_OUTER_WIREFRAME_SPEC_SHA256,
+            FROZEN_OUTER_WIREFRAME_SPECIFICATION,
+        )
+    raise ValueError(f"unknown frozen validation method: {method}")
+
 STATUS_VALUES = ("ok", "review", "unavailable")
 PROVENANCE_RANK = {
     "observed": 3,
@@ -77,24 +145,22 @@ def canonical_sha256(value):
     return hashlib.sha256(payload).hexdigest()
 
 
-def assert_frozen_method():
-    """Fail closed if the local #75 contract no longer matches the frozen run."""
-    if wireframe.SCHEMA != FROZEN_WIREFRAME_SPECIFICATION["schema_version"]:
-        raise RuntimeError("wireframe schema differs from frozen #75 contract")
+def assert_frozen_method(method=OUTER_METHOD):
+    """Fail closed unless the declared method matches the running estimator."""
+    _, expected_sha, expected_spec = _method_profile(method)
+    if wireframe.SCHEMA != expected_spec["schema_version"]:
+        raise RuntimeError("wireframe schema differs from frozen method contract")
     current = _jsonable(wireframe.specification())
-    if canonical_sha256(current) != FROZEN_WIREFRAME_SPEC_SHA256:
+    if canonical_sha256(current) != expected_sha or current != expected_spec:
         raise RuntimeError(
-            "wireframe specification differs from frozen #75 revision; "
-            "declare a new validation method revision before continuing"
+            "wireframe specification differs from declared frozen method; "
+            "run the historical checkout or declare a new method revision"
         )
-    if current != FROZEN_WIREFRAME_SPECIFICATION:
-        raise RuntimeError("wireframe specification changed without revision")
     if topology.SCAFFOLD_SCHEMA != current["topology_schema"]:
         raise RuntimeError("semantic scaffold schema differs from frozen contract")
     if sequence_gauge.SCHEMA != "diamond360-asscher-sequence-gauge/1":
         raise RuntimeError("sequence gauge contract differs from frozen #80 contract")
     return True
-
 
 def metric_policy():
     return {
@@ -142,17 +208,18 @@ def status_policy():
     }
 
 
-def frozen_method_record():
+def frozen_method_record(method=OUTER_METHOD):
+    revision, specification_sha, specification = _method_profile(method)
     return {
-        "wireframe_revision": FROZEN_WIREFRAME_REVISION,
+        "method_revision": method,
+        "wireframe_revision": revision,
         "wireframe_schema": wireframe.SCHEMA,
-        "wireframe_specification": deepcopy(FROZEN_WIREFRAME_SPECIFICATION),
-        "wireframe_specification_sha256": FROZEN_WIREFRAME_SPEC_SHA256,
+        "wireframe_specification": deepcopy(specification),
+        "wireframe_specification_sha256": specification_sha,
         "topology_contract_schema": topology.CONTRACT_SCHEMA,
         "topology_scaffold_schema": topology.SCAFFOLD_SCHEMA,
         "sequence_gauge_schema": sequence_gauge.SCHEMA,
     }
-
 
 def benchmark_snapshot(manifest):
     """Return the source identity fields needed to reproduce a validation run."""
@@ -205,11 +272,12 @@ def assert_frozen_benchmark_manifest(manifest):
     return snapshot
 
 
-def contract_document():
+def contract_document(method=OUTER_METHOD):
+    _method_profile(method)
     return {
         "schema_version": CONTRACT_SCHEMA,
         "result_schema": SCHEMA,
-        "frozen_method": frozen_method_record(),
+        "frozen_method": frozen_method_record(method),
         "benchmark_manifest": {
             "path": BENCHMARK_MANIFEST_PATH,
             "canonical_sha256": BENCHMARK_MANIFEST_CANONICAL_SHA256,
@@ -581,13 +649,14 @@ def build_validation_record(
     case_id,
     comparison_kind,
     run_metadata=None,
+    method=OUTER_METHOD,
 ):
     """Wrap a scaffold comparison in the frozen #88 provenance contract.
 
     Inputs are already-produced #75 result dictionaries. There is intentionally
     no image path, fitting callback, or external target argument.
     """
-    assert_frozen_method()
+    assert_frozen_method(method)
     reference_result = deepcopy(reference_result)
     candidate_result = deepcopy(candidate_result)
     sources = assert_frozen_benchmark_manifest(benchmark_manifest)
@@ -623,7 +692,7 @@ def build_validation_record(
         "comparison_kind": str(comparison_kind),
         "status": comparison["status"],
         "reasons": comparison["reasons"],
-        "frozen_method": frozen_method_record(),
+        "frozen_method": frozen_method_record(method),
         "benchmark_inputs": sources,
         "metric_policy": metric_policy(),
         "status_policy": status_policy(),

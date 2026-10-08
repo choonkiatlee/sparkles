@@ -18,6 +18,7 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 from . import asscher_geometry_validation as validation
+from . import asscher_outer_octagon as outer_octagon
 from . import asscher_topology as topology
 from . import asscher_wireframe as wireframe
 from . import pipeline
@@ -92,22 +93,39 @@ def _load_evidence(pose_output, records):
     )
 
 
-def _fit_records(pose_output, records, gauge_id):
+def _fit_records(pose_output, records, gauge_id, *, method=validation.OUTER_METHOD):
     evidence, u, masks, brightness, metadata = _load_evidence(
         pose_output, records
     )
+    if method == validation.OUTER_METHOD:
+        outer_fit = outer_octagon.fit_consensus(
+            masks, frame_metadata=metadata
+        )
+        outer_vertices = np.asarray(
+            outer_fit["vertices_topology_order"], float
+        )
+        outer_confidence = outer_fit["confidence"]
+    elif method == validation.LEGACY_METHOD:
+        outer_fit = None
+        outer_vertices = wireframe._median_outer_vertices(masks)
+        outer_confidence = None
+    else:
+        raise ValueError(f"unknown validation method {method}")
     result = wireframe.fit_from_sector_evidence(
         evidence,
         u,
         gauge_id=gauge_id,
         frame_metadata=metadata,
-        outer_vertices=wireframe._median_outer_vertices(masks),
+        outer_vertices=outer_vertices,
+        outer_confidence=outer_confidence,
     )
     result["selected_frames"] = metadata
+    if outer_fit is not None:
+        result["outer_evidence"] = outer_fit
     return result, brightness, masks
 
 
-def _primary_fit(pose_output, pose_payload):
+def _primary_fit(pose_output, pose_payload, *, method=validation.OUTER_METHOD):
     gauge_id = wireframe._gauge_id(pose_payload)
     if gauge_id is None:
         return {
@@ -116,21 +134,42 @@ def _primary_fit(pose_output, pose_payload):
             "reason": "stable_sequence_gauge_unavailable",
             "scaffold": None,
         }, [], [], []
-    selected = wireframe._select_geometry_records(pose_payload)
+    if method == validation.OUTER_METHOD:
+        coarse = wireframe._select_geometry_records(
+            pose_payload, max_frames=None
+        )
+        selected, outer_selection = outer_octagon.select_records(
+            coarse,
+            max_frames=wireframe.MAX_GEOMETRY_FRAMES,
+            min_frames=wireframe.MIN_GEOMETRY_FRAMES,
+        )
+    elif method == validation.LEGACY_METHOD:
+        selected = wireframe._select_geometry_records(pose_payload)
+        outer_selection = None
+    else:
+        raise ValueError(f"unknown validation method {method}")
     if len(selected) < wireframe.MIN_GEOMETRY_FRAMES:
-        return {
+        result = {
             "schema_version": wireframe.SCHEMA,
             "status": "unavailable",
-            "reason": "fewer_than_three_compatible_geometry_views",
+            "reason": (
+                "fewer_than_three_outer_octagon_views"
+                if outer_selection is not None
+                else "fewer_than_three_compatible_geometry_views"
+            ),
             "semantic_gauge_id": gauge_id,
             "scaffold": None,
-        }, selected, [], []
+        }
+        if outer_selection is not None:
+            result["outer_selection"] = outer_selection
+        return result, selected, [], []
     result, brightness, masks = _fit_records(
-        pose_output, selected, gauge_id
+        pose_output, selected, gauge_id, method=method
     )
+    if outer_selection is not None:
+        result["outer_selection"] = outer_selection
     result["sequence_gauge"] = pose_payload.get("sequence_gauge")
     return result, selected, brightness, masks
-
 
 def _max_numeric(rows, field):
     values = [
@@ -189,6 +228,8 @@ def _leave_one_out(
     benchmark_manifest,
     certificate,
     output,
+    *,
+    method=validation.OUTER_METHOD,
 ):
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
@@ -207,7 +248,9 @@ def _leave_one_out(
             for index, record in enumerate(selected)
             if index != omitted_index
         ]
-        candidate, _, _ = _fit_records(pose_output, subset, gauge_id)
+        candidate, _, _ = _fit_records(
+            pose_output, subset, gauge_id, method=method
+        )
         case_id = (
             f"{certificate}:leave-out-source-"
             f"{omitted.get('source_index')}"
@@ -218,6 +261,7 @@ def _leave_one_out(
             benchmark_manifest,
             case_id=case_id,
             comparison_kind="estimator_stability_leave_one_out",
+            method=method,
             run_metadata={
                 "policy": STABILITY_POLICY,
                 "omitted_source_index": omitted.get("source_index"),
@@ -910,8 +954,9 @@ def run_stone(
     benchmark_manifest,
     *,
     certificate,
+    method=validation.OUTER_METHOD,
 ):
-    validation.assert_frozen_method()
+    validation.assert_frozen_method(method)
     validation.assert_frozen_benchmark_manifest(benchmark_manifest)
     pose_output = Path(pose_output)
     output = Path(output)
@@ -921,7 +966,7 @@ def run_stone(
     )
 
     primary, selected, primary_brightness, primary_masks = _primary_fit(
-        pose_output, pose_payload
+        pose_output, pose_payload, method=method
     )
     (output / "primary-wireframe.json").write_text(
         json.dumps(primary, indent=2, allow_nan=False) + "\n"
@@ -933,6 +978,7 @@ def run_stone(
         summary = {
             "schema_version": SCHEMA,
             "certificate": certificate,
+            "frozen_method": validation.frozen_method_record(method),
             "status": "unavailable",
             "reason": primary.get("reason"),
             "primary_result_status": primary.get("status"),
@@ -966,6 +1012,7 @@ def run_stone(
         benchmark_manifest,
         certificate,
         output / "stability",
+        method=method,
     )
     transfer, render_items = _run_transfer(
         pose_output,
@@ -1003,7 +1050,7 @@ def run_stone(
         "certificate": certificate,
         "status": status,
         "reasons": reasons,
-        "frozen_method": validation.frozen_method_record(),
+        "frozen_method": validation.frozen_method_record(method),
         "primary": {
             "status": primary.get("status"),
             "semantic_gauge_id": primary.get("semantic_gauge_id"),
@@ -1038,7 +1085,10 @@ def run_stone(
     return summary
 
 
-def run_source_benchmark(source_root, output, bundle_manifest):
+def run_source_benchmark(
+    source_root, output, bundle_manifest, *, method=validation.OUTER_METHOD
+):
+    validation.assert_frozen_method(method)
     source_root = Path(source_root).resolve()
     output = Path(output).resolve()
     manifest = json.loads(Path(bundle_manifest).read_text())
@@ -1076,6 +1126,7 @@ def run_source_benchmark(source_root, output, bundle_manifest):
                 output / "per-stone" / certificate,
                 manifest,
                 certificate=certificate,
+                method=method,
             ))
 
     payload = {
@@ -1083,7 +1134,7 @@ def run_source_benchmark(source_root, output, bundle_manifest):
         "stability_policy": STABILITY_POLICY,
         "transfer_policy": TRANSFER_POLICY,
         "metric_contract": validation.SCHEMA,
-        "frozen_method": validation.frozen_method_record(),
+        "frozen_method": validation.frozen_method_record(method),
         "benchmark_inputs": validation.assert_frozen_benchmark_manifest(
             manifest
         ),
@@ -1114,11 +1165,16 @@ def main():
         type=Path,
         default=Path("docs/360/benchmark/source-bundles.json"),
     )
+    parser.add_argument(
+        "--method", choices=(validation.LEGACY_METHOD, validation.OUTER_METHOD),
+        default=validation.OUTER_METHOD,
+    )
     args = parser.parse_args()
     result = run_source_benchmark(
         args.source_root,
         args.output,
         args.bundle_manifest,
+        method=args.method,
     )
     for stone in result["stones"]:
         stability = stone.get("estimator_stability", {})
