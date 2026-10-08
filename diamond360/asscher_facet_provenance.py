@@ -201,7 +201,7 @@ def build_stone_record(lines, junctions):
                     "physical_facet_semantic_id":None,
                 })
         graph=jrow.get("junction_evidence") or {}
-        if graph.get("physical_facet_identity_verified") is not False:
+        if graph.get("physical_facet_identity_verified") not in (None, False):
             raise ValueError("local RGB junction cannot be verified physical")
         if graph.get("polygon") is not None:
             raise ValueError("optical junction polygon cannot claim physical geometry")
