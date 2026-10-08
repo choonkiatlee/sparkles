@@ -219,11 +219,106 @@ def _window_local_peak_indices(consensus, u, distance):
     return np.asarray(sorted(chosen), dtype=int)
 
 
-def discover_template(frame_sector_evidence, u, *, peak_policy=GLOBAL_PEAK_POLICY):
+# Candidate-rank research experiment, opt-in and restricted to C3/table.
+# It does not interpret contrast as a confirmed polished-facet junction.
+LEGACY_RANK_POLICY = "prominence_sector_v1"
+FRAME_RANK_POLICY = "c3_frame_consistency_v1"
+
+
+def experimental_frame_rank_specification():
+    return {
+        "schema_version": "diamond360-asscher-c3-frame-ranking/1",
+        "policy": FRAME_RANK_POLICY,
+        "c3_window": list(BOUNDARY_WINDOWS[0]),
+        "peak_policy": WINDOW_PEAK_POLICY,
+        "per_frame_peak_search_radius_u": .035,
+        "local_z_min": .8,
+        "frame_supported_sector_fraction": .5,
+        "angular_coherence_radius_u": .045,
+        "score_formula": (
+            "unchanged global log1p(prominence / global_prominence_scale) "
+            "+ 1.25 * median_sector_support "
+            "+ 1.25 * fraction_of_frames_with_4_of_8_supported_sectors "
+            "- 1.25 * median_sector_misalignment / semantic_window_width"
+        ),
+        "coefficient_source": "reuse existing frozen 1.25 sector-support weight",
+        "scope": "C3/table only; all other crown tier rankers unchanged",
+        "physical_facet_claim": False,
+    }
+
+
+def candidate_frame_rank(candidate, frames, sectors, u, window, prom_scale):
+    """Audit spatial coherence and view persistence, without facet identity."""
+    target = float(candidate["u"])
+    per_frame = []
+    for frame in frames:
+        strong = []
+        offsets = []
+        for sector in frame:
+            peak = _local_peak(sector, u, target, radius=.035)
+            ok = (
+                peak is not None and peak["z"] is not None
+                and peak["z"] >= .8
+            )
+            strong.append(bool(ok))
+            if ok:
+                offsets.append(abs(float(peak["u"]) - target))
+        per_frame.append({
+            "supported_sector_count": int(sum(strong)),
+            "supported_sector_fraction": float(np.mean(strong)),
+            "median_supported_peak_offset_u": (
+                float(np.median(offsets)) if offsets else None
+            ),
+        })
+    persistent_fraction = float(np.mean([
+        item["supported_sector_fraction"] >= .5 for item in per_frame
+    ]))
+    # Median across original eight spatial sectors; no symmetry/ideal
+    # square geometry is imposed on what may be virtual/refracted edges.
+    sector_offsets = []
+    for sector in sectors:
+        peak = _local_peak(sector, u, target, radius=.045)
+        if peak is not None and peak["z"] is not None and peak["z"] >= .8:
+            sector_offsets.append(abs(float(peak["u"]) - target))
+    angular_misalignment = (
+        float(np.median(sector_offsets)) if sector_offsets else None
+    )
+    baseline = (
+        float(np.log1p(candidate["prominence"] / prom_scale))
+        + 1.25 * float(candidate["sector_support"])
+    )
+    # Missing angular support fails closed at the semantic-window scale.
+    width = float(window[1] - window[0])
+    angle_penalty = (
+        angular_misalignment / width
+        if angular_misalignment is not None else 1.
+    )
+    return {
+        "u": target,
+        "prominence": float(candidate["prominence"]),
+        "sector_support": float(candidate["sector_support"]),
+        "base_score": baseline,
+        "frame_persistence_fraction": persistent_fraction,
+        "angular_misalignment_u": angular_misalignment,
+        "angular_misalignment_fraction_of_window": float(angle_penalty),
+        "rank_score": float(
+            baseline + 1.25 * persistent_fraction - 1.25 * angle_penalty
+        ),
+        "per_frame": per_frame,
+        "interpretation": "image-space contrast only; virtual facets remain possible",
+    }
+
+
+def discover_template(frame_sector_evidence, u, *, peak_policy=GLOBAL_PEAK_POLICY,
+                      rank_policy=LEGACY_RANK_POLICY):
     """Discover three ordered persistent boundaries and 8-sector control points."""
     data = np.asarray(frame_sector_evidence, float)
     if data.ndim != 3 or data.shape[1] != 8 or data.shape[2] != len(u):
         raise ValueError("Expected frame × 8-sector × radial-sample evidence")
+    if rank_policy not in (LEGACY_RANK_POLICY, FRAME_RANK_POLICY):
+        raise ValueError(f"unknown C3 candidate ranking policy: {rank_policy}")
+    if rank_policy == FRAME_RANK_POLICY and peak_policy != WINDOW_PEAK_POLICY:
+        raise ValueError("frame-consistent C3 ranking needs window-local peak evidence")
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", RuntimeWarning)
         sectors = np.nanmedian(data, axis=0)
@@ -275,10 +370,21 @@ def discover_template(frame_sector_evidence, u, *, peak_policy=GLOBAL_PEAK_POLIC
             selected.append(None)
             missing.append(name)
             continue
-        selected.append(max(
-            options,
-            key=lambda c: np.log1p(c["prominence"] / prom_scale) + 1.25 * c["sector_support"],
-        ))
+        if name == "centre_inner" and rank_policy == FRAME_RANK_POLICY:
+            rows = [
+                candidate_frame_rank(c, data, sectors, u, (lo, hi), prom_scale)
+                for c in options
+            ]
+            # No per-stone parameters and no physical-facet truth assumption.
+            winner = int(np.argmax([r["rank_score"] for r in rows]))
+            for c, row in zip(options, rows):
+                c["frame_rank_diagnostics"] = row
+            selected.append(options[winner])
+        else:
+            selected.append(max(
+                options,
+                key=lambda c: np.log1p(c["prominence"] / prom_scale) + 1.25 * c["sector_support"],
+            ))
     partial_controls = {
         name: _control_from_candidate(boundary, window, u)
         for name, boundary, window in zip(BOUNDARIES, selected, BOUNDARY_WINDOWS)
@@ -318,8 +424,18 @@ def discover_template(frame_sector_evidence, u, *, peak_policy=GLOBAL_PEAK_POLIC
     if status != "unavailable" and any(c["near_window_edge"] for c in controls):
         status = "review"
         reason = "semantic_window_edge"
-    return dict(status=status, reason=reason, consensus=consensus, sectors=sectors,
-                candidates=candidates, controls=controls)
+    response = dict(status=status, reason=reason, consensus=consensus, sectors=sectors,
+                    candidates=candidates, controls=controls)
+    if rank_policy == FRAME_RANK_POLICY:
+        response["c3_ranking_audit"] = {
+            "policy": FRAME_RANK_POLICY,
+            "selected_u": float(selected[0]["u"]),
+            "candidates": [
+                row["frame_rank_diagnostics"]
+                for row in candidates if "frame_rank_diagnostics" in row
+            ],
+        }
+    return response
 
 
 def boundary_alignment(frame_sector_evidence, u, controls):
