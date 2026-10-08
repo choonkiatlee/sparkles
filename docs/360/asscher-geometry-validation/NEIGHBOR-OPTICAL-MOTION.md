@@ -91,3 +91,38 @@ and cannot be passed to the optical-to-physical consumer gate.
 Research disposition will be **KEEP/REVISE** for an *optical*
 measurement after actual RGB QC. Mere ability to compute local
 translations is not evidence that a reflection is a real facet edge.
+
+## First real four-stone result (8 October 2026)
+
+The initial full frozen-source replay ([workflow 37852681446](https://github.com/choonkiatlee/sparkles/actions/runs/37852681446))
+passed. It reported **34 of 34 adjacent ordinal pairs as measurable at the
+pair level**. This means source images and overlapping masks existed; it
+**does not** mean all local optical-patch shifts were unambiguous.
+
+| IGI certificate | Crown-view metadata | Adjacent pairs | Median gain-normalized absolute change | Observations |
+| --- | --- | ---: | ---: | --- |
+| LG756520111 | likely crown | 7/7 | 0.0435 | Adjacent source 12–13 and 15–16 show localized changing interior bands and corner reflections; 1–4 of 16 local tiles ambiguous |
+| LG756580087 | uncertain | 9/9 | 0.0590 | Some adjacent views have less mask overlap (0.956–0.960); do not label table/crown |
+| LG818659722 | likely crown | 9/9 | 0.0585 | Source 6–7 illustrates substantial interior appearance change; 9 of 16 local tiles ambiguous in that pair |
+| LG836619414 | uncertain | 9/9 | 0.1666 | Largest changes coincide with lower mask intersection-over-union (~0.93), so registration/silhouette mismatch may confound apparent optical motion |
+
+**RGB visual QC:** The panels show real changes in bright/dark internal
+reflections between adjacent source-camera frames, without requiring an
+assertion of physical facet identity. However, the motion overlays also
+show some orange bars on the registered footprint boundary, which are
+*not* evidence of diamond light behavior. The render has therefore been
+tightened to display heat only on the **eroded common valid stone interior**,
+with a negative-control test for mismatched silhouette masks. This
+rendering-only revision does not change any numeric motion metrics.
+
+### Research disposition and next decision
+
+**KEEP as an optical-only exploratory measurement, not a diamond quality
+score or an estimator of physical/virtual facet classes.** Patch
+correspondence is not yet a calibrated image-flow ground truth. In
+particular, low mask overlap and uncertain crown orientation must
+remain visible alongside motion measures. Any downstream comparison
+should separate photometric change from apparent texture translation
+and benchmark camera/gauge registration quality independently.
+The original physically unsupported C3/table boundaries remain
+unavailable; no source stress was run.
