@@ -94,9 +94,9 @@ def _outside_first_contact(distance, side, threshold):
 
 def _phase_rows(height, phase):
     lo, hi = (
-        (POLICY["crown_first_y_fraction"], POLICY["crown_last_y_fraction"])
-        if phase == "pavilion" else
         (POLICY["pavilion_first_y_fraction"], POLICY["pavilion_last_y_fraction"])
+        if phase == "pavilion" else
+        (POLICY["crown_first_y_fraction"], POLICY["crown_last_y_fraction"])
     )
     return np.arange(round(lo * height), round(hi * height) + 1, dtype=int)
 
