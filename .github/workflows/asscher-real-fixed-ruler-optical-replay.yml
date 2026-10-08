@@ -6,7 +6,10 @@ on:
       - "diamond360/asscher_semantic_optical_real_replay.py"
       - "diamond360/asscher_semantic_optical_handoff.py"
       - "tests/test_asscher_semantic_optical_real_replay.py"
+      - "diamond360/asscher_semantic_optical_sensitivity.py"
+      - "tests/test_asscher_semantic_optical_sensitivity.py"
       - "docs/360/asscher-geometry-validation/REAL-FIXED-RULER-BRIGHTNESS-REPLAY.md"
+      - "docs/360/asscher-geometry-validation/FIXED-OPTICAL-SUPPORT-SENSITIVITY.md"
       - ".github/workflows/asscher-real-fixed-ruler-optical-replay.yml"
   workflow_dispatch:
 
@@ -26,7 +29,7 @@ jobs:
       - name: Install package
         run: python -m pip install -e .
       - name: Test frozen-transfer replay provenance and visualization
-        run: python -m unittest tests.test_asscher_semantic_optical_real_replay tests.test_asscher_semantic_optical_handoff -v
+        run: python -m unittest tests.test_asscher_semantic_optical_real_replay tests.test_asscher_semantic_optical_handoff tests.test_asscher_semantic_optical_sensitivity -v
       - name: Retrieve ORIGINAL archived frozen #89 scaffold and per-frame transfer
         env:
           GH_TOKEN: ${{ github.token }}
@@ -66,13 +69,15 @@ jobs:
             --source-root outputs/real-optical-sources \
             --source-manifest docs/360/benchmark/per-stone/IGI-LG756520111/source-manifest.json \
             --frozen-root outputs/frozen-89 \
-            --output outputs/real-fixed-ruler-replay
+            --output outputs/real-fixed-ruler-replay \
+            --sensitivity
           python -m diamond360.asscher_semantic_optical_real_replay \
             --certificate IGI-LG756580087 \
             --source-root outputs/real-optical-sources \
             --source-manifest docs/360/benchmark/per-stone/IGI-LG756580087/source-manifest.json \
             --frozen-root outputs/frozen-89 \
-            --output outputs/real-fixed-ruler-replay
+            --output outputs/real-fixed-ruler-replay \
+            --sensitivity
       - name: Validate real crown-window replay never moves ruler or creates physical-facet scores
         run: |
           python - <<'PY'
@@ -101,6 +106,44 @@ jobs:
               print(c,data["archived_crown_face_selection"],"observed",measured,
                     "of",11*55,"possible source-frame semantic rows")
           PY
+      - name: Validate measured sensitivity and no fake cross-vendor invariance
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path("outputs/real-fixed-ruler-replay")
+          for name in ("IGI-LG756520111","IGI-LG756580087"):
+              sub=root/name
+              d=json.loads((sub/"real-fixed-ruler-sensitivity.json").read_text())
+              baseline=json.loads((sub/"real-fixed-ruler-brightness.json").read_text())
+              assert d["status"]=="descriptive_sensitivity_no_method_selection_or_quality_score"
+              assert d["certificate"]==name
+              assert d["source_indices"]==baseline["sampled_source_indices"]
+              assert len(d["frames"])==11 and len(d["semantic_ids"])==55
+              assert d["no_refit"] is True and d["physical_facet_angles_available"] is False
+              assert d["vendor_cross_source_calibration_established"] is False
+              assert d["frozen_geometry_artifact_hashes"]==baseline["frozen_artifact_sha256"]
+              assert d["archived_face_role"]==baseline["archived_crown_face_selection"]
+              assert (sub/"real-fixed-ruler-sensitivity.png").is_file()
+              assert all(f["unchanged_scaffold"] and f["unchanged_transfer_support"]
+                         and f["fixed_geometry_refit_count"]==0 for f in d["frames"])
+              for f,s in zip(d["frames"],baseline["frames"]):
+                  assert f["source_index"]==s["source_index"]
+                  orig={q["semantic_id"]:q for q in s["entities"]}
+                  for row in f["entities"]:
+                      assert row["nominal_pixel_count"]==orig[row["semantic_id"]]["supported_pixel_count"]
+                      assert row["nominal_raw_mean"]==orig[row["semantic_id"]]["raw_mean_brightness"]
+                      assert row["geometry_support_status"]==orig[row["semantic_id"]]["geometry_support_status"]
+              for key in ("C1_N","C2_N","C3_N","P1_N","P2_N","P3_N"):
+                  e=d["entity_summary"][key]
+                  core=e["perturbation_stats"]["core_1px_from_nominal"]
+                  larger=e["perturbation_stats"]["expanded_1px_from_nominal"]
+                  bright=e["perturbation_stats"]["gain_1_10_clipped_raw_from_nominal"]
+                  print(name,key,"core_median_abs",core["median_abs"],
+                        "expanded_median_abs",larger["median_abs"],
+                        "gain_median_abs",bright["median_abs"],
+                        "raw_range",e["nominal_raw_range"])
+          PY
       - name: Upload small real-source trace and provenance reports, not intermediate 256-frame arrays
         uses: actions/upload-artifact@v4
         with:
@@ -108,6 +151,10 @@ jobs:
           path: |
             outputs/real-fixed-ruler-replay/IGI-LG756520111/real-fixed-ruler-brightness.json
             outputs/real-fixed-ruler-replay/IGI-LG756520111/real-fixed-ruler-traces.png
+            outputs/real-fixed-ruler-replay/IGI-LG756520111/real-fixed-ruler-sensitivity.json
+            outputs/real-fixed-ruler-replay/IGI-LG756520111/real-fixed-ruler-sensitivity.png
             outputs/real-fixed-ruler-replay/IGI-LG756580087/real-fixed-ruler-brightness.json
             outputs/real-fixed-ruler-replay/IGI-LG756580087/real-fixed-ruler-traces.png
+            outputs/real-fixed-ruler-replay/IGI-LG756580087/real-fixed-ruler-sensitivity.json
+            outputs/real-fixed-ruler-replay/IGI-LG756580087/real-fixed-ruler-sensitivity.png
           if-no-files-found: error
