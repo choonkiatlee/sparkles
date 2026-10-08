@@ -181,6 +181,31 @@ class DiajewelRotationDownloader(_ProgressiveDownloader):
         return viewer, source_root, f"{source_root}/0.json"
 
 
+class Core360RotationDownloader(_ProgressiveDownloader):
+    """Download the validated v360.in same-origin Vision360 variant."""
+
+    source_name = "core360"
+    _HOST = re.compile(r"^v360[0-9]+\.v360\.in$", re.IGNORECASE)
+
+    def _source(self, reference: EvidenceReference) -> tuple[str, str, str]:
+        locator = reference.locator or ""
+        parts = urlsplit(locator)
+        values = parse_qs(parts.query).get("d", [])
+        host = parts.netloc.lower()
+        if (
+            parts.scheme != "https"
+            or not self._HOST.fullmatch(host)
+            or parts.path.rstrip("/").lower() != "/vision360.html"
+            or len(values) != 1
+            or not _ITEM_ID.fullmatch(values[0])
+        ):
+            raise ValueError("not an exact Core360 v360.in viewer URL")
+        item_id = values[0]
+        viewer = f"https://{host}/vision360.html?d={item_id}"
+        source_root = f"https://{host}/imaged/{item_id}"
+        return viewer, source_root, f"{source_root}/0.json?version="
+
+
 class WorkshopRotationDownloader(_ProgressiveDownloader):
     source_name = "workshop"
 
