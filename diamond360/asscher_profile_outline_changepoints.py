@@ -203,6 +203,7 @@ def analyse_trace_record(payload):
     _validate_strokes(payload)
     return {
         "schema_version": SCHEMA,
+        "source_orientation": POLICY["source_orientation"],
         "source_sha256": payload["source_sha256"],
         "policy": POLICY,
         "policy_sha256": feasibility.canonical_sha256(POLICY),
@@ -242,7 +243,7 @@ section{background:white;padding:12px;border-radius:9px;margin-bottom:12px;borde
 canvas{width:min(100%,600px);height:auto;touch-action:none;border:1px solid #a8bac7}
 button,select,textarea{font:inherit;padding:7px;margin:3px}textarea{display:block;width:95%;min-height:45px}
 p.small{font-size:13px;color:#4d5d6f}button.main{background:#225d9e;color:white;border-radius:5px}</style></head><body>
-<h2>Trace the physical *external appearance*, not the interior</h2>
+<h2>Trace pointed upper PAVILION and broad lower CROWN (not interior)</h2>
 <p>Image-only trace candidates, not certified physical facets or dihedral angles.
 Do not consult Sergey's angle estimates. Mark only edges you can distinguish
 from background; leave any unrecoverable half unavailable.</p>
