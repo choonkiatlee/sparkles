@@ -36,15 +36,11 @@
     ],
     "origin": "lab-grown",
     "reported_proportions": {
-      "culet": "Asscher,",
-      "cut": "and",
       "depth_percent": 64.6,
       "fluorescence": "None",
-      "girdle": "Girdle:",
-      "length_width_ratio": 1.0,
-      "polish": "ed",
+      "length_width_ratio": 1,
       "symmetry": "Excellent",
-      "table_percent": 64.0
+      "table_percent": 64
     },
     "shape": "Asscher"
   },
