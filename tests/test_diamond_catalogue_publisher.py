@@ -5,6 +5,7 @@ import hashlib
 import json
 import unittest
 from dataclasses import replace
+from datetime import datetime, timezone
 from urllib.parse import parse_qs, urlsplit
 from unittest.mock import patch
 
@@ -181,7 +182,7 @@ class GitHubPublishingTests(unittest.TestCase):
                          ["data/catalog.json", "data/diamonds/igi-lg800667394.json"])
         manifest = api.manifest(receipt.diamond_id)
         self.assertEqual(api.index()["diamonds"][0]["id"], receipt.diamond_id)
-        self.assertEqual(manifest["evidence"][2]["frames"][0]["source_index"], 253)
+        self.assertEqual(next(e for e in manifest["evidence"] if e["kind"] == "rotation")["frames"][0]["source_index"], 253)
         self.assertTrue(all(v.startswith("asset-") for v in
                             (a["name"] for a in api.assets.values())))
         for asset in expected.assets:
@@ -225,7 +226,8 @@ class GitHubPublishingTests(unittest.TestCase):
         publish_result(result(), api)
         receipt = publish_result(result(
             url="https://diyona.com/pages/diamond-detail?sku=partial",
-            status=ResultStatus.PARTIAL, evidence=False, price=None), api)
+            status=ResultStatus.PARTIAL, evidence=False, price=None,
+            retrieved_at=datetime(2026, 10, 8, 8, tzinfo=timezone.utc)), api)
         manifest = api.manifest(receipt.diamond_id)
         self.assertEqual(len(manifest["evidence"]), 3)
         self.assertEqual(len(manifest["retrievals"]), 2)
