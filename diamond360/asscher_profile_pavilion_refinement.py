@@ -302,67 +302,99 @@ def _draw_line_dashed(draw, xy, fill, width=3):
 
 
 def render_comparison(photo, result):
-    """Large twin panels with the source photo and provenance-visible paths."""
+    """Two vertical, readable pavilion panels: observed vs conditional mirror.
+
+    All actual image-source observations appear identically in both panels.
+    Purple dotted paths are ONLY a modeled mirrored left extension and never
+    become independent right-side measurements, irrespective of visual fit.
+    """
     base = photo.convert("RGB")
-    width, height = base.size
     mag = 3
     crop = (20, 190, 390, 304)
-    panel_w, panel_h = (crop[2]-crop[0])*mag, (crop[3]-crop[1])*mag
-    canvas = Image.new("RGB", (2*panel_w+36, panel_h+108), (249, 250, 252))
-    d = ImageDraw.Draw(canvas)
-    colors = {"left": (16, 183, 66), "right": (20, 135, 239)}
-    mirror_color = (203, 65, 203)
-    for idx in range(2):
-        tile = base.crop(crop).resize((panel_w, panel_h))
-        xoff = idx*(panel_w+36)
-        canvas.paste(tile, (xoff, 44))
-        d.text((xoff+10, 12),
-               "Observed outside edges" if idx == 0 else "Symmetry: hypothetical unless reviewed",
-               fill=(25, 33, 47))
-        def translate(x,y):
-            return (round((x-crop[0])*mag+xoff), round((y-crop[1])*mag+44))
-        band = result["widest_width_band_candidate"]
-        for yy in [band["y_first_px"], band["y_last_px"]]:
-            x1,y1=translate(crop[0], yy);x2,_=translate(crop[2], yy)
-            d.line((x1,y1,x2,y1),fill=(214,133,22),width=1)
-        for side in ("left","right"):
-            pts = result["observed_supported_points"][side]
-            previous = None
-            for row in pts:
-                x,y = row["xy_px"]
-                at = translate(x,y)
-                shade = colors[side] if row["provenance"]=="automated_background_first_exterior_source" else (245,154,37)
-                if previous and y-previous[1] <= POLICY["maximum_visual_connected_gap_y_px"]:
-                    d.line((*previous[0],*at),fill=shade,width=3)
-                previous=(at,y)
-            fit = result["independent_pavilion"][side]
-            if fit["status"] == "review":
-                model = fit["selected_model"]
-                ys = range(fit["supported_y_range_px"][0],fit["supported_y_range_px"][-1]+1)
-                fitted_xy = [translate(_piecewise_x(model,y),y) for y in ys]
-                d.line(fitted_xy, fill=(255,255,255),width=2)
-                for bp in fit["breakpoints"]:
-                    x,y=bp["xy_px"];cx,cy=translate(x,y)
-                    color = (248,212,24) if bp["stability"]=="stable_across_penalties" else (244,119,41)
-                    d.ellipse((cx-6,cy-6,cx+6,cy+6),fill=color,outline=(31,35,41),width=2)
-        proposal = result["conditional_pavilion_model"].get("right_terminal_candidate")
-        if idx == 1 and proposal and proposal.get("xy_px"):
-            x,y=proposal["xy_px"];cx,cy=translate(x,y)
-            d.ellipse((cx-9,cy-9,cx+9,cy+9),outline=mirror_color,width=3)
-            left = result["observed_supported_points"]["left"]
-            axis = result["symmetry_diagnostic"].get("axis_x_px")
-            if axis is not None:
-                xy = [translate(2*axis-row["xy_px"][0],row["xy_px"][1])
-                      for row in left if row["xy_px"][1]>=248]
-                _draw_line_dashed(d,xy,mirror_color,width=3)
-            d.text((xoff+10,panel_h+53),"PURPLE: model-inferred, NOT a right observation",fill=mirror_color)
-        elif idx == 0:
-            d.text((xoff+10,panel_h+53),"GREEN/BLUE: source  ORANGE: endpoint-only",fill=(40,56,64))
-    d.text((10, panel_h+89),
-           "All coordinates are projected image evidence. No P1/P2/P3 physical angles.",
-           fill=(44,53,67))
-    return canvas
+    panel_width = (crop[2]-crop[0])*mag
+    panel_height = (crop[3]-crop[1])*mag
+    header_height, legend_height, gutter = 45, 46, 24
+    full_height = 2*(header_height+panel_height+legend_height)+gutter+35
+    image = Image.new("RGB", (panel_width, full_height), (249, 250, 252))
+    draw = ImageDraw.Draw(image)
+    colors = {"left": (5, 210, 64), "right": (20, 140, 240)}
+    predicted = (195, 48, 210)
+    titles = (
+        "OBSERVED PAVILION: independent left and right outer edges",
+        "OPTIONAL MIRROR: purple is NOT observed right-side evidence",
+    )
 
+    for panel in (0, 1):
+        offset_y = panel*(header_height+panel_height+legend_height+gutter)
+        image.paste(base.crop(crop).resize((panel_width, panel_height)),
+                    (0, offset_y+header_height))
+        draw.text((12,offset_y+13),titles[panel],fill=(27,38,55))
+
+        def at(x,y):
+            return (round((x-crop[0])*mag),round((y-crop[1])*mag+offset_y+header_height))
+
+        band=result["widest_width_band_candidate"]
+        for y in (band["y_first_px"],band["y_last_px"]):
+            draw.line((*at(crop[0],y),*at(crop[2],y)),
+                      fill=(224,143,28),width=2)
+
+        for side in ("left","right"):
+            source=result["observed_supported_points"][side]
+            previous=None
+            for row in source:
+                x,y=row["xy_px"]
+                this=at(x,y)
+                color=(colors[side]
+                       if row["provenance"]=="automated_background_first_exterior_source"
+                       else (255,153,28))
+                if previous is not None and y-previous[1] <= POLICY["maximum_visual_connected_gap_y_px"]:
+                    draw.line((*previous[0],*this),fill=color,width=3)
+                previous=(this,y)
+            fit=result["independent_pavilion"][side]
+            if fit["status"]!="review":
+                continue
+            line=fit["selected_model"]
+            ys=range(fit["supported_y_range_px"][0],fit["supported_y_range_px"][-1]+1)
+            smooth=[at(_piecewise_x(line,y),y) for y in ys]
+            # Dark outline makes the actual straight-segment fit legible
+            # against both luminous diamond facets and grey background.
+            draw.line(smooth,fill=(15,26,40),width=4)
+            draw.line(smooth,fill=(252,251,246),width=2)
+            for change in fit["breakpoints"]:
+                x,y=change["xy_px"];cx,cy=at(x,y)
+                color=((251,230,25) if change["stability"]=="stable_across_penalties"
+                       else (249,100,20))
+                draw.ellipse((cx-8,cy-8,cx+8,cy+8),
+                             fill=color,outline=(18,26,35),width=2)
+        draw.text(
+            (12,offset_y+header_height+panel_height+12),
+            "GREEN left / BLUE right: source. ORANGE: shadow-limited extension.",
+            fill=(33,48,56),
+        )
+        draw.text(
+            (12,offset_y+header_height+panel_height+28),
+            "YELLOW break: penalty-stable. ORANGE break: model-dependent.",
+            fill=(33,48,56),
+        )
+
+        if panel==1:
+            proposal=result["conditional_pavilion_model"].get("right_terminal_candidate")
+            axis=result["symmetry_diagnostic"].get("axis_x_px")
+            if proposal and proposal.get("xy_px") and axis is not None:
+                pts=[at(2*axis-row["xy_px"][0],row["xy_px"][1])
+                     for row in result["observed_supported_points"]["left"]
+                     if row["xy_px"][1]>=248]
+                # Every other short segment: conspicuously dashed model hypothesis.
+                for a,b in zip(pts[::2],pts[1::2]):
+                    draw.line((a,b),fill=predicted,width=4)
+                x,y=proposal["xy_px"];cx,cy=at(x,y)
+                draw.ellipse((cx-11,cy-11,cx+11,cy+11),
+                             outline=predicted,width=4)
+                draw.line((cx-15,cy,cx+15,cy),fill=predicted,width=2)
+    draw.text((12,full_height-23),
+              "IMAGE PROJECTION ONLY. No verified P1/P2/P3 physical angles.",
+              fill=(33,48,56))
+    return image
 
 def write_report(photo, auto_json, joint_json, endpoint_json, output, pose_json=None):
     photo = Path(photo)
