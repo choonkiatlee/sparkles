@@ -1,0 +1,28 @@
+{
+  "diamonds": [
+    {
+      "carat": "2.59",
+      "clarity": "VVS1",
+      "colour": "F",
+      "currency": "GBP",
+      "dimensions": [
+        7.58,
+        7.55,
+        4.88
+      ],
+      "has_motion": true,
+      "id": "igi-lg756520111",
+      "lab": "IGI",
+      "manifest_path": "data/diamonds/igi-lg756520111.json",
+      "price": "685.00",
+      "report_number": "LG756520111",
+      "retailer": "www.qualitydiamonds.co.uk",
+      "retrieval_status": "partial",
+      "shape": "Asscher",
+      "source_url": "https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/9155264EA",
+      "tax_basis": "inc. VAT",
+      "thumbnail_url": "https://github.com/choonkiatlee/sparkles/releases/download/sparkles-diamond-igi-lg756520111/asset-3e9e442756ebc1545db66048f6108cc8ebde5a9c8fd82f1051fbf084bfdad95f.jpg"
+    }
+  ],
+  "schema": "sparkles-diamond-index/1"
+}
