@@ -1,0 +1,89 @@
+name: asscher-optical-registration-confound-audit
+
+permissions:
+  contents: read
+  actions: read
+
+on:
+  pull_request:
+    paths:
+      - "diamond360/asscher_optical_registration_audit.py"
+      - "tests/test_asscher_optical_registration_audit.py"
+      - "docs/360/asscher-geometry-validation/OPTICAL-REGISTRATION-CONFOUNDS.md"
+      - ".github/workflows/asscher-optical-registration-audit.yml"
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: python -m pip install -e .
+
+      - name: Test optical-only and registration-confound contract
+        run: |
+          python -m unittest \
+            tests.test_asscher_optical_registration_audit \
+            tests.test_asscher_optical_neighbor_motion \
+            tests.test_asscher_optical_physical_provenance \
+            tests.test_asscher_geometry_validation -v
+
+      - name: Download immutable successful #178 optical neighbor observations
+        uses: actions/download-artifact@v4
+        with:
+          name: asscher-neighbor-optical-motion
+          run-id: 37854076791
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: outputs/frozen-optical-neighbors
+
+      - name: Replay four-stone registration/appearance confound audit
+        run: |
+          python -m diamond360.asscher_optical_registration_audit \
+            --source outputs/frozen-optical-neighbors \
+            --output outputs/asscher-optical-registration-audit
+
+      - name: Validate all 34 original pairs and no physical geometry promotion
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path("outputs/asscher-optical-registration-audit")
+          result=json.loads((root/"summary.json").read_text())
+          assert result["stone_count"]==4
+          assert result["measured_pair_count"]==34
+          assert result["physical_facet_identity_claim"] is False
+          assert result["quality_score"] is None
+          assert result["no_new_rgb_download_or_geometry_fit"]
+          for row in result["stones"]:
+              assert row["measured_pair_count"] in (7,9)
+              assert sum(b["pair_count"] for b in
+                         row["overlap_bins"].values())==row["measured_pair_count"]
+              stone=json.loads((root/row["report_path"]).read_text())
+              assert stone["physical_facet_correspondence"]=="unavailable"
+              assert stone["no_camera_registration_correction_performed"]
+              assert stone["no_quality_score"]
+              assert all(p["facet_identity"]=="unavailable" and
+                         p["physical_interior_geometry"]=="unavailable"
+                         for p in stone["pairs"])
+              print(row["certificate"],row["face_identity"],
+                    "overlap counts",{
+                      key:val["pair_count"]
+                      for key,val in row["overlap_bins"].items()},
+                    "within-stone paired contrast",
+                    row["low_vs_high_overlap_contrast"])
+          PY
+
+      - name: Upload reproducible descriptive QC evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: asscher-optical-registration-confound-audit
+          path: outputs/asscher-optical-registration-audit
+          retention-days: 90
+          if-no-files-found: error
