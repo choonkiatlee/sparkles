@@ -152,8 +152,23 @@ def render_scene(scene: Scene, fitted: Optional[dict] = None) -> Image.Image:
     left=[(projected_x(scene,"left",t),y0+h*t) for t in np.linspace(0,1,180)]
     right=[(projected_x(scene,"right",t),y0+h*t) for t in np.linspace(0,1,180)]
     draw.polygon(left+list(reversed(right)),fill=(247,246,249))
-    draw.line(left,fill=(38,108,162),width=2)
-    draw.line(right,fill=(38,108,162),width=2)
+    # Faint grey lines show generating geometry only. Colored supported
+    # pixels and their short connections show what the estimator ACTUALLY saw.
+    # In occluded/shadow intervals, there must be no colored contour line.
+    draw.line(left,fill=(193,194,198),width=1)
+    draw.line(right,fill=(193,194,198),width=1)
+    sampled = sample_scene(scene)["observations"]["contours"]
+    for side, color in (("left",(13,168,83)),("right",(25,107,227))):
+        previous = None
+        for row in sampled[side]:
+            x, y = row["x_px"], row["y_px"]
+            if x is None:
+                previous = None
+                continue
+            if previous is not None and y - previous[1] <= 2.01:
+                draw.line((*previous,x,y),fill=color,width=2)
+            draw.ellipse((x-1.4,y-1.4,x+1.4,y+1.4),fill=color)
+            previous = (x,y)
     if scene.inner_distractors:
         for t in (0.27,0.41,0.56,0.70):
             y=y0+h*t
@@ -161,14 +176,6 @@ def render_scene(scene: Scene, fitted: Optional[dict] = None) -> Image.Image:
             rx=projected_x(scene,"right",t)-28
             if lx<rx:
                 draw.line((lx,y,rx,y),fill=(113,100,135),width=3)
-    for side,interval in (("left",scene.left_occlusion),
-                          ("right",scene.right_occlusion)):
-        a,b=interval
-        if b>a:
-            for y in range(int(y0+h*a),int(y0+h*b)+1,2):
-                t=(y-y0)/h
-                x=projected_x(scene,side,t)
-                draw.ellipse((x-4,y-4,x+4,y+4),fill=(211,212,215))
     for side,spec in (("left",scene.left),("right",scene.right)):
         for frac in spec.knots:
             yy=y0+frac*h
@@ -181,4 +188,5 @@ def render_scene(scene: Scene, fitted: Optional[dict] = None) -> Image.Image:
                 xx=projected_x(scene,side,t)
                 draw.ellipse((xx-8,yy-8,xx+8,yy+8),
                              outline=(238,123,10),width=3)
+    draw.text((10,248),"Green/blue = observed; pale gray = generating reference",fill=(40,54,65))
     return image
