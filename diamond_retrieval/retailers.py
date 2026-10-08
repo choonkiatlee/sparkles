@@ -355,6 +355,20 @@ class DiyonaListingProvider:
         response = self.http_client.get(url, timeout=self.timeout)
         if response.status_code < 200 or response.status_code >= 300:
             raise RetrievalError(f"Diyona listing returned HTTP {response.status_code}")
+        # Diyona's current page is a Shopify shell: the certified diamond is
+        # fetched from the public_diamonds API by exact SKU. This is the
+        # PRIMARY path, not a fallback after attempting to parse rendered HTML.
+        # Read only the public Supabase bootstrap settings from the shell;
+        # never use the HTML to infer the missing IGI report.
+        from .diyona_public_api import fetch_diyona_public_record
+        record = fetch_diyona_public_record(
+            url, response, self.http_client, timeout=self.timeout
+        )
+        if record is not None:
+            return record
+
+        # Backward compatibility for static HTML snapshots without the
+        # public API bootstrap (e.g. older archived retailer pages).
         raw, parsed = _parse_html(response.content)
 
         header = re.search(

@@ -20,7 +20,7 @@ from .models import (
 )
 from .retailers import (
     _ParsedHtml, _igi_certificate_reference, _motion_references,
-    _sanitize_retained_html, _still_references,
+    _still_references,
 )
 
 _URL = re.compile(r"""\bSUPABASE_URL\s*=\s*['"](https://[a-z0-9.-]+\.supabase\.co)['"]""", re.I)
@@ -55,9 +55,7 @@ def _public_api_config(html: str) -> tuple[str, str] | None:
     parsed = urlsplit(base)
     # Pin to Supabase-managed HTTPS hosts (no arbitrary storefront-supplied URL).
     if (parsed.scheme != "https" or parsed.username or parsed.password
-            or not parsed.hostname or not re.fullmatch(
-                r"[a-z0-9-]+\.supabase\.co", parsed.hostname
-            )):
+            or parsed.hostname != "ofjwrrqzzbcnmkkmlawl.supabase.co"):
         raise RetrievalError("Diyona public data endpoint is not a safe Supabase host")
     return base, anon.group(1)
 
@@ -188,8 +186,11 @@ def fetch_diyona_public_record(url: str, response, http_client, *, timeout: floa
                     images=(), media=()),
     ))
 
-    # Token-bearing retailer HTML must be sanitized before retention.
-    # The PostgREST JSON consists only of the allowlisted public columns above.
+    # Never retain public JS bootstrap configuration or its anonymous API key.
+    # An HTML digest gives provenance without persisting any tokens or scripts.
+    import hashlib
+    bootstrap_digest = hashlib.sha256(response.content).hexdigest()
+    # The PostgREST JSON consists only of the explicitly selected public columns.
     return ListingRecord(
         url=url, metadata=metadata, references=tuple(references),
         provenance=(
@@ -197,8 +198,8 @@ def fetch_diyona_public_record(url: str, response, http_client, *, timeout: floa
             ProvenanceStep(source, attribution_url, {"sku": sku, "report_number": report}),
         ),
         raw_responses=(
-            SourceResponse("diyona_listing", _sanitize_retained_html(html),
-                           response.url, response.headers.get("Content-Type"), True),
+            SourceResponse("diyona_html_bootstrap", "sha256:" + bootstrap_digest,
+                           response.url, "text/plain", True),
             SourceResponse(source, api.content.decode("utf-8", "replace"),
                            api_url, "application/json", True),
         ),

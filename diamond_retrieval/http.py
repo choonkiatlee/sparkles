@@ -106,8 +106,11 @@ class UrllibHttpClient:
                 content=response_content,
             )
 
-    def get(self, url: str, *, timeout: float) -> HttpResponse:
-        return self._request(url, timeout=timeout, method="GET")
+    def get(
+        self, url: str, *, timeout: float,
+        headers: dict[str, str] | None = None,
+    ) -> HttpResponse:
+        return self._request(url, timeout=timeout, method="GET", headers=headers)
 
     def post(
         self,
