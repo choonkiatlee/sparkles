@@ -163,6 +163,10 @@ class NativeLineGeometryTests(unittest.TestCase):
                                )),
                   patch.object(line.stability,"_load_evidence",
                                return_value=evidence),
+                  patch.object(line.stability,"_load_gauged_arrays",
+                               return_value=(
+                                   np.ones((160,160)),mask,mask
+                               )),
                   patch.object(line.outer_octagon,"fit_consensus",
                                return_value={
                                    "vertices_topology_order":original_outline,
