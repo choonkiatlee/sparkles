@@ -51,7 +51,7 @@ jobs:
             tests.test_asscher_profile_auto_changepoints \
             tests.test_asscher_profile_endpoint_candidates \
             tests.test_asscher_profile_conditional_symmetry \
-            tests.test_asscher_profile_pavilion_fit -v
+            tests.test_asscher_profile_pavilion_refinement -v
       - name: Emit source-pinned evidence review template
         run: |
           python -m diamond360.asscher_profile_physical_evidence \
@@ -222,7 +222,7 @@ jobs:
           assert set(doc["lower_crown_contours"])=={"left","right"}
           assert set(doc["last_crown_changepoint_candidates"])=={"left","right"}
           assert (folder/"endpoint-review-overlay.png").is_file()
-          print("Top candidate:",doc["top_cap_candidate"]["status"])
+          print("Top candidate:",doc["top_pavilion_tip_candidate"]["status"])
           print("Terminal candidates:",{s:v["status"] for s,v in doc["last_crown_changepoint_candidates"].items()})
           PY
       - name: Generate unreviewed conditional symmetry preview
@@ -249,7 +249,7 @@ jobs:
           assert (p/"conditional-symmetry-preview.png").is_file()
           assert (p/"pose-review-template.json").is_file()
           print("Unconfirmed head-on: mirrored LOWER CROWN terminal remains a PREVIEW")
-          print("Mirror candidate:",r["right_terminal_symmetry_hypothesis"].get("xy_px"))
+          print("Mirror candidate:",r["right_crown_terminal_symmetry_hypothesis"].get("xy_px"))
           print("Image-only proxy:",r["image_only_symmetry_diagnostic"])
           PY
       - name: Pavilion-specific independent versus optional symmetry model
