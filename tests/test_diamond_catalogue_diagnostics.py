@@ -82,6 +82,19 @@ class IngestionDiagnosticTests(unittest.TestCase):
         self.assertEqual(code, "catalogue_metadata_conflict")
         self.assertIn("reported_proportions", hint)
 
+    def test_conflicting_proportion_name_is_safe_and_specific(self):
+        code, hint = safe_failure(CatalogueError(
+            "Conflicting reported proportion: table_percent"))
+        self.assertEqual(code, "catalogue_proportion_conflict")
+        self.assertIn("table_percent", hint)
+        self.assertNotIn("token=", hint)
+
+    def test_unrecognized_proportion_key_is_never_reflected(self):
+        code, hint = safe_failure(CatalogueError(
+            "Conflicting reported proportion: token=DO_NOT_LEAK"))
+        self.assertEqual(code, "catalogue_validation_failure")
+        self.assertNotIn("DO_NOT_LEAK", hint)
+
     def test_existing_diamond_evidence_conflict_is_actionable(self):
         code, hint = safe_failure(CatalogueError(
             "Conflicting catalogue entries share a logical key"))

@@ -8,7 +8,9 @@ from .identity import diamond_id
 from .models import CatalogueError, SCHEMA
 from .serialization import canonical_json
 
-_CERT_FIELDS = ("shape", "origin", "carat", "colour", "clarity", "dimensions", "reported_proportions")
+# Identity/certificate-bound fields remain immutable across ingestions. Reported
+# proportions are a separately merged set of retailer-observed fields.
+_CERT_FIELDS = ("shape", "origin", "carat", "colour", "clarity", "dimensions")
 
 
 def _equivalent(left, right) -> bool:
@@ -22,6 +24,31 @@ def _equivalent(left, right) -> bool:
         except InvalidOperation:
             return str(left).strip().upper() == str(right).strip().upper()
     return left == right
+
+
+def _merge_reported_proportions(older, newer):
+    """Enrich individual proportion observations without discarding or overwriting.
+
+    Re-ingestion may omit a previously seen grade or add a newly extracted
+    field. Neither is a conflict. If two observations explicitly disagree on
+    the same field, fail closed instead of silently choosing one.
+    """
+    if older is None:
+        return copy.deepcopy(newer)
+    if newer is None:
+        return older
+    if not isinstance(older, dict) or not isinstance(newer, dict):
+        if not _equivalent(older, newer):
+            raise CatalogueError("Conflicting certified metadata: reported_proportions")
+        return older
+    for key, value in newer.items():
+        if key in older and not _equivalent(older[key], value):
+            # Value details may be untrusted retailer text. Caller must use an
+            # allowlist before publishing the key in public Actions logs.
+            raise CatalogueError(f"Conflicting reported proportion: {key}")
+        if key not in older:
+            older[key] = copy.deepcopy(value)
+    return older
 
 
 def _unique_sorted(items: list[dict], key):
@@ -76,6 +103,10 @@ def merge_manifest(existing: dict | None, incoming: dict) -> dict:
                 raise CatalogueError(f"Conflicting certified metadata: {field}")
             if older is None and newer is not None:
                 old_meta[field] = newer
+        old_meta["reported_proportions"] = _merge_reported_proportions(
+            old_meta.get("reported_proportions"),
+            new_meta.get("reported_proportions"),
+        )
         old_meta.setdefault("attribution", {}).update({
             k: v for k, v in new_meta.get("attribution", {}).items()
             if k not in old_meta.get("attribution", {})
