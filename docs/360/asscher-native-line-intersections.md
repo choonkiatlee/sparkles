@@ -52,6 +52,23 @@ each side and corner from observable evidence. It may return unavailable.
 OpenCV is an *optional diagnostic-only* dependency installed by the
 isolated GitHub workflow, not added to production project dependencies.
 
+## Missing inner scaffold is not missing source-line evidence
+
+The first all-stone run reproduced the correct frozen source selection but
+abstained entirely on IGI-LG818659722, because that stone's frozen #96
+**inner** scaffold is unavailable. This is not a reason to skip an
+independent examination of original RGB lines. The diagnostic now derives
+only the *observed physical outer octagon* via the existing
+`asscher_outer_octagon.fit_consensus` on the same selected #80-gauged masks,
+even when the inner C3/table fit failed. It does **not** fill in any
+unavailable inner facet/corner, select a new source view, or modify #96.
+
+The unchanged full source selection is still compared against frozen #96
+records in CI; all four stones must supply native RGB evidence when source
+frames exist. Geometry remains explicitly `unavailable` unless a
+valid image-supported junction cycle is demonstrated, which this
+diagnostic does not attempt.
+
 ## Visual QC questions
 
 1. Do the long detected line segments lie along actual boundaries,
