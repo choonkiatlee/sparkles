@@ -99,8 +99,7 @@ export function createRotationPlayer({host,slots,config=FRAME_PREFETCH}) {
     if(destroyed || item.rotation?.status!=="available") return;
     const index=frameIndexAt(position,item.rotation.frameCount);
     const frame=item.rotation.frames[index];
-    if(!force && (item.requestedURL===frame.url ||
-        (item.shownURL===frame.url && !item.pendingError.hidden))) return;
+    if(!force && item.requestedURL===frame.url) return;
     if(!force && item.shownURL===frame.url) {
       item.pendingError.hidden=true;
       item.caption.textContent="Frame "+(index+1)+" / "+item.rotation.frameCount+

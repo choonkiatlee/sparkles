@@ -7,6 +7,7 @@ on:
       - "tests/catalogue-core.test.mjs"
       - "tests/catalogue-compare.test.mjs"
       - "tests/catalogue-rotation.test.mjs"
+      - "tests/catalogue-rotation-player.test.mjs"
       - "tests/test_catalogue_pages_site.py"
       - "tools/build_catalogue_pages.py"
       - "index.html"
@@ -36,6 +37,6 @@ jobs:
           node --check catalogue/rotation.mjs
           node --check catalogue/rotation-player.mjs
       - name: Test catalogue selection and view logic
-        run: node --test tests/catalogue-core.test.mjs tests/catalogue-compare.test.mjs tests/catalogue-rotation.test.mjs
+        run: node --test tests/catalogue-core.test.mjs tests/catalogue-compare.test.mjs tests/catalogue-rotation.test.mjs tests/catalogue-rotation-player.test.mjs
       - name: Validate published site artifact and source links
         run: python -m unittest tests.test_catalogue_pages_site -v

@@ -118,7 +118,7 @@ In `catalogue/rotation.mjs`:
 
 ```js
 export const FRAME_PREFETCH = Object.freeze({
-  mode: "none", // change to "nearby" or "all" when desired
+  mode: "all", // default for selected comparison; switch to "nearby" or "none" if needed
   nearbyRadius: 2,
   maxConcurrent: 4,
 });
@@ -137,3 +137,32 @@ To test model/policy behavior:
 ```sh
 node --test tests/catalogue-rotation.test.mjs
 ```
+
+
+## C3b: flicker-resistant full-buffered playback (#153)
+
+Following testing on the real comparison, playback was **very flickery** under
+C3a's on-demand source swaps. The C3b behavior therefore changes the default
+for selected comparisons to **\`FRAME_PREFETCH.mode="all"\`**.
+
+1. Full image prefetch starts when the selected manifests load (not in overview).
+   The UI displays completed/total frame progress. The **Play** button waits
+   until all source images are downloaded or explicitly reported unavailable.
+   Seeking and stepping remain possible during preloading.
+2. Downloads are deduplicated and concurrency-limited (\`maxConcurrent=4\`).
+   A small LRU pool keeps at most **24 source Image objects** retained for
+   nearby decoding; the browser handles the rest of the HTTP cache. This
+   avoids deliberately retaining 5 × 256 decoded originals in application JS.
+3. A **double-buffered viewer** keeps the last successfully displayed frame
+   visible until its next original image finishes loading **and decoding**.
+   Rapid scrubs invalidate stale requests; failed images never blank the view,
+   and can be retried. Playback automatically pauses when the tab is hidden.
+4. One scalar normalized ordinal position continues to drive every selected
+   stone. There is **no invented physical phase alignment or optical score**.
+
+**Cost caveat:** a two-stone 256-frame comparison transfers all 512 original
+JPEGs before Play is enabled; up to five stones scale proportionately. The
+tradeoff is intentional following user feedback. If network impact proves too
+large, set \`mode: "nearby"\` (neighbor window) or \`"none"\` without redesigning
+the viewer. Mixed counts, video-only, missing frames and R2 URL handling remain
+supported. No full-frame downloads occur in the catalogue browse table.

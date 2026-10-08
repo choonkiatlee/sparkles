@@ -54,9 +54,9 @@ test("incomplete, missing and video-only evidence never masquerades as rotation"
   assert.equal(extractRotation([{...rotation([f(0),f(1)]),metadata:{sequence_complete:true,frame_count:255}}]).status,"unavailable");
 });
 
-test("full prefetch exists, is opt-in, loads selected frames, and respects concurrency",()=>{
+test("full prefetch is now the selected-comparison default with bounded concurrency",()=>{
   assert.deepEqual(PREFETCH_MODES,["none","nearby","all"]);
-  assert.equal(FRAME_PREFETCH.mode,"none");
+  assert.equal(FRAME_PREFETCH.mode,"all");
   const seq=extractRotation([{
     kind:"rotation",status:"success",metadata:{sequence_complete:true},
     frames:Array.from({length:8},(_,i)=>({source_index:i,
@@ -98,4 +98,70 @@ test("nearby prefetch wraps and remains bounded to neighboring image URLs",()=>{
   preloader.observe([seq],0);
   assert.deepEqual(requested.sort(),["https://github.com/assets/1.jpg","https://github.com/assets/5.jpg"]);
   preloader.stop();
+});
+
+
+test("prefetch tracks progress, failures, retries and bounds retained decoded images",()=>{
+  const frames=Array.from({length:5},(_,i)=>({source_index:i,
+    asset:{media_type:"image/jpeg",storage:{url:"https://frames.test/"+i+".jpg"}}}));
+  const seq=extractRotation([{kind:"rotation",status:"success",
+    metadata:{sequence_complete:true},frames}]);
+  const pending=[];
+  const updates=[];
+  const loader=createFramePreloader({mode:"all",maxConcurrent:2,maxRetained:2,
+    imageFactory:()=>{
+      const img={onload:null,onerror:null};
+      Object.defineProperty(img,"src",{set(url){
+        if(url) pending.push({url,img});
+      }});
+      return img;
+    },
+    onProgress:s=>updates.push(s),
+  });
+  loader.observe([seq],0);
+  assert.equal(loader.stats().total,5);
+  assert.equal(loader.stats().active,2);
+  pending[0].img.onload();
+  assert.equal(loader.stats().loaded,1);
+  pending[1].img.onerror();
+  assert.equal(loader.stats().failed,1);
+  for(let i=2;i<5;i++) pending[i].img.onload();
+  assert.equal(loader.stats().complete,true);
+  assert.equal(loader.stats().loaded,4);
+  assert.equal(loader.stats().failed,1);
+  assert.equal(loader.isReady(pending[0].url),true);
+  assert.equal(loader.isReady(pending[1].url),false);
+  loader.retry(pending[1].url);
+  assert.equal(loader.stats().complete,false);
+  pending.at(-1).img.onload();
+  assert.equal(loader.stats().loaded,5);
+  assert.equal(loader.stats().failed,0);
+  assert.equal(loader.stats().complete,true);
+  assert.ok(updates.length>=5);
+  loader.stop();
+  assert.equal(loader.stats().total,0);
+  assert.equal(loader.stats().queued,0);
+});
+
+test("stale callbacks after stop cannot restart queue or produce progress",()=>{
+  const frames=Array.from({length:4},(_,i)=>({source_index:i,
+    asset:{storage:{url:"https://frames.test/"+i+".jpg"}}}));
+  const seq=extractRotation([{kind:"rotation",status:"success",
+    metadata:{sequence_complete:true},frames}]);
+  let callback,progress=0,requests=0;
+  const loader=createFramePreloader({mode:"all",maxConcurrent:1,
+    onProgress:()=>progress++,imageFactory:()=>{
+      const img={onload:null,onerror:null};
+      Object.defineProperty(img,"src",{set(url){
+        if(url){callback=img.onload;requests++;}
+      }});
+      return img;
+    }});
+  loader.observe([seq],0);
+  const before=progress;
+  loader.stop();
+  callback();
+  assert.equal(requests,1);
+  assert.equal(progress,before);
+  assert.equal(loader.stats().queued,0);
 });
