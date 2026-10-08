@@ -48,7 +48,7 @@ class ExternalD360Tests(unittest.TestCase):
 
     def test_unsupported_sources_and_missing_media_fail_closed(self):
         with self.assertRaisesRegex(ValueError,"precommitted"):
-            ext.run_external("synthetic-best","bad",None,None,None)
+            ext.run_external("synthetic-best",{},None,None)
         bad=copy.deepcopy(self.manifest)
         row=next(x for x in bad["samples"] if x["sample_id"]==ext.SAMPLES[0])
         row["media"]["sequence"]["frame_count"]=99
