@@ -87,7 +87,8 @@ class RealFixedReplayContractTests(unittest.TestCase):
         report=handoff.sample_sequence(primary["scaffold"],frames)
         with tempfile.TemporaryDirectory() as td:
             dest=Path(td)/"traces.png"
-            replay._plot_traces(report,dest)
+            plotted_ids=replay._plot_traces(report,dest)
+            self.assertEqual(plotted_ids,["C1_N","C2_N","C3_N","P1_N","TABLE"])
             self.assertTrue(dest.exists())
             self.assertGreater(dest.stat().st_size,4500)
             self.assertEqual(report["counts"]["frames"],7)
