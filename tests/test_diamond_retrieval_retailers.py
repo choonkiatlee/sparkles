@@ -242,6 +242,36 @@ def _qd_pdf(report="LG713574578", include_report=True):
     )
 
 
+
+class IgiShapeHeadingTests(unittest.TestCase):
+    def test_igi_cutting_style_heading_does_not_extract_ting_style(self):
+        from diamond_retrieval.processors import _pdf_fields
+        text = (
+            "INTERNATIONAL GEMOLOGICAL INSTITUTE\n"
+            "REPORT NUMBER LG816611062\n"
+            "Shape and Cutting Style\n"
+            "Asscher\n"
+            "Measurements 7.20 x 7.10 x 5.05 mm\n"
+            "Carat Weight 2.69\n"
+            "Color Grade D\n"
+            "Clarity Grade VS1\n"
+        )
+        fields = _pdf_fields(text)
+        self.assertEqual(fields["shape"].upper(), "ASSCHER")
+        self.assertNotEqual(fields["shape"].lower(), "ting style")
+
+    def test_igi_cutting_style_inline_format(self):
+        from diamond_retrieval.processors import _pdf_fields
+        fields = _pdf_fields("Shape and Cutting Style: ASSCHER\nMeasurements 7.2 x 7.1 x 5.05")
+        self.assertEqual(fields["shape"], "ASSCHER")
+
+    def test_legacy_shape_and_cut_format_unchanged(self):
+        from diamond_retrieval.processors import _pdf_fields
+        fields = _pdf_fields("SHAPE AND CUT ASSCHER\nMEASUREMENTS 7.2 x 7.1 x 5.05")
+        self.assertEqual(fields["shape"], "ASSCHER")
+
+
+
 class CertificateOnlyPolicy:
     def select(self, listing, reference):
         return reference.kind == CERTIFICATE

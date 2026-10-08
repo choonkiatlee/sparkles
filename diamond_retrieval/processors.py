@@ -43,7 +43,9 @@ def _pdf_fields(text: str) -> dict[str, object]:
         fields["lab"] = "IGI"
 
     shape = re.search(
-        r"SHAPE(?:\s+AND\s+CUT)?\s*:?[ ]*"
+        # Current IGI certificates say "Shape and Cutting Style"; CUT must not
+        # match the prefix of CUTTING and extract the phantom "ting Style".
+        r"\bSHAPE(?:\s+AND\s+(?:CUTTING\s+STYLE|CUT\b))?\s*:?[ ]*"
         r"([A-Z][A-Z \-/]+?)(?=\s+(?:MEASUREMENTS|CARAT\s+WEIGHT|COLOR\s+GRADE|COLOUR\s+GRADE|CLARITY\s+GRADE)|\n|$)",
         text,
         re.I,
