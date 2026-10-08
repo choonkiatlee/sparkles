@@ -92,7 +92,7 @@ class ConditionalSymmetryTests(unittest.TestCase):
         self.assertEqual(result["right_crown_terminal_symmetry_hypothesis"]["status"],
                          "counterfactual_mirror_preview_not_applied")
         self.assertIn("already_has_independent", result["right_crown_terminal_symmetry_hypothesis"]["reason"])
-        self.assertEqual(result["independent_terminal_candidates"]["right"]["xy_px"],
+        self.assertEqual(result["independent_crown_terminal_candidates"]["right"]["xy_px"],
                          [314.0, 271])
 
     def test_inconsistent_mirror_outline_blocks_acceptance_even_with_pose_flag(self):
