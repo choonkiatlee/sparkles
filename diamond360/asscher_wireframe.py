@@ -466,6 +466,7 @@ def fit_from_sector_evidence(
     frame_metadata=None,
     outer_vertices=None,
     outer_confidence=0.95,
+    step_peak_policy=steps.GLOBAL_PEAK_POLICY,
 ):
     """Fit one fixed scaffold from already-gauged multi-frame edge evidence."""
     data = np.asarray(frame_sector_evidence, float)
@@ -482,7 +483,12 @@ def fit_from_sector_evidence(
     if not gauge_id:
         raise ValueError("stable sequence gauge_id is required")
 
-    template = steps.discover_template(data, u)
+    # Original #75/#96 path is unchanged; experimental selection is opt-in.
+    template = (
+        steps.discover_template(data, u)
+        if step_peak_policy == steps.GLOBAL_PEAK_POLICY
+        else steps.discover_template(data, u, peak_policy=step_peak_policy)
+    )
     if template["status"] == "unavailable":
         return {
             "schema_version": SCHEMA,
