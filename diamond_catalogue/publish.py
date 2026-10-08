@@ -12,7 +12,7 @@ from dataclasses import replace
 from diamond_retrieval import default_config, retrieve_diamond
 from diamond_retrieval.http import UrllibHttpClient
 from diamond_retrieval.retailers import DiyonaListingProvider
-from .diyona_browser import RenderedDiyonaListingProvider
+from .diyona_report_hint import ReportHintDiyonaProvider, normalize_report_hint, require_independent_report_corroboration
 from diamond_retrieval.errors import (
     IdentityConflictError, RetrievalError, UnsupportedInputError,
 )
@@ -28,18 +28,12 @@ _HTTP_LISTING_ERROR = re.compile(
 # Deliberately match only messages emitted by our own adapter. Never render
 # arbitrary upstream exception text, URLs, HTML, tokens or response bodies.
 _KNOWN_LISTING_ERRORS = {
-    "Diyona browser rendering failed":
-        ("listing_render_failed",
-         "The publicly accessible Diyona page could not be rendered in Chromium."),
-    "Diyona rendered listing did not expose certificate-bound diamond data":
-        ("listing_render_missing_identity",
-         "The rendered Diyona page did not reveal the requested certificate-bound SKU and IGI report."),
-    "Diyona browser navigation changed the exact listing":
-        ("listing_render_identity_mismatch",
-         "The browser navigated away from the requested exact Diyona stone."),
-    "Diyona rendered HTML exceeded safe size limit":
-        ("listing_render_too_large",
-         "The rendered Diyona HTML exceeded the configured safety limit."),
+    "Diyona explicit IGI report differs from the returned listing":
+        ("report_hint_mismatch",
+         "The supplied IGI report conflicts with the exact retailer listing."),
+    "Report hint only supports an exact Diyona listing":
+        ("report_hint_unsupported",
+         "An explicit IGI report hint is allowed only for an exact Diyona URL."),
     "Diyona exact listing no longer exposes certificate-bound diamond data":
         ("listing_missing_identity",
          "Diyona did not expose the report number and SKU required for safe publication."),
@@ -57,6 +51,8 @@ _KNOWN_LISTING_ERRORS = {
 
 def safe_failure(exc: Exception) -> tuple[str, str]:
     """Return only fixed, non-secret public diagnostics."""
+    if isinstance(exc, ValueError) and str(exc) == "IGI report input must be a full LG report number":
+        return ("invalid_report_hint", "Supply the complete IGI LG report number.")
     if isinstance(exc, UnsupportedInputError):
         return ("unsupported_input",
                 "Use one exact supported Diyona or Quality Diamonds listing URL.")
@@ -95,24 +91,30 @@ def safe_failure(exc: Exception) -> tuple[str, str]:
         return ("github_api_failure",
                 f"GitHub API returned HTTP {exc.status}; inspect repo permissions and retry.")
     if isinstance(exc, CatalogueError):
+        if str(exc) == "Explicit IGI hint lacks independent certificate-bound corroboration":
+            return ("report_hint_unverified",
+                    "IGI report was supplied manually but no matching certificate or "
+                    "certificate-bound motion was recovered; nothing was published.")
         return ("catalogue_validation_failure",
                 "Asset hashes, identity, capacity, or stored manifest failed a safety check.")
     return ("unexpected_failure",
             "An unexpected error occurred; inspect the failing stage without sharing secrets.")
 
 
-def retrieve_for_publication(url: str):
-    """Call the public retriever; add browser fallback only for exact Diyona."""
-    if DiyonaListingProvider(None).supports(url):
-        client = UrllibHttpClient()
-        config = default_config(client)
-        providers = tuple(
-            RenderedDiyonaListingProvider(client)
-            if isinstance(provider, DiyonaListingProvider) else provider
-            for provider in config.providers
-        )
-        return retrieve_diamond(url, config=replace(config, providers=providers))
-    return retrieve_diamond(url)
+def retrieve_for_publication(url: str, *, igi_report: str | None = None):
+    """Use the public retrieval composition with an optional explicit IGI hint."""
+    if not igi_report:
+        return retrieve_diamond(url)
+    if not DiyonaListingProvider(None).supports(url):
+        raise UnsupportedInputError("Manual IGI report hint requires an exact Diyona listing")
+    client = UrllibHttpClient()
+    config = default_config(client)
+    providers = tuple(
+        ReportHintDiyonaProvider(client, report_hint=igi_report)
+        if isinstance(provider, DiyonaListingProvider) else provider
+        for provider in config.providers
+    )
+    return retrieve_diamond(url, config=replace(config, providers=providers))
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -128,8 +130,11 @@ def main(argv: list[str] | None = None) -> int:
 
     stage = "listing retrieval"
     try:
-        result = retrieve_for_publication(url)
+        raw_report = os.environ.get("IGI_REPORT", "").strip()
+        report_hint = normalize_report_hint(raw_report) if raw_report else None
+        result = retrieve_for_publication(url, igi_report=report_hint)
         stage = "publishability validation"
+        require_independent_report_corroboration(result)
         plan = plan_publication(result)  # fail-closed gate before remote mutations
         kinds: dict[str, int] = {}
         for evidence in result.evidence:

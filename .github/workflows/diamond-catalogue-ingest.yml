@@ -7,6 +7,10 @@ on:
         description: "One exact supported Diyona or Quality Diamonds listing URL"
         required: true
         type: string
+      igi_report:
+        description: "Optional exact IGI LG report, only when Diyona's HTML omits it"
+        required: false
+        type: string
 
 permissions: {}
 
@@ -33,13 +37,12 @@ jobs:
           python-version: "3.11"
 
       - name: Install Sparkles
-        run: |
-          python -m pip install -e ".[catalogue-browser]"
-          python -m playwright install --with-deps chromium
+        run: python -m pip install -e .
 
       - name: Ingest and publish one certified diamond
         env:
           DIAMOND_URL: ${{ inputs.diamond_url }}
+          IGI_REPORT: ${{ inputs.igi_report }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_REF: refs/heads/master
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

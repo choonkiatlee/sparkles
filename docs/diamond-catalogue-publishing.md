@@ -82,3 +82,29 @@ Local focused verification:
 
 The repository-wide geometry validation has an unrelated known frozen-method
 mismatch after PR #96; this does not change catalogue contract tests.
+
+
+## JavaScript-only Diyona listings (no browser dependency)
+
+The URL already gives the exact SKU. The critical identifier is the IGI report.
+When the server-side HTML contains the SKU/report pairing, no extra input
+is needed. If the public retailer HTML omits its client-rendered identity,
+the optional `igi_report` workflow input accepts the full `LG...` number
+visible on the user-facing page; it does NOT infer that number from the SKU.
+
+The resulting record explicitly states that the SKU/report association was
+supplied by the user, not independently verified from retailer HTML. The
+publisher only proceeds if an independently retrieved IGI PDF has a matching
+parsed report or a successful rotation/video has provenance from Loupe360's
+exact certificate-bound lookup for that report. If upstream evidence fails
+or the input conflicts with the static listing, publication stops and no
+manifest is written. Original access controls are respected.
+
+For the first smoke test use:
+- `diamond_url=https://diyona.com/pages/diamond-detail?sku=A69835AA4`
+- `igi_report=LG816611062`
+
+Neither Playwright nor Chromium is needed or installed. Media remain
+retrievable using the public exact-report resolver and supplier downloader.
+A manual claim is not silently presented as independently established
+retailer metadata.
