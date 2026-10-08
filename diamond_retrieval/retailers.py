@@ -258,48 +258,38 @@ def _motion_references(
             )
         )
 
-    # Loupe's query is certificate-bound, not viewer-bound. Multiple links to
-    # the same report need only one query, but their locators remain recorded.
+    # One certificate-bound lookup can yield either evidence kind or both.
+    # Two policy-selectable references share a retrieval key so that only
+    # one lookup occurs when both rotation and video are requested.
     loupe_links = tuple(dict.fromkeys(
         value
         for value in values
         if urlsplit(value).netloc.lower() in {"loupe360.com", "www.loupe360.com"}
         and urlsplit(value).scheme in {"http", "https"}
     ))
-    if loupe_links:
-        references.append(
-            EvidenceReference(
-                identifier=f"{source}:{report_number}:loupe360",
-                kind=ROTATION,
-                retrieval_key=f"loupe360-report:{report_number}",
-                locator=loupe_links[0],
-                provenance=(
-                    ProvenanceStep(source, url, {"loupe360_links": loupe_links}),
-                ),
-                metadata={
-                    "lab": "IGI",
-                    "report_number": report_number,
-                    "resolver": "loupe360_certificate",
-                },
-            )
-        )
-    elif not references and (
+    has_unlinked_motion = (
         "360°" in parsed.text or "Loading 360" in parsed.text or "360 View" in parsed.text
-    ):
-        references.append(
-            EvidenceReference(
-                identifier=f"{source}:{report_number}:loupe360",
-                kind=ROTATION,
-                retrieval_key=f"loupe360-report:{report_number}",
-                locator=f"loupe360-report:{report_number}",
-                provenance=(ProvenanceStep(source, url),),
-                metadata={
-                    "lab": "IGI",
-                    "report_number": report_number,
-                    "resolver": "loupe360_certificate",
-                },
-            )
+    )
+    if loupe_links or (not references and has_unlinked_motion):
+        locator = loupe_links[0] if loupe_links else f"loupe360-report:{report_number}"
+        provenance = (
+            ProvenanceStep(source, url, {"loupe360_links": loupe_links}),
         )
+        for kind in (ROTATION, VIDEO):
+            references.append(
+                EvidenceReference(
+                    identifier=f"{source}:{report_number}:loupe360:{kind}",
+                    kind=kind,
+                    retrieval_key=f"loupe360-report:{report_number}",
+                    locator=locator,
+                    provenance=provenance,
+                    metadata={
+                        "lab": "IGI",
+                        "report_number": report_number,
+                        "resolver": "loupe360_certificate",
+                    },
+                )
+            )
     return tuple(references)
 
 
