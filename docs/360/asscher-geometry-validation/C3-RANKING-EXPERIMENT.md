@@ -72,3 +72,53 @@ specification.
 
 As requested, **no automatic source-stress tests**; #90 is manual-only and
 any robustness/physical facet claims are explicitly provisional.
+
+## Four-stone results — 8 October 2026
+
+The opt-in #89 run [37775298832](https://github.com/choonkiatlee/sparkles/actions/runs/37775298832) passed its focused tests, source integrity checks, all four-stone primary/leave-one-out fits, fixed-ruler transfer, and three-way baseline comparison against immutable #96 and #131.
+
+| Certificate | Frozen #96 maximum local-tier displacement | #131 window-local | #134 frame-coherent | Primary |
+|---|---:|---:|---:|---|
+| LG756520111 | 1.015936 | 1.015936 | **1.015936** | review |
+| LG756580087 | 0.220310 | 0.220310 | **0.220310** | review |
+| LG836619414 | 0.268954 | 0.268954 | **0.268954** | review |
+| LG818659722 | unavailable | 0.179538 | **0.179538** | review; one leave-out unavailable |
+
+**No change in maximum stability across the four stones relative to #131.**
+Most critically, `LG756520111` still changes C3/table from
+`u=0.578616` in the five-frame primary to `u=0.477987` when frame 16
+is omitted. The selected frames and the geometric outer fit remain unchanged.
+
+The full image-space candidate audit reveals *why* the score failed:
+
+| LG756520111 | Winner u≈0.478 | Other u≈0.579 |
+|---|---:|---:|
+| **Five-frame original score** | 1.568 | 2.371 |
+| Five-frame fraction of supported views | 1.00 | 1.00 |
+| Five-frame median angular misalignment u | 0.0252 | 0.0189 |
+| Five-frame new rank score | 2.643 | **3.490** |
+| **Without frame 16 original score** | 1.729 | 1.324 |
+| Without frame 16 fraction of supported views | 1.00 | 1.00 |
+| Without frame 16 median angular misalignment u | 0.0252 | 0.0283 |
+| Without frame 16 new rank score | **2.804** | 2.377 |
+
+Even with frame 16 omitted, the 0.579 hypothesis has strong frame-wise
+sector support counts **6, 7, 7, 7** versus **4, 8, 8, 6** for 0.478.
+However, **both** satisfy the threshold of at least four sectors in
+all four remaining views. The chosen binary persistence metric therefore
+saturates at 100% for *both* and cannot separate the candidates. Median
+angular offsets are close, so changing one scalar score cannot be
+justified by a clear physical geometry signal.
+
+**Disposition: REVISE / do not promote the experimental ranker.**
+This deliberately negative result is important: persistence of radial
+image contrast and eight-sector smoothness *do not identify a physical
+Asscher facet junction* in this 360. The next responsible step should
+retain **both** hypotheses and flag an ambiguity for physical/virtual
+facet separation and geometry validation, rather than reweighting the
+score using LG756520111 until one particular mode wins.
+
+The score remains opt-in, no defaults changed; #90 source stress remains
+manual/deferred. Per-case scorer diagnostics, comparative JSON and visual
+QC are available from the linked successful workflow artifact.
+
