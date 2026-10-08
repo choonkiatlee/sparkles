@@ -5,6 +5,10 @@ on:
     paths:
       - "catalogue/**"
       - "tests/catalogue-core.test.mjs"
+      - "tests/catalogue-ingest-request.test.mjs"
+      - "tests/test_catalogue_ingest_issue.py"
+      - "tools/parse_diamond_ingest_issue.py"
+      - ".github/workflows/diamond-catalogue-issue-request.yml"
       - "tests/catalogue-compare.test.mjs"
       - "tests/catalogue-rotation.test.mjs"
       - "tests/catalogue-player.test.mjs"
@@ -32,12 +36,14 @@ jobs:
         run: |
           node --check catalogue/core.mjs
           node --check catalogue/app.mjs
+          node --check catalogue/ingest-request.mjs
+          node --check catalogue/ingest-request-form.mjs
           node --check catalogue/compare.mjs
           node --check catalogue/comparison-view.mjs
           node --check catalogue/rotation.mjs
           node --check catalogue/rotation-canvas.mjs
           node --check catalogue/rotation-player.mjs
       - name: Test catalogue selection and view logic
-        run: node --test tests/catalogue-core.test.mjs tests/catalogue-compare.test.mjs tests/catalogue-rotation.test.mjs tests/catalogue-player.test.mjs tests/catalogue-canvas.test.mjs tests/catalogue-canvas-player.test.mjs
+        run: node --test tests/catalogue-ingest-request.test.mjs tests/catalogue-core.test.mjs tests/catalogue-compare.test.mjs tests/catalogue-rotation.test.mjs tests/catalogue-player.test.mjs tests/catalogue-canvas.test.mjs tests/catalogue-canvas-player.test.mjs
       - name: Validate published site artifact and source links
-        run: python -m unittest tests.test_catalogue_pages_site -v
+        run: python -m unittest tests.test_catalogue_pages_site tests.test_catalogue_ingest_issue -v
