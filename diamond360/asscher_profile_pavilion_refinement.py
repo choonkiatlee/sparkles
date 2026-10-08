@@ -1,7 +1,7 @@
-"""Pavilion-first source-contour fitting, with separately gated symmetry.
+"""Actual upper-pavilion source-contour fitting, with separately gated symmetry.
 
-Only projected OUTER contours enter the fit. End-of-pavilion extensions have
-less weight than independently supported main paths. No facet IDs, expert
+Only the UPPER pointed source-image contour (physical pavilion region) enters
+the fit. Lower shadow-affected rows are CROWN and excluded completely. No facet IDs, expert
 photo-angle targets, or internal virtual-facet gradients enter this module.
 A mirrored outline is a hypothetical/model-inferred geometry, NEVER a
 right-side observation and never an unqualified physical facet angle.
@@ -22,11 +22,13 @@ from . import asscher_profile_auto_changepoints as joint
 from . import asscher_profile_endpoint_candidates as endpoint
 from . import asscher_profile_conditional_symmetry as symmetry
 
-SCHEMA = "diamond360-asscher-profile-pavilion-refinement/1"
+SCHEMA = "diamond360-asscher-profile-pavilion-refinement/2"
 POLICY = {
-    "roi": "projected_pavilion_below_joint_widest_width_band",
+    "roi": "pointed_upper_pavilion_above_joint_widest_width_band",
+    "source_orientation": "pointed_upper_pavilion_broad_lower_crown",
     "main_source_weight": 1.0,
-    "independently_source_supported_endpoint_weight": 0.55,
+    "inferred_top_point_weight": 0.0,
+    "point_like_tip_is_candidate_only": True,
     "minimum_points_per_straight_stretch": 10,
     "minimum_y_span_per_straight_stretch_px": 9.0,
     "maximum_apparent_stretches_per_side": 3,
@@ -44,26 +46,17 @@ POLICY = {
 }
 
 
-def _points(contour, ends, side, boundary_end_y):
-    """Keep original and terminal support/provenance independent, no filling."""
+def _points(contour, side, boundary_start_y):
+    """Only UPPER source-supported physical-pavilion envelope; no lower crown."""
     raw = {}
     for row in contour["paths"][side + "_pavilion"]["points"]:
         xy = row.get("xy_px")
         if (xy and row["support"] == "edge_supported_candidate"
-                and xy[1] > boundary_end_y):
+                and xy[1] < boundary_start_y):
             raw[int(xy[1])] = {
                 "xy_px": [int(xy[0]), int(xy[1])],
                 "weight": POLICY["main_source_weight"],
                 "provenance": "automated_background_first_exterior_source",
-            }
-    for row in ends["terminal_contours"][side]["points"]:
-        xy = row.get("xy_px")
-        if (xy and row["status"] == "candidate_only"
-                and xy[1] > boundary_end_y and int(xy[1]) not in raw):
-            raw[int(xy[1])] = {
-                "xy_px": [int(xy[0]), int(xy[1])],
-                "weight": POLICY["independently_source_supported_endpoint_weight"],
-                "provenance": "automatic_shadow_limited_endpoint_extension",
             }
     return [raw[k] for k in sorted(raw)]
 
@@ -138,7 +131,7 @@ def _piecewise_x(fit, y):
 
 def _select(points):
     if len(points) < POLICY["minimum_points_per_straight_stretch"]:
-        return {"status": "unavailable", "reason": "insufficient_supported_exterior_pavilion_points"}
+        return {"status": "unavailable", "reason": "insufficient_supported_upper_pavilion_points"}
     candidates = {}
     for p in POLICY["segment_complexity_penalties_px2"]:
         model = _fit(points, p)
@@ -192,6 +185,8 @@ def _select(points):
 
 
 def analyse(contour, joined, ends, pose_review=None):
+    if contour.get("policy", {}).get("source_orientation") != POLICY["source_orientation"]:
+        raise ValueError("inverted source orientation")
     if (contour.get("schema_version") != exterior.SCHEMA
         or joined.get("schema_version") != joint.SCHEMA
         or ends.get("schema_version") != endpoint.SCHEMA):
@@ -199,6 +194,8 @@ def analyse(contour, joined, ends, pose_review=None):
     if any(row.get("source_sha256") != feasibility.ORIGINAL_PROFILE_SHA256
            for row in (contour, joined, ends)):
         raise ValueError("source SHA mismatch")
+    if joined.get("source_orientation") != POLICY["source_orientation"]:
+        raise ValueError("joint stage source orientation is inverted")
     if (contour.get("policy_sha256") != feasibility.canonical_sha256(exterior.POLICY)
         or joined.get("policy_sha256") != feasibility.canonical_sha256(joint.POLICY)
         or ends.get("policy_sha256") != feasibility.canonical_sha256(endpoint.POLICY)):
@@ -214,61 +211,59 @@ def analyse(contour, joined, ends, pose_review=None):
             "physical_facet_angles": "all_unavailable",
             "comparison_targets_loaded": False,
         }
-    boundary_y = int(band["y_last_px"])
-    separate = {side: _points(contour, ends, side, boundary_y)
+    boundary_y = int(band["y_first_px"])
+    separate = {side: _points(contour, side, boundary_y)
                 for side in ("left", "right")}
     independent = {side: _select(separate[side]) for side in ("left", "right")}
-    symmetrical = symmetry.analyse(contour, joined, ends, pose_review)
-    hypothesis = symmetrical["right_terminal_symmetry_hypothesis"]
-    proposal = None
-    if hypothesis.get("xy_px") is not None:
-        proposal = {
-            **hypothesis,
-            "status": hypothesis["status"],
-            "reason": hypothesis["reason"],
-            "important": "modeled_right_terminal_not_independent_image_evidence",
+    # The 2-D paired *upper pavilion* shape is a pose-consistency check, not
+    # independent proof of head-on orientation or real facet mirror symmetry.
+    pose = symmetry._validate_pose(pose_review)
+    proxy = symmetry._outline_symmetry_proxy(contour, joined, ends)
+    axis = proxy.get("axis_x_px")
+    mirrored_right = [] if axis is None else [
+        {
+            "xy_px": [round(2 * axis - row["xy_px"][0], 3), row["xy_px"][1]],
+            "provenance": "MODEL_ONLY_mirrored_left_pavilion_not_observed_right",
+            "status": "counterfactual_only",
         }
+        for row in separate["left"]
+    ]
+    model_allowed = (pose["status"] == "confirmed_conditional"
+        and proxy["status"] == "image_only_compatible_not_pose_proof"
+        and all(len(separate[side]) >= 15 for side in ("left", "right")))
+    common = _select_mirror(
+        [dict(item, side=side) for side in ("left","right") for item in separate[side]], axis
+    ) if model_allowed else None
     modeled = {
-        "status": "not_adopted_pose_unconfirmed",
-        "provenance": "counterfactual_illustration_not_observation",
-        "right_terminal_candidate": proposal,
-        "common_model": None,
+        "status": "conditional_symmetry_model_inferred" if common and common["status"] != "unavailable"
+                  else "not_adopted_pose_unconfirmed_or_inconsistent",
+        "provenance": "head_on_and_stone_symmetry_model_not_independent_pixels",
+        "axis_x_px": axis,
+        "mirrored_right_pavilion_preview": mirrored_right,
+        "common_model": common,
+        "original_side_records_unchanged": True,
     }
-    if symmetrical["status"] == "conditional_model_inference":
-        axis = symmetrical["image_only_symmetry_diagnostic"]["axis_x_px"]
-        pooled = [dict(p, side=side) for side in ("left", "right")
-                  for p in separate[side]]
-        # A shared radial curve is a MODEL, not an alteration to independent
-        # observations. It also requires each side to have some real support.
-        if all(len(separate[side]) >= 15 for side in ("left", "right")):
-            common = _select_mirror(pooled, axis)
-            modeled = {
-                "status": "conditional_symmetry_model_inferred",
-                "provenance": "separately_confirmed_head_on_plus_stone_symmetry",
-                "axis_x_px": axis,
-                "right_terminal_candidate": proposal,
-                "common_model": common,
-                "original_side_records_unchanged": True,
-            }
     return {
         "schema_version": SCHEMA,
         "source_sha256": feasibility.ORIGINAL_PROFILE_SHA256,
         "policy": POLICY,
         "policy_sha256": feasibility.canonical_sha256(POLICY),
         "status": "review",
+        "source_orientation": POLICY["source_orientation"],
+        "top_pavilion_tip_candidate": ends.get("top_pavilion_tip_candidate"),
         "widest_width_band_candidate": band,
         "independent_pavilion": independent,
         "observed_supported_points": separate,
-        "symmetry_diagnostic": symmetrical["image_only_symmetry_diagnostic"],
-        "pose_review": symmetrical["pose_review"],
+        "symmetry_diagnostic": proxy,
+        "pose_review": pose,
         "conditional_pavilion_model": modeled,
         "comparison_targets_loaded": False,
         "physical_facet_angles": "all_unavailable",
         "interpretation": (
-            "Pavilion-first piecewise projected silhouette. Independently observed "
-            "left/right source coordinates remain separate. Symmetry, when used, "
-            "is an optional head-on-gated model inference, not observed data. "
-            "No physical pavilion-tier identity or calibrated facet angles."
+            "Upper pointed half is PAVILION; lower shadowed half is CROWN and "
+            "excluded from pavilion fitting. Independently observed upper "
+            "left/right source coordinates remain separate. Conditional symmetry "
+            "is never an observed right contour. No physical P1/P2/P3 angles."
         ),
     }
 
@@ -302,98 +297,66 @@ def _draw_line_dashed(draw, xy, fill, width=3):
 
 
 def render_comparison(photo, result):
-    """Two vertical, readable pavilion panels: observed vs conditional mirror.
-
-    All actual image-source observations appear identically in both panels.
-    Purple dotted paths are ONLY a modeled mirrored left extension and never
-    become independent right-side measurements, irrespective of visual fit.
-    """
+    """Mobile-friendly vertically stacked pointed PAVILION-only comparison."""
     base = photo.convert("RGB")
     mag = 3
-    crop = (20, 190, 390, 304)
-    panel_width = (crop[2]-crop[0])*mag
-    panel_height = (crop[3]-crop[1])*mag
-    header_height, legend_height, gutter = 45, 46, 24
-    full_height = 2*(header_height+panel_height+legend_height)+gutter+35
-    image = Image.new("RGB", (panel_width, full_height), (249, 250, 252))
+    crop = (20, 40, 390, 225)
+    panel_w, panel_h = (crop[2]-crop[0])*mag, (crop[3]-crop[1])*mag
+    head, foot, gutter = 42, 47, 22
+    image = Image.new("RGB",(panel_w,2*(head+panel_h+foot+gutter)),(249,250,252))
     draw = ImageDraw.Draw(image)
-    colors = {"left": (5, 210, 64), "right": (20, 140, 240)}
-    predicted = (195, 48, 210)
-    titles = (
-        "OBSERVED PAVILION: independent left and right outer edges",
-        "OPTIONAL MIRROR: purple is NOT observed right-side evidence",
-    )
-
-    for panel in (0, 1):
-        offset_y = panel*(header_height+panel_height+legend_height+gutter)
-        image.paste(base.crop(crop).resize((panel_width, panel_height)),
-                    (0, offset_y+header_height))
-        draw.text((12,offset_y+13),titles[panel],fill=(27,38,55))
-
-        def at(x,y):
-            return (round((x-crop[0])*mag),round((y-crop[1])*mag+offset_y+header_height))
-
+    colors={"left":(20,205,75),"right":(25,128,240)}
+    for p in (0,1):
+        yoffset=p*(head+panel_h+foot+gutter)
+        image.paste(base.crop(crop).resize((panel_w,panel_h)),(0,yoffset+head))
+        draw.text((12,yoffset+11),(
+            "UPPER PAVILION: independently observed outer geometry" if p==0
+            else "UPPER PAVILION: purple mirror is MODEL ONLY (not observed)"
+        ),fill=(30,39,52))
+        def pos(x,y):
+            return (round((x-crop[0])*mag), round((y-crop[1])*mag+yoffset+head))
         band=result["widest_width_band_candidate"]
         for y in (band["y_first_px"],band["y_last_px"]):
-            draw.line((*at(crop[0],y),*at(crop[2],y)),
-                      fill=(224,143,28),width=2)
-
+            draw.line((*pos(crop[0],y),*pos(crop[2],y)),
+                      fill=(234,153,31),width=2)
+        tip=result.get("top_pavilion_tip_candidate") or {}
+        if tip.get("status")=="candidate_only":
+            x,y=tip["projected_pavilion_tip_xy_px"]
+            cx,cy=pos(x,y)
+            draw.ellipse((cx-8,cy-8,cx+8,cy+8),
+                         fill=(5,235,223),outline=(10,30,42),width=2)
         for side in ("left","right"):
             source=result["observed_supported_points"][side]
-            previous=None
-            for row in source:
-                x,y=row["xy_px"]
-                this=at(x,y)
-                color=(colors[side]
-                       if row["provenance"]=="automated_background_first_exterior_source"
-                       else (255,153,28))
-                if previous is not None and y-previous[1] <= POLICY["maximum_visual_connected_gap_y_px"]:
-                    draw.line((*previous[0],*this),fill=color,width=3)
-                previous=(this,y)
+            prev=None
+            for item in source:
+                x,y=item["xy_px"];xy=pos(x,y)
+                if prev and y-prev[1]<=POLICY["maximum_visual_connected_gap_y_px"]:
+                    draw.line((*prev[0],*xy),fill=colors[side],width=3)
+                prev=(xy,y)
             fit=result["independent_pavilion"][side]
             if fit["status"]!="review":
                 continue
             line=fit["selected_model"]
             ys=range(fit["supported_y_range_px"][0],fit["supported_y_range_px"][-1]+1)
-            smooth=[at(_piecewise_x(line,y),y) for y in ys]
-            # Dark outline makes the actual straight-segment fit legible
-            # against both luminous diamond facets and grey background.
-            draw.line(smooth,fill=(15,26,40),width=4)
-            draw.line(smooth,fill=(252,251,246),width=2)
-            for change in fit["breakpoints"]:
-                x,y=change["xy_px"];cx,cy=at(x,y)
-                color=((251,230,25) if change["stability"]=="stable_across_penalties"
-                       else (249,100,20))
+            poly=[pos(_piecewise_x(line,y),y) for y in ys]
+            draw.line(poly,fill=(14,21,33),width=4)
+            draw.line(poly,fill=(250,250,247),width=2)
+            for ch in fit["breakpoints"]:
+                x,y=ch["xy_px"];cx,cy=pos(x,y)
+                c=(249,224,17) if ch["stability"]=="stable_across_penalties" else (247,116,21)
                 draw.ellipse((cx-8,cy-8,cx+8,cy+8),
-                             fill=color,outline=(18,26,35),width=2)
-        draw.text(
-            (12,offset_y+header_height+panel_height+12),
-            "GREEN left / BLUE right: source. ORANGE: shadow-limited extension.",
-            fill=(33,48,56),
-        )
-        draw.text(
-            (12,offset_y+header_height+panel_height+28),
-            "YELLOW break: penalty-stable. ORANGE break: model-dependent.",
-            fill=(33,48,56),
-        )
-
-        if panel==1:
-            proposal=result["conditional_pavilion_model"].get("right_terminal_candidate")
-            axis=result["symmetry_diagnostic"].get("axis_x_px")
-            if proposal and proposal.get("xy_px") and axis is not None:
-                pts=[at(2*axis-row["xy_px"][0],row["xy_px"][1])
-                     for row in result["observed_supported_points"]["left"]
-                     if row["xy_px"][1]>=248]
-                # Every other short segment: conspicuously dashed model hypothesis.
-                for a,b in zip(pts[::2],pts[1::2]):
-                    draw.line((a,b),fill=predicted,width=4)
-                x,y=proposal["xy_px"];cx,cy=at(x,y)
-                draw.ellipse((cx-11,cy-11,cx+11,cy+11),
-                             outline=predicted,width=4)
-                draw.line((cx-15,cy,cx+15,cy),fill=predicted,width=2)
-    draw.text((12,full_height-23),
-              "IMAGE PROJECTION ONLY. No verified P1/P2/P3 physical angles.",
-              fill=(33,48,56))
+                             fill=c,outline=(20,29,40),width=2)
+        if p==1:
+            pred=result["conditional_pavilion_model"]["mirrored_right_pavilion_preview"]
+            for a,b in zip(pred[::3],pred[1::3]):
+                draw.line((*pos(*a["xy_px"]),*pos(*b["xy_px"])),
+                          fill=(190,57,205),width=4)
+        draw.text((12,yoffset+head+panel_h+12),
+                  "GREEN/BLUE: independently observed upper outline; WHITE: fitted.",
+                  fill=(38,48,62))
+        draw.text((12,yoffset+head+panel_h+28),
+                  "YELLOW stable bend; ORANGE model-dependent; CYAN culet-region tip.",
+                  fill=(38,48,62))
     return image
 
 def write_report(photo, auto_json, joint_json, endpoint_json, output, pose_json=None):
