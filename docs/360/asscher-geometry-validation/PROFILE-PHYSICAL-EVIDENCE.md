@@ -673,3 +673,77 @@ observed symmetry, no expert-angle leakage, and preservation of all physical
 angle unavailability. This lets us examine whether symmetry could help
 recover an obscured bottom-right change without smuggling an optical prior
 into the evidence.
+
+
+## B2h — pavilion-focused source-data fit; crown deferred
+
+Review feedback: the existing crown outline is close enough for now and
+the **pavilion** is the most important geometric target. Do not tune
+crown optical structure, retrofit facet-angle targets, or force a presumed
+physical three-tier model into the observed image.
+
+The new \`diamond360.asscher_profile_pavilion_fit\` is deliberately
+additive to v2 background-first external contours, common maximum-width
+band, endpoint proposals and pose-review schema. It does **not** change
+any upstream crown or silhouette outputs.
+
+**Independent pavilion evidence**: starting just below the candidate
+maximum-width band, collect each side's actual source-supported outside
+pixels plus *only* shadow-aware terminal-extension points that passed
+source/background QC. Preserve their side, original source coordinates
+and separate algorithmic provenance; do not fill occluded rows. Fit
+1/2/3 *apparent* continuous silhouette slopes on each side independently,
+using the already-predeclared source-only complexity penalties. Report
+breakpoints, residuals and model-penalty sensitivity; no facet ID or
+physical plane/dihedral angle.
+
+**Pavilion symmetry sensitivity (separate model)**: take a reflection
+axis from independently observed width-band extrema and check paired
+left/right pavilion midpoint residuals. For rows with *both* observed
+outer edges, fit one actual measured half-width \((x_R-x_L)/2\); for
+supported left-terminal rows *after* right source support ends, use
+\(a-x_L\) to generate a possible \`MODEL_ONLY_NOT_PIXEL_OBSERVED\`
+right-hand position \(x_R^{model}=2a-x_L\). Thus the inferred right
+extension never masquerades as an observed edge. A shared continuous
+piecewise *radius* fit can be previewed even before a pose assessment,
+but is **not adopted** unless both independent head-on and stone
+mirror-symmetry assumptions are explicitly supplied in the source-hashed
+pose review *and* crown/pavilion paired image diagnostics are compatible.
+Model variants cannot override an independent right terminal candidate.
+An approximate 2D mirror image alone is not proof of head-on camera pose
+or symmetric physical facet angles.
+
+**Tip/shadow QC**: terminate source-supported traces when the
+background/shadow separation fails. The fitted pavilion covers the
+observed extent only; \`tip_or_culet_xy_px=null\` persists if no source
+evidence supports the true projected convergence. No invented symmetric
+bottom tip, no invented third physical pavilion plane. The overlay crops
+the pavilion only and keeps actual left/right source contours in
+different solid colors and inferred right-tail points in a distinct
+counterfactual color. Independently observed and model-inferred
+changepoints have separate provenance. The incomplete right side must
+not be treated as new ground truth.
+
+Run after the previous automatic source-only stages:
+
+\`\`\`bash
+python -m diamond360.asscher_profile_pavilion_fit \
+  --image docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG \
+  --auto-json outputs/asscher-profile-physical-evidence/auto-exterior.json \
+  --joint-json outputs/asscher-profile-physical-evidence/joint-changepoints.json \
+  --endpoint-json outputs/asscher-profile-physical-evidence/endpoint-candidates.json \
+  --output outputs/asscher-profile-physical-evidence
+\`\`\`
+
+Outputs are \`pavilion-fit.json\` and \`pavilion-only-overlay.png\`.
+A separate \`--pose-review\` may be passed for a *conditional modeled*
+symmetric profile, but it does not alter the independently observed
+left/right output or any physical angle fields.
+
+**Falsification**: the focused tests cover independent observed versus
+inferred provenance, missing right end while left survives, asymmetric
+right displacement vetoing symmetry, explicit head-on plus stone
+assumption for conditional adoption, retained independent right
+candidate, forged/stale source/target data and a source-hash-locked,
+reproducible real-photo overlay. The true stone's physical facet tiers
+and optical interior remain separate tasks (#91 PR C and #123).
