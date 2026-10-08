@@ -87,7 +87,7 @@ def _raw_from_audit(audit, *, corrupt_index=None, omit_batch=None, scramble=None
         "schema_version": "sparkles-progressive-motion/1",
         "source": audit["source_pipeline"],
         "viewer_url": audit["viewer"],
-        "dimensions": audit["dimensions"],
+        "dimensions": [8, 8],
         "scramble": scramble if scramble is not None else audit["scramble"],
         "batches": batches,
     }
