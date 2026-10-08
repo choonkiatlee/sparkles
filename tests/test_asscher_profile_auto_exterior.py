@@ -84,14 +84,14 @@ class AutoExteriorTests(unittest.TestCase):
                 for p in with_virtual_face["paths"][name]["points"]
             ))
 
-    def test_actual_photo_chooses_outer_crown_not_bright_internal_table(self):
+    def test_actual_photo_chooses_outer_pavilion_not_bright_internal_face(self):
         record, = (auto.write_qc(
             ORIGINAL, Path(tempfile.mkdtemp()),
             feasibility.ORIGINAL_PROFILE_SHA256
         ),)
-        left = {p["xy_px"][1]: p for p in record["paths"]["left_crown"]["points"]
+        left = {p["xy_px"][1]: p for p in record["paths"]["left_pavilion"]["points"]
                 if p["xy_px"] is not None}
-        right = {p["xy_px"][1]: p for p in record["paths"]["right_crown"]["points"]
+        right = {p["xy_px"][1]: p for p in record["paths"]["right_pavilion"]["points"]
                  if p["xy_px"] is not None}
         # Image-only silhouette sanity ranges, not Sergey angle targets:
         # the brightest central face would put x much closer to the center.
@@ -120,8 +120,8 @@ class AutoExteriorTests(unittest.TestCase):
             )
             self.assertTrue(record["original_verified"])
             self.assertEqual(record["source_sha256"], feasibility.ORIGINAL_PROFILE_SHA256)
-            self.assertGreater(record["paths"]["left_crown"]["supported_fraction"], 0.5)
-            self.assertGreater(record["paths"]["right_crown"]["supported_fraction"], 0.5)
+            self.assertGreater(record["paths"]["left_pavilion"]["supported_fraction"], 0.5)
+            self.assertGreater(record["paths"]["right_pavilion"]["supported_fraction"], 0.5)
             self.assertTrue(any(
                 point["support"] == "weak_or_ambiguous"
                 for row in record["paths"].values()
