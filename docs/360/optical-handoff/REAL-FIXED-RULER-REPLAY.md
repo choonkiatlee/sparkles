@@ -64,7 +64,7 @@ Run \`asscher_semantic_optical_handoff.sample_sequence\` on the
   selected descriptive entity brightness values. \`C1_N\`,
   \`C2_N\`, \`C3_N\`, \`P1_N\`, \`TABLE\` are **only illustrative semantic
   image-support names**, not physically validated facet masks. NULLs
-  leave disconnected points, not interpolation.
+  leave disconnected points, not interpolation. Source frame indices are\n  displayed at **true cyclic spacing**, with 255 positioned next to 0 and\n  traces intentionally **not connected across unsampled gaps**.
 
 The research gate is showing fixed IDs despite changing optical
 appearance. It is **not** a final #92 KEEP decision: #91's external
