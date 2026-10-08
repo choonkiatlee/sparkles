@@ -288,7 +288,7 @@ class RetailerProviderTests(unittest.TestCase):
         )
         self.assertEqual(
             [ref.kind for ref in record.references],
-            [CERTIFICATE, ROTATION],
+            [CERTIFICATE, ROTATION, VIDEO],
         )
         self.assertIn("[redacted]", record.raw_responses[0].body)
         self.assertNotIn("fixture-public-key", record.raw_responses[0].body)
@@ -315,7 +315,7 @@ class RetailerProviderTests(unittest.TestCase):
         self.assertEqual(str(record.metadata.extra["price_ex_vat_gbp"]), "1108.33")
         self.assertEqual(
             [ref.kind for ref in record.references],
-            [CERTIFICATE, STILL, ROTATION],
+            [CERTIFICATE, STILL, ROTATION, VIDEO],
         )
         self.assertEqual(record.references[1].locator, QD_STILL)
 
@@ -514,6 +514,35 @@ class RetailerEndToEndTests(unittest.TestCase):
         self.assertEqual(len(result.videos), 1)
         self.assertEqual(result.videos[0].payload, VIDEO_BYTES)
         self.assertEqual(len(http.post_calls), 1)
+
+    def test_video_only_policy_resolves_loupe_without_downloading_rotation(self):
+        http = self.qd_http()
+        payload = json.loads(http.post_responses[GRAPHQL_URL][0])
+        payload["data"]["certificate_by_cert_number"]["video"] = DIRECT_VIDEO
+        http.post_responses[GRAPHQL_URL] = (
+            json.dumps(payload).encode(), "application/json"
+        )
+        http.responses[DIRECT_VIDEO] = (VIDEO_BYTES, "video/mp4")
+
+        class VideoOnlyMotionPolicy(StandardRetrievalPolicy):
+            def select(self, listing, reference):
+                return reference.kind in {CERTIFICATE, VIDEO}
+
+        from dataclasses import replace
+        result = retrieve_diamond(
+            QD_URL,
+            config=replace(default_config(http), policy=VideoOnlyMotionPolicy()),
+        )
+        self.assertEqual(result.status, ResultStatus.COMPLETE)
+        self.assertEqual(len(result.certificates), 1)
+        self.assertEqual(len(result.videos), 1)
+        self.assertEqual(result.rotations, ())
+        self.assertEqual(len(http.post_calls), 1)
+        self.assertFalse(any("/0.json" in url for url in http.calls))
+        self.assertEqual(http.calls.count(DIRECT_VIDEO), 1)
+        self.assertTrue(
+            any(x.kind == ROTATION and x.status == EvidenceStatus.NOT_REQUESTED for x in result.attempts)
+        )
 
     def test_listing_and_loupe_duplicate_asset_download_once_and_keep_both_sources(self):
         http = self.qd_http()
