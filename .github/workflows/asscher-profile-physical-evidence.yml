@@ -6,10 +6,12 @@ on:
       - "diamond360/asscher_profile_physical_evidence.py"
       - "diamond360/asscher_profile_outer_contour.py"
       - "diamond360/asscher_profile_assisted_review.py"
+      - "diamond360/asscher_profile_outline_changepoints.py"
       - "diamond360/asscher_profile_feasibility.py"
       - "tests/test_asscher_profile_physical_evidence.py"
       - "tests/test_asscher_profile_outer_contour.py"
       - "tests/test_asscher_profile_assisted_review.py"
+      - "tests/test_asscher_profile_outline_changepoints.py"
       - "tests/test_asscher_profile_feasibility.py"
       - "docs/360/asscher-geometry-validation/PROFILE-PHYSICAL-EVIDENCE.md"
       - "docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG"
@@ -33,7 +35,8 @@ jobs:
             tests.test_asscher_profile_feasibility \
             tests.test_asscher_profile_physical_evidence \
             tests.test_asscher_profile_outer_contour \
-            tests.test_asscher_profile_assisted_review -v
+            tests.test_asscher_profile_assisted_review \
+            tests.test_asscher_profile_outline_changepoints -v
       - name: Emit source-pinned evidence review template
         run: |
           python -m diamond360.asscher_profile_physical_evidence \
@@ -106,6 +109,28 @@ jobs:
           assert (directory / "assisted-review-regions.png").is_file()
           assert (directory / "assisted-review.html").is_file()
           print("Image-only human worksheet verified; no numerical facets made up.")
+          PY
+      - name: Generate independent silhouette trace editor and changepoint baseline
+        run: |
+          python -m diamond360.asscher_profile_outline_changepoints \
+            --image docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG \
+            --output outputs/asscher-profile-physical-evidence
+      - name: Check no invented silhouette changepoints before review
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path("outputs/asscher-profile-physical-evidence")
+          result = json.loads((root/"exterior-changepoints.json").read_text())
+          assert result["status"] == "unavailable"
+          assert len(result["contours"]) == 4
+          assert all(item["status"] == "unavailable" for item in result["contours"].values())
+          assert all(row["physical_angle_deg"] is None
+                     for side in result["semantic_measurements"].values()
+                     for row in side.values())
+          assert (root/"exterior-tracer.html").is_file()
+          assert (root/"exterior-changepoints-overlay.png").is_file()
+          print("No physical contours or angles invented without separately reviewed traces.")
           PY
       - name: Upload review template
         uses: actions/upload-artifact@v4
