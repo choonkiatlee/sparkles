@@ -13,4 +13,4 @@ dependencies = ["numpy>=1.24", "Pillow>=9.2", "scipy>=1.10", "pypdf>=5.0", "cryp
 diamond360 = "diamond360.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["diamond360*", "diamond_retrieval*"]
+include = ["diamond360*", "diamond_retrieval*", "diamond_catalogue*"]
