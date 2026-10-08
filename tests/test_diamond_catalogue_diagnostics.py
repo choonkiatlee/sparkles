@@ -32,6 +32,30 @@ def wrapped_retrieval_error(message: str) -> RetrievalError:
 
 
 class IngestionDiagnosticTests(unittest.TestCase):
+    def test_diyona_public_api_403_is_explicit_and_safe(self):
+        code, hint = safe_failure(wrapped_retrieval_error(
+            "Diyona public stone lookup returned HTTP 403"))
+        self.assertEqual(code, "listing_access_denied")
+        self.assertIn("HTTP 403", hint)
+
+    def test_diyona_public_api_identity_and_data_failures_are_safe(self):
+        cases = {
+            "Diyona public stone lookup did not return exactly one stone":
+                "diyona_api_missing_or_ambiguous",
+            "Diyona public stone SKU does not match exact URL":
+                "diyona_api_sku_mismatch",
+            "Diyona public stone has no full IGI report number":
+                "diyona_api_missing_igi",
+            "Diyona public stone has incompatible certificate lab":
+                "diyona_api_lab_mismatch",
+            "Diyona public stone lookup returned invalid JSON":
+                "diyona_api_invalid_json",
+        }
+        for message, expected in cases.items():
+            with self.subTest(message=message):
+                self.assertEqual(
+                    safe_failure(wrapped_retrieval_error(message))[0], expected)
+
     def test_http_403_is_explicit_and_safe(self):
         code, hint = safe_failure(wrapped_retrieval_error("Diyona listing returned HTTP 403"))
         self.assertEqual(code, "listing_access_denied")

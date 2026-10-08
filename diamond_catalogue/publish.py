@@ -25,12 +25,27 @@ from .models import CatalogueError
 from .planner import plan_publication
 
 _HTTP_LISTING_ERROR = re.compile(
-    r"^(?:Diyona|Quality Diamonds) listing returned HTTP ([1-5][0-9][0-9])$"
+    r"^(?:(?:Diyona|Quality Diamonds) listing|Diyona public stone lookup) returned HTTP ([1-5][0-9][0-9])$"
 )
 
 # Deliberately match only messages emitted by our own adapter. Never render
 # arbitrary upstream exception text, URLs, HTML, tokens or response bodies.
 _KNOWN_LISTING_ERRORS = {
+    "Diyona public stone lookup did not return exactly one stone":
+        ("diyona_api_missing_or_ambiguous", "Diyona's public data did not return exactly one SKU match."),
+    "Diyona public stone SKU does not match exact URL":
+        ("diyona_api_sku_mismatch", "Diyona's public row does not match the requested URL SKU."),
+    "Diyona public stone has no full IGI report number":
+        ("diyona_api_missing_igi", "Diyona's public row has no full IGI certificate number."),
+    "Diyona public stone has incompatible certificate lab":
+        ("diyona_api_lab_mismatch", "Diyona's public row reports an incompatible lab."),
+    "Diyona public stone lookup returned invalid JSON":
+        ("diyona_api_invalid_json", "Diyona's public data endpoint did not return valid JSON."),
+    "Diyona public data endpoint is not a safe Supabase host":
+        ("diyona_api_unexpected_host", "Diyona's configured public data host changed; review the adapter."),
+    "Diyona exact URL has invalid public SKU":
+        ("diyona_api_invalid_sku", "Diyona exact URL contains an invalid SKU."),
+
     "Diyona explicit IGI report differs from the returned listing":
         ("report_hint_mismatch",
          "The supplied IGI report conflicts with the exact retailer listing."),

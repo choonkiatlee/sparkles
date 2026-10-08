@@ -84,27 +84,39 @@ The repository-wide geometry validation has an unrelated known frozen-method
 mismatch after PR #96; this does not change catalogue contract tests.
 
 
-## JavaScript-only Diyona listings (no browser dependency)
+## Diyona default ingestion: public Supabase API (no Chromium)
 
-The URL already gives the exact SKU. The critical identifier is the IGI report.
-When the server-side HTML contains the SKU/report pairing, no extra input
-is needed. If the public retailer HTML omits its client-rendered identity,
-the optional `igi_report` workflow input accepts the full `LG...` number
-visible on the user-facing page; it does NOT infer that number from the SKU.
+The normal Diyona adapter now retrieves the stone record from the same
+public PostgREST endpoint used by the retailer's own browser:
 
-The resulting record explicitly states that the SKU/report association was
-supplied by the user, not independently verified from retailer HTML. The
-publisher only proceeds if an independently retrieved IGI PDF has a matching
-parsed report or a successful rotation/video has provenance from Loupe360's
-exact certificate-bound lookup for that report. If upstream evidence fails
-or the input conflicts with the static listing, publication stops and no
-manifest is written. Original access controls are respected.
+1. Get the exact SKU from `?sku=A69835AA4`.
+2. Perform a *bootstrap-only* HTTP GET of Diyona's Shopify shell to read its
+   current `SUPABASE_URL` and public `SUPABASE_ANON` configuration. No
+   diamond facts are parsed from that shell, no JavaScript is executed, and
+   the shell/anonymous browser key are **not persisted in evidence**.
+3. Call the pinned public Supabase host's
+   `/rest/v1/public_diamonds?sku=eq.<SKU>&select=...&limit=2`
+   with the publicly advertised browser API key.
+4. Require **exactly one** returned stone, a matching SKU, IGI lab and a
+   complete IGI report number. `certificate_number` determines the canonical
+   catalogue identity; grades, dimensions, public image/video and certificate
+   URLs are retained with their API attribution.
+5. Continue using the existing verified certificate/media retrieval and
+   immutable GitHub Release publication pipeline.
 
-For the first smoke test use:
-- `diamond_url=https://diyona.com/pages/diamond-detail?sku=A69835AA4`
-- `igi_report=LG816611062`
+The live no-browser probe on 2026-10-08 returned a single public API row
+for SKU `A69835AA4` with `certificate_number=LG816611062`. The
+API result—not a user claim or a guessed URL—is the primary identity source.
 
-Neither Playwright nor Chromium is needed or installed. Media remain
-retrievable using the public exact-report resolver and supplier downloader.
-A manual claim is not silently presented as independently established
-retailer metadata.
+The optional workflow `igi_report` remains a backward-compatible manual
+fallback for cases where the retailer's public API is genuinely unavailable,
+but it is **not required** when the API is working. Manual identity retains
+explicit attribution and requires independent corroboration before publication.
+
+No Playwright, Chromium or headless browser is installed or invoked.
+
+The two requests are lightweight HTTP and the first exists *only* to
+bootstrap the rotating public API configuration, never to parse a
+JavaScript-rendered diamond detail screen. A future pinned public anonymous
+key can eliminate that bootstrap GET if desired, at the cost of managing
+public-key rotation.
