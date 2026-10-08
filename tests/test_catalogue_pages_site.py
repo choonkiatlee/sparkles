@@ -14,6 +14,7 @@ class PagesCatalogueTests(unittest.TestCase):
                 "index.html", ".nojekyll", "catalogue/index.html",
                 "catalogue/core.mjs", "catalogue/app.mjs", "catalogue/styles.css",
                 "catalogue/compare.mjs", "catalogue/comparison-view.mjs",
+                "catalogue/rotation.mjs",
                 "data/catalog.json", "data/diamonds/igi-lg756520111.json",
                 "data/diamonds/igi-lg816611062.json",
             ):
@@ -45,6 +46,21 @@ class PagesCatalogueTests(unittest.TestCase):
         self.assertIn("overview_thumbnail_url || row.thumbnail_url", app)
         self.assertIn("const original = httpUrl(row.thumbnail_url)", app)
         self.assertNotIn("overview_thumbnail_url", comparator)
+
+    def test_c3a_shared_360_player_preserves_original_stills_and_default_prefetch(self):
+        view = (ROOT / "catalogue/comparison-view.mjs").read_text(encoding="utf-8")
+        rot = (ROOT / "catalogue/rotation.mjs").read_text(encoding="utf-8")
+        html = (ROOT / "catalogue/index.html").read_text(encoding="utf-8")
+        self.assertIn('["rotation","360 rotation"]', view)
+        self.assertIn('fillColumn(column,data)', view)
+        self.assertIn('renderMotion(column,data)', view)
+        self.assertIn('DEFAULT_PREFETCH_MODE', view)
+        self.assertIn('Prefetch every frame (more data)', view)
+        self.assertIn('export const PREFETCH_ALL_DEFAULT = false', rot)
+        self.assertIn('concurrency=PREFETCH_CONCURRENCY', rot)
+        self.assertIn('Shared', view)
+        self.assertIn('relative frame position', html)
+        self.assertNotIn("angle-calibrated playback", html)
 
     def test_compact_table_has_real_selection_and_future_score_placeholders(self):
         html = (ROOT / "catalogue/index.html").read_text(encoding="utf-8")

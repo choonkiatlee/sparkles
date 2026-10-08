@@ -90,3 +90,59 @@ The default catalogue browse view is a **dense selectable table** rather than th
 The row prefers the automatically generated `overview_thumbnail_url` (128px source-hash-verified WebP) if available and falls back to the original `thumbnail_url` otherwise. The crop is generated with existing Asscher silhouette/pose code but does not assert a physically calibrated face-up viewing angle. The detailed C2 comparison still uses full original media unchanged. See `docs/catalogue-thumbnails.md`.
 
 Keyboard-accessible checkboxes and the C1 2–5 selection/shareable URL behavior are preserved; C2 manifest-backed detail remains below the table. On narrow screens the table scrolls horizontally, with selection and report/thumbnail columns sticky to maintain identity while scanning metrics.
+
+
+## C3a: shared ordinal original 360 comparison (#154)
+
+Open a selected 2–5-stone comparison to display a **shared player toolbar** and an
+aligned **360 rotation** row for each column with a recovered successful,
+complete ordered frame sequence. Full original stills remain in each column
+header; C2 metadata, original PDFs and provenance remain unchanged. The
+compact overview has no 360 loading.
+
+The same normalized position p in [0,1) drives each sequence with
+\`index=floor(p*frame_count)\`, wrapping at 1.0. A 256-frame stone and a
+64-frame stone therefore traverse each saved cycle over the same relative
+time, without claiming equivalent physical camera angles, phase alignment, or
+identical frame 0 across suppliers. Prev/next use the finest selected
+sequence's ordinal step; playback advances at 8 ticks/second over an
+approximately 15-second normalized cycle. Browser range keyboard navigation
+works via the native range input.
+
+For missing, failed, incomplete or video-only motion, the rotation cell
+explains the limitation; any original video has an explicit source link.
+A missing individual JPEG shows a retry button. Per-column manifest retry
+and stale-selection guards are retained.
+
+### Optional prefetch policy (disabled by default)
+
+\`catalogue/rotation.mjs\` exports \`PREFETCH_ALL_DEFAULT = false\` and the
+pure \`prefetchURLs(rotation,p,mode)\` function. The player exposes
+**Prefetch every frame (more data)** as an unchecked checkbox. When off, only
+the current displayed frame and neighboring ±2 frame URLs are requested.
+When explicitly checked, all frames for **selected** complete rotations are
+queued for loading, with global \`PREFETCH_CONCURRENCY = 3\`, rather than
+opening hundreds of simultaneous image requests. Unselected diamonds and the
+overview never prefetch any frames. Changing selection/hiding the player drops
+pending work; active browser requests may finish. Detailed queue caching,
+progress display, advanced cancellation and mobile tuning belong to C3b #155.
+
+Changing \`PREFETCH_ALL_DEFAULT\` to \`true\` changes the initial behavior in a
+single place if a future deployment decides that unlimited prefetch should be
+the default. The frontend reads resolved \`asset.storage.url\` (GitHub Release,
+R2, etc.) and does not call GitHub REST. Successful manifests are cached,
+but there is no full media manifest preloading.
+
+### C3a verification
+
+\`\`\`sh
+node --check catalogue/rotation.mjs
+node --check catalogue/comparison-view.mjs
+node --test tests/catalogue-core.test.mjs tests/catalogue-compare.test.mjs tests/catalogue-rotation.test.mjs
+python -m unittest tests.test_catalogue_pages_site -v
+\`\`\`
+
+The rotation tests exercise the two real 256-frame saved stones, simulated mixed
+frame counts, unsafe/incomplete/media-only cases, and the concurrency-limited
+prefetch-all policy. Follow with a visual smoke of the published static Pages
+comparison link once the PR is merged.
