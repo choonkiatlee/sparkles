@@ -87,11 +87,73 @@ wireframe, #92 geometry-to-optics handoff, or diamond quality scoring.
 
 ## Acceptance
 
-- [ ] Frozen #146/#162 archive hashes, selected frames and crown
+- [x] Frozen #146/#162 archive hashes, selected frames and crown
       provenance replay on all four stones.
-- [ ] Negative tests: source-frame wrap/gaps, missingness, candidate
+- [x] Negative tests: source-frame wrap/gaps, missingness, candidate
       collisions, unsupported RGB lines, forged physical identity.
-- [ ] JSON and original RGB pair QC for every <=3-frame window,
+- [x] JSON and original RGB pair QC for every <=3-frame window,
       with no artificially completed tracks.
-- [ ] Optical motion/contrast findings and REVISE/KEEP decision
+- [x] Optical motion/contrast findings and REVISE/KEEP decision
       based on actual visual QC, not numerical stability alone.
+
+
+## Four-stone result and original RGB review (2026-10-08)
+
+[Workflow 37852805244](https://github.com/choonkiatlee/sparkles/actions/runs/37852805244)
+completed its focused tests, frozen source-archive replay and original-camera
+RGB pair render successfully. The artifact named
+asscher-optical-neighbor-dynamics contains all per-stone JSON and images.
+
+| Certificate | Crown view provenance | Sampled near-neighbor windows (true consecutive) | Tentative optical pairs | Not redetected | Newly detected |
+| --- | --- | ---: | ---: | ---: | ---: |
+| IGI-LG756520111 | likely crown | 4 (3) | 17 | 7 | 8 |
+| IGI-LG756580087 | uncertain | 2 (1) | 16 | 9 | 12 |
+| IGI-LG818659722 | likely crown | 4 (1) | 3 | 18 | 14 |
+| IGI-LG836619414 | uncertain | 2 (1) | 5 | 3 | 6 |
+| **Total** | | **12 (6)** | **41** | **37** | **40** |
+
+These are counts of **threshold-selected optical image observations**, not
+numbers of facets, nor a performance rating. A missed match is censored
+by the prior RGB line detector and spatial matching threshold.
+Six comparisons are genuinely consecutive frames; the other six have
+one or two unsampled intermediate rotations. No 256-frame continuity
+or optical track through a gap is claimed.
+
+### Visual QC findings
+
+- LG756520111 **src16 -> src17 -> src18**: the original native RGB crops
+  visibly change internal bright/dark patterns across genuinely consecutive
+  source frames. Several matched contrast candidates show small image-plane
+  radial movements (typically of the order of 0.006–0.032 in outer
+  silhouette-normalized radial fraction), while other candidates are
+  not redetected. This documents appearance variation, **not the
+  trajectory of a polished facet**.
+- LG818659722 **src8 -> src10**: the RGB appearance of the central region
+  changes visibly. Its line detector emits *zero* tentative matched
+  candidates over this two-frame gap (five not redetected and four newly
+  detected). This is an **important negative example**: neither missing
+  candidate pairs nor a changed image means that a physical facet vanished,
+  and the intervening src9 was not observed in this pilot.
+- LG756580087 **src4 -> src5**: eight tentative matches despite changing
+  contrast in the original camera views, but the current crown-facing
+  metadata remains *uncertain*. This can inform optical observation
+  but cannot be used to validate C3/table geometry.
+- LG836619414 also has uncertain crown-facing provenance. Its sparse
+  line coincidences are observational evidence only.
+
+**Gradient-strength caveat:** the archived #146 field called
+gradient_strength is a *frame-locally normalized directional edge
+support measure*. Its change is **not an absolute photometric
+brightness change** and cannot establish light return or optical
+quality across different illumination conditions. The source-RGB
+image comparison is therefore essential.
+
+**Research disposition: KEEP this bounded optical-change diagnostic**,
+not a physical-facet estimator or a reliable long-lived feature tracker.
+The next step, if useful, is a separate predeclared *dense* contiguous
+source-window optical study with better region-level brightness,
+darkness/contrast and virtual/reflection ambiguity summaries. Keep
+physical surfaces and virtual-facet hypotheses separate, retain missing
+detections and unresolved crown metadata, and compare against these
+frozen negative examples. No automatic virtual labels, physical
+facet angles, quality scores or #90 stress runs.
