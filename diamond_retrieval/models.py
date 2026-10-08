@@ -189,6 +189,7 @@ class EvidenceAttempt:
     status: EvidenceStatus
     provenance: tuple[ProvenanceStep, ...] = ()
     message: str | None = None
+    locator: str | None = None
 
 
 @dataclass(frozen=True)
@@ -212,6 +213,21 @@ class DiamondResult:
 
     def evidence_of_kind(self, kind: EvidenceKind) -> tuple[Evidence, ...]:
         return tuple(item for item in self.evidence if item.kind == kind)
+
+    @property
+    def certificate_link(self) -> str | None:
+        """Original linked verification URL, or attempted PDF URL if none was linked.
+
+        This is an unverified reference, NOT evidence that the PDF was recovered.
+        """
+        for attempt in self.attempts:
+            if (
+                attempt.kind == CERTIFICATE
+                and attempt.locator
+                and attempt.locator.startswith(("https://", "http://"))
+            ):
+                return attempt.locator
+        return None
 
     @property
     def certificates(self) -> tuple[Evidence, ...]:
