@@ -18,11 +18,12 @@ from PIL import Image, ImageDraw
 
 from . import asscher_profile_feasibility as feasibility
 
-SCHEMA = "diamond360-asscher-exterior-changepoints/1"
-TRACE_SCHEMA = "diamond360-asscher-exterior-traces/1"
-STROKES = ("left_crown", "right_crown", "left_pavilion", "right_pavilion")
+SCHEMA = "diamond360-asscher-exterior-changepoints/2"
+TRACE_SCHEMA = "diamond360-asscher-exterior-traces/2"
+STROKES = ("left_pavilion", "right_pavilion", "left_crown", "right_crown")
 POLICY = {
     "coordinate_system": "original_image_xy_top_left_pixel_centers",
+    "source_orientation": "pointed_upper_pavilion_broad_lower_crown",
     "source_type": "reviewed_image_only_exterior_contour_trace",
     "max_segments_per_side_region": 3,
     "min_points_per_segment": 6,
@@ -46,6 +47,7 @@ def template():
         "schema_version": TRACE_SCHEMA,
         "source_sha256": feasibility.ORIGINAL_PROFILE_SHA256,
         "coordinate_system": POLICY["coordinate_system"],
+        "source_orientation": POLICY["source_orientation"],
         "strokes": {key: {
             "status": "unavailable",
             "provenance": "no_independently_reviewed_exterior_trace",
@@ -59,10 +61,12 @@ def template():
 def _validate_strokes(payload):
     if payload.get("schema_version") != TRACE_SCHEMA:
         raise ValueError("wrong exterior trace schema")
-    if set(payload) != {"schema_version", "source_sha256", "coordinate_system", "strokes", "target_values_loaded"}:
+    if set(payload) != {"schema_version", "source_sha256", "coordinate_system", "source_orientation", "strokes", "target_values_loaded"}:
         raise ValueError("unexpected/target-bearing input fields forbidden")
     if payload.get("source_sha256") != feasibility.ORIGINAL_PROFILE_SHA256:
         raise ValueError("trace must refer to original source SHA-256")
+    if payload.get("source_orientation") != POLICY["source_orientation"]:
+        raise ValueError("source orientation is missing or inverted")
     if payload.get("coordinate_system") != POLICY["coordinate_system"]:
         raise ValueError("invalid image coordinate convention")
     if payload.get("target_values_loaded") is not False:
@@ -256,7 +260,7 @@ Save each side independently; use at least eight points for a supported trace.</
 facet identities or angle measurements. Import it into the changepoint fit, or send it back for review.</p></section>
 <script>
 const data=__DOC__, src=new Image();src.src="data:image/png;base64,__PHOTO__";
-const names=["left_crown","right_crown","left_pavilion","right_pavilion"];
+const names=["left_pavilion","right_pavilion","left_crown","right_crown"];
 const select=document.querySelector("#side"),canvas=document.querySelector("#photo"),
 ctx=canvas.getContext("2d"),note=document.querySelector("#notes"),msg=document.querySelector("#message");
 for(const name of names){let o=document.createElement("option");o.value=name;o.textContent=name.replaceAll("_"," ");select.appendChild(o)}
