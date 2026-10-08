@@ -1,0 +1,91 @@
+name: asscher-optical-physical-provenance-contract
+
+permissions:
+  contents: read
+  actions: read
+
+on:
+  pull_request:
+    paths:
+      - "diamond360/asscher_optical_physical_provenance.py"
+      - "tests/test_asscher_optical_physical_provenance.py"
+      - "docs/360/asscher-geometry-validation/OPTICAL-PHYSICAL-PROVENANCE.md"
+      - ".github/workflows/asscher-optical-physical-provenance.yml"
+  workflow_dispatch:
+
+jobs:
+  provenance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install package
+        run: python -m pip install -e .
+
+      - name: Test fail-closed image-to-physical separation and unchanged diagnostics
+        run: |
+          python -m unittest \
+            tests.test_asscher_optical_physical_provenance \
+            tests.test_asscher_geometry_rgb_lines \
+            tests.test_asscher_geometry_junction_graph \
+            tests.test_asscher_semantic_optical_handoff -v
+
+      - name: Download immutable original-RGB line evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: asscher-native-RGB-facet-line-diagnostic
+          run-id: 37797799152
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: outputs/frozen-lines
+
+      - name: Download immutable original-RGB junction evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: asscher-rgb-junction-graph-diagnostic
+          run-id: 37815198934
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: outputs/frozen-junctions
+
+      - name: Build four-stone optical versus physical evidence inventory
+        run: |
+          python -m diamond360.asscher_optical_physical_provenance \
+            --line-root outputs/frozen-lines \
+            --junction-root outputs/frozen-junctions \
+            --output outputs/asscher-optical-physical-provenance
+
+      - name: Verify no optical candidate is promoted to a physical facet
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path("outputs/asscher-optical-physical-provenance")
+          summary=json.loads((root/"summary.json").read_text())
+          assert len(summary["stones"])==4
+          assert summary["physical_facet_identity_from_RGB"] is False
+          assert summary["production_estimator_unchanged"] is True
+          for row in summary["stones"]:
+              stone=json.loads((root/"per-stone"/row["certificate"]/
+                                "provenance.json").read_text())
+              assert row["physical_interior_facet_status"]=="unavailable"
+              assert not stone["can_use_as_physical_facet_geometry"]
+              for boundary in stone["physical_geometry"]["interior_boundaries"].values():
+                  assert boundary["vertices_topology_order"] is None
+                  assert boundary["status"]=="unavailable"
+              for frame in stone["optical_appearance"]["frames"]:
+                  for kind in ("line_segment_candidates","junction_candidates"):
+                      assert all(o["facet_semantic_id"] is None for o in frame[kind])
+              print(row["certificate"],"optical segments",row["optical_line_count"],
+                    "junctions",row["optical_junction_count"],
+                    "face",row["face_identity"])
+          PY
+
+      - name: Upload provenance-separated four-stone evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: asscher-optical-physical-provenance
+          path: outputs/asscher-optical-physical-provenance
+          retention-days: 90
+          if-no-files-found: error
