@@ -1,0 +1,182 @@
+name: asscher-temporal-rank-stability
+
+concurrency:
+  group: asscher-temporal-rank-stability-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+
+on:
+  pull_request:
+    paths:
+      - "diamond360/asscher_geometry_validation.py"
+      - "diamond360/asscher_geometry_method_comparison.py"
+      - "diamond360/asscher_geometry_stability.py"
+      - "diamond360/asscher_wireframe.py"
+      - "diamond360/asscher_topology.py"
+      - "diamond360/asscher_sequence_gauge.py"
+      - "diamond360/asscher_pose_sequence.py"
+      - "docs/360/benchmark/source-bundles.json"
+      - "docs/360/asscher-geometry-validation/**"
+      - "tests/test_asscher_geometry_validation.py"
+      - "tests/test_asscher_geometry_method_comparison.py"
+      - "tests/test_asscher_geometry_outer_revision.py"
+      - "tests/test_asscher_geometry_stability.py"
+      - "diamond360/asscher_steps.py"
+      - "diamond360/asscher_geometry_temporal_comparison.py"
+      - "tests/test_asscher_candidate_rank_experiment.py"
+      - ".github/workflows/asscher-temporal-rank-stability.yml"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: python -m pip install -e .
+
+      - name: Run focused validation tests
+        run: |
+          python -m unittest \
+            tests.test_asscher_geometry_validation \
+            tests.test_asscher_geometry_stability \
+            tests.test_asscher_geometry_method_comparison \
+            tests.test_asscher_geometry_outer_revision \
+            tests.test_asscher_window_peak_experiment \
+            tests.test_asscher_candidate_rank_experiment -v
+
+      - name: Download frozen benchmark source bundles
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import urllib.request
+          import zipfile
+          from pathlib import Path
+
+          manifest = json.loads(
+              Path("docs/360/benchmark/source-bundles.json").read_text()
+          )
+          root = Path("outputs/asscher-temporal-rank-stability-sources")
+          root.mkdir(parents=True, exist_ok=True)
+
+          for item in manifest["bundles"]:
+              archive = root / item["filename"]
+              urllib.request.urlretrieve(item["download_url"], archive)
+              assert archive.stat().st_size == item["bytes"]
+              assert hashlib.sha256(archive.read_bytes()).hexdigest() == item["sha256"]
+              destination = root / item["certificate"]
+              destination.mkdir(parents=True, exist_ok=True)
+              with zipfile.ZipFile(archive) as bundle:
+                  bundle.extractall(destination)
+          PY
+
+      - name: Run four-stone stability and fixed-ruler transfer benchmark
+        run: |
+          python -m diamond360.asscher_geometry_stability \
+            --source-root outputs/asscher-temporal-rank-stability-sources \
+            --output outputs/asscher-temporal-rank-stability \
+            --method temporal_candidate_v4_experiment
+
+      - name: Print research summary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          data = json.loads(
+              Path("outputs/asscher-temporal-rank-stability/summary.json").read_text()
+          )
+          for stone in data["stones"]:
+              stability = stone.get("estimator_stability", {})
+              transfer = stone.get("fixed_ruler_transfer", {})
+              print(stone["certificate"], stone["status"])
+              print(
+                  "  primary:",
+                  stone.get("primary", {}).get("selected_source_indices"),
+              )
+              print(
+                  "  max boundary tier fraction:",
+                  stability.get("max_boundary_displacement_tier_fraction"),
+              )
+              print(
+                  "  identity swaps:",
+                  stability.get("semantic_identity_swap_count"),
+              )
+              print("  transfer status:", transfer.get("status_counts"))
+              print("  outside fit:", transfer.get("outside_primary_fit_count"))
+              print("  wrap:", transfer.get("wrap_check"))
+          PY
+
+      - name: Retrieve immutable #96 control validation artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: asscher-geometry-stability-outer-v2
+          run-id: 37755387174
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: outputs/outer-v2-control
+
+      - name: Retrieve immutable window-local v3 experiment artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: asscher-window-peak-stability-v3-experiment
+          run-id: 37767669755
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: outputs/window-v3-control
+
+      - name: Paired #88 comparisons against v3 and #96
+        run: |
+          python -m diamond360.asscher_geometry_temporal_comparison \
+            --control outputs/window-v3-control/summary.json \
+            --experiment outputs/asscher-temporal-rank-stability/summary.json \
+            --control-method window_local_peaks_v3_experiment \
+            --output outputs/asscher-temporal-rank-stability/paired-v3-v4.json
+          python -m diamond360.asscher_geometry_temporal_comparison \
+            --control outputs/outer-v2-control/summary.json \
+            --experiment outputs/asscher-temporal-rank-stability/summary.json \
+            --control-method outer_octagon_v2 \
+            --output outputs/asscher-temporal-rank-stability/paired-v2-v4.json
+
+      - name: Print original frame-16 candidate vote breakdown
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path("outputs/asscher-temporal-rank-stability")
+          stone = root / "per-stone/IGI-LG756520111"
+          for path in [
+              stone / "primary-wireframe.json",
+              stone / "stability/leave-out-0016-wireframe.json",
+          ]:
+              data = json.loads(path.read_text())
+              print(path.name, "status", data["status"])
+              print("  C3", (data.get("boundary_evidence") or {}).get("C3_TABLE", {}).get("global_u"))
+              for row in ((data.get("candidate_ranking") or {})
+                          .get("centre_inner",{}).get("candidates",[])):
+                  print("  candidate", round(row["u"],4),
+                        "frame votes",row["frame_vote_count"],"/",row["frame_count"],
+                        "sector-frame votes",row["supported_sector_frame_pairs"],
+                        "original score",round(row["original_selection_score"],4),
+                        "eligible",row["eligible_frame_corroboration"])
+          PY
+
+      - name: Record full-suite status
+        continue-on-error: true
+        run: python -m unittest discover -s tests -v
+
+      - name: Upload geometry stability outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: asscher-temporal-rank-stability-v4-experiment
+          path: outputs/asscher-temporal-rank-stability
+          if-no-files-found: error
+          retention-days: 90
