@@ -27,6 +27,14 @@ class HttpResponse:
 
 class HttpClient(Protocol):
     def get(self, url: str, *, timeout: float) -> HttpResponse: ...
+    def post(
+        self,
+        url: str,
+        *,
+        timeout: float,
+        content: bytes,
+        headers: Mapping[str, str] | None = None,
+    ) -> HttpResponse: ...
 
 
 class ListingProvider(Protocol):
