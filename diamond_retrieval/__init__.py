@@ -22,6 +22,7 @@ from .motion_sources import (
     Core360RotationDownloader,
     D360RotationDownloader,
     DiajewelRotationDownloader,
+    RemoteV360RotationDownloader,
     WorkshopRotationDownloader,
 )
 from .models import (
@@ -90,6 +91,7 @@ __all__ = [
     "DiamondRetriever",
     "D360RotationDownloader",
     "DiajewelRotationDownloader",
+    "RemoteV360RotationDownloader",
     "DirectVideoDownloader",
     "DirectVideoProcessor",
     "DiyonaListingProvider",

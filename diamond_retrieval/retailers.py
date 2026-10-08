@@ -285,6 +285,12 @@ def _direct_rotation_locator(value: str) -> bool:
             parts.path.lower().rstrip("/") == "/360viewer/360view.html"
             and bool(query.get("d", [""])[0])
         )
+    if (
+        host in {"v360.in", "www.v360.in"}
+        and parts.path.lower().rstrip("/") == "/viewer4.0/vision360.html"
+        and bool(query.get("d", [""])[0])
+    ):
+        return True
     core_prefix = host.removesuffix(".v360.in")
     if (
         host.endswith(".v360.in")

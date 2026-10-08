@@ -128,6 +128,22 @@ class LoupeResolutionTests(unittest.TestCase):
         self.assertIn("certificate_by_cert_number", request["query"])
         self.assertEqual(headers["Content-Type"], "application/json")
 
+
+    def test_loupe_resolves_exact_igi_report_to_remote_v360_media(self):
+        viewer = (
+            "https://v360.in/viewer4.0/vision360.html?"
+            "d=VDC-32-50&surl=https://s10.v360.in/images/company/1546/"
+        )
+        http = FakeHttpClient(
+            posts={GRAPHQL_URL: (_graphql_payload(v360_url=viewer), "application/json")}
+        )
+        children = Loupe360CertificateResolver(http).resolve(_listing(), _loupe_reference())
+        self.assertEqual(len(children), 1)
+        self.assertEqual(children[0].locator, viewer)
+        self.assertEqual(children[0].kind, ROTATION)
+        self.assertEqual(children[0].metadata["report_number"], REPORT)
+        self.assertEqual(children[0].metadata["supplier_frame_count"], 256)
+
     def test_resolver_rejects_returned_certificate_mismatch(self):
         http = FakeHttpClient(
             posts={

@@ -37,6 +37,34 @@ jobs:
           python -m unittest tests.test_diamond_retrieval_media -v
           python -m unittest tests.test_d360_source -v
 
+      # Non-gating: upstream media availability is external, but logs prove
+      # whether the exact Loupe360-linked V360 source is presently recoverable.
+      - name: Bounded LG781646632 supplier-motion smoke
+        continue-on-error: true
+        run: |
+          python - <<'PY'
+          from diamond_retrieval import (
+              ROTATION, EvidenceReference, ProgressiveRotationProcessor,
+              RemoteV360RotationDownloader, UrllibHttpClient,
+          )
+
+          viewer = (
+              "https://v360.in/viewer4.0/vision360.html?"
+              "d=VDC-32-50&surl=https://s10.v360.in/images/company/1546/"
+          )
+          ref = EvidenceReference(
+              identifier="igi-lg781646632:loupe360:v360",
+              kind=ROTATION, retrieval_key=viewer, locator=viewer,
+          )
+          downloader = RemoteV360RotationDownloader(UrllibHttpClient(), timeout=8)
+          raw = downloader.download(ref)
+          rotation = ProgressiveRotationProcessor().process(raw)[0]
+          print("Live V360 original frames:", len(rotation.frames))
+          print("Source:", rotation.metadata.get("source_root"))
+          print("First SHA256:", rotation.frames[0].sha256)
+          assert len(rotation.frames) == 256
+          PY
+
       - name: Record full-suite status
         continue-on-error: true
         run: python -m unittest discover -s tests -v
