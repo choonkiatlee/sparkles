@@ -153,18 +153,29 @@ def _extract_line_score(gx, gy, valid, center_px, scale, side, fraction, base):
     )
     high=(directional>=base)&is_valid
     coverage=float(np.mean(high))
-    contiguous=float(longest_true_run(high)/len(high))
-    # Favor *extended* straight gradients; isolated hot pixels must not vote.
+    padded=np.r_[False,high,False].astype(np.int8)
+    changes=np.diff(padded)
+    begins=np.flatnonzero(changes==1)
+    ends=np.flatnonzero(changes==-1)
+    longest=int(np.argmax(ends-begins)) if len(begins) else None
+    run_length=int(ends[longest]-begins[longest]) if longest is not None else 0
+    contiguous=float(run_length/len(high))
+    # Store and draw ONLY the directly corroborated contiguous subsegment.
+    # Extending a partial segment would manufacture the unobserved facet edge.
+    start=int(begins[longest]) if longest is not None else 0
+    stop=int(ends[longest]-1) if longest is not None else 0
     strength=float(np.mean(np.minimum(directional/(base+1e-9),3.))*1/3)
     return {
         "fraction":float(fraction),
         "coverage":coverage,
         "longest_contiguous_fraction":contiguous,
+        "longest_supported_run_samples":run_length,
         "strength":strength,
         "valid_fraction":float(np.mean(is_valid)),
         "score":float((coverage*.50+contiguous*.40+strength*.10)),
-        "sample_start":points[0].tolist(),
-        "sample_end":points[-1].tolist(),
+        "sample_start":points[start].tolist(),
+        "sample_end":points[stop].tolist(),
+        "rendered_segment_policy":"only_contiguous_observed_RGB_gradient_pixels",
     }
 
 
