@@ -78,12 +78,8 @@ def _outside_first_contact(distance, side, threshold):
     if margin >= limit:
         raise ValueError("source too narrow for first-contact tracing")
     above = (rows >= threshold).astype(np.int16)
-    counts = ndi.convolve1d(
-        above, weights=np.ones(POLICY["persistent_contact_window_px"], dtype=np.int16),
-        axis=1, mode="constant", cval=0, origin=-POLICY["persistent_contact_window_px"] // 2 + 1
-    )
-    # Explicit forward window preserves exact first-contact semantics and
-    # avoids any one-sided filter kernel alignment ambiguity.
+    # Explicit forward count enforces the first inward contact. A symmetric
+    # convolution would risk shifting an exterior edge toward the interior.
     counts = sum(
         above[:, margin + shift:limit + shift]
         for shift in range(POLICY["persistent_contact_window_px"])
