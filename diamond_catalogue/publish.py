@@ -76,6 +76,59 @@ _KNOWN_LISTING_ERRORS = {
 }
 
 
+# Only exact, in-repository CatalogueError messages are safe to expose. These
+# identify the failed invariant without printing arbitrary URLs, raw metadata,
+# release payloads or API response bodies.
+_KNOWN_CATALOGUE_ERRORS = {
+    "Conflicting catalogue entries share a logical key":
+        ("catalogue_observation_conflict",
+         "Previously stored evidence or an observation has the same identity key but different content."),
+    "GitHub Release asset digest mismatch":
+        ("catalogue_asset_digest_mismatch",
+         "A previously uploaded Release asset does not match the expected SHA-256."),
+    "GitHub Release asset byte count mismatch":
+        ("catalogue_asset_size_mismatch",
+         "A previously uploaded Release asset does not match the expected byte count."),
+    "GitHub Release asset is not successfully uploaded":
+        ("catalogue_asset_incomplete",
+         "A Release asset is not in the uploaded state."),
+    "GitHub Release would exceed its 1,000-asset limit; use R2 or sharded storage":
+        ("catalogue_release_capacity",
+         "The stone's Release is at capacity; use sharded storage or R2."),
+    "Cannot regenerate index from truncated Git tree":
+        ("catalogue_tree_truncated",
+         "GitHub returned a truncated repository tree; index regeneration is unsafe."),
+    "Invalid stored catalogue JSON":
+        ("catalogue_stored_json_invalid",
+         "Previously committed catalogue JSON cannot be parsed."),
+    "Cannot decode existing Git catalogue JSON":
+        ("catalogue_stored_json_invalid",
+         "Previously committed catalogue JSON cannot be decoded."),
+    "Unpublished or untraceable overview thumbnail":
+        ("catalogue_thumbnail_invalid",
+         "An existing or incoming overview thumbnail is missing its traceable asset reference."),
+    "Unpublished evidence asset in catalogue manifest":
+        ("catalogue_manifest_asset_missing",
+         "A stored or incoming manifest references evidence without a public asset URL."),
+    "GitHub Release contains duplicate asset names":
+        ("catalogue_release_duplicates",
+         "The stone's Release has duplicate asset names."),
+    "Release asset enumeration exceeded safe bound":
+        ("catalogue_release_inventory",
+         "The Release asset listing exceeded the supported enumeration limit."),
+    "Diamond manifest identity/ID mismatch":
+        ("catalogue_identity_mismatch",
+         "A stored or incoming manifest's report identity does not match its stable ID."),
+    "Refusing to merge different certified diamonds":
+        ("catalogue_identity_mismatch",
+         "Existing and incoming manifests refer to different certified diamonds."),
+}
+_CERTIFIED_CONFLICT_FIELDS = frozenset((
+    "shape", "origin", "carat", "colour", "clarity", "dimensions",
+    "reported_proportions",
+))
+
+
 def _listing_exception(exc: RetrievalError) -> tuple[str, str]:
     """Walk provider/network exception chains without exposing message contents.
 
@@ -168,6 +221,15 @@ def safe_failure(exc: Exception) -> tuple[str, str]:
             return ("report_hint_unverified",
                     "IGI report was supplied manually but no matching certificate or "
                     "certificate-bound motion was recovered; nothing was published.")
+        message = str(exc)
+        if message in _KNOWN_CATALOGUE_ERRORS:
+            return _KNOWN_CATALOGUE_ERRORS[message]
+        field_prefix = "Conflicting certified metadata: "
+        if message.startswith(field_prefix):
+            field = message[len(field_prefix):]
+            if field in _CERTIFIED_CONFLICT_FIELDS:
+                return ("catalogue_metadata_conflict",
+                        f"Previously stored and newly retrieved {field} disagree; no changes were committed.")
         return ("catalogue_validation_failure",
                 "Asset hashes, identity, capacity, or stored manifest failed a safety check.")
     return ("unexpected_failure",

@@ -11,6 +11,7 @@ from urllib.error import URLError
 from contextlib import redirect_stderr
 from unittest.mock import patch
 
+from diamond_catalogue.models import CatalogueError
 from diamond_catalogue.github_api import GitHubError
 from diamond_catalogue.publish import main, safe_failure
 from diamond_retrieval.errors import (
@@ -74,6 +75,44 @@ class IngestionDiagnosticTests(unittest.TestCase):
         self.assertEqual(code, "github_permission_denied")
         self.assertIn("HTTP 403", hint)
         self.assertNotIn("secret", hint)
+
+    def test_existing_diamond_metadata_conflict_identifies_safe_field(self):
+        code, hint = safe_failure(CatalogueError(
+            "Conflicting certified metadata: reported_proportions"))
+        self.assertEqual(code, "catalogue_metadata_conflict")
+        self.assertIn("reported_proportions", hint)
+
+    def test_existing_diamond_evidence_conflict_is_actionable(self):
+        code, hint = safe_failure(CatalogueError(
+            "Conflicting catalogue entries share a logical key"))
+        self.assertEqual(code, "catalogue_observation_conflict")
+        self.assertIn("identity key", hint)
+
+    def test_existing_asset_integrity_conflict_is_specific(self):
+        code, hint = safe_failure(CatalogueError(
+            "GitHub Release asset digest mismatch"))
+        self.assertEqual(code, "catalogue_asset_digest_mismatch")
+        self.assertIn("SHA-256", hint)
+
+    def test_existing_tree_and_thumbnail_invariants_are_classified(self):
+        self.assertEqual(safe_failure(CatalogueError(
+            "Cannot regenerate index from truncated Git tree"))[0],
+            "catalogue_tree_truncated")
+        self.assertEqual(safe_failure(CatalogueError(
+            "Unpublished or untraceable overview thumbnail"))[0],
+            "catalogue_thumbnail_invalid")
+
+    def test_catalogue_unknown_details_are_never_reflected(self):
+        secret = "token=DO_NOT_LEAK https://example.com/private"
+        for error in (
+            CatalogueError(secret),
+            CatalogueError("Conflicting certified metadata: colour " + secret),
+            CatalogueError("GitHub Release asset digest mismatch " + secret),
+        ):
+            code, hint = safe_failure(error)
+            self.assertEqual(code, "catalogue_validation_failure")
+            self.assertNotIn("DO_NOT_LEAK", hint)
+            self.assertNotIn("example.com", hint)
 
     def test_cli_failing_retrieval_logs_stage_and_annotation_but_not_url(self):
         sensitive_url = "https://diyona.com/pages/diamond-detail?sku=SECRET_STONE"
