@@ -411,7 +411,7 @@ def _diyona_public_record_as_listing(
         dimensions=dimensions,
         reported_proportions=proportions,
         price=price, currency="USD" if price is not None else None,
-        tax_basis="displayed USD price; tax basis not stated" if price is not None else None,
+        tax_basis="public API USD price; storefront/tax basis not verified" if price is not None else None,
         attribution=attribution,
     )
     source = "diyona_public_supabase"
@@ -492,8 +492,20 @@ class DiyonaListingProvider:
         response = self.http_client.get(url, timeout=self.timeout)
         if response.status_code < 200 or response.status_code >= 300:
             raise RetrievalError(f"Diyona listing returned HTTP {response.status_code}")
-        raw, parsed = _parse_html(response.content)
+        raw = response.content.decode("utf-8", "replace")
+        # Diyona's live storefront renders stone details from public_diamonds.
+        # Use that public exact-SKU API by default. HTML is fetched only to
+        # discover its published anonymous configuration, never as a first
+        # attempt to parse client-rendered certificate/stone data.
+        if "SUPABASE_URL" in raw and "SUPABASE_ANON" in raw:
+            return _diyona_public_record_as_listing(
+                self.http_client, url=url, expected_sku=expected_sku,
+                raw_html=raw, response=response, timeout=self.timeout,
+            )
 
+        # Historical snapshots/fully server-rendered pages remain supported.
+        # This path is *not* tried for a page advertising the live JSON API.
+        _, parsed = _parse_html(response.content)
         header = re.search(
             r"([0-9]+(?:\.[0-9]+)?)ct\s+([A-Za-z][A-Za-z -]+?)\s+Lab Diamond",
             parsed.text,
@@ -508,10 +520,7 @@ class DiyonaListingProvider:
         # A carat/shape display heading is useful but not an identity check:
         # live storefront layouts can omit it while showing the certificate.
         if not identity:
-            return _diyona_public_record_as_listing(
-                self.http_client, url=url, expected_sku=expected_sku,
-                raw_html=raw, response=response, timeout=self.timeout,
-            )
+            raise RetrievalError("Diyona exact listing no longer exposes certificate-bound diamond data")
         sku, report_number = identity.group(1), identity.group(2).upper()
         if sku.upper() != expected_sku.upper():
             raise RetrievalError("Diyona listing SKU does not match the requested exact URL")
