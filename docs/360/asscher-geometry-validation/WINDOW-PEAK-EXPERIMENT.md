@@ -63,6 +63,21 @@ must never relabel a reflected/virtual contrast peak as a polished junction.
 If an experimental candidate changes the primary scaffold or results in new
 `unavailable` cases, record both the improvement and that cost.
 
+## Provisional result — frozen four-stone #89 comparison (8 Oct 2026)
+
+Completed [#89 window-local stability run](https://github.com/choonkiatlee/sparkles/actions/runs/37767669755) replayed the frozen source bundles and compared against archived #96 evidence using unchanged displacement, semantics and gauge criteria.
+
+| Certificate | #96 maximum crown-boundary displacement / local-tier | Window-local experiment | Primary disposition |
+|---|---:|---:|---|
+| LG756520111 | 1.015936 | **1.015936** | no stability improvement; remains review |
+| LG756580087 | 0.220310 | **0.220310** | remains review |
+| LG836619414 | 0.268954 | **0.268954** | remains review |
+| LG818659722 | unavailable primary | 0.179538 on available comparisons | primary becomes review; inspect unavailable leave-one-out cases separately |
+
+LG756520111's `C3_TABLE` still jumps `u≈0.579→0.478` when frame 16 is omitted. Although window-local peak competition preserves a candidate near 0.579 that the old global suppression dropped, **the candidate ranking still selects ~0.478**. Thus localizing peak suppression alone does *not* correct the original failure. The LG818659722 coverage gain is encouraging but does not establish that inferred interior contrast corresponds to physical facets.
+
+**Research disposition: REVISE.** Preserve this opt-in policy and the negative result for reproducibility, but **do not promote** `window_local_peaks_v3_experiment` to production/default. Next isolate and test the within-window C3 candidate ranking/support terms and guard against reflection/virtual facets, using the four-stone benchmark rather than LG756520111-specific tuning. #90 source-stress is intentionally deferred and cannot be inferred from this comparison.
+
 ## Interpretation
 
 The diagnostic identified an **algorithmic cross-window suppression
