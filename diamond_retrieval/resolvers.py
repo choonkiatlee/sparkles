@@ -149,6 +149,15 @@ class Loupe360CertificateResolver:
                 parts.path.lower().rstrip("/") == "/360viewer/360view.html"
                 and bool(query.get("d", [""])[0])
             )
+        core_prefix = host.removesuffix(".v360.in")
+        if (
+            host.endswith(".v360.in")
+            and core_prefix.startswith("v360")
+            and core_prefix[4:].isdigit()
+            and parts.path.lower().rstrip("/") == "/vision360.html"
+            and bool(query.get("d", [""])[0])
+        ):
+            return True
         return (
             host == "d360.tech"
             and parts.path.lower().rstrip("/") == "/view.html"
