@@ -1,0 +1,185 @@
+name: asscher-c3-frame-rank-stability
+
+concurrency:
+  group: asscher-c3-frame-rank-stability-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+
+on:
+  pull_request:
+    paths:
+      - "diamond360/asscher_geometry_validation.py"
+      - "diamond360/asscher_geometry_method_comparison.py"
+      - "diamond360/asscher_geometry_stability.py"
+      - "diamond360/asscher_wireframe.py"
+      - "diamond360/asscher_topology.py"
+      - "diamond360/asscher_sequence_gauge.py"
+      - "diamond360/asscher_pose_sequence.py"
+      - "docs/360/benchmark/source-bundles.json"
+      - "docs/360/asscher-geometry-validation/**"
+      - "tests/test_asscher_geometry_validation.py"
+      - "tests/test_asscher_geometry_method_comparison.py"
+      - "tests/test_asscher_geometry_outer_revision.py"
+      - "tests/test_asscher_geometry_stability.py"
+      - "diamond360/asscher_steps.py"
+      - "diamond360/asscher_geometry_c3_rank_comparison.py"
+      - "tests/test_asscher_c3_frame_rank_experiment.py"
+      - ".github/workflows/asscher-c3-frame-rank-stability.yml"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: python -m pip install -e .
+
+      - name: Run focused validation tests
+        run: |
+          python -m unittest \
+            tests.test_asscher_geometry_validation \
+            tests.test_asscher_geometry_stability \
+            tests.test_asscher_geometry_method_comparison \
+            tests.test_asscher_geometry_outer_revision \
+            tests.test_asscher_window_peak_experiment \
+            tests.test_asscher_c3_frame_rank_experiment -v
+
+      - name: Download frozen benchmark source bundles
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import urllib.request
+          import zipfile
+          from pathlib import Path
+
+          manifest = json.loads(
+              Path("docs/360/benchmark/source-bundles.json").read_text()
+          )
+          root = Path("outputs/asscher-c3-frame-rank-stability-sources")
+          root.mkdir(parents=True, exist_ok=True)
+
+          for item in manifest["bundles"]:
+              archive = root / item["filename"]
+              urllib.request.urlretrieve(item["download_url"], archive)
+              assert archive.stat().st_size == item["bytes"]
+              assert hashlib.sha256(archive.read_bytes()).hexdigest() == item["sha256"]
+              destination = root / item["certificate"]
+              destination.mkdir(parents=True, exist_ok=True)
+              with zipfile.ZipFile(archive) as bundle:
+                  bundle.extractall(destination)
+          PY
+
+      - name: Run four-stone stability and fixed-ruler transfer benchmark
+        run: |
+          python -m diamond360.asscher_geometry_stability \
+            --source-root outputs/asscher-c3-frame-rank-stability-sources \
+            --output outputs/asscher-c3-frame-rank-stability \
+            --method c3_frame_coherence_v4_experiment
+
+      - name: Print research summary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          data = json.loads(
+              Path("outputs/asscher-c3-frame-rank-stability/summary.json").read_text()
+          )
+          for stone in data["stones"]:
+              stability = stone.get("estimator_stability", {})
+              transfer = stone.get("fixed_ruler_transfer", {})
+              print(stone["certificate"], stone["status"])
+              print(
+                  "  primary:",
+                  stone.get("primary", {}).get("selected_source_indices"),
+              )
+              print(
+                  "  max boundary tier fraction:",
+                  stability.get("max_boundary_displacement_tier_fraction"),
+              )
+              print(
+                  "  identity swaps:",
+                  stability.get("semantic_identity_swap_count"),
+              )
+              print("  transfer status:", transfer.get("status_counts"))
+              print("  outside fit:", transfer.get("outside_primary_fit_count"))
+              print("  wrap:", transfer.get("wrap_check"))
+          PY
+
+      - name: Retrieve original frozen #96 four-stone evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: asscher-geometry-stability-outer-v2
+          run-id: 37755387174
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: outputs/frozen-outer-v2
+
+      - name: Retrieve frozen #131 four-stone window-local evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: asscher-window-peak-stability-v3-experiment
+          run-id: 37767669755
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: outputs/frozen-window-v3
+
+      - name: Compare all four stones with both independent baselines
+        run: |
+          python -m diamond360.asscher_geometry_c3_rank_comparison \
+            --control outputs/frozen-outer-v2/summary.json \
+            --window outputs/frozen-window-v3/summary.json \
+            --candidate outputs/asscher-c3-frame-rank-stability/summary.json \
+            --output outputs/asscher-c3-frame-rank-stability/three-way-comparison.json
+
+      - name: Print per-stone C3 rankings and omitted-frame C3 controls
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path("outputs/asscher-c3-frame-rank-stability")
+          cmp=json.loads((root/"three-way-comparison.json").read_text())
+          for row in cmp["stones"]:
+              cert=row["certificate"]
+              print(cert, "max-tier",
+                    row["control_max_tier_displacement"],
+                    row["window_max_tier_displacement"],
+                    row["candidate_max_tier_displacement"])
+              base=root/"per-stone"/cert
+              main=json.loads((base/"primary-wireframe.json").read_text())
+              print("  primary:", main.get("status"),
+                    "C3:", (main.get("boundary_evidence") or {}).get("C3_TABLE",{}).get("global_u"))
+              audit=main.get("c3_ranking_audit") or {}
+              for c in audit.get("candidates",[]):
+                  print("   hypothesis",round(c["u"],6),
+                        "base",round(c["base_score"],4),
+                        "views",c["frame_persistence_fraction"],
+                        "angular",c["angular_misalignment_u"],
+                        "experimental-score",round(c["rank_score"],4))
+              for f in sorted((base/"stability").glob("leave-out-*-wireframe.json")):
+                  fit=json.loads(f.read_text())
+                  control=(fit.get("boundary_evidence") or {}).get("C3_TABLE") or {}
+                  print("   leave-one-out",f.name,"status",fit.get("status"),
+                        "C3",control.get("global_u"))
+          PY
+
+      - name: Record full-suite status
+        continue-on-error: true
+        run: python -m unittest discover -s tests -v
+
+      - name: Upload geometry stability outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: asscher-c3-frame-rank-stability-v4-experiment
+          path: outputs/asscher-c3-frame-rank-stability
+          if-no-files-found: error
+          retention-days: 90
