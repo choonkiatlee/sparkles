@@ -61,6 +61,36 @@ exists and otherwise falls back to low-confidence model support. Those supports
 may overlap. They are **not** ray-traced virtual facets and are **not** direct
 polished-pavilion projections.
 
+## Outer-octagon-first anchor
+
+Before any interior step edge is allowed to influence the stone-level
+wireframe, the fitter now treats the observed silhouette as the primary
+physical image boundary:
+
+1. #73 crown-lobe records are only coarse candidates.
+2. Outline residual and edge visibility first decide whether the observed
+   octagon is reliable enough to use.
+3. Reliable octagons are ranked for face-onness using the full #73
+   outer-silhouette projection-consistency score **relative to other views of
+   the same stone**. It is deliberately not an absolute cross-stone threshold:
+   persistent centre/corner asymmetry may be real cutting geometry rather than
+   camera tilt. Explicit aspect/foreshortening and opposite-cardinal
+   convergence remain serialized diagnostics and hard sanity bounds.
+4. Candidate octagons are also compared to a robust stone-level medoid;
+   silhouette-shape outliers are rejected.
+5. The fitter deliberately uses only a small face-on core (currently up to five
+   frames) rather than filling the seven-frame quota with weaker edge-of-lobe
+   views.
+6. A fixed stone-level `GIRDLE_OUTLINE` is the median of the selected fitted
+   octagons in the #80 sequence gauge.
+7. Only after that anchor exists are persistent radial edges considered for
+   C1/C2/C3/table support.
+
+This is intentionally a conservative 2-D image-plane procedure. It does not
+estimate camera tilt or apply projective rectification. If fewer than three
+compatible outer-octagon views survive, geometry is `unavailable` rather than
+being manufactured from oblique frames.
+
 ## Fixed stone-level fit
 
 The fitter selects up to seven of the best compatible crown-side geometry

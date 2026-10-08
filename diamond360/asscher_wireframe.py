@@ -23,6 +23,7 @@ import numpy as np
 from PIL import Image, ImageDraw
 from scipy import ndimage as ndi
 
+from . import asscher_outer_octagon as outer_octagon
 from . import asscher_steps as steps
 from . import asscher_topology as topology
 
@@ -57,6 +58,8 @@ def specification():
         "schema_version": SCHEMA,
         "minimum_geometry_frames": MIN_GEOMETRY_FRAMES,
         "maximum_geometry_frames": MAX_GEOMETRY_FRAMES,
+        "outer_octagon_schema": outer_octagon.SCHEMA,
+        "outer_octagon": outer_octagon.specification(),
         "step_evidence_schema": steps.SCHEMA,
         "topology_schema": topology.SCAFFOLD_SCHEMA,
         "crown_control_map": dict(CROWN_CONTROL_MAP),
@@ -66,8 +69,9 @@ def specification():
             "evidence; no equality constraint is imposed"
         ),
         "geometry_policy": (
-            "one stone-level scaffold is fitted from multiple compatible "
-            "geometry views; per-frame edge matches are residual evidence only"
+            "fit the observed outer octagon first; use it to reject projection/"
+            "silhouette outliers and define one stone-level coordinate anchor; "
+            "only then infer inward crown/table support from persistent edges"
         ),
         "representation_policy": (
             "image-plane semantic support only; no direct polished-facet "
@@ -461,6 +465,7 @@ def fit_from_sector_evidence(
     gauge_id,
     frame_metadata=None,
     outer_vertices=None,
+    outer_confidence=0.95,
 ):
     """Fit one fixed scaffold from already-gauged multi-frame edge evidence."""
     data = np.asarray(frame_sector_evidence, float)
@@ -532,8 +537,9 @@ def fit_from_sector_evidence(
     boundaries = {
         row["boundary_id"]: row for row in scaffold["boundaries"]
     }
+    outer_confidence = _clip01(outer_confidence)
     boundaries["GIRDLE_OUTLINE"].update(
-        confidence=0.95,
+        confidence=outer_confidence,
         provenance="observed",
         observation_state="complete",
     )
@@ -562,7 +568,7 @@ def fit_from_sector_evidence(
         "C3": ("C2_C3", "C3_TABLE"),
     }
     boundary_sector_conf = {
-        "GIRDLE_OUTLINE": np.full(8, 0.95, float),
+        "GIRDLE_OUTLINE": np.full(8, outer_confidence, float),
         **{
             boundary_id: _control_sector_confidence(control)
             for boundary_id, control in crown_controls.items()
@@ -778,6 +784,8 @@ def _select_geometry_records(payload, max_frames=MAX_GEOMETRY_FRAMES):
             int(row.get("position", 10**9)),
         )
     )
+    if max_frames is None:
+        return candidates
     return candidates[: int(max_frames)]
 
 
@@ -982,16 +990,22 @@ def fit_pose_sequence(
         )
         return result
 
-    selected = _select_geometry_records(payload, max_frames=max_frames)
+    coarse_candidates = _select_geometry_records(payload, max_frames=None)
+    selected, outer_selection = outer_octagon.select_records(
+        coarse_candidates,
+        max_frames=max_frames,
+        min_frames=MIN_GEOMETRY_FRAMES,
+    )
     if len(selected) < MIN_GEOMETRY_FRAMES:
         result = {
             "schema_version": SCHEMA,
             "status": "unavailable",
-            "reason": "fewer_than_three_compatible_geometry_views",
+            "reason": "fewer_than_three_outer_octagon_views",
             "semantic_gauge_id": gauge_id,
             "selected_source_indices": [
                 row.get("source_index") for row in selected
             ],
+            "outer_selection": outer_selection,
             "scaffold": None,
         }
         (output / "wireframe.json").write_text(
@@ -999,6 +1013,10 @@ def fit_pose_sequence(
         )
         return result
 
+    selection_by_source = {
+        row.get("source_index"): row
+        for row in outer_selection.get("frames", [])
+    }
     evidence, masks, brightness_frames, metadata = [], [], [], []
     u_reference = None
     for record in selected:
@@ -1028,16 +1046,29 @@ def fit_pose_sequence(
             "face_role": record.get("face_role"),
             "rotation_phase_deg": coordinate.get("rotation_phase_deg"),
             "gauge_quarter_turn": coordinate.get("gauge_quarter_turn"),
+            "outer_octagon": selection_by_source.get(
+                record.get("source_index")
+            ),
         })
 
-    outer = _median_outer_vertices(masks)
+    outer_fit = outer_octagon.fit_consensus(
+        masks,
+        frame_metadata=metadata,
+    )
+    outer = np.asarray(
+        outer_fit["vertices_topology_order"],
+        float,
+    )
     result = fit_from_sector_evidence(
         np.asarray(evidence),
         u_reference,
         gauge_id=gauge_id,
         frame_metadata=metadata,
         outer_vertices=outer,
+        outer_confidence=outer_fit["confidence"],
     )
+    result["outer_selection"] = outer_selection
+    result["outer_evidence"] = outer_fit
     result["selected_frames"] = metadata
     result["sequence_gauge"] = payload.get("sequence_gauge")
     if result.get("scaffold") is not None:

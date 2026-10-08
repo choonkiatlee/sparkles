@@ -7,6 +7,7 @@ concurrency:
 on:
   pull_request:
     paths:
+      - "diamond360/asscher_outer_octagon.py"
       - "diamond360/asscher_steps.py"
       - "diamond360/asscher_topology.py"
       - "diamond360/asscher_sequence_gauge.py"
@@ -90,6 +91,24 @@ jobs:
               print(stone["certificate"])
               print("  status:", stone["status"])
               print("  selected:", stone["selected_source_indices"])
+              outer = stone.get("outer_selection") or {}
+              print(
+                  "  outer:",
+                  {
+                      "candidates": outer.get("candidate_count"),
+                      "hard_usable": outer.get("hard_usable_count"),
+                      "selected": outer.get("selected_count"),
+                      "medoid": outer.get("medoid_source_index"),
+                  },
+              )
+              print(
+                  "  outer rejected:",
+                  {
+                      row.get("source_index"): row.get("reasons")
+                      for row in outer.get("frames", [])
+                      if not row.get("selected")
+                  },
+              )
               print("  review:", stone["review_reasons"])
               print(
                   "  crown:",

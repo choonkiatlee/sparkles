@@ -2,6 +2,7 @@ import unittest
 
 import numpy as np
 
+from diamond360 import asscher_outer_octagon as outer_octagon
 from diamond360 import asscher_topology as topology
 from diamond360 import asscher_wireframe as wireframe
 
@@ -46,6 +47,63 @@ def metadata(count):
         }
         for i in range(count)
     ]
+
+
+
+
+def outer_record(
+    source_index,
+    *,
+    quality=0.95,
+    projection=0.95,
+    edge=0.95,
+    fit=0.95,
+    residual=0.012,
+    aspect=1.0,
+    parallelism=1.0,
+    shape_shift=0.0,
+):
+    diameter = 100.0
+    offsets = np.array(
+        [0.49, 0.61, 0.50, 0.60, 0.49, 0.61, 0.50, 0.60],
+        dtype=float,
+    )
+    offsets[0] += float(shape_shift)
+    return {
+        "source_index": int(source_index),
+        "position": int(source_index),
+        "rank": int(source_index) + 1,
+        "face_role": "likely_crown_lobe",
+        "assessment": {
+            "status": "ok",
+            "score": float(quality),
+            "components": {
+                "projection_consistency": {"score": float(projection)},
+                "edge_visibility": {"score": float(edge)},
+                "outline_fit": {"score": float(fit)},
+            },
+            "outline": {
+                "normalized_q90_boundary_residual": float(residual),
+                "aspect_ratio": float(aspect),
+                "effective_diameter_px": diameter,
+                "parallelism_error_deg": {
+                    "cardinal_0_4": float(parallelism),
+                    "corner_1_5": 1.0,
+                    "cardinal_2_6": float(parallelism),
+                    "corner_3_7": 1.0,
+                },
+                "side_lines": [
+                    {"offset_from_centre_px": float(value * diameter)}
+                    for value in offsets
+                ],
+            },
+        },
+        "canonical": {"path": f"canonical/{source_index:04d}.npz"},
+        "sequence_coordinate": {
+            "gauge_status": "available",
+            "gauge_quarter_turn": 0,
+        },
+    }
 
 
 class AsscherWireframeTests(unittest.TestCase):
@@ -239,6 +297,94 @@ class AsscherWireframeTests(unittest.TestCase):
         self.assertEqual(
             [row["source_index"] for row in selected],
             [0, 2, 4],
+        )
+
+
+    def test_outer_octagon_gate_rejects_oblique_frame_before_inner_fit(self):
+        records = [
+            outer_record(0, projection=0.97, fit=0.96, edge=0.95),
+            outer_record(1, projection=0.95, fit=0.95, edge=0.94),
+            outer_record(2, projection=0.93, fit=0.94, edge=0.93),
+            outer_record(3, projection=0.92, fit=0.92, edge=0.91),
+            outer_record(
+                4,
+                projection=0.66,
+                aspect=1.16,
+                parallelism=8.0,
+            ),
+        ]
+        selected, diagnostic = outer_octagon.select_records(
+            records, max_frames=7
+        )
+        self.assertEqual(
+            [row["source_index"] for row in selected],
+            [0, 1, 2, 3],
+        )
+        bad = next(
+            row for row in diagnostic["frames"]
+            if row["source_index"] == 4
+        )
+        self.assertFalse(bad["selected"])
+        self.assertIn("outer_projection_parallelism", bad["reasons"])
+
+    def test_outer_octagon_gate_does_not_fill_frame_quota_with_weak_tail(self):
+        records = [
+            outer_record(0, projection=0.98, fit=0.98, edge=0.98),
+            outer_record(1, projection=0.96, fit=0.96, edge=0.96),
+            outer_record(2, projection=0.94, fit=0.94, edge=0.94),
+            outer_record(3, projection=0.92, fit=0.92, edge=0.92),
+            outer_record(4, projection=0.83, fit=0.83, edge=0.83),
+            outer_record(5, projection=0.82, fit=0.82, edge=0.82),
+        ]
+        selected, diagnostic = outer_octagon.select_records(
+            records, max_frames=7
+        )
+        self.assertEqual(
+            len(selected),
+            outer_octagon.PREFERRED_FACE_ON_CORE_FRAMES,
+        )
+        self.assertLess(diagnostic["selected_count"], 7)
+
+    def test_outer_projection_composite_is_diagnostic_not_hard_gate(self):
+        records = [
+            outer_record(
+                i,
+                projection=0.35,
+                fit=0.96,
+                edge=0.94,
+                aspect=1.0 + 0.002 * i,
+                parallelism=0.6 + 0.05 * i,
+            )
+            for i in range(5)
+        ]
+        selected, diagnostic = outer_octagon.select_records(
+            records, max_frames=7
+        )
+        self.assertGreaterEqual(len(selected), 3)
+        self.assertTrue(
+            all(row["hard_usable"] for row in diagnostic["frames"])
+        )
+
+    def test_outer_octagon_consensus_rejects_shape_outlier(self):
+        records = [
+            outer_record(0, shape_shift=0.000),
+            outer_record(1, shape_shift=0.003),
+            outer_record(2, shape_shift=-0.002),
+            outer_record(3, shape_shift=0.004),
+            outer_record(4, shape_shift=0.095),
+        ]
+        selected, diagnostic = outer_octagon.select_records(
+            records, max_frames=7
+        )
+        self.assertNotIn(
+            4, [row["source_index"] for row in selected]
+        )
+        bad = next(
+            row for row in diagnostic["frames"]
+            if row["source_index"] == 4
+        )
+        self.assertEqual(
+            bad["reasons"], ["outer_octagon_consensus_outlier"]
         )
 
     def test_gauge_id_is_sequence_level_not_per_frame(self):
