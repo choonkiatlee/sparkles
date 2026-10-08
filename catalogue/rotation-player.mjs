@@ -1,229 +1,225 @@
-// C3b: atomic, flicker-free ordinal playback from original saved images.
-// The frame loader finishes loading/decoding *all selected panes* before
-// committing a new synchronized position. The previous images stay mounted.
-import {FRAME_PREFETCH,createFramePreloader,createBufferedFrameCoordinator,
-  frameIndexAt,stepPosition} from "./rotation.mjs";
+// C3b: buffered original-image comparison. Never replace a displayed frame
+// until every requested next frame has finished loading/decoding.
+import { FRAME_PREFETCH, createFramePreloader, createBufferedFrameCoordinator,
+  frameIndexAt,stepPosition } from "./rotation.mjs";
 
-const el=(tag,cls="",txt=null)=>{
-  const n=document.createElement(tag);
-  if(cls)n.className=cls;
-  if(txt!==null)n.textContent=String(txt);
-  return n;
+const el=(tag,className="",text=null)=>{
+  const node=document.createElement(tag);
+  if(className)node.className=className;
+  if(text!==null)node.textContent=String(text);
+  return node;
 };
 
-export function createRotationPlayer({host,slots,config=FRAME_PREFETCH}){
+export function createRotationPlayer({host,slots,config=FRAME_PREFETCH}) {
   const stones=new Map();
-  const preloader=createFramePreloader({
-    mode:config.mode,nearbyRadius:config.nearbyRadius,
-    maxConcurrent:config.maxConcurrent,maxDecoded:config.maxDecoded,
-  });
+  let position=0, timer=null, playToken=0, destroyed=false;
+  let preloader, unsubscribe;
   const coordinator=createBufferedFrameCoordinator(urls=>preloader.focus(urls));
-  let position=0,clock=null,destroyed=false,pending=false,sequence=0,speed=1;
-  const toolbar=el("div","motion-toolbar-main");
+
+  const top=el("div","motion-toolbar-main");
   const intro=el("div","motion-toolbar-intro");
-  intro.append(el("strong","","Synchronized original rotations"),
-    el("p","subtle","Shared relative frame position · no calibrated camera angle or crown-phase matching"));
-  const progressLine=el("div","motion-progress-line");
-  const progress=el("progress","motion-progress");
-  progress.max=1;progress.value=0;
-  progress.setAttribute("aria-label","Prefetch progress for original rotation images");
-  const progressText=el("span","motion-progress-label","Loading selected original rotations");
-  progressLine.append(progress,progressText);
-  intro.append(progressLine);
-  toolbar.append(intro);
+  intro.append(el("strong","", "Synchronized original rotations"),
+    el("p","subtle","Relative sequence position only · physical angles and crown phase are not aligned"));
+  top.append(intro);
   const controls=el("div","motion-controls");
   const back=el("button","motion-step","← Step");
   const play=el("button","motion-play","Play");
   const forward=el("button","motion-step","Step →");
   for(const button of [back,play,forward])button.type="button";
-  const speedLabel=el("label","motion-speed-label","Speed");
-  const speedSelect=el("select","motion-speed");
-  speedSelect.setAttribute("aria-label","Rotation playback speed");
-  for(const rate of [0.5,1,2]){
-    const option=el("option","",rate+"×");
-    option.value=String(rate);
-    if(rate===1)option.selected=true;
-    speedSelect.append(option);
-  }
-  speedLabel.append(speedSelect);
   const sliderLabel=el("label","motion-range-label","Position");
   const slider=el("input","motion-slider");
   slider.type="range";slider.min="0";slider.max="1000";slider.step="1";slider.value="0";
-  slider.setAttribute("aria-label","Shared ordinal rotation position");
-  const ordinalText=el("span","motion-position","0%");
-  ordinalText.setAttribute("aria-live","off");
-  sliderLabel.append(slider,ordinalText);
-  controls.append(back,play,forward,speedLabel,sliderLabel);
-  toolbar.append(controls);host.append(toolbar);
-  const status=el("p","motion-playback-status","Original images load only for selected diamonds");
-  status.setAttribute("role","status");
-  host.append(status);
+  slider.setAttribute("aria-label","Shared relative rotation position");
+  const positionText=el("span","motion-position","0%");
+  sliderLabel.append(slider,positionText);
+  controls.append(back,play,forward,sliderLabel);
+  top.append(controls);
+  host.append(top);
 
-  const present=()=>[...stones.values()].filter(entry=>entry.rotation?.status==="available");
-  const stepCount=()=>Math.max(1,...present().map(entry=>entry.rotation.frameCount));
-  const describe=(msg)=>{if(!destroyed)status.textContent=msg;};
-  const stopPlayback=()=>{
-    if(clock!==null){clearInterval(clock);clock=null;}
-    play.textContent="Play";play.setAttribute("aria-label","Play synchronized rotations");
-  };
-  const syncControls=()=>{
-    const enabled=present().length>0;
-    for(const control of [play,back,forward,slider,speedSelect])control.disabled=!enabled;
-    slider.value=String(Math.round(position*1000));
-    ordinalText.textContent=Math.round(position*100)+"%";
-  };
-  const unsubscribe=preloader.subscribe(info=>{
+  const loadBar=el("div","motion-prefetch-row");
+  const prefetchLabel=el("label","motion-prefetch-label");
+  const prefetchToggle=el("input");
+  prefetchToggle.type="checkbox";
+  prefetchToggle.checked=config.mode==="all";
+  prefetchToggle.setAttribute("aria-label","Preload every original rotation frame for selected stones");
+  prefetchLabel.append(prefetchToggle,
+    el("span","", "Preload all frames (uses more data)"));
+  const progress=el("span","motion-prefetch-progress","Waiting for saved rotations");
+  progress.setAttribute("role","status");
+  progress.setAttribute("aria-live","off");
+  loadBar.append(prefetchLabel,progress);host.append(loadBar);
+
+  const ready=()=>[...stones.values()].filter(item=>item.rotation?.status==="available");
+  const steps=()=>Math.max(1,...ready().map(item=>item.rotation.frameCount));
+  const allUrls=()=>ready().map(item=>item.rotation);
+  const bytes=()=>ready().reduce((sum,item)=>sum+(item.rotation.totalBytes||0),0);
+  function updateProgress(state) {
     if(destroyed)return;
-    progress.max=Math.max(1,info.total);
-    progress.value=info.completed;
-    const bytes=present().reduce((sum,entry)=>sum+(entry.rotation.totalBytes||0),0);
-    const size=bytes>0?" · about "+(bytes/1048576).toFixed(1)+" MiB total":"";
-    progressText.textContent=info.total ?
-      "Prefetched "+info.completed+" / "+info.total+" frames"+
-      (info.failed?" · "+info.failed+" unavailable":"")+size :
-      "Waiting for selected rotation manifests";
-  });
-  function showFallback(item,representative){
-    const box=el("div","motion-empty");
-    box.append(el("span","motion-unavailable",item.rotation?.reason ||
-      "Original rotation unavailable"));
-    if(representative?.url){
-      const img=el("img","motion-static");
-      img.src=representative.url;
-      img.alt="Original representative still for "+item.report;
-      img.loading="lazy";img.decoding="async";
-      box.prepend(img);
-    }
-    item.slot.append(box);
-  }
-  // Only append loaded+decoded Image nodes. Crucially never change the src
-  // attribute of a currently visible image while waiting for the next frame.
-  function commitFrames(items,frames,images,target){
-    // Reject partial/error batches; leave every previously displayed image
-    // intact so the comparison never flashes a blank/mismatched state.
-    if(images.some(image=>!image)){
-      stopPlayback();
-      describe("A source frame did not load. Previous frames retained; Retry frame or scrub again.");
-      for(const item of items)item.error.hidden=false;
+    if(!ready().length){
+      progress.textContent="Waiting for usable saved rotations";
       return;
     }
-    items.forEach((item,i)=>{
-      const image=images[i],frame=frames[i];
-      // A repeated underlying asset URL across stones cannot share the same
-      // physical DOM image node; duplicate only in this rare case.
-      const duplicate=images.indexOf(image)<i;
-      const display=duplicate?image.cloneNode(false):image;
-      display.className="motion-image";
-      display.alt="Original frame "+(frame.ordinal+1)+" of "+
-        item.rotation.frameCount+" for "+item.report+
-        "; ordinal position, not a calibrated camera angle";
-      item.stage.replaceChildren(display);
-      item.caption.textContent="Frame "+(frame.ordinal+1)+" / "+
-        item.rotation.frameCount+" · source index "+frame.sourceIndex;
-      item.error.hidden=true;
-      item.displayedURL=frame.url;
-    });
-    describe(clock===null?"Synchronized frames ready":"Playing synchronized original frames");
+    if(state.mode==="all"){
+      const size=bytes();
+      const sizeText=size ? " · ~"+(size/1048576).toFixed(1)+" MiB source media" : "";
+      progress.textContent="Preloaded "+state.completed+" / "+state.total+" frames"+
+        (state.failed ? " · "+state.failed+" failed" : "")+sizeText;
+    }else if(state.mode==="nearby"){
+      progress.textContent="Nearby prefetch enabled · "+state.completed+" frames loaded";
+    }else{
+      progress.textContent="Loading frames on demand";
+    }
   }
-  function seek(target,{forceRetry=false}={}){
-    if(destroyed || !Number.isFinite(target))return;
-    position=Math.max(0,Math.min(0.999999,target));
+  function installPreloader(mode) {
+    unsubscribe?.();
+    preloader?.stop();
+    preloader=createFramePreloader({mode,nearbyRadius:config.nearbyRadius,
+      maxConcurrent:config.maxConcurrent,maxDecoded:config.maxDecoded});
+    unsubscribe=preloader.subscribe(updateProgress);
+  }
+  function syncControls() {
+    const enabled=ready().length>0;
+    for(const control of [play,back,forward,slider])control.disabled=!enabled;
+    positionText.textContent=Math.round(position*100)+"%";
+    slider.value=String(Math.round(position*1000));
+  }
+  function pause() {
+    playToken++;
+    if(timer!==null){clearTimeout(timer);timer=null;}
+    play.textContent="Play";
+    play.setAttribute("aria-label","Play synchronized original rotations");
+  }
+  function present(item,frame,index,image) {
+    // This is an already-decoded <img>. The old frame stays in place until this
+    // synchronous replacement, so there is no blank intermediary src change.
+    image.className="motion-image";
+    image.alt="Original frame "+(index+1)+" of "+item.rotation.frameCount+
+      " for "+item.report+"; camera angle not calibrated";
+    image.draggable=false;
+    item.stage.replaceChildren(image);
+    item.currentURL=frame.url;
+    item.currentIndex=index;
+    item.error.hidden=true;
+    item.caption.textContent="Frame "+(index+1)+" / "+item.rotation.frameCount+
+      " · source "+frame.sourceIndex;
+  }
+  async function seek(next) {
+    if(destroyed || !Number.isFinite(next))return false;
+    position=Math.max(0,Math.min(0.999999,next));
     syncControls();
-    const items=present();
-    if(!items.length)return;
-    const frames=items.map(item=>item.rotation.frames[
-      frameIndexAt(position,item.rotation.frameCount)]);
-    const urls=frames.map(frame=>frame.url);
-    const request=++sequence;
-    pending=true;
-    describe("Buffering synchronized frames · previous image remains visible");
-    if(forceRetry){
-      // Explicit Retry requeues failed media through the same bounded loader.
-      void Promise.all(urls.map(url=>preloader.retry(url))).then(()=>{
-        if(!destroyed && request===sequence)seek(position);
-      });
-      return;
-    }
-    const captured=position;
-    void coordinator.seek(urls,images=>{
-      if(destroyed || request!==sequence)return;
-      commitFrames(items,frames,images,captured);
-    }).then(success=>{
-      if(destroyed || request!==sequence)return;
-      pending=false;
-      if(!success)describe("Newer seek superseded an older frame request");
-    }).catch(()=>{
-      if(destroyed || request!==sequence)return;
-      pending=false;stopPlayback();
-      describe("Frame loading failed; previous images retained");
+    const selected=ready();
+    if(!selected.length)return false;
+    const targets=selected.map(item=>{
+      const index=frameIndexAt(position,item.rotation.frameCount);
+      return {item,index,frame:item.rotation.frames[index]};
     });
-    preloader.observe(items.map(item=>item.rotation),captured);
+    for(const {item,index} of targets) {
+      if(item.currentIndex!==index){
+        item.caption.textContent="Loading frame "+(index+1)+" / "+item.rotation.frameCount+
+          " · previous frame held";
+      }
+    }
+    const promise=coordinator.seek(targets.map(x=>x.frame.url),images=>{
+      targets.forEach(({item,index,frame},i)=>{
+        const image=images[i];
+        if(image)present(item,frame,index,image);
+        else {
+          // Preserve the last successfully decoded frame on all network errors.
+          item.error.hidden=false;
+          item.caption.textContent="Frame "+(index+1)+" unavailable · previous frame retained";
+        }
+      });
+    });
+    // Make the requested frames high priority before scheduling bulk work.
+    preloader.observe(allUrls(),position);
+    return promise;
   }
-  function step(direction){seek(stepPosition(position,stepCount(),direction));}
-  function tick(){
-    if(destroyed || pending)return;
-    if(!present().length){stopPlayback();return;}
-    step(1);
+  async function playNext(token) {
+    if(destroyed || token!==playToken)return;
+    const target=stepPosition(position,steps(),1);
+    await seek(target);
+    if(destroyed || token!==playToken)return;
+    // Wait for all selected next frames before advancing. Slow networking
+    // reduces frame rate instead of presenting blank/mismatched columns.
+    timer=setTimeout(()=>playNext(token),105);
   }
-  function start(){
-    if(clock!==null || !present().length)return;
-    play.textContent="Pause";play.setAttribute("aria-label","Pause synchronized rotations");
-    clock=setInterval(tick,Math.max(45,Math.round(120/speed)));
-    describe("Playing as frames buffer; no skipped or flashing frames");
+  function togglePlay() {
+    if(timer!==null || play.textContent==="Pause"){pause();return;}
+    if(!ready().length)return;
+    pause();
+    play.textContent="Pause";
+    play.setAttribute("aria-label","Pause synchronized original rotations");
+    const token=playToken;
+    timer=setTimeout(()=>playNext(token),0);
   }
-  function toggle(){if(clock===null)start();else stopPlayback();}
   slider.addEventListener("input",()=>{
-    stopPlayback();seek(Number(slider.value)/1001);
+    pause();seek(Number(slider.value)/1000);
   });
-  back.addEventListener("click",()=>{stopPlayback();step(-1);});
-  forward.addEventListener("click",()=>{stopPlayback();step(1);});
-  play.addEventListener("click",toggle);
-  speedSelect.addEventListener("change",()=>{
-    const next=Number(speedSelect.value);
-    if(![0.5,1,2].includes(next))return;
-    speed=next;
-    if(clock!==null){stopPlayback();start();}
+  back.addEventListener("click",()=>{pause();seek(stepPosition(position,steps(),-1));});
+  forward.addEventListener("click",()=>{pause();seek(stepPosition(position,steps(),1));});
+  play.addEventListener("click",togglePlay);
+  prefetchToggle.addEventListener("change",()=>{
+    pause();coordinator.invalidate();
+    installPreloader(prefetchToggle.checked?"all":"nearby");
+    seek(position);
   });
 
-  function setStone(id,rotation,representative,report=id){
+  function setStone(id,rotation,representative,report=id) {
     if(destroyed || !slots.has(id))return;
     const slot=slots.get(id);
     slot.replaceChildren();
-    const item={id,report,rotation,slot,displayedURL:null};
+    const item={rotation,slot,report,currentURL:null,currentIndex:-1};
     stones.set(id,item);
     if(rotation?.status!=="available"){
-      showFallback(item,representative);
-      syncControls();return;
+      const fallback=el("div","motion-empty");
+      if(representative?.url){
+        const image=el("img","motion-static");
+        image.src=representative.url;
+        image.alt="Original still for "+report;
+        image.loading="lazy";image.decoding="async";
+        fallback.append(image);
+      }
+      fallback.append(el("span","motion-unavailable",
+        rotation?.reason || "No complete ordered original rotation"));
+      slot.append(fallback);
+      syncControls();updateProgress(preloader.stats());
+      return;
     }
     const figure=el("figure","motion-figure");
-    const stage=el("div","motion-frame-stage");
-    stage.append(el("span","motion-loading","Preparing first original frame…"));
-    const error=el("div","motion-frame-error");
-    error.hidden=true;
+    item.stage=el("div","motion-image-stage");
+    item.stage.append(el("span","motion-unavailable","Loading original frame…"));
+    item.error=el("div","motion-frame-error");
+    item.error.hidden=true;
     const retry=el("button","motion-retry","Retry frame");
     retry.type="button";
-    retry.addEventListener("click",()=>{stopPlayback();seek(position,{forceRetry:true});});
-    error.append(el("span","","Frame unavailable · "),retry);
-    const caption=el("figcaption","motion-frame-caption");
-    figure.append(stage,error,caption);
+    retry.addEventListener("click",async()=>{
+      const index=frameIndexAt(position,item.rotation.frameCount);
+      await preloader.retry(item.rotation.frames[index].url);
+      if(!destroyed)seek(position);
+    });
+    item.error.append(el("span","", "Original frame failed to load"),retry);
+    item.caption=el("figcaption","motion-frame-caption","");
+    figure.append(item.stage,item.error,item.caption);
     slot.append(figure);
-    item.stage=stage;item.error=error;item.caption=caption;
-    syncControls();seek(position);
-  }
-  function failStone(id){
-    if(!slots.has(id)||destroyed)return;
-    stones.delete(id);coordinator.invalidate();sequence++;
-    slots.get(id).replaceChildren(el("span","motion-unavailable",
-      "Rotation manifest unavailable; retry this column"));
-    if(!present().length)stopPlayback();
     syncControls();
-    if(present().length)seek(position);
+    seek(position);
   }
-  function destroy(){
+  function failStone(id) {
+    if(!slots.has(id) || destroyed)return;
+    stones.delete(id);
+    slots.get(id).replaceChildren(el("span","motion-unavailable","Motion manifest unavailable; retry this column"));
+    coordinator.invalidate();
+    if(!ready().length)pause();
+    syncControls();
+    updateProgress(preloader.stats());
+  }
+  function destroy() {
     if(destroyed)return;
-    stopPlayback();destroyed=true;sequence++;
-    coordinator.close();unsubscribe();preloader.stop();stones.clear();
+    destroyed=true;pause();coordinator.close();
+    unsubscribe?.();preloader.stop();stones.clear();
   }
+
+  installPreloader(config.mode);
   syncControls();
   return {setStone,failStone,destroy,seek};
 }
