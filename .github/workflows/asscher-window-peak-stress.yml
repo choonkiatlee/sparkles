@@ -1,7 +1,7 @@
-name: asscher-geometry-source-stress
+name: asscher-window-peak-stress
 
 concurrency:
-  group: asscher-geometry-source-stress-${{ github.ref }}
+  group: asscher-window-peak-stress-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -34,7 +34,8 @@ jobs:
             tests.test_asscher_geometry_validation \
             tests.test_asscher_geometry_stability \
             tests.test_asscher_geometry_method_comparison \
-            tests.test_asscher_geometry_outer_revision -v
+            tests.test_asscher_geometry_outer_revision \
+            tests.test_asscher_window_peak_experiment -v
 
       - name: Download representative frozen benchmark bundles
         run: |
@@ -49,7 +50,7 @@ jobs:
           manifest = json.loads(
               Path("docs/360/benchmark/source-bundles.json").read_text()
           )
-          root = Path("outputs/asscher-geometry-source-stress-sources")
+          root = Path("outputs/asscher-window-peak-stress-sources")
           root.mkdir(parents=True, exist_ok=True)
 
           for item in manifest["bundles"]:
@@ -68,9 +69,9 @@ jobs:
       - name: Run controlled source and poor-view stress benchmark
         run: |
           python -m diamond360.asscher_geometry_source_stress \
-            --source-root outputs/asscher-geometry-source-stress-sources \
-            --output outputs/asscher-geometry-source-stress \
-            --method outer_octagon_v2
+            --source-root outputs/asscher-window-peak-stress-sources \
+            --output outputs/asscher-window-peak-stress \
+            --method window_local_peaks_v3_experiment
 
       - name: Print source sensitivity tables
         run: |
@@ -79,7 +80,7 @@ jobs:
           from pathlib import Path
 
           data = json.loads(
-              Path("outputs/asscher-geometry-source-stress/summary.json").read_text()
+              Path("outputs/asscher-window-peak-stress/summary.json").read_text()
           )
           for stone in data["stones"]:
               print(stone["certificate"], stone["status"])
@@ -124,21 +125,21 @@ jobs:
                   )
           PY
 
-      - name: Retrieve original pinned #75 validation evidence
+      - name: Retrieve immutable #96 control validation artifact
         uses: actions/download-artifact@v4
         with:
-          name: asscher-geometry-source-stress
-          run-id: 37687610094
+          name: asscher-geometry-source-stress-outer-v2
+          run-id: 37755387140
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          path: outputs/frozen-initial-stress
+          path: outputs/outer-v2-control
 
-      - name: Compare #75 and #96 using unchanged #88 metrics
+      - name: Produce paired control versus window-local report
         run: |
-          python -m diamond360.asscher_geometry_method_comparison \
+          python -m diamond360.asscher_geometry_window_peak_comparison \
             --kind stress \
-            --before outputs/frozen-initial-stress/summary.json \
-            --after outputs/asscher-geometry-source-stress/summary.json \
-            --output outputs/asscher-geometry-source-stress/method-comparison.json
+            --control outputs/outer-v2-control/summary.json \
+            --experiment outputs/asscher-window-peak-stress/summary.json \
+            --output outputs/asscher-window-peak-stress/window-peak-comparison.json
 
       - name: Record full-suite status
         continue-on-error: true
@@ -147,7 +148,7 @@ jobs:
       - name: Upload stress outputs
         uses: actions/upload-artifact@v4
         with:
-          name: asscher-geometry-source-stress-outer-v2
-          path: outputs/asscher-geometry-source-stress
+          name: asscher-window-peak-stress-v3-experiment
+          path: outputs/asscher-window-peak-stress
           if-no-files-found: error
           retention-days: 90

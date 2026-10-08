@@ -178,7 +178,48 @@ def _control_from_candidate(boundary, window, u):
         near_window_edge=bool(margin <= radial_spacing),
     )
 
-def discover_template(frame_sector_evidence, u):
+
+# Research-only alternative. Existing callers retain global suppression exactly.
+GLOBAL_PEAK_POLICY = "global_v1"
+WINDOW_PEAK_POLICY = "semantic_window_local_v1"
+
+
+def experimental_peak_policy_specification():
+    return {
+        "schema_version": "diamond360-asscher-step-window-peaks/1",
+        "policy": WINDOW_PEAK_POLICY,
+        "boundary_windows": [list(window) for window in BOUNDARY_WINDOWS],
+        "distance_u_fraction": .095,
+        "minimum_distance_samples": 3,
+        "selection_policy": (
+            "apply find_peaks minimum-separation independently within each "
+            "predeclared semantic window, not globally before filtering"
+        ),
+        "fallback_policy": (
+            "do not manufacture a missing boundary from the highest raw "
+            "pixel: keep unobserved semantic windows unavailable"
+        ),
+        "prominence_policy": (
+            "measure selected peak prominence on the original global "
+            "consensus for comparability with the frozen score"
+        ),
+        "physical_facet_claim": False,
+    }
+
+
+def _window_local_peak_indices(consensus, u, distance):
+    """Peak competition is restricted to each *predeclared* semantic zone."""
+    chosen = set()
+    for lo, hi in BOUNDARY_WINDOWS:
+        indices = np.flatnonzero((u >= lo) & (u <= hi))
+        if len(indices) < 3:
+            continue
+        peaks, _ = find_peaks(consensus[indices], distance=distance)
+        chosen.update(int(indices[index]) for index in peaks)
+    return np.asarray(sorted(chosen), dtype=int)
+
+
+def discover_template(frame_sector_evidence, u, *, peak_policy=GLOBAL_PEAK_POLICY):
     """Discover three ordered persistent boundaries and 8-sector control points."""
     data = np.asarray(frame_sector_evidence, float)
     if data.ndim != 3 or data.shape[1] != 8 or data.shape[2] != len(u):
@@ -190,8 +231,13 @@ def discover_template(frame_sector_evidence, u):
     consensus = ndi.gaussian_filter1d(np.nan_to_num(consensus, nan=0.0), 1.2)
     interior = (u >= .16) & (u <= .92)
     distance = max(3, int(round(.095 * (len(u) - 1))))
-    raw_peaks, _ = find_peaks(consensus, distance=distance)
-    raw_peaks = raw_peaks[interior[raw_peaks]]
+    if peak_policy == GLOBAL_PEAK_POLICY:
+        raw_peaks, _ = find_peaks(consensus, distance=distance)
+        raw_peaks = raw_peaks[interior[raw_peaks]]
+    elif peak_policy == WINDOW_PEAK_POLICY:
+        raw_peaks = _window_local_peak_indices(consensus, u, distance)
+    else:
+        raise ValueError(f"unknown Asscher peak policy: {peak_policy}")
     prominence = peak_prominences(consensus, raw_peaks)[0] if len(raw_peaks) else np.array([], float)
     candidates = []
     for idx, prom in zip(raw_peaks, prominence):
@@ -199,7 +245,7 @@ def discover_template(frame_sector_evidence, u):
         supported = sum(p is not None and p["z"] is not None and p["z"] >= .8 for p in per_sector)
         candidates.append(dict(index=int(idx), u=float(u[idx]), prominence=float(prom),
                                sector_support=supported / 8, sector_peaks=per_sector))
-    if len(candidates) < 3:
+    if len(candidates) < 3 and peak_policy == GLOBAL_PEAK_POLICY:
         ranked = np.argsort(consensus[interior])[::-1]
         interior_idx = np.flatnonzero(interior)
         chosen = [c["index"] for c in candidates]
