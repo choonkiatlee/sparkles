@@ -2,9 +2,12 @@ import { MAX_SELECTION, MIN_COMPARISON, validateIndex, visibleRows,
   priceText, dimensionsText, displayValue, selectionFromSearch,
   selectionSearch, toggleSelection } from "./core.mjs";
 
+import { createComparisonView } from "./comparison-view.mjs";
+
 const $ = id => document.getElementById(id);
 const controls = { search:$("search"), status:$("status-filter"), sort:$("sort") };
 const state = { rows:[], selected:[], comparing:false, ready:false };
+const comparisonView = createComparisonView({container:$("comparison"),grid:$("comparison-grid"),fetcher:(...args)=>fetch(...args)});
 const node = (tag, className="", text=null) => {
   const n = document.createElement(tag);
   if (className) n.className = className;
@@ -83,22 +86,6 @@ function syncURL() {
   const search = selectionSearch(location.search,state.selected,state.comparing);
   history.replaceState(null,"",location.pathname + (search ? "?"+search : "") + location.hash);
 }
-function renderPreview() {
-  const section = $("comparison"), grid = $("comparison-grid");
-  const rows = state.selected.map(id => state.rows.find(row=>row.id===id)).filter(Boolean);
-  const show = state.comparing && rows.length >= MIN_COMPARISON;
-  section.hidden = !show;
-  grid.replaceChildren();
-  if (!show) return;
-  rows.forEach(row => {
-    const item = node("div","comparison-item");
-    item.append(node("h4","",displayValue(row.report_number)),
-      node("p","",displayValue(row.carat)+" ct · "+displayValue(row.colour)+" · "+displayValue(row.clarity)),
-      node("p","",dimensionsText(row)),node("p","",priceText(row)),
-      node("p","", "Retrieval: "+displayValue(row.retrieval_status)));
-    grid.append(item);
-  });
-}
 function render() {
   if (!state.ready) return;
   const rows = visibleRows(state.rows,{
@@ -117,7 +104,7 @@ function render() {
   const compare = $("compare-button");
   compare.disabled = quantity < MIN_COMPARISON;
   compare.textContent = state.comparing ? "Hide overview" : "Compare "+quantity+" selected";
-  renderPreview();
+  comparisonView.update(state.rows,state.selected,state.comparing);
 }
 function applyNavigationState() {
   const parsed = selectionFromSearch(location.search,new Set(state.rows.map(r=>r.id)));
