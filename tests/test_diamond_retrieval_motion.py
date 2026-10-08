@@ -389,6 +389,20 @@ class ProgressiveMotionContractTests(unittest.TestCase):
             + [f"{root}/{n}.json?version=1" for n in range(1, 8)],
         )
 
+    def test_default_composition_registers_remote_v360_downloader(self):
+        from diamond_retrieval import default_config
+        viewer = (
+            "https://v360.in/viewer4.0/vision360.html?"
+            "d=VDC-32-50&surl=https://s10.v360.in/images/company/1546/"
+        )
+        config = default_config(FakeHttpClient({}))
+        supporting = [
+            downloader for downloader in config.downloaders
+            if downloader.supports(_reference("loupe360", viewer))
+        ]
+        self.assertEqual(len(supporting), 1)
+        self.assertIsInstance(supporting[0], RemoteV360RotationDownloader)
+
     def test_remote_v360_requires_exact_public_media_root(self):
         valid = (
             "https://v360.in/viewer4.0/vision360.html?"
