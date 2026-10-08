@@ -65,7 +65,7 @@ Loupe360 exact-certificate resolution can return an external Vision360 4.0 viewe
 `https://v360.in/viewer4.0/vision360.html?d=VDC-32-50&surl=https://s10.v360.in/images/company/1546/`.
 The `RemoteV360RotationDownloader` uses the **supplied exact** `d` and `surl`
 to locate the progressive JSON sequence below
-`https://s10.v360.in/images/company/1546/VDC-32-50/`.
+`https://s10.v360.in/images/company/1546/imaged/VDC-32-50/`.
 It requires a public HTTPS V360 CDN root of the form
 `s<digits>.v360.in/images/company/<digits>/` (or the documented same-origin
 viewer default without `surl`), rejects arbitrary external hosts and path
