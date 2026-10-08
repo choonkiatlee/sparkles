@@ -1,0 +1,63 @@
+name: asscher-pavilion-synthetic-observability
+
+on:
+  pull_request:
+    paths:
+      - "diamond360/asscher_pavilion_synthetic.py"
+      - "diamond360/asscher_profile_pavilion_refinement.py"
+      - "tests/test_asscher_pavilion_synthetic.py"
+      - "docs/360/asscher-geometry-validation/SYNTHETIC-PAVILION-OBSERVABILITY.md"
+      - ".github/workflows/asscher-pavilion-synthetic-observability.yml"
+  workflow_dispatch:
+
+jobs:
+  synthetic-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install package
+        run: python -m pip install -e .
+      - name: Test synthetic 3D geometry and exterior observability
+        run: python -m unittest tests.test_asscher_pavilion_synthetic -v
+      - name: Generate deterministic held-out benchmark and visual examples
+        run: |
+          python -m diamond360.asscher_pavilion_synthetic \
+            --output outputs/asscher-pavilion-synthetic
+      - name: Gate on reproducibility and scientific provenance
+        run: |
+          python - <<'PY'
+          import json
+          import math
+          from pathlib import Path
+
+          root = Path("outputs/asscher-pavilion-synthetic")
+          record = json.loads((root / "synthetic-pavilion-benchmark.json").read_text())
+          assert record["status"] == "synthetic_benchmark_not_real_photo_validation"
+          assert record["real_diamond_photo_used"] is False
+          assert record["expert_targets_loaded"] is False
+          assert record["physical_tier_identity_from_source_image"] == "unavailable"
+          assert len(record["cases"]) == 8
+          assert sum(c["split"] == "dev" for c in record["cases"]) == 3
+          assert sum(c["split"] == "holdout" for c in record["cases"]) == 5
+          for case in record["cases"]:
+              assert case["physical_tier_band_count"] == 3
+              assert case["projected_transition_identity"].startswith("UNKNOWN")
+              for side in ("left", "right"):
+                  fit = case["external_source_only_baseline"][side]
+                  if fit["status"] == "synthetic_image_plane_evaluation":
+                      assert 1 <= fit["selected_projected_stretches"] <= 3
+                      assert math.isfinite(fit["heldout_outer_edge_rmse_px"])
+                      assert fit["heldout_rows"] > 0
+          assert (root / "synthetic-pavilion-cases.png").is_file()
+          print("Synthetic-only, source-independent, 3 dev / 5 holdout, no facet-angle claims.")
+          PY
+      - name: Upload synthetic benchmark
+        uses: actions/upload-artifact@v4
+        with:
+          name: asscher-pavilion-synthetic-observability
+          path: outputs/asscher-pavilion-synthetic/
+          if-no-files-found: error
