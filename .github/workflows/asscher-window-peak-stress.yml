@@ -1,0 +1,168 @@
+name: asscher-window-peak-stress
+
+concurrency:
+  group: asscher-window-peak-stress-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+
+on:
+  pull_request:
+    paths:
+      - "diamond360/asscher_geometry_source_stress.py"
+      - "diamond360/asscher_geometry_stability.py"
+      - "diamond360/asscher_geometry_validation.py"
+      - "diamond360/asscher_geometry_method_comparison.py"
+      - "diamond360/asscher_wireframe.py"
+      - "diamond360/asscher_pose_sequence.py"
+      - "diamond360/asscher_sequence_gauge.py"
+      - "diamond360/pipeline.py"
+      - "docs/360/benchmark/source-bundles.json"
+      - "docs/360/asscher-geometry-validation/SOURCE-STRESS.md"
+      - "tests/test_asscher_geometry_source_stress.py"
+      - "tests/test_asscher_geometry_method_comparison.py"
+      - "tests/test_asscher_geometry_outer_revision.py"
+      - ".github/workflows/asscher-window-peak-stress.yml"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: python -m pip install -e .
+
+      - name: Run focused source-stress tests
+        run: |
+          python -m unittest \
+            tests.test_asscher_geometry_source_stress \
+            tests.test_asscher_geometry_validation \
+            tests.test_asscher_geometry_stability \
+            tests.test_asscher_geometry_method_comparison \
+            tests.test_asscher_geometry_outer_revision \
+            tests.test_asscher_window_peak_experiment -v
+
+      - name: Download representative frozen benchmark bundles
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import urllib.request
+          import zipfile
+          from pathlib import Path
+
+          wanted = {"IGI-LG756520111", "IGI-LG836619414"}
+          manifest = json.loads(
+              Path("docs/360/benchmark/source-bundles.json").read_text()
+          )
+          root = Path("outputs/asscher-window-peak-stress-sources")
+          root.mkdir(parents=True, exist_ok=True)
+
+          for item in manifest["bundles"]:
+              if item["certificate"] not in wanted:
+                  continue
+              archive = root / item["filename"]
+              urllib.request.urlretrieve(item["download_url"], archive)
+              assert archive.stat().st_size == item["bytes"]
+              assert hashlib.sha256(archive.read_bytes()).hexdigest() == item["sha256"]
+              destination = root / item["certificate"]
+              destination.mkdir(parents=True, exist_ok=True)
+              with zipfile.ZipFile(archive) as bundle:
+                  bundle.extractall(destination)
+          PY
+
+      - name: Run controlled source and poor-view stress benchmark
+        run: |
+          python -m diamond360.asscher_geometry_source_stress \
+            --source-root outputs/asscher-window-peak-stress-sources \
+            --output outputs/asscher-window-peak-stress \
+            --method window_local_peaks_v3_experiment
+
+      - name: Print source sensitivity tables
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          data = json.loads(
+              Path("outputs/asscher-window-peak-stress/summary.json").read_text()
+          )
+          for stone in data["stones"]:
+              print(stone["certificate"], stone["status"])
+              print(
+                  "  failures:",
+                  stone.get("geometry_unavailable_condition_count"),
+                  "gauge:",
+                  stone.get("gauge_failure_condition_count"),
+                  "gauge-changes:",
+                  stone.get("gauge_change_condition_count"),
+                  "id-set-changes:",
+                  stone.get("semantic_id_set_change_condition_count"),
+                  "support-reassignments:",
+                  stone.get("support_semantic_reassignment_condition_count"),
+              )
+              for row in stone.get("conditions", []):
+                  geometry = row["geometry_comparison"]
+                  support = row.get(
+                      "fixed_ruler_support_delta_from_baseline", {}
+                  )
+                  print(
+                      " ",
+                      row["condition_id"],
+                      geometry["status"],
+                      "max-tier=",
+                      geometry.get("max_boundary_displacement_tier_fraction"),
+                      "fixed=",
+                      row.get("fixed_ruler_status"),
+                      "support-delta=",
+                      support.get("boundary_support_fraction_delta"),
+                  )
+              poor = stone.get("poor_view_stress", {})
+              for row in poor.get("bins", []):
+                  print(
+                      "  poor-view",
+                      row["distance_bin_frames"],
+                      row["window_scope"],
+                      "n=", row["frame_count"],
+                      "pose=", row["mean_pose_score"],
+                      "support=", row["mean_crown_boundary_support_fraction"],
+                      "confidence=", row["mean_crown_entity_confidence"],
+                  )
+          PY
+
+      - name: Retrieve immutable #96 control validation artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: asscher-geometry-source-stress-outer-v2
+          run-id: 37755387140
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: outputs/outer-v2-control
+
+      - name: Produce paired control versus window-local report
+        run: |
+          python -m diamond360.asscher_geometry_window_peak_comparison \
+            --kind stress \
+            --control outputs/outer-v2-control/summary.json \
+            --experiment outputs/asscher-window-peak-stress/summary.json \
+            --output outputs/asscher-window-peak-stress/window-peak-comparison.json
+
+      - name: Record full-suite status
+        continue-on-error: true
+        run: python -m unittest discover -s tests -v
+
+      - name: Upload stress outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: asscher-window-peak-stress-v3-experiment
+          path: outputs/asscher-window-peak-stress
+          if-no-files-found: error
+          retention-days: 90
