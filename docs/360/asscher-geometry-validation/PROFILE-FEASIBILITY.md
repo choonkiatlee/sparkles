@@ -36,8 +36,16 @@ access any other files.
 - Generic candidates: weighted-gradient Hough transform, unoriented
   line inclination from -75° to +75° in 3° steps (positive slopes toward +y),
   normal offset in 1-pixel bins, up to fourteen separated candidates.
+  Each Hough peak is **localized** to its strongest contiguous edge-supported
+  run (within ±2 pixels, maximum 8-pixel gap, minimum 18-pixel span and 8
+  supported edgels); the overlay never draws unobserved full-image Hough lines.
+  Candidate endpoints are still only diagnostic proposals, not fitted facets.
 - All generic line angles are *image-coordinate inclinations*, not diamond
   facet angles. No estimate from this stage is named P1/P2/P3/C1.
+- Two provisional image-coordinate horizontal-band proposals (upper/lower
+  central) are derived from supported candidates using coarse vertical bands.
+  They are **not** labeled table or girdle: both must be independently verified
+  before PR B may use them anatomically.
 - The reported edge-activity bounding rectangle is a *quantile of edgels*,
   **not** a verified outer diamond silhouette. It must not be treated as an
   outline fit or evidence of table/girdle/culet localization.
@@ -138,6 +146,10 @@ PR A can be merged if the diagnostic is reproducible, accurately labels
 generic evidence without claiming physical/semantic geometry, and provides
 an image artifact allowing a reviewer to assess whether true profile
 boundaries are distinguishable. **It need not and must not match expert angles.**
+
+The first PR A audit exposed full-width Hough lines that exaggerated
+edge support; the refinement restricts drawing to finite contiguous
+observed edge runs. The top and lower band proposals are hypotheses only.
 
 Before PR B starts, inspect the visual artifacts, record which anatomical
 landmarks can be distinguished from reflection boundaries, and decide
