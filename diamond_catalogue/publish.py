@@ -25,7 +25,7 @@ from .models import CatalogueError
 from .planner import plan_publication
 
 _HTTP_LISTING_ERROR = re.compile(
-    r"^(?:Diyona|Quality Diamonds) listing returned HTTP ([1-5][0-9][0-9])$"
+    r"^(?:(?:Diyona|Quality Diamonds) listing|Diyona public diamond lookup) returned HTTP ([1-5][0-9][0-9])$"
 )
 
 # Deliberately match only messages emitted by our own adapter. Never render
@@ -37,6 +37,30 @@ _KNOWN_LISTING_ERRORS = {
     "Report hint only supports an exact Diyona listing":
         ("report_hint_unsupported",
          "An explicit IGI report hint is allowed only for an exact Diyona URL."),
+    "Diyona public diamond lookup has no unique exact SKU record":
+        ("listing_missing_identity",
+         "The retailer public API returned no unique record for the exact SKU."),
+    "Diyona public diamond lookup SKU mismatch":
+        ("listing_identity_mismatch",
+         "The retailer public API returned a different SKU."),
+    "Diyona public diamond lookup lacks a valid IGI certificate":
+        ("listing_missing_identity",
+         "The retailer public API did not provide a valid IGI certificate."),
+    "Diyona page does not advertise its public diamond lookup":
+        ("listing_api_configuration_missing",
+         "The retailer no longer advertises a supported public diamond lookup."),
+    "Diyona page advertises an unexpected diamond data source":
+        ("listing_api_source_changed",
+         "The retailer public API source changed and must be reviewed before ingestion."),
+    "Diyona public diamond lookup returned invalid JSON":
+        ("listing_api_invalid_response",
+         "The retailer public diamond API did not return valid JSON."),
+    "Diyona public lookup result exceeds size limit":
+        ("listing_api_invalid_response",
+         "The retailer public diamond API response exceeded the permitted size."),
+    "Diyona SKU is not a valid exact public lookup key":
+        ("listing_invalid_url",
+         "The requested Diyona SKU is not a valid exact public lookup key."),
     "Diyona exact listing no longer exposes certificate-bound diamond data":
         ("listing_missing_identity",
          "Diyona did not expose the report number and SKU required for safe publication."),
