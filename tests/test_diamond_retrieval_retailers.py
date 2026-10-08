@@ -515,6 +515,30 @@ class RetailerEndToEndTests(unittest.TestCase):
         self.assertEqual(result.videos[0].payload, VIDEO_BYTES)
         self.assertEqual(len(http.post_calls), 1)
 
+    def test_unsupported_loupe_rotation_retains_supported_video_as_partial(self):
+        http = self.qd_http()
+        payload = json.loads(http.post_responses[GRAPHQL_URL][0])
+        unknown_viewer = "https://unsupported.example.test/stone-360"
+        record = payload["data"]["certificate_by_cert_number"]
+        record["v360"]["url"] = unknown_viewer
+        record["video"] = DIRECT_VIDEO
+        http.post_responses[GRAPHQL_URL] = (
+            json.dumps(payload).encode(), "application/json"
+        )
+        http.responses[DIRECT_VIDEO] = (VIDEO_BYTES, "video/mp4")
+        result = retrieve_diamond(QD_URL, config=default_config(http))
+        self.assertEqual(result.status, ResultStatus.PARTIAL)
+        self.assertEqual(result.rotations, ())
+        self.assertEqual(len(result.videos), 1)
+        self.assertEqual(result.videos[0].payload, VIDEO_BYTES)
+        unsupported = [
+            x for x in result.attempts
+            if x.kind == ROTATION and x.status == EvidenceStatus.UNSUPPORTED
+        ]
+        self.assertEqual(len(unsupported), 1)
+        self.assertEqual(unsupported[0].locator, unknown_viewer)
+        self.assertNotIn(unknown_viewer, http.calls)
+
     def test_video_only_policy_resolves_loupe_without_downloading_rotation(self):
         http = self.qd_http()
         payload = json.loads(http.post_responses[GRAPHQL_URL][0])
@@ -582,8 +606,8 @@ class RetailerEndToEndTests(unittest.TestCase):
         self.assertEqual(result.videos, ())
         failures = [
             x for x in result.attempts
-            if x.kind == VIDEO and x.status == EvidenceStatus.DOWNLOAD_FAILED or
-            x.kind == VIDEO and x.status == EvidenceStatus.MISSING
+            if x.kind == VIDEO
+            and x.status in {EvidenceStatus.DOWNLOAD_FAILED, EvidenceStatus.MISSING}
         ]
         self.assertEqual(len(failures), 1)
         self.assertEqual(failures[0].locator, DIRECT_VIDEO)
