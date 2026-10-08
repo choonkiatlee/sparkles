@@ -220,5 +220,25 @@ class CatalogueTests(unittest.TestCase):
         self.assertEqual(entry["payload_asset"]["media_type"], "application/octet-stream")
 
 
+    def test_reviewed_thumbnail_survives_reingestion(self):
+        stored = publish(result())[1]
+        thumb = {
+            "asset":{"sha256":"a"*64,"byte_count":1800,"media_type":"image/webp",
+                "storage":{"backend":"r2","locator":"thumb","url":"https://assets.example.test/thumb.webp"}},
+            "source":{"sha256":"b"*64,"source_index":0,"frame_position":0},
+            "crop_source_bbox_xyxy":[10,10,200,200],
+            "generation":{"status":"automatic","algorithm":"v1"},
+        }
+        stored["derived_media"]={"overview_thumbnail":thumb}
+        self.assertEqual(build_index([stored])["diamonds"][0]["overview_thumbnail_url"],
+                         "https://assets.example.test/thumb.webp")
+        merged = merge_manifest(stored,publish(result(url="https://diyona.com/new?sku=1"))[1])
+        self.assertEqual(merged["derived_media"],stored["derived_media"])
+        damaged=copy.deepcopy(stored)
+        damaged["derived_media"]["overview_thumbnail"]["asset"]["storage"]=None
+        with self.assertRaisesRegex(CatalogueError,"Unpublished"):
+            build_index([damaged])
+
+
 if __name__ == "__main__":
     unittest.main()

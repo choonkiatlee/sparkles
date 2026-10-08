@@ -48,6 +48,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python -m diamond_catalogue.publish
 
+      - name: Generate missing compact overview thumbnails
+        # Source/release reads can fail independently of a successful ingestion.
+        # The generator logs a warning and retains the original image fallback.
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF: refs/heads/master
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python -m diamond_catalogue.auto_thumbnail_batch --limit 100
+
   deploy-pages:
     needs: publish
     uses: ./.github/workflows/catalogue-pages.yml

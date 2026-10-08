@@ -63,6 +63,50 @@ class GitHubCatalogue:
                 manifests[path] = value
         return head, tree_sha, manifests, old_index
 
+    def attach_generated_thumbnail(self, diamond_id: str, derivative: dict) -> PublishReceipt:
+        """Atomically attach a generated icon if one is not already published."""
+        from .merge import _check_manifest
+        import copy
+        path = MANIFEST_PREFIX + diamond_id + ".json"
+        for attempt in range(MAX_COMMIT_ATTEMPTS):
+            head, tree_sha, manifests, old_index = self._snapshot()
+            existing = manifests.get(path)
+            if not existing:
+                raise CatalogueError("Cannot attach thumbnail without a certified manifest")
+            current = (existing.get("derived_media") or {}).get("overview_thumbnail")
+            if current is not None:
+                return PublishReceipt(diamond_id,path,0,len(manifests),head,False,
+                                      existing["retrievals"][-1]["status"])
+            revised = copy.deepcopy(existing)
+            revised.setdefault("derived_media", {})["overview_thumbnail"] = copy.deepcopy(derivative)
+            _check_manifest(revised)
+            manifests[path] = revised
+            index = build_index(manifests.values())
+            tree = self.api.post_json(f"{self.api.prefix}/git/trees", {
+                "base_tree": tree_sha,
+                "tree": [
+                    {"path": path, "mode":"100644","type":"blob",
+                     "content":json_document(revised)},
+                    {"path": CATALOGUE_PATH, "mode":"100644","type":"blob",
+                     "content":json_document(index)},
+                ],
+            })
+            commit = self.api.post_json(f"{self.api.prefix}/git/commits", {
+                "message":f"Catalogue: auto-generate overview thumbnail for {diamond_id}",
+                "tree":tree["sha"], "parents":[head],
+            })
+            try:
+                self.api.patch_json(f"{self.api.prefix}/git/refs/heads/{self.branch}", {
+                    "sha":commit["sha"], "force":False,
+                })
+            except GitHubError as error:
+                if error.status not in {409,422} or attempt+1 == MAX_COMMIT_ATTEMPTS:
+                    raise
+                continue
+            return PublishReceipt(diamond_id, path, 1, len(manifests),
+                                  commit["sha"], True, revised["retrievals"][-1]["status"])
+        raise CatalogueError("Overview thumbnail commit retry budget exceeded")
+
     def commit(self, published_manifest: dict, *, asset_count: int) -> PublishReceipt:
         path = MANIFEST_PREFIX + published_manifest["id"] + ".json"
         for attempt in range(MAX_COMMIT_ATTEMPTS):

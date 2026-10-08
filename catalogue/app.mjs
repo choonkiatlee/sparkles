@@ -55,13 +55,24 @@ function makeRow(row) {
   identity.scope="row";
   const detail = node("div","diamond-identity");
   const thumb = node("span","mini-photo");
-  const imageURL = httpUrl(row.thumbnail_url);
+  const generatedIcon = Boolean(row.overview_thumbnail_url);
+  const imageURL = httpUrl(row.overview_thumbnail_url || row.thumbnail_url);
   if (imageURL) {
     const img=node("img");
     img.src=imageURL;
-    img.alt="Representative saved diamond image (not a verified face-up view)";
+    img.alt=generatedIcon ? "Automatically cropped diamond overview thumbnail" : "Representative saved diamond image";
     img.loading="lazy"; img.decoding="async";
-    img.addEventListener("error",()=>thumb.replaceChildren(node("span","photo-empty","◇")));
+    img.title=generatedIcon ? "Automatic source-hash-traced crop; orientation uncalibrated" : "Original representative image";
+    img.addEventListener("error",()=>{
+      // A temporary derived-asset issue should never hide the original saved image.
+      const original = httpUrl(row.thumbnail_url);
+      if (generatedIcon && original && img.src !== original) {
+        img.src = original;
+        img.alt = "Original representative diamond image (generated icon unavailable)";
+        return;
+      }
+      thumb.replaceChildren(node("span","photo-empty","◇"));
+    });
     thumb.append(img);
   } else {
     thumb.append(node("span","photo-empty","◇"));

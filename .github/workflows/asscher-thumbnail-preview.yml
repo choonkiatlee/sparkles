@@ -1,0 +1,59 @@
+name: asscher-thumbnail-preview
+
+on:
+  pull_request:
+    paths:
+      - "diamond_catalogue/faceup_thumbnail.py"
+      - "tests/test_faceup_thumbnail.py"
+      - "tests/test_faceup_publish.py"
+      - "diamond_catalogue/faceup_publish.py"
+      - "diamond_catalogue/auto_thumbnail_batch.py"
+      - "tools/build_faceup_previews.py"
+      - ".github/workflows/asscher-thumbnail-preview.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  thumbnail-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -e .
+      - run: python -m unittest tests.test_faceup_thumbnail tests.test_faceup_publish tests.test_diamond_catalogue -v
+
+  real-published-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -e .
+      - name: Recover published source frames and render two automatic icons
+        id: previews
+        # This produces reproducibility/QC artifacts; merge auto-backfill
+        # separately generates published icons without any approval stage.
+        continue-on-error: true
+        run: |
+          python tools/build_faceup_previews.py \
+            --output /tmp/faceup-review \
+            igi-lg756520111 igi-lg816611062
+      - name: Upload original-color crop and thumbnail review bundle
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: auto-icons-two-published-stones
+          path: /tmp/faceup-review/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Flag preview failure, preserving the tests
+        if: steps.previews.outcome == 'failure'
+        run: |
+          echo "::warning title=Auto icon QC unavailable::External image retrieval or silhouette crop failed; original image remains the fallback."

@@ -47,6 +47,15 @@ def _check_manifest(manifest: dict) -> None:
         for ref in references:
             if not (ref.get("storage") or {}).get("url"):
                 raise CatalogueError("Unpublished evidence asset in catalogue manifest")
+    thumbnail = (manifest.get("derived_media") or {}).get("overview_thumbnail")
+    if thumbnail is not None:
+        asset = thumbnail.get("asset") or {}
+        source = thumbnail.get("source") or {}
+        if (not (asset.get("storage") or {}).get("url")
+                or not source.get("sha256")
+                or not asset.get("sha256")
+                or not thumbnail.get("crop_source_bbox_xyxy")):
+            raise CatalogueError("Unpublished or untraceable overview thumbnail")
     canonical_json(manifest)
 
 

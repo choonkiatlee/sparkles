@@ -26,6 +26,10 @@ def index_row(manifest: dict) -> dict:
                 break
         if thumbnail:
             break
+    # Optional automatically generated icon; leave source thumbnail and original
+    # comparison evidence unmodified.
+    derived = (manifest.get("derived_media") or {}).get("overview_thumbnail") or {}
+    overview_thumbnail = (derived.get("asset") or {}).get("storage", {}).get("url")
     metadata = manifest["diamond_metadata"]
     return {
         "id": manifest["id"], "manifest_path": f"data/diamonds/{manifest['id']}.json",
@@ -41,6 +45,7 @@ def index_row(manifest: dict) -> dict:
         "has_motion": any(e["kind"] in {"rotation", "video"} and e["status"] == "success"
                           and (e.get("frames") or e.get("payload_asset")) for e in manifest["evidence"]),
         "thumbnail_url": thumbnail,
+        **({"overview_thumbnail_url": overview_thumbnail} if overview_thumbnail else {}),
     }
 
 
