@@ -124,6 +124,64 @@ class NativeLineGeometryTests(unittest.TestCase):
                              "unavailable_not_attempted_without_tracked_junction_cycle")
             self.assertFalse(row["physical_facet_identity_claim"])
 
+    def test_unavailable_inner_scaffold_does_not_hide_outer_RGB_evidence(self):
+        """A missing C3 scaffold must not suppress observable RGB edges."""
+        import json
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            pose=root/"pose"
+            pose.mkdir()
+            (pose/"asscher-pose.json").write_text(json.dumps({"frames":[]}))
+            Image.new("RGB",(160,160),(60,120,190)).save(root/"original.png")
+            records=[{
+                "source_index":i,
+                "position":i,
+                "source_camera_path":"original.png",
+                "sequence_coordinate":{
+                    "sequence_gauge_to_camera_xy":np.eye(3).tolist()
+                },
+            } for i in (3,7,11)]
+            mask=np.ones((160,160),bool)
+            evidence=(np.ones((3,8,160)),np.linspace(0,1,160),
+                      [mask]*3,[np.ones((160,160))]*3,
+                      [{"source_index":i} for i in (3,7,11)])
+            original_outline=wireframe._ideal_outer_vertices().tolist()
+            def fake_inspect(source,record,mask,outer,*,destination):
+                Image.new("RGB",(140,90),"black").save(destination)
+                return {
+                    "source_index":record["source_index"],
+                    "original_rgb_qc":destination.name,
+                    "covered_side_families":[],
+                    "observed_corner_families":[],
+                    "polygon_fit_status":
+                        "unavailable_not_attempted_without_tracked_junction_cycle",
+                }
+            with (patch.object(line.stability,"_primary_fit",
+                               return_value=(
+                                   {"status":"unavailable","scaffold":None},
+                                   records,[],[]
+                               )),
+                  patch.object(line.stability,"_load_evidence",
+                               return_value=evidence),
+                  patch.object(line.outer_octagon,"fit_consensus",
+                               return_value={
+                                   "vertices_topology_order":original_outline,
+                                   "confidence":.92
+                               }) as outer_fit,
+                  patch.object(line,"inspect_frame",
+                               side_effect=fake_inspect)):
+                result=line.run_stone(root,pose,root/"output",
+                                      certificate="SYNTH")
+            self.assertEqual(result["status"],"diagnostic_only")
+            self.assertEqual(len(result["frames"]),3)
+            self.assertEqual(result["primary_frozen_geometry_status"],
+                             "unavailable")
+            self.assertEqual(result["outer_outline_origin"],
+                             "frozen_outer_octagon_fit_consensus")
+            self.assertTrue(outer_fit.called)
+            self.assertTrue((root/"output"/result["camera_RGB_contact_sheet"]).is_file())
+
+
 
 if __name__=="__main__":
     unittest.main()
