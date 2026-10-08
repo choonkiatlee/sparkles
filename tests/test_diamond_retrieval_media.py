@@ -165,6 +165,23 @@ class LoupeResolutionTests(unittest.TestCase):
         self.assertEqual(children[1].metadata["format"], "video")
         self.assertNotIn("format", children[0].metadata)
 
+    def test_unknown_supplier_viewer_is_explicit_but_does_not_hide_video(self):
+        direct = "https://media.example.test/exact-stone.mp4"
+        unknown = "https://unknown.example.test/supplier-360"
+        http = FakeHttpClient(
+            posts={
+                GRAPHQL_URL: (
+                    _graphql_payload(v360_url=unknown, video=direct),
+                    "application/json",
+                )
+            }
+        )
+        children = Loupe360CertificateResolver(http).resolve(
+            _listing(), _loupe_reference()
+        )
+        self.assertEqual([x.kind for x in children], [ROTATION, VIDEO])
+        self.assertEqual([x.locator for x in children], [unknown, direct])
+
     def test_direct_video_is_used_only_when_no_supported_v360_exists(self):
         direct = "https://media.example.test/exact-stone.mp4"
         http = FakeHttpClient(
