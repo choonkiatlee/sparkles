@@ -1,0 +1,39 @@
+name: catalogue-browser-smoke
+
+on:
+  pull_request:
+    paths:
+      - "tests/catalogue-browser-smoke.mjs"
+      - ".github/workflows/catalogue-browser-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  real-rotation-browser-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install headless Chromium for standalone smoke test
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Run desktop and emulated mobile Chromium against two original published 256-frame rotations
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/sparkles-browser-site.log 2>&1 &
+          web_pid=$!
+          trap 'kill "$web_pid" 2>/dev/null || true' EXIT
+          node tests/catalogue-browser-smoke.mjs
+      - name: Upload screenshot and quantitative smoke results even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: catalogue-c3-real-browser-smoke
+          path: browser-smoke-results/
+          if-no-files-found: ignore
+          retention-days: 14
