@@ -428,3 +428,48 @@ not cover all true source uncertainty or camera projection ambiguity.
 The separate interior virtual-facet research is #123. The photographed
 physical pavilion plane identifiers and all eight P1/P2/P3/C1 physical
 angles remain unavailable until independently supported.
+
+
+## B2d v2 correction — outside/background contact is the objective
+
+The first automated proposer (\`auto-exterior/1\`) was **rejected on visual
+inspection**: despite its continuity regularizer, maximizing local contrast
+selected bright **interior** virtual-face boundaries rather than the much
+fainter actual stone/background boundary on the upper crown. **Do not use v1
+results for physical geometry, landmarks or changepoints.**
+
+The revised \`diamond360-asscher-auto-exterior/2\` makes a different,
+fundamental observation:
+
+- Model the nearly constant RGB background using samples taken at the **left
+  and right outer image borders in each row**. No internal/central face
+  pixels are used to establish the background reference.
+- From each side's outside image border, scan *inwards* until the **first
+  persistent deviation** from background is found (at least 5 of the
+  following 7 pixels exceed a predeclared RGB separation). This criterion
+  does not reward the strongest or brightest inner face.
+- Compare low/moderate contact thresholds 7/9/12 RGB units, preserve the
+  first-contact coordinates and threshold disagreement on each source row,
+  and median-filter **only across five neighboring image rows** for minor
+  JPEG noise. No 3D/pavilion-angle target or rigid polygon attracts the
+  trace inward.
+- If a threshold misses a faint real edge and snaps to the bright interior,
+  the difference is exposed as an **uncertain** contour span, rather than
+  silently declaring that interior line physical.
+- The lower platform/shadow region is excluded from automatic *supported*
+  points regardless of algorithmically proposed coordinates, and the
+  provisional y≈212 crown/pavilion phase split is not a verified girdle.
+
+Added adversarial regression: draw a faint outer silhouette, then a much
+brighter internal virtual face on top. **The external path must remain
+unchanged.** Photo-only sanity checks require the y=100/y=160 proposed
+crown outline to remain outside the obvious central table boundaries.
+Synthetic internal stripes, blank images and original-source hash guards
+remain in CI.
+
+The photo-derived outward-first proposal and its green/orange support overlay
+still require independent review, especially near the lower pavilion. A
+background-first contour is more plausible physical evidence than a
+brightness-maximizing Hough line, but it is **not** proof that every edge is
+the correct 3D silhouette or that it corresponds to a specific P1/P2/P3 plane.
+The internal/virtual optical problem remains tracked separately in #123.
