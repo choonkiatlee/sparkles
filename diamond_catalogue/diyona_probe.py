@@ -116,9 +116,9 @@ def run():
     # Query the same public Supabase PostgREST resource used by the site.
     # The browser-visible anon credential is used only in the request headers,
     # never printed or persisted.
-    source="\\n".join(parsed.inline)
-    url_match=re.search(r'SUPABASE_URL\\s*=\\s*([\\x27\\x22])([^\\x27\\x22]+)\\1',source)
-    anon_match=re.search(r'SUPABASE_ANON\\s*=\\s*([\\x27\\x22])([^\\x27\\x22]+)\\1',source)
+    source="\n".join(parsed.inline)
+    url_match=re.search(r'SUPABASE_URL\s*=\s*([\x27\x22])([^\x27\x22]+)\1',source)
+    anon_match=re.search(r'SUPABASE_ANON\s*=\s*([\x27\x22])([^\x27\x22]+)\1',source)
     print("SUPABASE settings found",bool(url_match),bool(anon_match))
     if url_match and anon_match:
         base=url_match.group(2).rstrip("/")
