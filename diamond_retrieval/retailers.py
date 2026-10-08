@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import html
+import math
 import re
 from dataclasses import dataclass
 from decimal import Decimal
@@ -120,28 +121,110 @@ def _field(text: str, label: str) -> str | None:
     return match.group(1).strip() if match else None
 
 
+# Null/placeholder values are *not grades*. In particular, the generic cut
+# grade may not be reported for step cuts such as Asscher diamonds.
+_MISSING_PROPORTION_VALUES = frozenset({
+    "", "-", "--", "—", "–", "n/a", "na", "not applicable",
+    "unknown", "null", "undefined", "not graded", "ungraded",
+})
+_GRADE_NAMES = {
+    "id": "Ideal", "ideal": "Ideal",
+    "ex": "Excellent", "excellent": "Excellent",
+    "vg": "Very Good", "v good": "Very Good", "very good": "Very Good",
+    "gd": "Good", "g": "Good", "good": "Good",
+    "f": "Fair", "fair": "Fair",
+    "p": "Poor", "pr": "Poor", "poor": "Poor",
+}
+_FLUORESCENCE_NAMES = {
+    "non": "None", "n": "None", "none": "None", "nil": "None",
+    "no": "None",
+    "f": "Faint", "faint": "Faint",
+    "slight": "Slight", "very slight": "Very Slight",
+    "med": "Medium", "medium": "Medium",
+    "s": "Strong", "strong": "Strong",
+    "vs": "Very Strong", "very strong": "Very Strong",
+    "negligible": "Negligible",
+}
+_GRADE_TOKENS = r"(?:Very\s+Good|Excellent|Ideal|Good|Fair|Poor|EX|VG|GD|ID|PR|G|F|P)"
+_FLUORESCENCE_TOKENS = (
+    r"(?:Very\s+Strong|Very\s+Slight|Negligible|Medium|"
+    r"Strong|Slight|Faint|None|Nil|Non|No|Med|VS|S|F|N)"
+)
+_GIRDLE_LEVEL = (
+    r"(?:Extremely\s+Thin|Very\s+Thin|Slightly\s+Thin|Thin|"
+    r"Medium|Slightly\s+Thick|Very\s+Thick|Extremely\s+Thick|Thick)"
+)
+_CULET_TOKENS = r"(?:Very\s+Small|Very\s+Large|Slightly\s+Large|Small|Medium|Large|Pointed|None)"
+
+
+def _normalized_proportion(key: str, value: object) -> str | float | None:
+    """Normalize *explicit* retailer values; never persist filler as a grade."""
+    if value is None:
+        return None
+    text = re.sub(r"\s+", " ", str(value)).strip()
+    if text.casefold() in _MISSING_PROPORTION_VALUES:
+        return None
+    if key in {"cut", "polish", "symmetry"}:
+        return _GRADE_NAMES.get(text.casefold().replace(".", ""))
+    if key == "fluorescence":
+        # None/Non means *no fluorescence*, which is a valid reported value;
+        # it is not the same as an absent fluorescence field.
+        return _FLUORESCENCE_NAMES.get(text.casefold())
+    if key == "girdle":
+        if re.fullmatch(rf"{_GIRDLE_LEVEL}(?:\s+to\s+{_GIRDLE_LEVEL})?", text, re.I):
+            return text.title().replace(" To ", " to ")
+        return None
+    if key == "culet":
+        if re.fullmatch(_CULET_TOKENS, text, re.I):
+            return text.title()
+        return None
+    if key in {"table_percent", "depth_percent", "length_width_ratio"}:
+        try:
+            number = float(text.rstrip("%").strip())
+        except ValueError:
+            return None
+        if not math.isfinite(number) or number <= 0:
+            return None
+        if key == "length_width_ratio":
+            return number if number <= 10 else None
+        return number if number <= 100 else None
+    return None
+
+
 def _proportions(text: str) -> dict[str, str | float]:
+    """Extract measured proportions and explicitly reported valid grades.
+
+    The retailer's HTML is flattened into text; an unconstrained label+word
+    regex used to read "cut and..." as cut="and", "polished" as polish="ed",
+    and nearby headings as culet/girdle. Match whole labels and known values.
+    """
     result: dict[str, str | float] = {}
     numeric_patterns = {
-        "table_percent": r"\bTable\s*%?\s*:?[ ]*([0-9.]+)\s*%",
-        "depth_percent": r"\bDepth\s*%?\s*:?[ ]*([0-9.]+)\s*%",
-        "length_width_ratio": r"\b(?:L/W Ratio|Ratio)\s*:?[ ]*([0-9.]+)",
+        "table_percent": r"\bTable\s*%?\s*:?\s*([0-9]+(?:\.[0-9]+)?)\s*%",
+        "depth_percent": r"\bDepth\s*%?\s*:?\s*([0-9]+(?:\.[0-9]+)?)\s*%",
+        "length_width_ratio": r"\b(?:L/W Ratio|Ratio)\s*:?\s*([0-9]+(?:\.[0-9]+)?)\b",
     }
     for key, pattern in numeric_patterns.items():
         match = re.search(pattern, text, re.I)
         if match:
-            result[key] = float(match.group(1))
-    for label, key in (
-        ("Cut", "cut"),
-        ("Polish", "polish"),
-        ("Symmetry", "symmetry"),
-        ("Fluorescence", "fluorescence"),
-        ("Girdle", "girdle"),
-        ("Culet", "culet"),
-    ):
-        value = _field(text, label)
-        if value and value != "-":
-            result[key] = value
+            value = _normalized_proportion(key, match.group(1))
+            if value is not None:
+                result[key] = value
+
+    labels = {
+        "cut": rf"\bCut(?:\s+Grade)?\s*:?\s*({_GRADE_TOKENS})\b",
+        "polish": rf"\bPolish\s*:?\s*({_GRADE_TOKENS})\b",
+        "symmetry": rf"\bSymmetry\s*:?\s*({_GRADE_TOKENS})\b",
+        "fluorescence": rf"\bFluorescence\s*:?\s*({_FLUORESCENCE_TOKENS})\b",
+        "girdle": rf"\bGirdle\s*:?\s*({_GIRDLE_LEVEL}(?:\s+to\s+{_GIRDLE_LEVEL})?)\b",
+        "culet": rf"\bCulet\s*:?\s*({_CULET_TOKENS})\b",
+    }
+    for key, pattern in labels.items():
+        match = re.search(pattern, text, re.I)
+        if match:
+            value = _normalized_proportion(key, match.group(1))
+            if value is not None:
+                result[key] = value
     return result
 
 
@@ -377,11 +460,9 @@ def _diyona_public_record_as_listing(
     }
     proportions = {}
     for key, name in proportion_names.items():
-        value = data.get(key)
-        if value is not None and str(value).strip():
-            proportions[name] = float(value) if key in {
-                "ratio", "depth_percent", "table_percent"
-            } else str(value)
+        value = _normalized_proportion(name, data.get(key))
+        if value is not None:
+            proportions[name] = value
 
     fields = ["report_number", "lab", "retailer_sku"]
     if shape:
