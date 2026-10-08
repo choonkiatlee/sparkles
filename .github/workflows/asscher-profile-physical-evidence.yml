@@ -10,6 +10,7 @@ on:
       - "diamond360/asscher_profile_auto_exterior.py"
       - "diamond360/asscher_profile_auto_changepoints.py"
       - "diamond360/asscher_profile_endpoint_candidates.py"
+      - "diamond360/asscher_profile_conditional_symmetry.py"
       - "diamond360/asscher_profile_feasibility.py"
       - "tests/test_asscher_profile_physical_evidence.py"
       - "tests/test_asscher_profile_outer_contour.py"
@@ -18,6 +19,7 @@ on:
       - "tests/test_asscher_profile_auto_exterior.py"
       - "tests/test_asscher_profile_auto_changepoints.py"
       - "tests/test_asscher_profile_endpoint_candidates.py"
+      - "tests/test_asscher_profile_conditional_symmetry.py"
       - "tests/test_asscher_profile_feasibility.py"
       - "docs/360/asscher-geometry-validation/PROFILE-PHYSICAL-EVIDENCE.md"
       - "docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG"
@@ -45,7 +47,8 @@ jobs:
             tests.test_asscher_profile_outline_changepoints \
             tests.test_asscher_profile_auto_exterior \
             tests.test_asscher_profile_auto_changepoints \
-            tests.test_asscher_profile_endpoint_candidates -v
+            tests.test_asscher_profile_endpoint_candidates \
+            tests.test_asscher_profile_conditional_symmetry -v
       - name: Emit source-pinned evidence review template
         run: |
           python -m diamond360.asscher_profile_physical_evidence \
@@ -218,6 +221,33 @@ jobs:
           assert (folder/"endpoint-review-overlay.png").is_file()
           print("Top candidate:",doc["top_cap_candidate"]["status"])
           print("Terminal candidates:",{s:v["status"] for s,v in doc["last_pavilion_changepoint_candidates"].items()})
+          PY
+      - name: Generate unreviewed conditional symmetry preview
+        run: |
+          python -m diamond360.asscher_profile_conditional_symmetry \
+            --image docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG \
+            --auto-json outputs/asscher-profile-physical-evidence/auto-exterior.json \
+            --joint-json outputs/asscher-profile-physical-evidence/joint-changepoints.json \
+            --endpoint-json outputs/asscher-profile-physical-evidence/endpoint-candidates.json \
+            --output outputs/asscher-profile-physical-evidence
+      - name: Verify mirror is not accepted without independently confirmed head-on pose
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("outputs/asscher-profile-physical-evidence")
+          r=json.loads((p/"conditional-symmetry.json").read_text())
+          assert r["status"] == "preview_only_not_adopted"
+          assert r["pose_review"]["status"] == "not_confirmed"
+          assert r["physical_facet_angles"] == "all_unavailable"
+          assert r["right_terminal_symmetry_hypothesis"]["status"] in {
+              "counterfactual_mirror_preview_not_applied","unavailable"}
+          assert r["independent_terminal_candidates"]["right"]["status"] == "unavailable"
+          assert (p/"conditional-symmetry-preview.png").is_file()
+          assert (p/"pose-review-template.json").is_file()
+          print("Unconfirmed head-on view: mirrored right terminal only a conditional PREVIEW")
+          print("Mirror candidate:",r["right_terminal_symmetry_hypothesis"].get("xy_px"))
+          print("Image-only proxy:",r["image_only_symmetry_diagnostic"])
           PY
       - name: Upload review template
         uses: actions/upload-artifact@v4
