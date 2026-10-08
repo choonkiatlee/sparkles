@@ -1,83 +1,69 @@
-# Asscher thumbnail generation and approval — #143
+# Automated compact catalogue thumbnails — issue #143
 
-## Why this is separate from the index's existing generic thumbnail
+The small browse-table icons are **fully automated**. The larger C2 comparison
+continues to display the original published media; generated assets do not
+replace original stills, videos, ordered 360 frames, or the report PDFs.
 
-The existing `thumbnail_url` always remains a representative retailer still /
-first original frame, with no crown-orientation claim. The optional
-`face_up_thumbnail_url` is only emitted for a **human-reviewed**, exact-hash
-derived thumbnail. The compact C2.5 table prefers that field when present and
-falls back to the previous thumbnail otherwise.
+## How generation works
 
-## Candidate generator
+`diamond_catalogue.faceup_thumbnail` reads 32 stratified positions from a
+published complete ordered 360 cycle, verifying every original downloaded
+image's SHA-256 against the immutable catalogue manifest. It reuses the existing:
 
-`diamond_catalogue.faceup_thumbnail` uses existing production methods:
+- `diamond360.segmentation.segment` background/foreground mask;
+- `diamond360.asscher_pose.assess_frame` and `face_orientation_cues`;
+- `diamond360.asscher_pose_sequence.resolve_face_lobes` for likely crown
+  vs pavilion lobe identification when the evidence resolves it;
+- `diamond360.asscher_outer_octagon.assess_record` for outer-silhouette checks;
+- `diamond360.geometry.fit_asscher_outline` for observed exterior crop corners.
 
-- `diamond360.segmentation.segment` on small source RGB copies;
-- `asscher_pose.assess_frame` and `face_orientation_cues`;
-- `asscher_pose_sequence.resolve_face_lobes` on 32 uniform circular proxy
-  samples from a *declared complete* original ordered rotation;
-- `asscher_outer_octagon.assess_record`, fitted outer contour (or an explicitly
-  **unverified** background-segmented contour as a review-only fallback);
-- tightly crop original full-colour pixels with 12% padding and encode
-  reproducible 128px WebP. There is no image synthesis, enhancement, physical
-  angle assertion or untrusted interpolation of facet geometry.
+Select the best usable outer-octagon view, preferring a resolved crown lobe.
+If the crown is ambiguous or the octagon strict gate fails, make a
+**generic overview crop** from the segmented outer foreground where available.
+Never crop around a bright internal facet. If no complete rotation exists,
+attempt a verified original still crop. If the image/crop isn't usable,
+retain the original `thumbnail_url` fallback in the index.
 
-A plausible crown-looking outline **does not** prove a crown viewpoint.
-The original method may not resolve the crown lobe (especially on sparse
-uniform samples). Candidate results then explicitly say
-`unverified_pose_candidate`; rejection of the strict outer model is reflected
-by `selection_method=rejected_outer_geometry_review_only`. A still-only crop
-has status `unverified_still_crop` and can **never** be published as a
-face-up thumbnail through the approval path.
+Cropping preserves **original RGB pixels**, a square padded presentation, and
+downsamples deterministically to a 128px WebP. There is no new invented
+physical camera angle, no quality score, no manual verification requirement.
 
-Each candidate record contains the original
-`source.sha256`/`source_index`/`frame_position` and the derivative
-`sha256`, crop bounds, source-selection/gating diagnostics, and algorithm
-version. Original source media bytes and evidence references remain unchanged.
+## Publisher & data contract
 
-## Review two actual diamonds
+The automatic publisher (`diamond_catalogue.faceup_publish`) constructs one
+hashed `PlannedAsset` and uploads through the existing
+`GitHubReleaseStorage` storage-neutral interface. The catalogue publisher
+atomically appends optional `derived_media.overview_thumbnail` containing:
 
-The `asscher-thumbnail-preview` workflow runs on the PR and has a public
-Actions artifact named `faceup-review-two-published-stones`.
-It downloads only 32 original-frame samples for each of:
-`igi-lg756520111` and `igi-lg816611062`, verifying every JPEG against
-the original immutable hash. It writes for each:
+- original source asset SHA-256 and stored frame index (or still hash);
+- derived WebP SHA-256, byte count and resolved storage URL;
+- source crop bounding box, algorithm, pose-selection status and
+  `human_verified: false`.
 
-- `<diamond-id>-crop.jpg` large original-colour crop for review;
-- `<diamond-id>.webp` small target icon;
-- `<diamond-id>-opposite-crop.jpg` second original-colour frame roughly half a cycle away, when recoverable. Use it to check whether the main crop is actually crown-facing rather than pavilion-facing;
-- `<diamond-id>.json` provenance, exact hashes, detailed suitability reasons;
-- `summary.json` overview.
+The generated index adds optional `overview_thumbnail_url`, while
+`thumbnail_url` still points to the original saved retailer representative.
+The table chooses the generated icon when available and otherwise uses the
+original. C2's `representativeAsset` is intentionally unchanged.
 
-An actual image preview is **not** certified as crown-facing merely because
-the generation job succeeded. Check the cut-corner outer boundary, full stone,
-correct *crown* table rather than pavilion diagonals, and whether a 128px
-icon is recognizable. Reject/rework rather than approving an ambiguous image.
+Each existing successful generated derivative is stable across re-ingestion.
+The publisher is idempotent and won't re-upload the same icon on subsequent
+runs. Strict source hash or media-URL failures skip that icon and do not corrupt
+the catalogue. No human-in-the-loop approval or upload workflow exists.
 
-## Explicit approval after visual validation
+## Automatic triggering
 
-After merge, the repository Actions workflow
-`catalogue-faceup-thumbnail-approve` requires all of:
+- On first merge of #143 to `master`, the `catalogue-thumbnail-auto` workflow
+  backfills saved diamonds, up to 100 missing icons per run, then invokes the
+  Pages reusable deployment workflow explicitly.
+- Each future `diamond-catalogue-ingest` publication executes the same
+  bounded backfill step after publishing evidence and before Pages deployment.
+- A manual `workflow_dispatch` rerun exists **only** for transient storage
+  failures; it is not an approval or per-diamond review step.
 
-1. exact diamond id;
-2. WebP SHA-256 from reviewed JSON;
-3. original selected source frame SHA-256 from reviewed JSON;
-4. literal `I_REVIEWED_THE_CROWN_VIEW` acknowledgement.
-
-The workflow checks out **updated master**, regenerates the image from its
-unchanged original source frame, compares both hashes and source identity,
-publishes the content-addressed WebP through the existing
-`GitHubReleaseStorage` storage contract, then atomically commits an optional
-`derived_media.face_up_thumbnail` reference plus the rebuilt
-`data/catalog.json`. It invokes the reusable Pages workflow after commit.
-The publication fails closed on any mismatch or attempt to replace a different
-reviewed thumbnail, so a changed algorithm or upstream image cannot silently
-relabel a pose.
-
-No public site's stored derivative is promoted by automatic CI. Because
-the source views are not physically calibrated, `face_up_thumbnail_url`
-means **human-confirmed crown-looking thumbnail**, not a measured physical
-angle or an optical quality score.
+Source fetching is network-bounded with safety checks and original SHA-256
+verification. Failures log a warning, not a bogus icon. The existing
+read-only `asscher-thumbnail-preview` workflow records reproducibility/QC
+sample crops for LG756520111 and LG816611062; its artifacts never need approval.
 
 ## Tests
 
@@ -85,7 +71,6 @@ angle or an optical quality score.
 python -m unittest tests.test_faceup_thumbnail tests.test_faceup_publish tests.test_diamond_catalogue -v
 ```
 
-The tests use synthetic outlines, source SHA mismatches, missing observations,
-repository publishing fake, idempotent object storage, index rebuild, source
-preservation and explicit approval gates. Network preview is separate and may
-expose genuine upstream unavailability without rewriting original evidence.
+Tests cover original SHA rejection, outer-crop correctness, generic unverified
+views, absent motion/stills, idempotent atomic Git index updates, unchanged
+original comparison evidence and storage-neutral URL resolution.
