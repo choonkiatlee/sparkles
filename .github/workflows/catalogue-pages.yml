@@ -1,20 +1,10 @@
 name: catalogue-pages
 
+# Pages deployment is deliberately manual-only. Keep the workflow for an
+# explicit future deploy, but do not run it after ingestion, thumbnails,
+# catalogue data commits or regular pushes.
 on:
-  push:
-    branches: [master]
-    paths:
-      - "index.html"
-      - ".nojekyll"
-      - "catalogue/**"
-      - "data/catalog.json"
-      - "data/diamonds/**"
-      - "evaluations/**"
-      - "resources/**"
-      - "tools/build_catalogue_pages.py"
-      - ".github/workflows/catalogue-pages.yml"
   workflow_dispatch:
-  workflow_call:
 
 permissions: {}
 
