@@ -1,0 +1,122 @@
+name: asscher-observed-RGB-junction-graph
+
+concurrency:
+  group: asscher-observed-RGB-junction-graph-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+
+on:
+  pull_request:
+    paths:
+      - "diamond360/asscher_geometry_rgb_junction_graph.py"
+      - "tests/test_asscher_geometry_rgb_junction_graph.py"
+      - "docs/360/asscher-geometry-validation/CONNECTED-RGB-JUNCTIONS.md"
+      - ".github/workflows/asscher-observed-rgb-junctions.yml"
+  workflow_dispatch:
+
+jobs:
+  diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: python -m pip install -e .
+
+      - name: Focused connected RGB junction graph and inherited segment tests
+        run: |
+          python -m unittest \
+            tests.test_asscher_geometry_rgb_junction_graph \
+            tests.test_asscher_geometry_rgb_lines \
+            tests.test_asscher_geometry_validation -v
+
+      - name: Fetch immutable #96 outer baseline
+        uses: actions/download-artifact@v4
+        with:
+          name: asscher-geometry-stability-outer-v2
+          run-id: 37755387174
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: outputs/outer-v2-baseline
+
+      - name: Fetch immutable #146 observed-line baseline
+        uses: actions/download-artifact@v4
+        with:
+          name: asscher-native-RGB-facet-line-diagnostic
+          run-id: 37797799152
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: outputs/native-RGB-lines-baseline
+
+      - name: Download the four SHA-256-pinned original RGB rotations
+        run: |
+          python - <<'PY'
+          import hashlib,json,urllib.request,zipfile
+          from pathlib import Path
+          manifest=json.loads(Path("docs/360/benchmark/source-bundles.json").read_text())
+          root=Path("outputs/RGB-junction-source-rotations")
+          root.mkdir(parents=True,exist_ok=True)
+          for row in manifest["bundles"]:
+              archive=root/row["filename"]
+              urllib.request.urlretrieve(row["download_url"],archive)
+              assert archive.stat().st_size==row["bytes"]
+              assert hashlib.sha256(archive.read_bytes()).hexdigest()==row["sha256"]
+              dest=root/row["certificate"]
+              dest.mkdir(parents=True,exist_ok=True)
+              with zipfile.ZipFile(archive) as bundle:
+                  bundle.extractall(dest)
+          PY
+
+      - name: Reconstruct observed RGB junction graph for each selected frame
+        run: |
+          python -m diamond360.asscher_geometry_rgb_junction_graph \
+            --source-root outputs/RGB-junction-source-rotations \
+            --output outputs/asscher-RGB-junction-graph
+
+      - name: Audit #96 source-selection and #146 line-evidence invariance
+        run: |
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          root=Path("outputs/asscher-RGB-junction-graph")
+          data=json.loads((root/"summary.json").read_text())
+          assert len(data["stones"])==4
+          assert data["no_estimator_changes"]
+          assert data["physical_facet_identity_verified"] is False
+          for row in data["stones"]:
+              cert=row["certificate"]
+              ref=json.loads((Path("outputs/outer-v2-baseline/per-stone")
+                              /cert/"primary-wireframe.json").read_text())
+              expected=[v["source_index"] for v in ref["selected_frames"]]
+              assert row["selected_source_indices"]==expected,cert
+              inherited=json.loads((root/"per-stone"/cert/
+                                     "line-baseline"/"line-evidence.json").read_text())
+              original=json.loads((Path("outputs/native-RGB-lines-baseline/per-stone")
+                                   /cert/"line-evidence.json").read_text())
+              assert inherited["selected_source_indices"]==original["selected_source_indices"]
+              assert [x.get("detected_side_count") for x in inherited["frames"]]==[
+                  x.get("detected_side_count") for x in original["frames"]],cert
+              assert [x.get("polygon") is not None for x in inherited["frames"]]==[
+                  x.get("polygon") is not None for x in original["frames"]],cert
+              assert len(row["frame_results"])==len(expected)
+              assert row["closed_cycle_frame_count"]<=len(expected)
+              print(cert,"selected",expected,
+                    "crown eligible",row["physical_crown_inference_eligible"],
+                    "observed junctions",row["junction_count"],
+                    "connected edges",row["graph_links"],
+                    "closed cycles",row["closed_cycle_frame_count"])
+          PY
+
+      - name: Upload source-RGB junction graph, measured nodes and abstentions
+        uses: actions/upload-artifact@v4
+        with:
+          name: asscher-observed-RGB-junction-graph
+          path: outputs/asscher-RGB-junction-graph
+          if-no-files-found: error
+          retention-days: 90
