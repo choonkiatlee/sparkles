@@ -1,0 +1,106 @@
+name: asscher-native-line-intersections
+
+concurrency:
+  group: asscher-native-line-intersections-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+
+on:
+  pull_request:
+    paths:
+      - "diamond360/asscher_geometry_native_line_qc.py"
+      - "tests/test_asscher_geometry_native_line_qc.py"
+      - "docs/360/asscher-native-line-intersections.md"
+      - ".github/workflows/asscher-native-line-intersections.yml"
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install app and optional research-only OpenCV
+        run: |
+          python -m pip install -e .
+          python -m pip install 'opencv-python-headless>=4.10,<5'
+
+      - name: Run focused original-source and frozen-method tests
+        run: |
+          python -m unittest             tests.test_asscher_geometry_native_line_qc             tests.test_asscher_geometry_validation -v
+
+      - name: Download immutable #96 primary evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: asscher-geometry-stability-outer-v2
+          run-id: 37755387174
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: outputs/frozen-outer-v2
+
+      - name: Download and SHA-256 verify all four frozen original source rotations
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import urllib.request
+          import zipfile
+          from pathlib import Path
+          manifest=json.loads(Path("docs/360/benchmark/source-bundles.json").read_text())
+          root=Path("outputs/native-line-sources")
+          root.mkdir(parents=True,exist_ok=True)
+          for row in manifest["bundles"]:
+              archive=root/row["filename"]
+              urllib.request.urlretrieve(row["download_url"],archive)
+              assert archive.stat().st_size==row["bytes"],row["certificate"]
+              assert hashlib.sha256(archive.read_bytes()).hexdigest()==row["sha256"],row["certificate"]
+              dest=root/row["certificate"]
+              dest.mkdir(parents=True,exist_ok=True)
+              with zipfile.ZipFile(archive) as zipped:
+                  zipped.extractall(dest)
+          PY
+
+      - name: Detect genuine finite image lines and junction hypotheses on camera RGB
+        run: |
+          python -m diamond360.asscher_geometry_native_line_qc             --source-root outputs/native-line-sources             --output outputs/asscher-native-line-intersections
+
+      - name: Fail closed if baseline source selection or method changed
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path("outputs/asscher-native-line-intersections")
+          data=json.loads((root/"summary.json").read_text())
+          assert data["estimator_unchanged"]
+          assert not data["physical_facet_identity_claim"]
+          assert len(data["stones"])==4
+          for row in data["stones"]:
+              cert=row["certificate"]
+              old=json.loads((Path("outputs/frozen-outer-v2/per-stone")
+                         /cert/"primary-wireframe.json").read_text())
+              expected=[f["source_index"] for f in old["selected_frames"]]
+              assert row["selected_source_indices"]==expected,(cert,expected)
+              assert row["camera_RGB_contact_sheet"],cert
+              assert len(row["frames"])==len(expected),cert
+              assert all(frame["polygon_fit_status"].startswith("unavailable")
+                         for frame in row["frames"]),cert
+              print(cert,"original source images",len(row["frames"]),
+                    "segment-family coverage",[
+                      frame["family_coverage"] for frame in row["frames"]],
+                    "corner-family coverage",[
+                      frame["junction_family_coverage"] for frame in row["frames"]])
+          PY
+
+      - name: Upload native RGB evidence and explicit unavailable-geometry reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: asscher-native-line-intersections
+          path: outputs/asscher-native-line-intersections
+          if-no-files-found: error
+          retention-days: 90
