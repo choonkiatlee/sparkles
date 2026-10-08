@@ -33,5 +33,6 @@ jobs:
           python -m unittest tests.test_igi_pdf_shape_label -v
           python -m unittest tests.test_diamond_retrieval -v
           python -m unittest tests.test_diamond_retrieval_retailers -v
+          python -m unittest tests.test_diamond_retrieval_proportions -v
           python -m unittest tests.test_diamond_retrieval_motion -v
           python -m unittest tests.test_diamond_retrieval_media -v
