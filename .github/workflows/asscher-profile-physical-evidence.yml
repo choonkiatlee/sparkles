@@ -1,0 +1,60 @@
+name: asscher-profile-physical-evidence
+
+on:
+  pull_request:
+    paths:
+      - "diamond360/asscher_profile_physical_evidence.py"
+      - "diamond360/asscher_profile_feasibility.py"
+      - "tests/test_asscher_profile_physical_evidence.py"
+      - "tests/test_asscher_profile_feasibility.py"
+      - "docs/360/asscher-geometry-validation/PROFILE-PHYSICAL-EVIDENCE.md"
+      - "docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG"
+      - ".github/workflows/asscher-profile-physical-evidence.yml"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install package
+        run: python -m pip install -e .
+      - name: Run target-blind physical-versus-optical separation tests
+        run: |
+          python -m unittest \
+            tests.test_asscher_profile_feasibility \
+            tests.test_asscher_profile_physical_evidence -v
+      - name: Emit source-pinned evidence review template
+        run: |
+          python -m diamond360.asscher_profile_physical_evidence \
+            --image docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG \
+            --require-original \
+            --output outputs/asscher-profile-physical-evidence/review-template.json
+      - name: Enforce no physical geometry or expert targets
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path("outputs/asscher-profile-physical-evidence/review-template.json")
+          doc = json.loads(p.read_text())
+          assert doc["source"]["archived_original_match"] is True
+          assert not doc["physical_boundary_annotations"]
+          assert doc["comparison"]["external_targets_loaded"] is False
+          assert all(not r["physical_measurement_eligible"] and r["semantic_facet_id"] is None
+                     for r in doc["image_only_evidence"])
+          assert all(facet["status"] == "unavailable" and facet["apparent_angle_deg"] is None
+                     for side in doc["semantic_measurements"].values()
+                     for facet in side.values())
+          print("Physical correspondence remains unverified, and all 8 angle slots are unavailable.")
+          PY
+      - name: Upload review template
+        uses: actions/upload-artifact@v4
+        with:
+          name: asscher-profile-physical-evidence
+          path: outputs/asscher-profile-physical-evidence
+          if-no-files-found: error
+          retention-days: 90
