@@ -86,6 +86,8 @@ jobs:
                          /cert/"primary-wireframe.json").read_text())
               expected=[f["source_index"] for f in old["selected_frames"]]
               assert row["selected_source_indices"]==expected,(cert,expected)
+              # Do not require an inner C3 scaffold: the outer silhouette
+              # remains measurable even when the old inner fit abstains.
               assert row["camera_RGB_contact_sheet"],cert
               assert len(row["frames"])==len(expected),cert
               assert all(frame["polygon_fit_status"].startswith("unavailable")
@@ -98,6 +100,7 @@ jobs:
           PY
 
       - name: Upload native RGB evidence and explicit unavailable-geometry reports
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: asscher-native-line-intersections
