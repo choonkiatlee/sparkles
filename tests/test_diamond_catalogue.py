@@ -132,6 +132,39 @@ class CatalogueTests(unittest.TestCase):
         self.assertEqual(len(merged["evidence"]), 6)  # Preserve source provenance, not just source bytes.
         self.assertEqual(len(build_index([merged])["diamonds"]), 1)
 
+    def test_new_proportion_values_enrich_missing_without_overwriting(self):
+        original = publish(result())[1]
+        richer = replace(result(), metadata=replace(
+            result().metadata,
+            reported_proportions={"table": "64%", "polish": "Excellent",
+                                  "fluorescence": "None"},
+        ))
+        merged = merge_manifest(original, publish(richer)[1])
+        self.assertEqual(merged["diamond_metadata"]["reported_proportions"], {
+            "table": "64%", "polish": "Excellent", "fluorescence": "None",
+        })
+        self.assertEqual(
+            merge_manifest(merged, publish(richer)[1])["diamond_metadata"],
+            merged["diamond_metadata"],
+        )
+
+    def test_genuine_known_proportion_conflicts_still_fail_closed(self):
+        original = publish(result())[1]
+        altered = replace(result(), metadata=replace(
+            result().metadata, reported_proportions={"table": "59%"},
+        ))
+        with self.assertRaisesRegex(CatalogueError, "reported proportion: table"):
+            merge_manifest(original, publish(altered)[1])
+
+    def test_missing_proportion_does_not_erase_known_value(self):
+        original = publish(result())[1]
+        blank = replace(result(), metadata=replace(
+            result().metadata, reported_proportions={},
+        ))
+        merged = merge_manifest(original, publish(blank)[1])
+        self.assertEqual(merged["diamond_metadata"]["reported_proportions"],
+                         {"table": "64%"})
+
     def test_partial_retrieval_cannot_erase_earlier_successful_media(self):
         full = publish(result())[1]
         partial = publish(result(url="https://diyona.com/details?sku=1", status=ResultStatus.PARTIAL,
