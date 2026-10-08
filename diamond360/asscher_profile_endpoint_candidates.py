@@ -1,4 +1,4 @@
-"""Image-only table-cap and terminal pavilion-contour hypotheses for #91.
+"""Image-only projected top-apex and terminal pavilion-contour hypotheses for #91.
 
 The existing joint crown/pavilion changepoint model covers the long outline.
 This *separate* endpoint experiment handles two regions its fixed ROI omits:
@@ -42,7 +42,7 @@ POLICY = {
     "terminal_joint_min_residual_improvement_px2": 200.0,
     "terminal_joint_penalty_sensitivity_px2": [40.0, 100.0, 250.0],
     "terminal_break_search_near_end_rows_px": 24,
-    "top_edge_identity": "outside_cap_candidate_not_verified_polished_table",
+    "top_edge_identity": "projected_point_like_apex_not_verified_table_or_culet",
     "terminal_edge_identity": "outside_projection_candidate_not_verified_pavilion_facet",
     "do_not_fill_missing_side_from_symmetry": True,
     "no_internal_virtual_facets_or_expert_angles": True,
@@ -92,13 +92,16 @@ def _top_cap(distance):
     central = min(valid, key=lambda run: abs((run[0][0]+run[-1][0])/2-(w-1)/2))
     return {
         "status": "candidate_only",
-        "kind": "short_horizontal_top_silhouette_cap_not_verified_table",
+        "kind": "projected_point_like_outer_apex_not_verified_table_or_culet",
+        "projected_apex_xy_px": [round((central[0][0] + central[-1][0])/2, 2), int(min_y)],
+        "appearance": "point_like_at_this_source_resolution",
         "source_xy_px": central,
         "left_endpoint_xy_px": central[0],
         "right_endpoint_xy_px": central[-1],
         "observed_width_px": central[-1][0] - central[0][0] + 1,
         "top_source_y_px": min_y,
         "physical_table_identity": "not_established",
+        "physical_culet_identity": "not_established",
         "reason": "first_sustained_source_background_contact_from_top",
     }
 
@@ -260,7 +263,7 @@ def analyse(rgb, contour, joint_report):
         "last_pavilion_changepoint_candidates": bends,
         "comparison_targets_loaded": False,
         "physical_facet_angle_status": "all_unavailable",
-        "interpretation": "Original-photo boundary candidates only; the outer top cap need not be the verified polished table, and bottom shadows may hide pavilion steps.",
+        "interpretation": "Original-photo boundary candidates only. The top is a point-like PROJECTED apex, not an identified polished table or culet. Bottom shadows may hide pavilion steps. No enforced mirror symmetry without verified head-on geometry.",
     }
 
 
@@ -269,12 +272,11 @@ def render_overlay(base_image, result):
     draw = ImageDraw.Draw(image)
     top = result["top_cap_candidate"]
     if top["status"] == "candidate_only":
-        pts = [(x*3, y*3) for x,y in top["source_xy_px"]]
-        draw.line(pts, fill=(0, 240, 226), width=5)
-        for p in (top["left_endpoint_xy_px"], top["right_endpoint_xy_px"]):
-            x, y = p
-            draw.ellipse((3*x-8,3*y-8,3*x+8,3*y+8),
-                         fill=(252,220,0), outline=(0,0,0),width=2)
+        # A tiny 8-pixel imaging plateau does not prove a flat table or
+        # two physical breakpoints. Present one apex hypothesis instead.
+        x, y = top["projected_apex_xy_px"]
+        draw.ellipse((3*x-9, 3*y-9, 3*x+9, 3*y+9),
+                     fill=(0, 240, 226), outline=(0,0,0), width=2)
     for side, row in result["terminal_contours"].items():
         for p in row["points"]:
             x,y = p["xy_px"]
