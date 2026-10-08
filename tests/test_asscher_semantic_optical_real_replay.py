@@ -102,6 +102,7 @@ class RealReplayTests(unittest.TestCase):
             self.assertNotIn(forbidden,text)
         self.assertIn("stability._load_gauged_arrays",text)
         self.assertIn("handoff.sample_fixed_frame",text)
+        self.assertIn("wireframe._gauge_id(poses)",text)
 
     def test_explicit_source_indices_straddle_cyclic_255_0(self):
         ids=replay.SOURCE_INDICES
