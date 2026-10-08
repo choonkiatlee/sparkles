@@ -82,7 +82,7 @@
         7.51,
         4.86
       ],
-      "has_motion": false,
+      "has_motion": true,
       "id": "igi-lg781646632",
       "lab": "IGI",
       "manifest_path": "data/diamonds/igi-lg781646632.json",
