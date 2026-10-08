@@ -1,0 +1,86 @@
+name: asscher-inner-evidence-diagnostic
+
+concurrency:
+  group: asscher-inner-evidence-diagnostic-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+
+on:
+  pull_request:
+    paths:
+      - "diamond360/asscher_inner_evidence_diagnostic.py"
+      - "tests/test_asscher_inner_evidence_diagnostic.py"
+      - "docs/360/asscher-geometry-validation/INNER-EVIDENCE-DIAGNOSTIC.md"
+      - ".github/workflows/asscher-inner-evidence-diagnostic.yml"
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: python -m pip install -e .
+
+      - name: Test diagnostic contracts
+        run: python -m unittest tests.test_asscher_inner_evidence_diagnostic -v
+
+      - name: Retrieve immutable original #115 validation evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: asscher-geometry-stability-outer-v2
+          run-id: 37755387174
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: outputs/frozen-outer-stability
+
+      - name: Download hash-verified LG756520111 360 source
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import urllib.request
+          import zipfile
+          from pathlib import Path
+          manifest = json.loads(
+              Path("docs/360/benchmark/source-bundles.json").read_text()
+          )
+          item, = [
+              row for row in manifest["bundles"]
+              if row["certificate"] == "IGI-LG756520111"
+          ]
+          root = Path("outputs/inner-evidence-sources")
+          root.mkdir(parents=True, exist_ok=True)
+          archive = root / item["filename"]
+          urllib.request.urlretrieve(item["download_url"], archive)
+          assert archive.stat().st_size == item["bytes"]
+          assert hashlib.sha256(archive.read_bytes()).hexdigest() == item["sha256"]
+          directory = root / item["certificate"]
+          directory.mkdir(parents=True, exist_ok=True)
+          with zipfile.ZipFile(archive) as z:
+              z.extractall(directory)
+          PY
+
+      - name: Produce frame-level inner-evidence and registration QC
+        run: |
+          python -m diamond360.asscher_inner_evidence_diagnostic \
+            --source-root outputs/inner-evidence-sources/IGI-LG756520111 \
+            --source-manifest docs/360/benchmark/per-stone/IGI-LG756520111/source-manifest.json \
+            --reference-dir outputs/frozen-outer-stability \
+            --output outputs/inner-evidence-diagnostic
+
+      - name: Upload report and original RGB QC
+        uses: actions/upload-artifact@v4
+        with:
+          name: asscher-inner-evidence-diagnostic
+          path: outputs/inner-evidence-diagnostic
+          if-no-files-found: error
+          retention-days: 90
