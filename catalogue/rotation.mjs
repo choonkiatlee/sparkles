@@ -14,9 +14,9 @@ const assetUrl = asset => {
 
 export const PREFETCH_MODES = Object.freeze(["none","nearby","all"]);
 export const FRAME_PREFETCH = Object.freeze({
-  // Change only this mode to "all" to opt into downloading all frames for
-  // the *selected* stones when their comparison is opened.
-  mode: "none",
+  // Full prefetch is now intentional for selected comparisons (C3b).
+  // Set to "nearby" or "none" to reduce bandwidth if needed.
+  mode: "all",
   nearbyRadius: 2,
   maxConcurrent: 4,
 });
@@ -66,45 +66,100 @@ export function stepPosition(position, frameCount, direction=1) {
   return next/frameCount;
 }
 
+// C3b: deduplicated, concurrency-limited, cancellable-at-boundary downloader.
+// Completion indicates an original frame has arrived in the browser cache;
+// it is NOT a guarantee the browser will keep all frames decoded in RAM.
+// Keep only a bounded number of Image objects alive to avoid huge memory usage.
 export function createFramePreloader({mode=FRAME_PREFETCH.mode,
   nearbyRadius=FRAME_PREFETCH.nearbyRadius,
   maxConcurrent=FRAME_PREFETCH.maxConcurrent,
-  imageFactory=()=>new Image()}={}) {
+  maxRetained=24,
+  imageFactory=()=>new Image(),
+  onProgress=()=>{}}={}) {
   if (!PREFETCH_MODES.includes(mode)) throw new RangeError("Invalid frame prefetch mode");
   if (!Number.isInteger(nearbyRadius) || nearbyRadius<0 || nearbyRadius>16 ||
-      !Number.isInteger(maxConcurrent) || maxConcurrent<1 || maxConcurrent>12)
+      !Number.isInteger(maxConcurrent) || maxConcurrent<1 || maxConcurrent>12 ||
+      !Number.isInteger(maxRetained) || maxRetained<0 || maxRetained>128)
     throw new RangeError("Invalid prefetch limits");
-  let stopped=false,active=0;
-  const seen=new Set(),queue=[];
-  function pump() {
-    while (!stopped && active<maxConcurrent && queue.length) {
-      const url=queue.shift();
-      active++;
-      let image;
-      try {
-        image=imageFactory();
-        const done=()=>{image.onload=null;image.onerror=null;active--;pump();};
-        image.onload=done;
-        image.onerror=()=>{seen.delete(url);done();};
-        image.src=url;
-      } catch {
-        seen.delete(url);active--;
-      }
-    }
+  let stopped=false;
+  const entries=new Map(),queue=[],activeImages=new Map(),hot=new Map();
+  const counts=()=>({
+    total:entries.size,
+    loaded:[...entries.values()].filter(s=>s==="ready").length,
+    failed:[...entries.values()].filter(s=>s==="failed").length,
+    active:activeImages.size,
+    queued:queue.length,
+    // Earlier "seen" is preserved as a diagnostic/compatibility metric.
+    seen:entries.size,
+  });
+  function stats() {
+    const c=counts();
+    return {...c,complete:c.total>0 && c.loaded+c.failed===c.total &&
+      c.active===0 && c.queued===0,mode};
   }
-  function add(url) {
-    if (!url || seen.has(url)) return;
-    seen.add(url);queue.push(url);
+  const notify=()=>{if(!stopped) onProgress(stats());};
+  function retain(url,img) {
+    if (!maxRetained) return;
+    hot.delete(url);hot.set(url,img);
+    while (hot.size>maxRetained) hot.delete(hot.keys().next().value);
+  }
+  function pump() {
+    while (!stopped && activeImages.size<maxConcurrent && queue.length) {
+      const url=queue.shift();
+      if (entries.get(url)!=="queued") continue;
+      let img;
+      try { img=imageFactory(); } catch {
+        entries.set(url,"failed");
+        continue;
+      }
+      entries.set(url,"loading");
+      activeImages.set(url,img);
+      let doneCalled=false;
+      const done=ok=>{
+        if(doneCalled) return;
+        doneCalled=true;
+        img.onload=null;img.onerror=null;
+        activeImages.delete(url);
+        if (stopped) return;
+        entries.set(url,ok?"ready":"failed");
+        if (ok) retain(url,img);
+        notify();
+        pump();
+      };
+      img.onload=()=>done(true);
+      img.onerror=()=>done(false);
+      try {img.src=url;} catch {done(false);}
+    }
+    notify();
+  }
+  function add(url,{retry=false}={}) {
+    if (!url || stopped) return;
+    if (entries.has(url) && !(retry && entries.get(url)==="failed")) return;
+    entries.set(url,"queued");
+    queue.push(url);
   }
   function observe(sequences,position) {
     if (stopped || mode==="none") return;
-    for (const seq of sequences) {
-      if (seq?.status!=="available") continue;
-      if (mode==="all") {
-        for (const frame of seq.frames) add(frame.url);
-      } else {
+    const available=sequences.filter(seq=>seq?.status==="available");
+    if (mode==="all") {
+      // Prioritize immediate surrounding frames across *all* known selected
+      // stones before requesting the remainder in a round-robin sequence.
+      for (let d=0;d<=nearbyRadius;d++) {
+        for (const seq of available) {
+          const n=frameIndexAt(position,seq.frameCount);
+          add(seq.frames[(n+d)%seq.frameCount].url);
+          if (d) add(seq.frames[(n-d+seq.frameCount)%seq.frameCount].url);
+        }
+      }
+      const longest=Math.max(0,...available.map(seq=>seq.frameCount));
+      for (let index=0;index<longest;index++) {
+        for (const seq of available) {
+          if(index<seq.frameCount) add(seq.frames[index].url);
+        }
+      }
+    } else {
+      for (const seq of available) {
         const current=frameIndexAt(position,seq.frameCount);
-        // Current frame is loaded by the visible <img>, only prefetch neighbors.
         for (let k=1;k<=nearbyRadius;k++) {
           add(seq.frames[(current+k)%seq.frameCount].url);
           add(seq.frames[(current-k+seq.frameCount)%seq.frameCount].url);
@@ -113,6 +168,18 @@ export function createFramePreloader({mode=FRAME_PREFETCH.mode,
     }
     pump();
   }
-  function stop() {stopped=true;queue.length=0;seen.clear();}
-  return {mode,observe,stop,stats:()=>({active,queued:queue.length,seen:seen.size})};
+  function retry(url) {
+    if (stopped || mode==="none") return;
+    add(url,{retry:true});pump();
+  }
+  function stop() {
+    stopped=true;queue.length=0;hot.clear();entries.clear();
+    // Never allow a stale callback to change the re-opened comparison.
+    for (const img of activeImages.values()) {
+      img.onload=null;img.onerror=null;
+      try {img.src="";} catch {/* browser may already have finished */}
+    }
+    activeImages.clear();
+  }
+  return {mode,observe,stop,retry,stats,isReady:url=>entries.get(url)==="ready"};
 }
