@@ -347,8 +347,8 @@ class RetailerProviderTests(unittest.TestCase):
 class RetailerEndToEndTests(unittest.TestCase):
     def qd_http(self, *, pdf=None, pdf_status=200):
         pdf_url = "https://api.igi.org/viewpdf.php?r=LG713574578"
-        viewer = "https://workshop.360view.link/view/QD-TEST-713574578"
-        root = "https://data1.360view.link/data/1/imaged/QD-TEST-713574578"
+        viewer = "https://v3603703.v360.in/vision360.html?d=QD-TEST-713574578"
+        root = "https://v3603703.v360.in/imaged/QD-TEST-713574578"
         responses = {
             QD_URL: (
                 _fixture("quality-diamonds-detail.html"),
@@ -426,7 +426,7 @@ class RetailerEndToEndTests(unittest.TestCase):
             [frame.source_index for frame in rotation.frames],
             list(range(256)),
         )
-        self.assertEqual(rotation.metadata["supplier"], "workshop")
+        self.assertEqual(rotation.metadata["supplier"], "core360")
         self.assertEqual(len(http.post_calls), 1)
         outcomes = {item.field: item.outcome for item in result.identity_comparisons}
         for field in (
