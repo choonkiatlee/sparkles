@@ -10,7 +10,7 @@ NEW = {"wireframe_revision": comparison.NEW_REVISION}
 
 def report(method, stones):
     return {"benchmark_inputs": {"manifest_canonical_sha256": MANIFEST},
-            "frozen_method": method, "stones": stones}
+            "frozen_method": dict(method), "stones": stones}
 
 
 class MethodComparisonTests(unittest.TestCase):
