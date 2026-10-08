@@ -33,6 +33,7 @@ jobs:
           python -m unittest tests.test_diamond_retrieval -v
           python -m unittest tests.test_diamond_retrieval_retailers -v
           python -m unittest tests.test_diamond_retrieval_motion -v
+          python -m unittest tests.test_diamond_retrieval_media -v
           python -m unittest tests.test_d360_source -v
 
       - name: Record full-suite status
