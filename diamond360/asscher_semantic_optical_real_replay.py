@@ -132,15 +132,12 @@ def replay_stone(cert, source, source_manifest, frozen_root, output):
         report = handoff.sample_fixed_frame(
             scaffold, expected, bright, mask, valid,
             normalized_brightness=None)
+        sensitivity_frames.append(sensitivity.sample_sensitivity_frame(
+            scaffold,expected,bright,mask,valid,baseline_report=report))
         report["face_role_archived"] = expected.get("face_role")
         report["pose_status_archived"] = expected.get("pose_status")
         report["frame_support_status_archived"] = expected.get("status")
         report["viewer_phase_is_calibrated_physical_rotation"] = False
-        sensitivity_frames.append(
-            sensitivity.sample_frame_sensitivity(
-                scaffold, expected, bright, mask, valid, report
-            )
-        )
         rows.append(report)
         records.append(record)
 
@@ -187,10 +184,7 @@ def replay_stone(cert, source, source_manifest, frozen_root, output):
     (output / "real-fixed-ruler-brightness.json").write_text(
         json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     render_traces(payload, output / "real-fixed-ruler-traces.png")
-    sensitivity_report = sensitivity.summarize(
-        cert, sensitivity_frames, digests, payload["archived_crown_face_selection"]
-    )
-    sensitivity.save(sensitivity_report, output)
+    sensitivity.write_sensitivity(payload,sensitivity_frames,output)
     # Keep no intermediate 256-frame canonical image arrays in final artifact.
     return payload
 
@@ -260,7 +254,6 @@ def main():
         "scaffold_refitted":o["scaffold_was_refitted"],
         "face":o["archived_crown_face_selection"],
         "example_support":{k:o["entity_support_summary"][k] for k in PLOT_ENTITIES[:3]},
-        "exposure_support_sensitivity": "exposure-support-sensitivity.json",
     },sort_keys=True))
 
 
