@@ -42,10 +42,10 @@ class ConditionalSymmetryTests(unittest.TestCase):
         r = symmetric.analyse(self.contour, self.joint, self.ends)
         self.assertEqual(r["status"], "preview_only_not_adopted")
         self.assertEqual(r["top_shape_interpretation"],
-                         "point_like_projected_apex_not_physical_culet_or_confirmed_table")
+                         "upper_pointed_pavilion_tip_culet_region_not_verified_culet_facet")
         self.assertEqual(r["pose_review"]["status"], "not_confirmed")
         self.assertEqual(r["physical_facet_angles"], "all_unavailable")
-        mirror = r["right_terminal_symmetry_hypothesis"]
+        mirror = r["right_crown_terminal_symmetry_hypothesis"]
         self.assertEqual(mirror["status"], "counterfactual_mirror_preview_not_applied")
         self.assertEqual(mirror["provenance"],
                          "MODEL_INFERRED_from_left_NOT_observed_right")
@@ -57,15 +57,15 @@ class ConditionalSymmetryTests(unittest.TestCase):
         review = self.pose()
         r = symmetric.analyse(self.contour, self.joint, self.ends, review)
         diagnostic = r["image_only_symmetry_diagnostic"]
-        self.assertGreaterEqual(diagnostic["paired_crown_rows"], 30)
+        self.assertGreaterEqual(diagnostic["paired_pavilion_rows"], 30)
         expected = (
             "conditional_symmetry_model_inferred"
             if diagnostic["status"] == "image_only_compatible_not_pose_proof"
             else "counterfactual_mirror_preview_not_applied"
         )
         self.assertEqual(r["right_terminal_symmetry_hypothesis"]["status"], expected)
-        self.assertEqual(r["independent_terminal_candidates"]["right"],
-                         self.ends["last_pavilion_changepoint_candidates"]["right"])
+        self.assertEqual(r["independent_crown_terminal_candidates"]["right"],
+                         self.ends["last_crown_changepoint_candidates"]["right"])
         self.assertEqual(r["physical_facet_angles"], "all_unavailable")
         if expected == "conditional_symmetry_model_inferred":
             axis = diagnostic["axis_x_px"]
@@ -97,7 +97,7 @@ class ConditionalSymmetryTests(unittest.TestCase):
 
     def test_inconsistent_mirror_outline_blocks_acceptance_even_with_pose_flag(self):
         contour = deepcopy(self.contour)
-        for row in contour["paths"]["right_crown"]["points"]:
+        for row in contour["paths"]["right_pavilion"]["points"]:
             if row["support"] == "edge_supported_candidate" and row["xy_px"]:
                 row["xy_px"][0] += 40
         result = symmetric.analyse(contour, self.joint, self.ends, self.pose())
