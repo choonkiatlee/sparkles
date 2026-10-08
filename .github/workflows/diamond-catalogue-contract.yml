@@ -22,8 +22,6 @@ jobs:
           python-version: "3.11"
       - name: Install package
         run: python -m pip install -e .
-      - name: One-time safe Diyona identity disagreement probe
-        run: python tests/probe_diyona_identity.py
       - name: Verify catalogue contract and existing retrieval tests
         run: |
           python -m unittest tests.test_diamond_catalogue -v
@@ -32,6 +30,7 @@ jobs:
           python -m unittest tests.test_diamond_catalogue_diagnostics -v
           python -m unittest tests.test_diyona_report_hint -v
           python -m unittest tests.test_diyona_public_api -v
+          python -m unittest tests.test_igi_pdf_shape_label -v
           python -m unittest tests.test_diamond_retrieval -v
           python -m unittest tests.test_diamond_retrieval_retailers -v
           python -m unittest tests.test_diamond_retrieval_motion -v
