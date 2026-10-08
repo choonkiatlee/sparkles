@@ -197,7 +197,10 @@ def replay(source_dir, source_manifest, output):
         if (meta["rotation_phase_deg"] is None
              or abs(meta["rotation_phase_deg"]-expected_phase)>1e-8
              or meta["gauge_quarter_turn"]!=0):
-            raise ValueError("reprocessed #80 phase/quarter turn differs from frozen #89")
+            raise ValueError(f"reprocessed source {index}: #80 phase/turn differs from #89: "
+                             f"observed phase={meta['rotation_phase_deg']!r}, "
+                             f"expected phase={expected_phase!r}, "
+                             f"observed quarter_turn={meta['gauge_quarter_turn']!r}")
         transfer=stability.transfer_fixed_ruler_frame(
             frame_evidence,u,primary,frame_metadata=meta,
             crown_peak_position=crown_peak,
