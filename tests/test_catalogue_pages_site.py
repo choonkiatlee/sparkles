@@ -26,7 +26,9 @@ class PagesCatalogueTests(unittest.TestCase):
             by_id = {r["id"]: r for r in index["diamonds"]}
             self.assertEqual(by_id["igi-lg756520111"]["retrieval_status"], "partial")
             self.assertEqual(by_id["igi-lg816611062"]["retrieval_status"], "complete")
-            self.assertTrue(all(row["has_motion"] for row in by_id.values()))
+            # Other legitimate catalogue stones may have only still evidence.
+            self.assertTrue(by_id["igi-lg756520111"]["has_motion"])
+            self.assertTrue(by_id["igi-lg816611062"]["has_motion"])
             self.assertFalse((out / ".github").exists())
             self.assertFalse((out / "diamond_retrieval").exists())
 
