@@ -33,3 +33,7 @@ jobs:
           python -m unittest tests.test_diamond_retrieval_retailers -v
           python -m unittest tests.test_diamond_retrieval_motion -v
           python -m unittest tests.test_diamond_retrieval_media -v
+
+      - name: Probe public Diyona data paths without a browser
+        continue-on-error: true
+        run: python -m diamond_catalogue.diyona_probe
