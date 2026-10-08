@@ -96,7 +96,7 @@ def run():
                        ("supabase","diamond","sku","certificate","cert_number",
                         "report_number","igi","fetch(","from(",".select(",".eq(",".rpc(")})
         for op in ("from", "eq", "rpc", "select"):
-            pattern=r'\\.'+op+r'\\(\\s*([\\x27\\x22])([A-Za-z_][A-Za-z0-9_., *-]{0,100})\\1'
+            pattern=r'\.'+op+r'\(\s*([\x27\x22])([A-Za-z_][A-Za-z0-9_., *-]{0,100})\1'
             matches=sorted(set(x[1] for x in re.findall(pattern,source)))
             if matches:
                 print("INLINE op",index,op,matches[:30])
@@ -109,7 +109,7 @@ def run():
             if at>=0:
                 fragment=source[max(0,at-90):at+190].replace("\\n"," ")
                 # only output source control flow, never strings or values
-                fragment=re.sub(r'([\\x27\\x22\\x60])(?:\\\\.|(?!\\1).)*?\\1',
+                fragment=re.sub(r'([\x27\x22\x60])(?:\\.|(?!\1).)*?\1',
                                 '[LITERAL]',fragment)
                 print("INLINE structure",index,term,fragment[:230])
 
