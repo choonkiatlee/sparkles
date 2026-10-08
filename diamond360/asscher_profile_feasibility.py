@@ -37,6 +37,10 @@ POLICY = {
     "peak_suppression_angle_deg": 6,
     "peak_suppression_rho_px": 9,
     "min_relative_vote": 0.23,
+    "line_support_tolerance_px": 2.0,
+    "max_connected_support_gap_px": 8.0,
+    "min_connected_support_span_px": 18.0,
+    "min_connected_support_edgels": 8,
     "landmark_policy": "proposals_only_no_semantic_assignment",
     "projection_policy": "not_assessed_until_side_facet_visibility_check",
     "ambiguity_policy": "all_facet_slots_unavailable_until_independent_extractor",
@@ -113,6 +117,63 @@ def _line_segment(angle_deg, rho, width, height):
     return [[round(float(v), 3) for v in p], [round(float(v), 3) for v in q]]
 
 
+def _supported_segment(angle, rho, width, height, xs, ys, weights):
+    """Return the strongest contiguous edge-supported portion of a Hough line.
+
+    A Hough vote is global and may aggregate disconnected optical edges; an
+    image-wide line is therefore not valid segment evidence. We use only
+    measured nearby edgels and refuse candidates without sustained support.
+    """
+    theta = np.deg2rad(angle)
+    tangent = np.array([np.cos(theta), np.sin(theta)])
+    normal = np.array([-np.sin(theta), np.cos(theta)])
+    centre = np.array([(width - 1) / 2.0, (height - 1) / 2.0])
+    points = np.column_stack((xs, ys)).astype(float) - centre
+    residual = np.abs(points @ normal - rho)
+    supported = residual <= POLICY["line_support_tolerance_px"]
+    if int(np.count_nonzero(supported)) < POLICY["min_connected_support_edgels"]:
+        return None
+    along = points[supported] @ tangent
+    supported_weights = weights[supported]
+    order = np.argsort(along, kind="stable")
+    along, supported_weights = along[order], supported_weights[order]
+    split = np.flatnonzero(np.diff(along) > POLICY["max_connected_support_gap_px"]) + 1
+    groups = np.split(np.arange(len(along)), split)
+    candidates = []
+    for group in groups:
+        if len(group) < POLICY["min_connected_support_edgels"]:
+            continue
+        lo, hi = float(along[group[0]]), float(along[group[-1]])
+        span = hi - lo
+        if span < POLICY["min_connected_support_span_px"]:
+            continue
+        candidates.append((float(np.sum(supported_weights[group])), span, len(group), lo, hi))
+    if not candidates:
+        return None
+    strength, span, count, lo, hi = max(candidates)
+    endpoints = []
+    for t in (lo, hi):
+        pt = centre + normal * rho + tangent * t
+        endpoints.append([round(float(v), 3) for v in pt])
+    if any(
+        x < -2.1 or x > width + 1.1 or y < -2.1 or y > height + 1.1
+        for x, y in endpoints
+    ):
+        return None
+    endpoints = [
+        [round(float(np.clip(x, 0, width - 1)), 3),
+         round(float(np.clip(y, 0, height - 1)), 3)]
+        for x, y in endpoints
+    ]
+    return {
+        "supported_segment_xy_px": endpoints,
+        "support_edgel_count": int(count),
+        "support_span_px": round(span, 3),
+        "support_vote_strength": round(strength, 6),
+        "support_policy": "strongest_connected_run_not_full_hough_line",
+    }
+
+
 def _line_candidates(energy, mask):
     h, w = energy.shape
     ys, xs = np.nonzero(mask)
@@ -158,7 +219,7 @@ def _line_candidates(energy, mask):
             for old in selected
         ):
             continue
-        segment = _line_segment(angle, rho, w, h)
+        segment = _supported_segment(angle, rho, w, h, xs, ys, weights)
         if segment is None:
             continue
         selected.append({
@@ -168,13 +229,46 @@ def _line_candidates(energy, mask):
             "signed_normal_offset_px": int(rho),
             "vote_strength": round(score, 6),
             "relative_vote": round(score / maximum, 6),
-            "endpoints_xy_px": segment,
+            **segment,
             "facet_identity": None,
             "evidence_type": "weighted_gradient_hough",
         })
         if len(selected) >= POLICY["max_candidate_lines"]:
             break
     return selected
+
+
+def _horizontal_band_proposals(lines, width, height):
+    """Image-coordinate hypotheses, not table/girdle identification.
+
+    These are only centrally located horizontal edge runs at coarse height
+    ranges. The geometry intervals are deliberately broad and no candidate
+    is assigned a physical facet or final anatomical identity.
+    """
+    proposals = {}
+    for name, lo, hi in (
+        ("upper_central_band", 0.15, 0.38),
+        ("lower_central_band", 0.60, 0.78),
+    ):
+        eligible = []
+        for line in lines:
+            if abs(line["image_line_angle_deg"]) > 3:
+                continue
+            (x0, y0), (x1, y1) = line["supported_segment_xy_px"]
+            xmid, ymid = (x0 + x1) / 2, (y0 + y1) / 2
+            if (
+                lo * height <= ymid <= hi * height
+                and 0.23 * width <= xmid <= 0.77 * width
+                and line["support_span_px"] >= 0.10 * width
+            ):
+                eligible.append(line)
+        best = max(eligible, key=lambda x: (x["support_span_px"], x["support_vote_strength"])) if eligible else None
+        proposals[name] = {
+            "status": "candidate_only" if best else "unavailable",
+            "line_candidate_id": best["candidate_id"] if best else None,
+            "reason": "coarse_vertical_position_only_anatomy_not_confirmed",
+        }
+    return proposals
 
 
 def _empty_slots():
@@ -243,6 +337,7 @@ def analyse_image(image_path, expected_sha256=None):
             "activity_bbox_xyxy_px": activity_box,
             "activity_bbox_semantics": "edge_activity_only_not_verified_silhouette",
             "line_candidates": lines,
+            "horizontal_band_proposals": _horizontal_band_proposals(lines, width, height),
         },
         "landmark_assessment": {
             name: {
@@ -276,7 +371,8 @@ def write_diagnostics(image_path, output, expected_sha256=None):
     overlay = Image.fromarray(rgb, mode="RGB")
     draw = ImageDraw.Draw(overlay)
     for line in payload["image_evidence"]["line_candidates"]:
-        ends = [tuple(p) for p in line["endpoints_xy_px"]]
+        # Only supported finite spans: global Hough lines exaggerate evidence.
+        ends = [tuple(p) for p in line["supported_segment_xy_px"]]
         draw.line(ends, fill=(255, 60, 70), width=2)
     # Box is just edge activity, emphatically not a fitted diamond silhouette.
     bbox = payload["image_evidence"]["activity_bbox_xyxy_px"]
