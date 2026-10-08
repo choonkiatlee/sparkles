@@ -14,34 +14,30 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Decode Core360 player string table
+      - name: Verify Core360 bootstrap format
         run: |
           python - <<'PY'
-          import codecs, re, urllib.request
-          url="https://v3603703.v360.in/js/vision360.js"
+          import hashlib, json, urllib.request
           viewer="https://v3603703.v360.in/vision360.html?d=NGS-05-413"
-          req=urllib.request.Request(
-              url,
-              headers={"User-Agent":"Mozilla/5.0 SparklesIssue100/1","Accept":"*/*","Referer":viewer},
-          )
-          with urllib.request.urlopen(req,timeout=20) as response:
-              body=response.read().decode("utf-8","replace")
-          start=body.find("var _0xc0fe=[")
-          end=body.find("];var dno=",start)
-          print("table_bounds=",start,end)
-          table=body[start:end]
-          raw_values=re.findall(r'"((?:\\.|[^"\\])*)"',table)
-          values=[]
-          for raw in raw_values:
-              try:
-                  values.append(codecs.decode(raw,"unicode_escape"))
-              except Exception:
-                  values.append(raw)
-          print("table_entries=",len(values))
-          interesting=("imaged","json","version","data/","http","vision360","scramble",".jpg")
-          for index,value in enumerate(values):
-              if any(token in value.lower() for token in interesting):
-                  print("ENTRY",index,repr(value))
-          for index in range(40,min(100,len(values))):
-              print("CORE",index,repr(values[index]))
+          root="https://v3603703.v360.in/imaged/NGS-05-413"
+          headers={"User-Agent":"Mozilla/5.0 SparklesIssue100/1","Accept":"*/*","Referer":viewer}
+          for url in (root+"/0.json?version=",):
+              req=urllib.request.Request(url,headers=headers)
+              with urllib.request.urlopen(req,timeout=20) as response:
+                  raw=response.read()
+              data=json.loads(raw)
+              print("url=",url)
+              print("sha256=",hashlib.sha256(raw).hexdigest(),"bytes=",len(raw))
+              print("keys=",sorted(data.keys()))
+              print("dimensions=",data.get("width"),data.get("height"))
+              print("version=",data.get("version"),"quality=",data.get("quality"))
+              scramble=data.get("scramble")
+              print("scramble_type=",type(scramble).__name__,"scramble_len=",len(scramble) if isinstance(scramble,str) else None)
+              version=data.get("version")
+              batch_url=f"{root}/1.json?version={version}"
+              req2=urllib.request.Request(batch_url,headers=headers)
+              with urllib.request.urlopen(req2,timeout=20) as response:
+                  batch_raw=response.read()
+              batch=json.loads(batch_raw)
+              print("batch1_url=",batch_url,"count=",len(batch) if isinstance(batch,list) else None,"bytes=",len(batch_raw))
           PY
