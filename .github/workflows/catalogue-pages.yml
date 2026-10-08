@@ -3,6 +3,9 @@ name: catalogue-pages
 # Pages deployment is deliberately manual-only. Keep the workflow for an
 # explicit future deploy, but do not run it after ingestion, thumbnails,
 # catalogue data commits or regular pushes.
+# NOTE: the GitHub-managed "pages build and deployment" workflow is separate.
+# Repository Settings > Pages > Build and deployment > Source must be set to
+# "GitHub Actions" instead of "Deploy from a branch" to stop its automatic runs.
 on:
   workflow_dispatch:
 
