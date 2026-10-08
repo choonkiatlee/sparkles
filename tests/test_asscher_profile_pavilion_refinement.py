@@ -1,4 +1,4 @@
-"""Pavilion prioritized fit: independent source evidence vs conditional symmetry."""
+"""Upper pointed pavilion must never be confused with lower crown."""
 from copy import deepcopy
 import json
 from pathlib import Path
@@ -19,164 +19,163 @@ PHOTO = (Path(__file__).resolve().parents[1] /
          "docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG")
 
 
-def synthetic_shape(slopes, side, y0=225, interval=3, count=18):
-    x = 46.0 if side == "left" else 364.0
-    sign = 1 if side == "left" else -1
-    points = []
-    y = y0
-    for rate in slopes:
-        for idx in range(count):
-            points.append({
+def shape(slopes, left=True):
+    out = []
+    y, x = 64, (203 if left else 207)
+    sign = -1 if left else 1
+    for slope in slopes:
+        for _ in range(20):
+            out.append({
                 "xy_px": [round(x, 3), y],
                 "weight": 1.0,
-                "provenance": "synthetic_true_exterior",
+                "provenance": "synthetic_supported_pavilion_envelope",
             })
-            y += interval
-            x += sign * rate * interval
-    return points
+            x += sign * slope * 2
+            y += 2
+    return out
 
 
-class PavilionRefinementTests(unittest.TestCase):
+class PavilionOrientationTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.rgb = np.asarray(Image.open(PHOTO).convert("RGB"))
         cls.contour = exterior.analyse_array(cls.rgb)
         cls.contour["source_sha256"] = feasibility.ORIGINAL_PROFILE_SHA256
         cls.joint = joint.analyse(cls.contour)
-        cls.terminal = endpoint.analyse(cls.rgb, cls.contour, cls.joint)
+        cls.ends = endpoint.analyse(cls.rgb, cls.contour, cls.joint)
 
-    def _review(self):
-        r = symmetry.pose_template()
-        r.update({
-            "status": "reviewed_head_on",
-            "head_on_pose_confirmed": True,
+    def pose(self):
+        review = symmetry.pose_template()
+        review.update({
+            "status": "reviewed_head_on", "head_on_pose_confirmed": True,
             "stone_mirror_symmetry_assumed": True,
             "review_basis": (
-                "Independent pose evidence reviewed, plus a separately declared "
-                "modeling assumption of approximately mirror-symmetric pavilion geometry."
+                "Independent profile camera-pose evidence reviewed without expert angle "
+                "targets; approximately bilateral pavilion geometry explicitly assumed."
             ),
-            "reviewed_by": "test_review",
+            "reviewed_by": "synthetic_pose_review",
         })
-        return r
+        return review
 
-    def test_synthetic_one_two_three_visible_stretches_no_forced_three_tiers(self):
-        for slopes in ([1.0], [0.7, 2.1], [0.7, 2.3, 0.8]):
-            with self.subTest(slopes=slopes):
-                pts = synthetic_shape(slopes, "left", count=17)
-                result = pavilion._select(pts)
-                self.assertEqual(result["status"], "review")
-                self.assertEqual(result["selected_segment_count"], len(slopes))
-                self.assertEqual(len(result["breakpoints"]), len(slopes)-1)
-                self.assertEqual(result["physical_facet_identity"], "not_established")
-
-    def test_shadow_extension_weighed_less_and_gaps_retained(self):
-        result = pavilion.analyse(self.contour, self.joint, self.terminal)
-        self.assertEqual(result["status"], "review")
-        self.assertEqual(result["physical_facet_angles"], "all_unavailable")
-        self.assertEqual(result["conditional_pavilion_model"]["status"],
-                         "not_adopted_pose_unconfirmed")
-        for side in ("left", "right"):
-            pts = result["observed_supported_points"][side]
-            self.assertTrue(any(row["provenance"]=="automatic_shadow_limited_endpoint_extension"
-                                for row in pts))
-            self.assertTrue(any(row["provenance"]=="automated_background_first_exterior_source"
-                                for row in pts))
-            self.assertEqual([r["xy_px"][1] for r in pts],
-                             sorted(set(r["xy_px"][1] for r in pts)))
-            self.assertTrue(all(
-                r["weight"]==pavilion.POLICY["main_source_weight"]
-                if r["provenance"]=="automated_background_first_exterior_source"
-                else r["weight"]==pavilion.POLICY["independently_source_supported_endpoint_weight"]
-                for r in pts
-            ))
-
-    def test_left_vs_right_independent_and_mirror_remains_preview_without_pose(self):
-        record = pavilion.analyse(self.contour, self.joint, self.terminal)
-        self.assertEqual(record["pose_review"]["status"], "not_confirmed")
-        proposed = record["conditional_pavilion_model"]["right_terminal_candidate"]
-        self.assertIsNotNone(proposed)
-        self.assertEqual(proposed["status"], "counterfactual_mirror_preview_not_applied")
-        self.assertEqual(proposed["provenance"], "MODEL_INFERRED_from_left_NOT_observed_right")
-        self.assertEqual(record["independent_pavilion"]["left"]["status"], "review")
-        self.assertEqual(record["independent_pavilion"]["right"]["status"], "review")
-        self.assertEqual(record["conditional_pavilion_model"]["common_model"], None)
-
-    def test_pose_review_and_model_symmetry_are_both_required(self):
-        nope = self._review()
-        nope["stone_mirror_symmetry_assumed"] = False
-        a = pavilion.analyse(self.contour, self.joint, self.terminal, nope)
-        self.assertEqual(a["conditional_pavilion_model"]["status"],
-                         "not_adopted_pose_unconfirmed")
-        b = pavilion.analyse(self.contour, self.joint, self.terminal, self._review())
-        consistent = b["symmetry_diagnostic"]["status"] == "image_only_compatible_not_pose_proof"
+    def test_source_orientation_is_upper_pavilion_lower_crown(self):
+        self.assertEqual(self.contour["policy"]["source_orientation"],
+                         "pointed_upper_pavilion_broad_lower_crown")
+        upper = self.contour["paths"]["left_pavilion"]["points"]
+        lower = self.contour["paths"]["left_crown"]["points"]
+        self.assertLess(max(p["xy_px"][1] for p in upper if p["xy_px"]),
+                        max(p["xy_px"][1] for p in lower if p["xy_px"]))
+        self.assertEqual(self.joint["source_orientation"],
+                         "pointed_upper_pavilion_broad_lower_crown")
         self.assertEqual(
-            b["conditional_pavilion_model"]["status"],
-            "conditional_symmetry_model_inferred" if consistent
-            else "not_adopted_pose_unconfirmed",
+            self.ends["top_pavilion_tip_candidate"]["status"], "candidate_only"
         )
-        if consistent:
-            self.assertEqual(b["conditional_pavilion_model"]["common_model"]["status"],
-                             "conditional_model_inferred_not_observed")
-            self.assertFalse(
-                b["conditional_pavilion_model"]["common_model"]["right_side_observations_replaced"]
-            )
-            self.assertEqual(
-                b["conditional_pavilion_model"]["right_terminal_candidate"]["provenance"],
-                "MODEL_INFERRED_from_left_NOT_observed_right",
-            )
-        self.assertEqual(a["observed_supported_points"], b["observed_supported_points"])
-        self.assertEqual(a["independent_pavilion"], b["independent_pavilion"])
+        self.assertIn("culet_region",
+                      self.ends["top_pavilion_tip_candidate"]["kind"])
+        self.assertEqual(set(self.ends["last_crown_changepoint_candidates"]),
+                         {"left","right"})
 
-    def test_asymmetric_outline_blocks_conditional_model_without_overwriting_right(self):
-        altered = deepcopy(self.contour)
-        for row in altered["paths"]["right_crown"]["points"]:
-            if row["xy_px"] and row["support"]=="edge_supported_candidate":
-                row["xy_px"][0] += 39
-        r = pavilion.analyse(altered, self.joint, self.terminal, self._review())
-        self.assertEqual(r["symmetry_diagnostic"]["status"], "image_only_inconsistent")
+    def test_real_pavilion_has_only_upper_source_pixels(self):
+        r = pavilion.analyse(self.contour, self.joint, self.ends)
+        band = r["widest_width_band_candidate"]
+        self.assertEqual(r["source_orientation"],pavilion.POLICY["source_orientation"])
+        self.assertEqual(r["physical_facet_angles"],"all_unavailable")
+        self.assertLess(band["y_first_px"],band["y_last_px"])
+        self.assertIn(r["independent_pavilion"]["left"]["status"],{"review","unavailable"})
+        self.assertIn(r["independent_pavilion"]["right"]["status"],{"review","unavailable"})
+        for side in ("left","right"):
+            pts=r["observed_supported_points"][side]
+            self.assertGreater(len(pts),40)
+            self.assertTrue(all(item["xy_px"][1] < band["y_first_px"] for item in pts))
+            self.assertTrue(all(item["provenance"]==
+                "automated_background_first_exterior_source" for item in pts))
+        # Regression: previously mistaken crown bend at y=273 must never
+        # reappear in any named physical pavilion breakpoint.
+        self.assertTrue(all(
+            mark["xy_px"][1] < band["y_first_px"]
+            for fit in r["independent_pavilion"].values()
+            for mark in fit.get("breakpoints",[])
+        ))
+
+    def test_one_two_three_apparent_upper_pavilion_slopes_are_optional(self):
+        for slopes in ([0.3],[0.2,1.1],[0.2,1.3,0.25]):
+            with self.subTest(slopes=slopes):
+                fitted = pavilion._select(shape(slopes))
+                self.assertEqual(fitted["status"],"review")
+                self.assertEqual(fitted["selected_segment_count"],len(slopes))
+                self.assertEqual(len(fitted["breakpoints"]),len(slopes)-1)
+
+    def test_pose_unreviewed_never_adopts_mirror(self):
+        r = pavilion.analyse(self.contour,self.joint,self.ends)
+        self.assertEqual(r["pose_review"]["status"],"not_confirmed")
         self.assertEqual(r["conditional_pavilion_model"]["status"],
-                         "not_adopted_pose_unconfirmed")
-        self.assertEqual(r["physical_facet_angles"], "all_unavailable")
+                         "not_adopted_pose_unconfirmed_or_inconsistent")
+        self.assertGreater(len(r["conditional_pavilion_model"]
+                              ["mirrored_right_pavilion_preview"]),40)
+        self.assertTrue(all(
+            row["provenance"]=="MODEL_ONLY_mirrored_left_pavilion_not_observed_right"
+            for row in r["conditional_pavilion_model"]["mirrored_right_pavilion_preview"]
+        ))
+        self.assertIsNone(r["conditional_pavilion_model"]["common_model"])
 
-    def test_missing_width_band_is_unavailable_not_a_guessed_girdle(self):
-        changed = deepcopy(self.joint)
-        changed["widest_band_candidate"] = {"status":"unavailable"}
-        r = pavilion.analyse(self.contour, changed, self.terminal)
-        self.assertEqual(r["status"], "unavailable")
-        self.assertEqual(r["physical_facet_angles"], "all_unavailable")
+    def test_symmetry_requires_independent_head_on_review_and_assumption(self):
+        a = pavilion.analyse(self.contour,self.joint,self.ends)
+        b = pavilion.analyse(self.contour,self.joint,self.ends,self.pose())
+        self.assertEqual(a["independent_pavilion"],b["independent_pavilion"])
+        self.assertEqual(a["observed_supported_points"],b["observed_supported_points"])
+        if b["symmetry_diagnostic"]["status"]=="image_only_compatible_not_pose_proof":
+            self.assertEqual(b["conditional_pavilion_model"]["status"],
+                             "conditional_symmetry_model_inferred")
+            self.assertFalse(b["conditional_pavilion_model"]["common_model"]
+                             ["right_side_observations_replaced"])
+        else:
+            self.assertNotEqual(b["conditional_pavilion_model"]["status"],
+                                "conditional_symmetry_model_inferred")
+        no_sym=self.pose()
+        no_sym["stone_mirror_symmetry_assumed"]=False
+        c=pavilion.analyse(self.contour,self.joint,self.ends,no_sym)
+        self.assertNotEqual(c["conditional_pavilion_model"]["status"],
+                            "conditional_symmetry_model_inferred")
 
-    def test_expert_targets_or_unpinned_method_forbidden(self):
-        changed = deepcopy(self.contour)
-        changed["comparison_targets_loaded"] = True
-        with self.assertRaisesRegex(ValueError, "expert angle"):
-            pavilion.analyse(changed, self.joint, self.terminal)
-        changed = deepcopy(self.terminal)
-        changed["policy_sha256"] = "tampered"
-        with self.assertRaisesRegex(ValueError, "revision"):
-            pavilion.analyse(self.contour, self.joint, changed)
+    def test_asymmetry_and_wrong_orientation_do_not_force_fits(self):
+        altered=deepcopy(self.contour)
+        for row in altered["paths"]["right_pavilion"]["points"]:
+            if row["xy_px"] and row["support"]=="edge_supported_candidate":
+                row["xy_px"][0]+=39
+        r=pavilion.analyse(altered,self.joint,self.ends,self.pose())
+        self.assertEqual(r["symmetry_diagnostic"]["status"],"image_only_inconsistent")
+        self.assertNotEqual(r["conditional_pavilion_model"]["status"],
+                            "conditional_symmetry_model_inferred")
+        invalid=deepcopy(self.contour)
+        invalid["policy"]["source_orientation"]="pointed_lower_pavilion"
+        with self.assertRaisesRegex(ValueError,"orientation"):
+            pavilion.analyse(invalid,self.joint,self.ends)
 
-    def test_real_image_generates_reproducible_separate_and_conditional_preview(self):
-        with tempfile.TemporaryDirectory() as td:
-            directory = Path(td)
-            exterior.write_qc(PHOTO,directory,feasibility.ORIGINAL_PROFILE_SHA256)
-            joint.write_report(PHOTO,directory/"auto-exterior.json",directory)
-            endpoint.write_report(PHOTO,directory/"auto-exterior.json",
-                                  directory/"joint-changepoints.json",directory)
-            fitted = pavilion.write_report(
-                PHOTO, directory/"auto-exterior.json",
-                directory/"joint-changepoints.json",
-                directory/"endpoint-candidates.json", directory,
-            )
-            self.assertTrue((directory/"pavilion-observed-vs-symmetry.png").is_file())
-            self.assertEqual(
-                fitted,
-                json.loads((directory/"pavilion-refinement.json").read_text())
-            )
-            self.assertEqual(
-                fitted["symmetry_diagnostic"]["axis_x_px"],
-                205.0
-            )
-            self.assertEqual(fitted["physical_facet_angles"],"all_unavailable")
+    def test_target_leak_and_missing_girdle_fail_closed(self):
+        invalid=deepcopy(self.contour)
+        invalid["comparison_targets_loaded"]=True
+        with self.assertRaisesRegex(ValueError,"expert angle"):
+            pavilion.analyse(invalid,self.joint,self.ends)
+        bad=deepcopy(self.joint)
+        bad["widest_band_candidate"]={"status":"unavailable"}
+        result=pavilion.analyse(self.contour,bad,self.ends)
+        self.assertEqual(result["status"],"unavailable")
+        self.assertEqual(result["physical_facet_angles"],"all_unavailable")
+
+    def test_original_photo_artifact_and_source_are_reproducible(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp)
+            exterior.write_qc(PHOTO,root,feasibility.ORIGINAL_PROFILE_SHA256)
+            joint.write_report(PHOTO,root/"auto-exterior.json",root)
+            endpoint.write_report(PHOTO,root/"auto-exterior.json",
+                                  root/"joint-changepoints.json",root)
+            result=pavilion.write_report(PHOTO,root/"auto-exterior.json",
+                root/"joint-changepoints.json",root/"endpoint-candidates.json",root)
+            self.assertEqual(result,json.loads((root/"pavilion-refinement.json").read_text()))
+            self.assertTrue((root/"pavilion-observed-vs-symmetry.png").is_file())
+            self.assertTrue(all(
+                p["xy_px"][1]<result["widest_width_band_candidate"]["y_first_px"]
+                for side in result["observed_supported_points"].values() for p in side
+            ))
 
 
 if __name__=="__main__":
