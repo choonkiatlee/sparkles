@@ -7,6 +7,8 @@ that three facets or bends are visible. All P1/P2/P3/C1 slots remain unavailable
 from __future__ import annotations
 
 import argparse
+import base64
+from io import BytesIO
 import json
 import math
 from pathlib import Path
@@ -57,6 +59,8 @@ def template():
 def _validate_strokes(payload):
     if payload.get("schema_version") != TRACE_SCHEMA:
         raise ValueError("wrong exterior trace schema")
+    if set(payload) != {"schema_version", "source_sha256", "coordinate_system", "strokes", "target_values_loaded"}:
+        raise ValueError("unexpected/target-bearing input fields forbidden")
     if payload.get("source_sha256") != feasibility.ORIGINAL_PROFILE_SHA256:
         raise ValueError("trace must refer to original source SHA-256")
     if payload.get("coordinate_system") != POLICY["coordinate_system"]:
@@ -68,6 +72,8 @@ def _validate_strokes(payload):
         raise ValueError("all four independent exterior stroke slots required")
     width, height = feasibility.ORIGINAL_PROFILE_SIZE
     for name, item in strokes.items():
+        if set(item) != {"status", "provenance", "points_xy_px", "review_notes"}:
+            raise ValueError("unexpected stroke inputs; no internal optical or target fields")
         points = item.get("points_xy_px")
         if not isinstance(points, list) or len(points) > 180:
             raise ValueError("exterior stroke must be a list of up to 180 points")
@@ -214,6 +220,82 @@ def analyse_trace_record(payload):
     }
 
 
+def render_exterior_trace_editor(image):
+    """A single-file, offline touch interface for four exterior-only strokes.
+
+    Human points are review evidence, not verified physical facets. Source
+    coordinates and monotone y are enforced again by the Python validator.
+    """
+    buffer = BytesIO()
+    image.save(buffer, "PNG")
+    photo = base64.b64encode(buffer.getvalue()).decode("ascii")
+    seed = json.dumps(template()).replace("<", "\\u003c").replace("&", "\\u0026")
+    return r"""<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Asscher external silhouette tracing (image-only)</title>
+<style>body{font:15px system-ui,sans-serif;max-width:780px;margin:15px auto;padding:0 12px;background:#f6f7f9;color:#152435}
+section{background:white;padding:12px;border-radius:9px;margin-bottom:12px;border:1px solid #c8d1db}
+canvas{width:min(100%,600px);height:auto;touch-action:none;border:1px solid #a8bac7}
+button,select,textarea{font:inherit;padding:7px;margin:3px}textarea{display:block;width:95%;min-height:45px}
+p.small{font-size:13px;color:#4d5d6f}button.main{background:#225d9e;color:white;border-radius:5px}</style></head><body>
+<h2>Trace the physical *external appearance*, not the interior</h2>
+<p>Image-only trace candidates, not certified physical facets or dihedral angles.
+Do not consult Sergey's angle estimates. Mark only edges you can distinguish
+from background; leave any unrecoverable half unavailable.</p>
+<section><canvas id="photo" width="410" height="319"></canvas>
+<p class="small">Choose one crown/pavilion side below, then tap successive external
+edge points <b>from higher to lower source y</b>. Do not interpolate across missing/occluded spans.
+Save each side independently; use at least eight points for a supported trace.</p></section>
+<section><label>Exterior trace: <select id="side"></select></label>
+<p><button id="undo">Undo point</button><button id="clear">Clear trace</button></p>
+<label>Image-only review note (why these pixels are exterior, and which are uncertain)
+<textarea id="notes" placeholder="Clearly visible outside/background boundary from ...; missing near ..."></textarea></label>
+<button id="save">Save reviewed side</button><p id="message"></p>
+<button id="download" class="main">Export exterior-traces.json</button>
+<p class="small">The exported file is source-hash pinned and still has no physical
+facet identities or angle measurements. Import it into the changepoint fit, or send it back for review.</p></section>
+<script>
+const data=__DOC__, src=new Image();src.src="data:image/png;base64,__PHOTO__";
+const names=["left_crown","right_crown","left_pavilion","right_pavilion"];
+const select=document.querySelector("#side"),canvas=document.querySelector("#photo"),
+ctx=canvas.getContext("2d"),note=document.querySelector("#notes"),msg=document.querySelector("#message");
+for(const name of names){let o=document.createElement("option");o.value=name;o.textContent=name.replaceAll("_"," ");select.appendChild(o)}
+let current=names[0],points=[];
+const color={left_crown:"#00c077",right_crown:"#077ce8",left_pavilion:"#e49425",right_pavilion:"#d12ca7"};
+function draw(){
+ctx.drawImage(src,0,0,410,319);
+for(const key of names){
+const item=data.strokes[key];const pts=(key===current?points:item.points_xy_px);
+if(!pts.length)continue;ctx.strokeStyle=color[key];ctx.lineWidth=key===current?3:2;
+ctx.beginPath();pts.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke();
+for(const [x,y] of pts){ctx.fillStyle=color[key];ctx.fillRect(x-2,y-2,4,4)}
+}}
+canvas.addEventListener("pointerdown",e=>{
+const r=canvas.getBoundingClientRect(),x=Math.round((e.clientX-r.left)*410/r.width),
+y=Math.round((e.clientY-r.top)*319/r.height);
+if(x<0||y<0||x>409||y>318){msg.textContent="Outside original image";return}
+if(points.length&&y<=points[points.length-1][1]){msg.textContent="Trace must increase in y";return}
+if(current.startsWith("left")&&x>215||current.startsWith("right")&&x<195){msg.textContent="Point crosses to the opposite side";return}
+if(points.length>=180){msg.textContent="Maximum 180 points";return}
+points.push([x,y]);msg.textContent=points.length+" points (unverified image-only)";draw()
+});
+function swap(){current=select.value;const row=data.strokes[current];points=row.points_xy_px.map(p=>p.slice());note.value=row.review_notes;msg.textContent=row.status==="unavailable"?"No reviewed trace yet":"Reviewed image-only, not physical truth";draw()}
+select.addEventListener("change",swap);
+document.querySelector("#undo").onclick=()=>{points.pop();draw()};
+document.querySelector("#clear").onclick=()=>{points=[];draw()};
+document.querySelector("#save").onclick=()=>{
+const row=data.strokes[current];if(points.length===0){row.status="unavailable";row.provenance="no_independently_reviewed_exterior_trace";row.points_xy_px=[];row.review_notes="";msg.textContent="Marked unavailable";return}
+if(points.length<8||note.value.trim().length<12){msg.textContent="Need at least 8 points and an explanatory note (12+ chars)";return}
+row.status="reviewed_image_only";row.provenance="human_traced_image_only";row.points_xy_px=points.map(p=>p.slice());row.review_notes=note.value.trim();
+msg.textContent="Saved "+current+" as provisional source-image evidence";draw()
+};
+document.querySelector("#download").onclick=()=>{
+const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="exterior-traces.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+};src.onload=draw;swap();
+</script></body></html>""".replace("__DOC__", seed).replace("__PHOTO__", photo)
+
+
 def write_result(image_path, output, traces=None):
     image_path, output = Path(image_path), Path(output)
     with Image.open(image_path) as im:
@@ -229,6 +311,7 @@ def write_result(image_path, output, traces=None):
     (output / "exterior-trace-template.json").write_text(
         json.dumps(template(), sort_keys=True, indent=2) + "\n", encoding="utf-8"
     )
+    (output / "exterior-tracer.html").write_text(render_exterior_trace_editor(image), encoding="utf-8")
     draw = ImageDraw.Draw(image)
     colors = {
         "left_crown": (30, 190, 70), "right_crown": (20, 130, 225),
