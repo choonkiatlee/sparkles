@@ -548,3 +548,52 @@ stretches, small missing-evidence gaps, an unavailable one-sided contour,
 an internal-reflection negative control and the source-locked original.
 This is an image-only change-point feasibility experiment, not a scored
 reconstruction of the diamond's physical three-tier facet model.
+
+
+## B2f — missed table cap and last pavilion change: separate endpoint detector
+
+Human feedback on the improved joint fit: outer crown and pavilion lines now
+mostly follow the stone, but the tiny **top table cap** and the **last lower
+pavilion change** were missing on both sides. These are two *different
+observability failures* from the middle-profile line fit:
+
+1. The old automatic exterior ROI began at y≈60 while the real source's
+   tiny topmost horizontal-ish exterior ridge is around y≈54–55.
+2. The pavilion trace stopped at y≈276 even though some source-background
+   evidence survives further down, before the platform shadow overwhelms it.
+   Consequently the last slope transition had insufficient lower support for
+   a two-segment model.
+
+The new module \`asscher_profile_endpoint_candidates\`, schema
+\`diamond360-asscher-profile-endpoints/1\`, is additive. It does not retune
+already supported middle-crown or first pavilion changepoints.
+
+**Top endpoint:** First sustained foreground contact from *above*, for
+each central source-image column, under three fixed background thresholds.
+A top cap is only proposed when at least five consecutive columns support
+an approximately level ridge, with threshold disagreement ≤2 pixels. This
+locates the outside apex/cap instead of promoting the very dark horizontal
+*internal* reflection below it to a table.
+
+**Bottom endpoint:** Extend the independently supported left and right
+pavilion contours locally/inward over a short additional range, using
+foreground/background separation and limited step length. Exit rather than
+force a bottom trace when the outside region becomes shadow-contaminated.
+For sufficiently supported terminal extensions, compare one versus two
+continuous pavilion slopes with an independently fixed improvement rule,
+minimum endpoint support and a penalty-stability test. The left/right
+candidates are deliberately independent; a possible terminal bend on one
+side is **not reflected across** as a manufactured bend on the other.
+
+**Crucial anatomical caveat:** The detected short top cap has not been
+certified as the physical polished table. Likewise a projected slope
+change in the lower exterior does not prove a polished P1/P2/P3 facet junction.
+All eight physical facet-angle measurements remain unavailable, and the
+independent Sergey comparison still belongs in PR C.
+
+The focused CI runs image-only synthetic/reflection controls, blank-image
+tests, source-hash/method-version checks, and emits
+\`endpoint-candidates.json\` and \`endpoint-review-overlay.png\`
+composited over the previous joint-fit image. Green lower points are
+supported *candidates*; orange points are shadow-limited. The top cap and
+terminal-change proposals require source-image visual review.
