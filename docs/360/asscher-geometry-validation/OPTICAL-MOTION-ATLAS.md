@@ -86,3 +86,42 @@ LG756580087 and LG836619414 retain **uncertain crown-facing** metadata.
 **The end goal is optical/perceptual characterization from the actual
 online-shopping 360, without pretending its virtual facets are physical
 facet junctions.** This PR only provides an auditable stepping stone.
+
+## Four-stone archived RGB results (2026-10-08)
+
+The first complete [original RGB atlas workflow](https://github.com/choonkiatlee/sparkles/actions/runs/37856385262)
+replayed the same 34 archived consecutive pairs and passed every
+atlas/provenance test. Values below are **tile evidence categories**, not
+diamond optical grades or recovered physical facet flow.
+
+| Certificate | Pairs | Shared-reference pairs | Ambiguous tiles | ±4 px clipped tiles | Local residual tiles | Low-IoU pairs | Crown role |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| LG756520111 | 7 | 7 | 18/112 | 0 | 2 | 0 | likely crown |
+| LG756580087 | 9 | 9 | 12/144 | 9 | 2 | 0 | uncertain |
+| LG818659722 | 9 | 8 | 54/144 | 1 | 1 | 0 | likely crown |
+| LG836619414 | 9 | 2 | 30/144 | **77** | 0 | **7/9** | uncertain |
+
+Native original RGB and paired atlases reviewed for
+LG756520111 source 15→16 and 12→13 and LG836619414 15→16.
+The former's measured patch shifts largely share a common gauge-space
+translation and should **not** be interpreted as 12 independent active
+facets. In the latter, a large fraction of local correlation matches
+hit the search boundary while the frozen silhouette overlaps poorly,
+consistent with strong view/registration confounding; its apparent
+motion must **not** be treated as a precise optical velocity.
+
+LG818659722 has substantial tile ambiguity (54 of 144 patches),
+demonstrating why replacing unresolved patches with zero motion would
+be misleading.
+
+**Research disposition: KEEP as an opt-in motion/registration/uncertainty
+diagnostic, not an "optical sparkle grade" or a valid facet tracker.**
+Only five localized residual tile observations appear across the four
+stones under the predeclared threshold. A follow-on optical/perceptual
+experiment should measure **spatial brightness/contrast modulation at
+fixed image regions** independently of texture displacement, with
+illumination normalization and view/crown uncertainty exposed, rather
+than assuming motion arrows represent virtual-facet behavior.
+
+The production #96 geometry estimator and the #92 physical-correspondence
+boundary are unchanged; no #90 source stress.
