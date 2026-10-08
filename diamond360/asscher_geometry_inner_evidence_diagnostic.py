@@ -270,7 +270,35 @@ def _graph(result, path):
     img.save(path)
 
 
-def run(source, source_manifest, output):
+def confirm_reference(report, reference_dir):
+    """Fail closed if the frozen #115 source/fit baseline cannot be replayed."""
+    root = Path(reference_dir) / "per-stone" / FOCUS
+    reference = json.loads((root / "primary-wireframe.json").read_text())
+    ablated = json.loads(
+        (root / "stability" / "leave-out-0016-wireframe.json").read_text()
+    )
+    if report["selected_source_indices"] != [
+        row["source_index"] for row in reference["selected_frames"]
+    ]:
+        raise RuntimeError("selected source indices differ from frozen #115")
+    for label, observed, original in (
+        ("all", report["with_all"]["c3_selected_global_u"], reference),
+        ("without", (
+            report["without_focus_frame"] or {}
+        ).get("c3_selected_global_u"), ablated),
+    ):
+        expected = original["boundary_evidence"]["C3_TABLE"]["global_u"]
+        if observed is None or not np.isclose(
+            observed, expected, rtol=0, atol=1e-9
+        ):
+            raise RuntimeError(
+                f"{label} C3 boundary does not reproduce frozen #115: "
+                f"{observed} vs {expected}"
+            )
+    return True
+
+
+def run(source, source_manifest, output, *, reference_dir=None):
     validation.assert_frozen_method(validation.OUTER_METHOD)
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
@@ -292,6 +320,11 @@ def run(source, source_manifest, output):
         report["primary_c3_table_global_u"] = (
             (primary.get("boundary_evidence") or {}).get("C3_TABLE", {}).get("global_u")
         )
+        if reference_dir is not None:
+            confirm_reference(report, reference_dir)
+            report["frozen_115_reproduction_checked"] = True
+        else:
+            report["frozen_115_reproduction_checked"] = False
         report["frozen_estimator_unchanged"] = True
         _graph(report, output / "c3-evidence-modes.png")
         report["qc_path"] = "c3-evidence-modes.png"
@@ -306,8 +339,9 @@ def main():
     parser.add_argument("--source-root", type=Path, required=True)
     parser.add_argument("--source-manifest", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--reference-dir", type=Path)
     args = parser.parse_args()
-    r = run(args.source_root, args.source_manifest, args.output)
+    r = run(args.source_root, args.source_manifest, args.output,\n            reference_dir=args.reference_dir)
     print("selected", r["selected_source_indices"])
     print("C3 table full", r["with_all"]["c3_selected_global_u"])
     other = r["without_focus_frame"]
