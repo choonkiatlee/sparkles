@@ -18,9 +18,9 @@
   </header>
   <main class="shell">
     <section class="intro">
-      <p class="eyebrow">Diamond research · saved evidence</p>
-      <h1>Your saved stones,<br>side by side.</h1>
-      <p>Browse certified diamonds already recovered into the archive. Prices are historical observations in their original currencies; retrieval completeness is not a quality judgment.</p>
+      <p class="eyebrow">Diamond research · Saved evidence</p>
+      <h1>Saved diamonds</h1>
+      <p>Scan the essentials, select 2–5 stones, then open the detailed comparison. Prices retain their original currencies and tax qualifications.</p>
     </section>
     <section id="catalogue" aria-labelledby="catalogue-title">
       <div class="section-heading">
@@ -30,16 +30,37 @@
       <div class="tools" aria-label="Catalogue controls">
         <label class="search-field">Search <input id="search" type="search" placeholder="Report, retailer, grade…" disabled></label>
         <label>Status <select id="status-filter" disabled><option value="all">All retrieval statuses</option><option value="complete">Complete</option><option value="partial">Partial</option></select></label>
-        <label>Sort <select id="sort" disabled><option value="report">Report number</option><option value="carat">Carat (ascending)</option><option value="price">Price (grouped by currency)</option></select></label>
+        <label>Sort <select id="sort" disabled><option value="report">Report number</option><option value="carat">Carat (ascending)</option><option value="colour">Colour (D to Z)</option><option value="clarity">Clarity (FL to I3)</option><option value="price">Price (grouped by currency)</option></select></label>
       </div>
       <div id="error" class="error" role="alert" hidden></div>
-      <div id="cards" class="cards" aria-live="off"></div>
+      <section class="selection" aria-label="Selected diamonds">
+        <div class="selection-line">
+          <div><h2>Selection</h2><p id="selected-count" aria-live="polite">Select two to five diamonds.</p></div>
+          <div class="selection-buttons"><button type="button" class="outline" id="clear-selection">Clear</button><button type="button" id="compare-button" disabled>Compare selected</button></div>
+        </div>
+        <div id="selected-chips" class="selected-chips"></div>
+      </section>
+      <div class="overview-scroll" role="region" aria-label="Selectable diamond overview. Scroll horizontally to see all fields." tabindex="0">
+        <table class="overview-table">
+          <thead>
+            <tr>
+              <th scope="col" class="cell-select">Pick</th>
+              <th scope="col" class="cell-identity">Diamond</th>
+              <th scope="col">Carat</th>
+              <th scope="col">Colour</th>
+              <th scope="col">Clarity</th>
+              <th scope="col">Price</th>
+              <th scope="col">Retrieval</th>
+              <th scope="col">Diamond score <span class="future-tag">(future)</span></th>
+            </tr>
+          </thead>
+          <tbody id="cards"></tbody>
+        </table>
+      </div>
+      <p class="subtle overview-footnote">Preview images are from saved evidence, not yet verified face-up crops. “Not scored” means no optical evaluation exists.</p>
       <p id="empty" class="empty" hidden>No diamonds match these filters.</p>
     </section>
-    <section class="selection" aria-label="Selected diamonds">
-      <div class="selection-line"><div><h2>Selected for comparison</h2><p id="selected-count" aria-live="polite">Select two to five diamonds.</p></div>
-        <div class="selection-buttons"><button type="button" class="outline" id="clear-selection">Clear</button><button type="button" id="compare-button" disabled>Compare selected</button></div></div>
-      <div id="selected-chips" class="selected-chips"></div>
+    <section class="compare-section" aria-label="Detailed diamond comparison">
       <div id="comparison" hidden><h3>Compare saved evidence</h3><p class="subtle">Metadata and original published stills, aligned by certified stone. Scroll horizontally to inspect up to five columns. Rotations are ordinal evidence, not calibrated viewing angles; synchronized playback follows in C3.</p><div id="comparison-grid"></div></div>
     </section>
   </main>

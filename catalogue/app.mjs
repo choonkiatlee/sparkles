@@ -28,59 +28,70 @@ function link(text, href) {
   a.href = safe; a.target = "_blank"; a.rel = "noopener noreferrer";
   return a;
 }
-function labeledFact(label, value) {
-  const d = node("div");
-  d.append(node("dt", "", label), node("dd", "", displayValue(value)));
-  return d;
-}
-function makeCard(row) {
-  const card = node("article","diamond" + (state.selected.includes(row.id) ? " is-selected" : ""));
-  const imageArea = node("div","photograph");
-  const src = httpUrl(row.thumbnail_url);
-  if (src) {
-    const img = node("img");
-    img.src = src;
-    img.alt = "Published evidence for " + displayValue(row.report_number) + "; viewing angle uncalibrated";
-    img.loading = "lazy"; img.decoding = "async";
-    img.addEventListener("error", () => imageArea.replaceChildren(node("span","photo-empty","Published image unavailable")));
-    imageArea.append(img);
-  } else imageArea.append(node("span","photo-empty","No published image"));
-  const content = node("div","card-content");
-  const heading = node("div","idline");
-  const id = node("div");
-  id.append(node("h3","",displayValue(row.lab)+" "+displayValue(row.report_number)),
-    node("p","subtitle",displayValue(row.retailer)));
-  const status = node("span","status " + (/^(complete|partial)$/.test(row.retrieval_status) ? row.retrieval_status : ""),
-    displayValue(row.retrieval_status));
-  heading.append(id,status);
-  const facts = node("dl","facts");
-  facts.append(labeledFact("Carat",row.carat == null ? null : row.carat+" ct"),
-    labeledFact("Colour",row.colour),labeledFact("Clarity",row.clarity));
-  const more = node("div","more");
-  more.append(node("p","subtitle",displayValue(row.shape)+" · "+dimensionsText(row)),
-    node("p","price",priceText(row)));
-  if (row.tax_basis) more.append(node("p","tax",row.tax_basis));
-  else more.append(node("p","tax","Tax basis unknown"));
-  const links = node("div","links");
-  const source = link("Original listing ↗",row.source_url);
-  if (source) links.append(source);
-  if (links.children.length) more.append(links);
-  const select = node("label","select-control");
+// Overview renders from the compact index only. Detailed manifests load on compare.
+function makeRow(row) {
+  const selected = state.selected.includes(row.id);
+  const tr = node("tr", "overview-row"+(selected ? " is-selected":""));
+  const checkCell = node("td", "cell-select");
+  const label = node("label", "row-selection");
   const input = node("input");
-  input.type = "checkbox"; input.checked = state.selected.includes(row.id);
-  input.disabled = !input.checked && state.selected.length >= MAX_SELECTION;
+  input.type = "checkbox";
+  input.checked = selected;
+  input.disabled = !selected && state.selected.length >= MAX_SELECTION;
   input.setAttribute("aria-label","Select "+displayValue(row.report_number)+" for comparison");
-  input.addEventListener("change", () => {
+  function toggle() {
     state.selected = toggleSelection(state.selected,row.id);
     state.comparing = state.comparing && state.selected.length >= MIN_COMPARISON;
-    syncURL(); render();
-    const moved = [...$("cards").querySelectorAll("input[type=checkbox]")].find(x => x.getAttribute("aria-label")===input.getAttribute("aria-label"));
-    moved?.focus();
+    syncURL();
+    render();
+    const replacement = [...$("cards").querySelectorAll("input[type=checkbox]")]
+      .find(x => x.getAttribute("aria-label") === input.getAttribute("aria-label"));
+    replacement?.focus();
+  }
+  input.addEventListener("change", toggle);
+  label.append(input);
+  checkCell.append(label);
+  const identity = node("th","cell-identity");
+  identity.scope="row";
+  const detail = node("div","diamond-identity");
+  const thumb = node("span","mini-photo");
+  const imageURL = httpUrl(row.thumbnail_url);
+  if (imageURL) {
+    const img=node("img");
+    img.src=imageURL;
+    img.alt="Representative saved diamond image (not a verified face-up view)";
+    img.loading="lazy"; img.decoding="async";
+    img.addEventListener("error",()=>thumb.replaceChildren(node("span","photo-empty","◇")));
+    thumb.append(img);
+  } else {
+    thumb.append(node("span","photo-empty","◇"));
+  }
+  const captions = node("span","diamond-caption");
+  const source=link(displayValue(row.lab)+" "+displayValue(row.report_number),row.source_url);
+  if (source) {source.className="report-link";captions.append(source);}
+  else captions.append(node("strong","report-link",displayValue(row.lab)+" "+displayValue(row.report_number)));
+  captions.append(node("small","retailer-name",displayValue(row.retailer)));
+  captions.append(node("small","size-note",dimensionsText(row)));
+  detail.append(thumb,captions);
+  identity.append(detail);
+  const carat = node("td","cell-number",row.carat == null ? "Unknown" : row.carat+" ct");
+  const colour = node("td","cell-grade",displayValue(row.colour));
+  const clarity = node("td","cell-grade",displayValue(row.clarity));
+  const price = node("td","cell-price");
+  price.append(node("strong","",priceText(row)));
+  const tax = node("small","tax-brief",row.tax_basis || "Tax basis unknown");
+  tax.title = row.tax_basis || "Tax basis unknown";
+  price.append(tax);
+  const status = node("td","cell-status");
+  status.append(node("span","status "+(/^(complete|partial)$/.test(row.retrieval_status)?row.retrieval_status:""),displayValue(row.retrieval_status)));
+  const score = node("td","cell-score");
+  score.append(node("span","not-scored","Not scored"));
+  tr.append(checkCell,identity,carat,colour,clarity,price,status,score);
+  tr.addEventListener("click", event=>{
+    if (event.target.closest("input,a,label,button")) return;
+    if (!input.disabled) toggle();
   });
-  select.append(input,node("span","","Select to compare"));
-  content.append(heading,facts,more,select);
-  card.append(imageArea,content);
-  return card;
+  return tr;
 }
 function syncURL() {
   const search = selectionSearch(location.search,state.selected,state.comparing);
@@ -93,7 +104,7 @@ function render() {
   });
   $("count").textContent = rows.length+" of "+state.rows.length+" saved "+(state.rows.length===1?"stone":"stones");
   const cards = $("cards");
-  cards.replaceChildren(...rows.map(makeCard));
+  cards.replaceChildren(...rows.map(makeRow));
   $("empty").hidden = rows.length > 0;
   const quantity = state.selected.length;
   $("selected-count").textContent = quantity === 0 ? "Select two to five diamonds." :
