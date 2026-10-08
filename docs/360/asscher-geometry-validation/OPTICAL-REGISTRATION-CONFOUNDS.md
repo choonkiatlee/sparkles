@@ -57,7 +57,7 @@ crown-role uncertainty and cannot carry a physical facet semantic ID.
 
 ## Tests and decision criteria
 
-- [ ] Invalid source-frame indices, patched archived physical labels,
+- [x] Invalid source-frame indices, patched archived physical labels,
       missing/duplicated tiles or impossible shifts fail closed.
 - [ ] Unavailable frames remain unavailable, not zero change.
 - [ ] Fixed low/intermediate/high overlap and patch-confidence strata
@@ -80,3 +80,20 @@ After reviewing the descriptive results, the next genuinely independent
 experiment would vary registration or common-interior masks on the
 *same original frames*, with a locked protocol, to see whether appearance
 contrasts are stable under those controlled changes.
+
+## Frozen four-stone audit results (8 October 2026)
+
+The focused archive-only [workflow 37856280642](https://github.com/choonkiatlee/sparkles/actions/runs/37856280642) passed the existing optical provenance tests, new invalid-input/causality guards, and complete 34-pair frozen #178 audit. The uploaded artifact includes per-stone JSON and an explicitly non-causal summary.
+
+| IGI certificate | Crown | Low overlap <0.95 | Intermediate [0.95,0.98) | High >=0.98 | Median appearance change per nonempty stratum (low / intermediate / high) |
+| --- | --- | ---: | ---: | ---: | --- |
+| LG756520111 | likely crown | 0 | 0 | 7 | — / — / 0.0435 |
+| LG756580087 | uncertain | 0 | 3 | 6 | — / 0.0921 / 0.0467 |
+| LG818659722 | likely crown | 0 | 0 | 9 | — / — / 0.0585 |
+| LG836619414 | uncertain | 7 | 0 | 2 | 0.1696 / — / 0.0630 |
+
+LG836619414's within-stone **low-minus-high overlap-bin median optical change** is +0.1067 (7 versus 2 pairs). LG756580087 has an intermediate-versus-high association, but *no low-overlap pair*, so its low/high contrast remains **unavailable**. For LG756520111 and LG818659722, all pairs are high-overlap and there is no defensible low/high contrast.
+
+Descriptive within-stone Spearman overlap/appearance-change associations are LG756520111 +0.143, LG756580087 -0.883, LG818659722 +0.400 and LG836619414 -0.450. The signs and magnitudes do **not** establish a causal mask-registration contribution; adjacent pairs share images and samples are tiny/selected. In particular, LG818659722's frame 6→7 pair has IoU about 0.998 yet nine of sixteen local matches are ambiguous. Do not use these numbers to subtract a fitted correction, classify true/virtual facets, or rank optical quality.
+
+**Decision: KEEP as descriptive optical measurement QC**, not calibrated camera registration or facet geometry. The next independently testable physical experiment, if wanted, is a locked sensitivity study of alternative registration/overlap masks on the **same** original images. None was performed here. No production estimator/quality-score change or source stress.
