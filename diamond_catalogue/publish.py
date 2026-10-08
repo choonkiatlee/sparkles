@@ -150,8 +150,16 @@ def safe_failure(exc: Exception) -> tuple[str, str]:
         return ("unsupported_input",
                 "Use one exact supported Diyona or Quality Diamonds listing URL.")
     if isinstance(exc, IdentityConflictError):
+        allowed = {
+            "report_number", "lab", "origin", "shape", "carat",
+            "colour", "clarity", "dimensions",
+        }
+        fields = sorted({item.field for item in exc.comparisons
+                         if item.field in allowed})
+        hint = ("Conflicting identity fields: " + ", ".join(fields) + ". "
+                if fields else "")
         return ("identity_conflict",
-                "Certified diamond identity observations disagree; publication was stopped.")
+                hint + "Certified identity observations disagree; publication was stopped.")
     if isinstance(exc, RetrievalError):
         return _listing_exception(exc)
     if isinstance(exc, GitHubError):

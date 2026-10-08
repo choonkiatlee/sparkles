@@ -34,3 +34,23 @@ jobs:
           python -m unittest tests.test_diamond_retrieval_retailers -v
           python -m unittest tests.test_diamond_retrieval_motion -v
           python -m unittest tests.test_diamond_retrieval_media -v
+
+      - name: Diagnose exact Diyona identity disagreement (read-only probe)
+        continue-on-error: true
+        run: |
+          python - <<'PY'
+          from diamond_retrieval import retrieve_diamond
+          from diamond_retrieval.errors import IdentityConflictError
+          url = "https://diyona.com/pages/diamond-detail?sku=A69835AA4"
+          try:
+              result = retrieve_diamond(url)
+          except IdentityConflictError as exc:
+              print("IDENTITY CONFLICTS:")
+              for comparison in exc.comparisons:
+                  if comparison.field in {"report_number", "lab", "origin", "shape",
+                                          "carat", "colour", "clarity", "dimensions"}:
+                      print("field", comparison.field, "values", repr(comparison.values),
+                            "sources", sorted(set(p.source for p in comparison.provenance)))
+          else:
+              print("NO IDENTITY CONFLICT", result.metadata.report_number, result.status.value)
+          PY

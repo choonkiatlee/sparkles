@@ -16,6 +16,7 @@ from diamond_catalogue.publish import main, safe_failure
 from diamond_retrieval.errors import (
     IdentityConflictError, RetrievalError, UnsupportedInputError,
 )
+from diamond_retrieval.models import IdentityComparison, IdentityOutcome
 
 
 def wrapped_retrieval_error(message: str) -> RetrievalError:
@@ -32,6 +33,20 @@ def wrapped_retrieval_error(message: str) -> RetrievalError:
 
 
 class IngestionDiagnosticTests(unittest.TestCase):
+    def test_identity_conflict_reports_only_allowlisted_field_names(self):
+        exc = IdentityConflictError((
+            IdentityComparison("dimensions", IdentityOutcome.CONFLICT,
+                               ("http://secret?token=DO_NOT_LEAK",)),
+            IdentityComparison("shape", IdentityOutcome.CONFLICT, ("SECRET",)),
+            IdentityComparison("arbitrary_secret_field", IdentityOutcome.CONFLICT, ("SECRET",)),
+        ))
+        code, hint = safe_failure(exc)
+        self.assertEqual(code, "identity_conflict")
+        self.assertIn("dimensions", hint)
+        self.assertIn("shape", hint)
+        self.assertNotIn("DO_NOT_LEAK", hint)
+        self.assertNotIn("arbitrary_secret_field", hint)
+
     def test_http_403_is_explicit_and_safe(self):
         code, hint = safe_failure(wrapped_retrieval_error("Diyona listing returned HTTP 403"))
         self.assertEqual(code, "listing_access_denied")
