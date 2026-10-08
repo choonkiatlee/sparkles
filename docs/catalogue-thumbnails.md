@@ -45,6 +45,7 @@ the original immutable hash. It writes for each:
 
 - `<diamond-id>-crop.jpg` large original-colour crop for review;
 - `<diamond-id>.webp` small target icon;
+- `<diamond-id>-opposite-crop.jpg` second original-colour frame roughly half a cycle away, when recoverable. Use it to check whether the main crop is actually crown-facing rather than pavilion-facing;
 - `<diamond-id>.json` provenance, exact hashes, detailed suitability reasons;
 - `summary.json` overview.
 

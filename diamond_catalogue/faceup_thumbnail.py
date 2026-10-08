@@ -335,6 +335,44 @@ def preview_manifest(manifest: dict, directory: Path, *, fetch_bytes=retrieve_fr
         (directory / f"{stem}.webp").write_bytes(thumbnail)
         large.thumbnail((500,500),Image.Resampling.LANCZOS)
         large.save(directory / f"{stem}-crop.jpg", quality=92)
+        # Explicitly show the opposite end of the archived full rotation:
+        # face-on silhouettes can appear on both crown AND pavilion sides.
+        source = record.get("source") or {}
+        if source.get("evidence_kind") == "rotation":
+            complete = next((
+                e for e in manifest.get("evidence",[])
+                if e.get("kind") == "rotation" and e.get("status") == "success"
+                and e.get("metadata",{}).get("sequence_complete") is True
+            ), None)
+            frames = (complete or {}).get("frames",[])
+            if len(frames) >= 16:
+                alternate_position = (int(source["frame_position"]) + len(frames)//2) % len(frames)
+                alternate = frames[alternate_position]
+                ref = alternate["asset"]
+                alt_source = SourceFrame(
+                    position=alternate_position,
+                    source_index=int(alternate["source_index"]),
+                    stored_position=alternate.get("stored_position"),
+                    source_sha256=ref["sha256"],
+                    source_url=ref["storage"]["url"],
+                )
+                try:
+                    original = verified_image(fetch_bytes(alt_source.source_url), alt_source)
+                    opposite_crop, opposite_bbox = crop_color_original(original)
+                    opposite_crop.thumbnail((500,500), Image.Resampling.LANCZOS)
+                    opposite_crop.save(directory / f"{stem}-opposite-crop.jpg",quality=92)
+                    record["opposite_review_view"] = {
+                        "source_index":alt_source.source_index,
+                        "frame_position":alternate_position,
+                        "source_sha256":alt_source.source_sha256,
+                        "crop_source_bbox_xyxy":opposite_bbox,
+                        "note":"Comparator only; do not infer crown/pavilion from half-cycle position alone",
+                    }
+                except (OSError, ValueError):
+                    record["opposite_review_view"] = {
+                        "status":"unavailable",
+                        "note":"Opposite original-frame crop failed QC; do not infer the face",
+                    }
     (directory / f"{stem}.json").write_text(
         json.dumps(record,sort_keys=True,indent=2)+"\n",encoding="utf-8",
     )
