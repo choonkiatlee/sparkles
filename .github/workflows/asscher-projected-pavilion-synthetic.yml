@@ -7,6 +7,7 @@ on:
       - "diamond360/asscher_profile_synthetic.py"
       - "diamond360/asscher_profile_synthetic_benchmark.py"
       - "tests/test_asscher_projected_pavilion_synthetic.py"
+      - "docs/360/asscher-geometry-validation/SYNTHETIC-PAVILION-GENERATIVE.md"
       - ".github/workflows/asscher-projected-pavilion-synthetic.yml"
   workflow_dispatch:
 
