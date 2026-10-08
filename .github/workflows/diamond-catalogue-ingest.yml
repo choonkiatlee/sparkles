@@ -33,7 +33,9 @@ jobs:
           python-version: "3.11"
 
       - name: Install Sparkles
-        run: python -m pip install -e .
+        run: |
+          python -m pip install -e ".[catalogue-browser]"
+          python -m playwright install --with-deps chromium
 
       - name: Ingest and publish one certified diamond
         env:
