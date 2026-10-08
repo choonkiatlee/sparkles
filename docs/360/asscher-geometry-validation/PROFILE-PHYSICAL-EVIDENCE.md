@@ -2,7 +2,7 @@
 > This photograph is viewed upside-down relative to the first software labels.
 > The **pointed upper source-image region (y≈54–201)** is the **PAVILION**
 > (pointed culet-region tip at the top); the wider y≈201–221 transition is
-> a **candidate GIRLDE BAND** (not verified); and the **shorter, broad lower
+> a **candidate GIRDLE BAND** (not verified); and the **shorter, broad lower
 > region (y≈221–~290)** is the **CROWN / table-region side**.
 >
 > Prior sections below document historical experiments using the **wrong
