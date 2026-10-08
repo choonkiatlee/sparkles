@@ -1,0 +1,113 @@
+name: asscher-real-fixed-ruler-optical-replay
+
+on:
+  pull_request:
+    paths:
+      - "diamond360/asscher_semantic_optical_real_replay.py"
+      - "diamond360/asscher_semantic_optical_handoff.py"
+      - "tests/test_asscher_semantic_optical_real_replay.py"
+      - "docs/360/asscher-geometry-validation/REAL-FIXED-RULER-BRIGHTNESS-REPLAY.md"
+      - ".github/workflows/asscher-real-fixed-ruler-optical-replay.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install package
+        run: python -m pip install -e .
+      - name: Test frozen-transfer replay provenance and visualization
+        run: python -m unittest tests.test_asscher_semantic_optical_real_replay tests.test_asscher_semantic_optical_handoff -v
+      - name: Retrieve ORIGINAL archived frozen #89 scaffold and per-frame transfer
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p outputs/frozen-89
+          gh run download 37830584391 --repo choonkiatlee/sparkles \
+            --name asscher-geometry-stability-outer-v2 \
+            --dir outputs/frozen-89
+          test -f outputs/frozen-89/per-stone/IGI-LG756520111/primary-wireframe.json
+          test -f outputs/frozen-89/per-stone/IGI-LG756580087/transfer.json
+      - name: Retrieve original pinned 256-view bundles for exactly two predefined diamonds
+        run: |
+          python - <<'PY'
+          import hashlib, json, urllib.request, zipfile
+          from pathlib import Path
+          manifest=json.loads(Path("docs/360/benchmark/source-bundles.json").read_text())
+          selected={"IGI-LG756520111","IGI-LG756580087"}
+          assert {x["certificate"] for x in manifest["bundles"] if x["certificate"] in selected} == selected
+          root=Path("outputs/real-optical-sources")
+          root.mkdir(parents=True,exist_ok=True)
+          for item in manifest["bundles"]:
+              if item["certificate"] not in selected: continue
+              archive=root/item["filename"]
+              urllib.request.urlretrieve(item["download_url"],archive)
+              assert archive.stat().st_size==item["bytes"]
+              assert hashlib.sha256(archive.read_bytes()).hexdigest()==item["sha256"]
+              dest=root/item["certificate"]
+              dest.mkdir(parents=True,exist_ok=True)
+              with zipfile.ZipFile(archive) as z:
+                  z.extractall(dest)
+              archive.unlink()
+          PY
+      - name: Replay original 360 into existing canonical #80 gauge with frozen #89 geometry
+        run: |
+          python -m diamond360.asscher_semantic_optical_real_replay \
+            --certificate IGI-LG756520111 \
+            --source-root outputs/real-optical-sources \
+            --source-manifest docs/360/benchmark/per-stone/IGI-LG756520111/source-manifest.json \
+            --frozen-root outputs/frozen-89 \
+            --output outputs/real-fixed-ruler-replay
+          python -m diamond360.asscher_semantic_optical_real_replay \
+            --certificate IGI-LG756580087 \
+            --source-root outputs/real-optical-sources \
+            --source-manifest docs/360/benchmark/per-stone/IGI-LG756580087/source-manifest.json \
+            --frozen-root outputs/frozen-89 \
+            --output outputs/real-fixed-ruler-replay
+      - name: Validate real crown-window replay never moves ruler or creates physical-facet scores
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          src=Path("outputs/real-fixed-ruler-replay")
+          for c in ("IGI-LG756520111","IGI-LG756580087"):
+              p=src/c/"real-fixed-ruler-brightness.json"
+              data=json.loads(p.read_text())
+              assert data["scaffold_was_refitted"] is False
+              assert data["frame_count"]==11
+              assert data["semantic_id_count"]==55
+              assert data["sampled_source_indices"]==[250,252,255,0,2,5,8,11,13,16,19]
+              assert data["all_physical_facets_verified"] is False
+              assert data["optical_quality_score"] is None
+              assert data["archived_semantic_gauge_id"]
+              assert all(f["scaffold_unchanged"] and f["refit_performed"] is False
+                         and f["physical_facet_angle_status"] == "unavailable"
+                         for f in data["frames"])
+              assert all(row["image_support_attribution"]=="nonexclusive_overlapping_not_polished_facet"
+                         and row["physical_facet_correspondence"] == "not_established"
+                         and row["normalized_mean_brightness"] is None
+                         for f in data["frames"] for row in f["entities"])
+              assert (src/c/"real-fixed-ruler-traces.png").is_file()
+              measured=sum(row["raw_mean_brightness"] is not None for f in data["frames"] for row in f["entities"])
+              print(c,data["archived_crown_face_selection"],"observed",measured,
+                    "of",11*55,"possible source-frame semantic rows")
+          PY
+      - name: Upload small real-source trace and provenance reports, not intermediate 256-frame arrays
+        uses: actions/upload-artifact@v4
+        with:
+          name: asscher-real-fixed-ruler-optical-replay
+          path: |
+            outputs/real-fixed-ruler-replay/IGI-LG756520111/real-fixed-ruler-brightness.json
+            outputs/real-fixed-ruler-replay/IGI-LG756520111/real-fixed-ruler-traces.png
+            outputs/real-fixed-ruler-replay/IGI-LG756580087/real-fixed-ruler-brightness.json
+            outputs/real-fixed-ruler-replay/IGI-LG756580087/real-fixed-ruler-traces.png
+          if-no-files-found: error
