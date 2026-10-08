@@ -24,7 +24,7 @@ def synthetic_auto(three_pavilion_stretches=3, internal_noise=False):
               "left_crown": [], "right_crown": []}
     if three_pavilion_stretches == 1:
         anchors = [(60, 205), (200, 40)]
-    elif three_crown_stretches == 2:
+    elif three_pavilion_stretches == 2:
         anchors = [(60, 205), (130, 150), (200, 40)]
     else:
         anchors = [(60, 205), (100, 183), (150, 133), (200, 40)]
