@@ -40,7 +40,7 @@ class PagesCatalogueTests(unittest.TestCase):
         self.assertNotIn("api.github.com", comparison)
         self.assertIn("createManifestLoader", comparison)
 
-    def test_c3a_ordinal_viewer_is_manifest_based_without_full_prefetch_by_default(self):
+    def test_c3b_ordinal_viewer_buffers_originals_with_full_prefetch_enabled(self):
         html=(ROOT / "catalogue/index.html").read_text(encoding="utf-8")
         comparison=(ROOT / "catalogue/comparison-view.mjs").read_text(encoding="utf-8")
         player=(ROOT / "catalogue/rotation-player.mjs").read_text(encoding="utf-8")
@@ -49,8 +49,13 @@ class PagesCatalogueTests(unittest.TestCase):
         self.assertIn("createRotationPlayer", comparison)
         self.assertIn('"rotation","Original rotation"', comparison)
         self.assertIn("stepPosition", player)
-        self.assertIn("setInterval", player)
-        self.assertIn('mode: "none"', model)
+        self.assertIn("setTimeout", player)
+        self.assertIn('mode: "all"', model)
+        self.assertIn("createBufferedFrameCoordinator", model)
+        self.assertIn("maxDecoded: 24", model)
+        self.assertIn("Preload all frames", player)
+        self.assertIn("previous frame retained", player)
+        self.assertIn("coordinator.seek", player)
         self.assertIn('"all"', model)
         self.assertIn("asset?.storage?.url", model)
         self.assertNotIn("api.github.com", model)

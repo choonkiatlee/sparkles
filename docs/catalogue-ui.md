@@ -137,3 +137,43 @@ To test model/policy behavior:
 ```sh
 node --test tests/catalogue-rotation.test.mjs
 ```
+
+
+## C3b: flicker-free buffered playback and automatic full prefetch (#153)
+
+Following live feedback that C3a playback flickered badly, **full frame
+prefetch is ON by default** for *selected* stones in the detailed comparison.
+The shared controls include **Preload all frames (uses more data)**, checked by
+default. Uncheck it to switch to bounded nearby prefetch without leaving the
+comparison. Changing the code default in `catalogue/rotation.mjs` also
+controls first-open behavior: `FRAME_PREFETCH.mode = "all" | "nearby" | "none"`.
+C3a's earlier `none` default above is preserved only as historical context.
+
+The player now **holds the last fully loaded and decoded image on screen** until
+all requested next frames are ready. It swaps the decoded image nodes together,
+not by resetting the `src` of a visible image. The slowest selected stone sets
+playback cadence (no rapid blank flashes or out-of-phase partial updates).
+Rapid scrub requests are versioned, so a slow old response cannot overwrite
+a newer position. A failed request preserves the previous frame and allows
+individual Retry. Changing selected stones or hiding the comparison destroys
+the preloader/timers and invalidates older seeks.
+
+For `all` mode, browser image requests are scheduled in a fair per-stone
+round-robin order, with a maximum of six simultaneous loads and **visible-frame
+requests always higher priority** than background downloads. The status line
+shows completed/total frames, failed frames and an estimate of original
+published media bytes. Only 24 decoded full-size images are retained in the
+JavaScript LRU; remaining preloaded images rely on browser HTTP cache and may
+need rereads if that cache evicts them. Browsers can still be slow while the
+first full preload is underway; load progress is not a guarantee that every
+frame is retained permanently in RAM.
+
+The two real archived 256-frame stones have substantial original JPEG media
+compared with their 128px thumbnails. With 2–5 selected stones, full prefetch
+can use tens of megabytes or more. Uncheck the switch on a slow connection to
+keep downloads nearer the viewed frames. Neither prefetch mode touches the
+compact catalogue thumbnails or changes original C2 still/provenance rows.
+
+Regression tests cover the exact archived frame arrays, mixed counts, R2 URLs,
+full-preload priority/concurrency, LRU bounds, failures/retries, and stale
+seek completion. Review on actual desktop/mobile browsers remains useful.
