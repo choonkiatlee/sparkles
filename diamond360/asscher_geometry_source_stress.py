@@ -254,8 +254,10 @@ def _process_sequence(source, source_manifest, processed, pose_output):
     )
 
 
-def _primary_from_pose(pose_output, pose_payload):
-    return stability._primary_fit(pose_output, pose_payload)
+def _primary_from_pose(
+    pose_output, pose_payload, *, method=validation.OUTER_METHOD
+):
+    return stability._primary_fit(pose_output, pose_payload, method=method)
 
 
 def _pose_lookup(payload):
@@ -483,6 +485,7 @@ def _run_source_condition(
     benchmark_manifest,
     reference_primary,
     reference_support,
+    method=validation.OUTER_METHOD,
 ):
     condition_id = spec["id"]
     condition_work = Path(work) / condition_id
@@ -499,7 +502,7 @@ def _run_source_condition(
         pose_output,
     )
     candidate, selected, _, _ = _primary_from_pose(
-        pose_output, pose_payload
+        pose_output, pose_payload, method=method
     )
 
     validation_record = validation.build_validation_record(
@@ -508,6 +511,7 @@ def _run_source_condition(
         benchmark_manifest,
         case_id=f"{certificate}:{condition_id}",
         comparison_kind="source_pipeline_stress",
+        method=method,
         run_metadata={
             "perturbation": deepcopy(spec),
             "derived_source_manifest_sha256": validation.canonical_sha256(
@@ -777,6 +781,7 @@ def run_stone(
     benchmark_manifest,
     *,
     certificate,
+    method=validation.OUTER_METHOD,
 ):
     output = Path(output)
     work = Path(work)
@@ -791,7 +796,7 @@ def run_stone(
         baseline_pose_output,
     )
     reference_primary, reference_selected, _, _ = _primary_from_pose(
-        baseline_pose_output, baseline_pose
+        baseline_pose_output, baseline_pose, method=method
     )
     (output / "baseline-wireframe.json").write_text(
         json.dumps(reference_primary, indent=2, allow_nan=False) + "\n"
@@ -801,6 +806,7 @@ def run_stone(
         summary = {
             "schema_version": SCHEMA,
             "certificate": certificate,
+            "frozen_method": validation.frozen_method_record(method),
             "status": "unavailable",
             "reason": "baseline_primary_scaffold_unavailable",
             "baseline_primary": _primary_summary(reference_primary),
@@ -838,6 +844,7 @@ def run_stone(
             benchmark_manifest=benchmark_manifest,
             reference_primary=reference_primary,
             reference_support=baseline_fixed["summary"],
+            method=method,
         )
         condition_summaries.append(summary)
 
@@ -875,6 +882,7 @@ def run_stone(
     summary = {
         "schema_version": SCHEMA,
         "certificate": certificate,
+        "frozen_method": validation.frozen_method_record(method),
         "status": (
             "review"
             if geometry_unavailable or gauge_failures
@@ -907,8 +915,10 @@ def run_stone(
     return summary
 
 
-def run_source_benchmark(source_root, output, bundle_manifest):
-    validation.assert_frozen_method()
+def run_source_benchmark(
+    source_root, output, bundle_manifest, *, method=validation.OUTER_METHOD
+):
+    validation.assert_frozen_method(method)
     source_root = Path(source_root).resolve()
     output = Path(output).resolve()
     manifest = json.loads(Path(bundle_manifest).read_text())
@@ -943,10 +953,12 @@ def run_source_benchmark(source_root, output, bundle_manifest):
                 work_root / certificate,
                 manifest,
                 certificate=certificate,
+                method=method,
             ))
 
     payload = {
         "schema_version": SCHEMA,
+        "frozen_method": validation.frozen_method_record(method),
         "frozen_policy": stress_policy(),
         "benchmark_inputs": validation.assert_frozen_benchmark_manifest(
             manifest
@@ -978,9 +990,14 @@ def main():
         type=Path,
         default=Path("docs/360/benchmark/source-bundles.json"),
     )
+    parser.add_argument(
+        "--method", choices=(validation.LEGACY_METHOD, validation.OUTER_METHOD),
+        default=validation.OUTER_METHOD,
+    )
     args = parser.parse_args()
     result = run_source_benchmark(
-        args.source_root, args.output, args.bundle_manifest
+        args.source_root, args.output, args.bundle_manifest,
+        method=args.method,
     )
     for stone in result["stones"]:
         print(stone["certificate"], stone["status"])
