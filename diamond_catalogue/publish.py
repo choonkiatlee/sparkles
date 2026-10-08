@@ -123,6 +123,10 @@ _KNOWN_CATALOGUE_ERRORS = {
         ("catalogue_identity_mismatch",
          "Existing and incoming manifests refer to different certified diamonds."),
 }
+_REPORTED_PROPORTION_FIELDS = frozenset((
+    "table_percent", "depth_percent", "length_width_ratio", "cut", "polish",
+    "symmetry", "fluorescence", "girdle", "culet",
+))
 _CERTIFIED_CONFLICT_FIELDS = frozenset((
     "shape", "origin", "carat", "colour", "clarity", "dimensions",
     "reported_proportions",
@@ -230,6 +234,12 @@ def safe_failure(exc: Exception) -> tuple[str, str]:
             if field in _CERTIFIED_CONFLICT_FIELDS:
                 return ("catalogue_metadata_conflict",
                         f"Previously stored and newly retrieved {field} disagree; no changes were committed.")
+        proportion_prefix = "Conflicting reported proportion: "
+        if message.startswith(proportion_prefix):
+            field = message[len(proportion_prefix):]
+            if field in _REPORTED_PROPORTION_FIELDS:
+                return ("catalogue_proportion_conflict",
+                        f"Two observations disagree on {field}; publication was stopped without replacing either value.")
         return ("catalogue_validation_failure",
                 "Asset hashes, identity, capacity, or stored manifest failed a safety check.")
     return ("unexpected_failure",
