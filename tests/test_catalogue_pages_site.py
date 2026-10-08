@@ -39,6 +39,19 @@ class PagesCatalogueTests(unittest.TestCase):
         self.assertNotIn("api.github.com", comparison)
         self.assertIn("createManifestLoader", comparison)
 
+    def test_compact_table_has_real_selection_and_future_score_placeholders(self):
+        html = (ROOT / "catalogue/index.html").read_text(encoding="utf-8")
+        app = (ROOT / "catalogue/app.mjs").read_text(encoding="utf-8")
+        for value in ('class="overview-table"', 'id="cards"', 'value="colour"',
+                      'value="clarity"', 'Diamond score', 'id="compare-button"'):
+            self.assertIn(value, html)
+        self.assertNotIn('class="cards"', html)
+        self.assertIn('function makeRow(row)', app)
+        self.assertIn('input.type = "checkbox"', app)
+        self.assertIn('Not scored', app)
+        self.assertIn('thumbnail_url', app)
+        self.assertIn('comparisonView.update', app)
+
     def test_ingestion_invokes_pages_after_publishing(self):
         ingest = (ROOT / ".github/workflows/diamond-catalogue-ingest.yml").read_text(encoding="utf-8")
         pages = (ROOT / ".github/workflows/catalogue-pages.yml").read_text(encoding="utf-8")

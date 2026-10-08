@@ -25,6 +25,13 @@ export function validateIndex(index) {
   }
   return index.diamonds;
 }
+// Common colour/clarity grade order; non-standard or missing grades sort last.
+const COLOUR_GRADES = "D E F G H I J K L M N O P Q R S T U V W X Y Z".split(" ");
+const CLARITY_GRADES = ["FL","IF","VVS1","VVS2","VS1","VS2","SI1","SI2","I1","I2","I3"];
+export const gradeOrder = (value, grades) => {
+  const pos = grades.indexOf(String(value ?? "").trim().toUpperCase());
+  return pos < 0 ? grades.length : pos;
+};
 export function visibleRows(rows, { search="", status="all", sort="report" }={}) {
   const needle = string(search).toLowerCase();
   const filtered = rows.filter(row => {
@@ -37,6 +44,9 @@ export function visibleRows(rows, { search="", status="all", sort="report" }={})
     if (sort === "carat") {
       const x = numeric(a.carat), y = numeric(b.carat);
       comparison = x === null ? (y === null ? 0 : 1) : y === null ? -1 : x-y;
+    } else if (sort === "colour" || sort === "clarity") {
+      const grades = sort === "colour" ? COLOUR_GRADES : CLARITY_GRADES;
+      comparison = gradeOrder(a[sort], grades) - gradeOrder(b[sort], grades);
     } else if (sort === "price") {
       // Price comparisons are valid only within a currency. Group by currency first.
       comparison = string(a.currency).localeCompare(string(b.currency));

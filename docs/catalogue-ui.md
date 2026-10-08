@@ -81,3 +81,12 @@ two live-published JSON manifests and null/partial/video/R2 cases.
 - C3 #138: ordinal (not physically calibrated) synchronized 360 player, bounded prefetch and storage-neutral `asset.storage.url` for both GitHub Release and R2 fixtures.
 
 No database, user accounts, ranking system, new optical analysis or browser ingestion controls are introduced.
+
+
+## Compact overview table — #142
+
+The default catalogue browse view is a **dense selectable table** rather than the original large card grid. Scannable columns are: choose, representative evidence thumbnail, report/retailer and dimensions, carat, colour, clarity, original-currency price with tax basis, retrieval status, and a **Not scored** placeholder for a future, separately validated optical-quality score. No fictitious score or FX comparison is created. The dropdown offers certified colour and clarity grade sorting as well as carat, report and currency-bucketed price.
+
+The row thumbnail uses the published compact-index `thumbnail_url` as an **uncalibrated saved image** and displays it in a small padded, modestly zoomed window; this is intentionally *not* a geometric crop or crown/face-up claim. Work on validated camera-pose/silhouette-based square thumbnail derivatives is separately tracked in #143, using existing `diamond360` geometry modules. That work can later publish and expose a verified thumbnail URL through the storage-neutral index.
+
+Keyboard-accessible checkboxes and the C1 2–5 selection/shareable URL behavior are preserved; C2 manifest-backed detail remains below the table. On narrow screens the table scrolls horizontally, with selection and report/thumbnail columns sticky to maintain identity while scanning metrics.
