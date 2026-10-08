@@ -16,6 +16,7 @@ from PIL import Image, ImageDraw
 
 from . import asscher_geometry_stability as stability
 from . import asscher_semantic_optical_handoff as handoff
+from . import asscher_semantic_optical_sensitivity as sensitivity
 from . import asscher_pose_sequence as pose
 from . import pipeline
 from . import asscher_wireframe as wireframe
@@ -110,6 +111,7 @@ def replay_stone(cert, source, source_manifest, frozen_root, output):
     # The #89 transfer has the authoritative fixed semantic gauge ID; each
     # canonical frame is only used when its per-source gauge record agrees.
     rows = []
+    sensitivity_frames = []
     records = []
     for idx in SOURCE_INDICES:
         record = by_source.get(idx)
@@ -134,6 +136,11 @@ def replay_stone(cert, source, source_manifest, frozen_root, output):
         report["pose_status_archived"] = expected.get("pose_status")
         report["frame_support_status_archived"] = expected.get("status")
         report["viewer_phase_is_calibrated_physical_rotation"] = False
+        sensitivity_frames.append(
+            sensitivity.sample_frame_sensitivity(
+                scaffold, expected, bright, mask, valid, report
+            )
+        )
         rows.append(report)
         records.append(record)
 
@@ -180,6 +187,10 @@ def replay_stone(cert, source, source_manifest, frozen_root, output):
     (output / "real-fixed-ruler-brightness.json").write_text(
         json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     render_traces(payload, output / "real-fixed-ruler-traces.png")
+    sensitivity_report = sensitivity.summarize(
+        cert, sensitivity_frames, digests, payload["archived_crown_face_selection"]
+    )
+    sensitivity.save(sensitivity_report, output)
     # Keep no intermediate 256-frame canonical image arrays in final artifact.
     return payload
 
@@ -249,6 +260,7 @@ def main():
         "scaffold_refitted":o["scaffold_was_refitted"],
         "face":o["archived_crown_face_selection"],
         "example_support":{k:o["entity_support_summary"][k] for k in PLOT_ENTITIES[:3]},
+        "exposure_support_sensitivity": "exposure-support-sensitivity.json",
     },sort_keys=True))
 
 
