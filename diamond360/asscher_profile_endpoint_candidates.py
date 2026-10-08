@@ -322,8 +322,8 @@ def main():
     args = parser.parse_args()
     result = write_report(args.image,args.auto_json,args.joint_json,args.output)
     print(json.dumps({
-        "upper_pavilion_tip":result["top_cap_candidate"]["status"],
-        "last_crown_bends":{side:row["status"] for side,row in result["last_pavilion_changepoint_candidates"].items()},
+        "upper_pavilion_tip":result["top_pavilion_tip_candidate"]["status"],
+        "last_crown_bends":{side:row["status"] for side,row in result["last_crown_changepoint_candidates"].items()},
         "physical_angles":"unavailable",
     },sort_keys=True))
 
