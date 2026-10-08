@@ -473,3 +473,78 @@ background-first contour is more plausible physical evidence than a
 brightness-maximizing Hough line, but it is **not** proof that every edge is
 the correct 3D silhouette or that it corresponds to a specific P1/P2/P3 plane.
 The internal/virtual optical problem remains tracked separately in #123.
+
+
+## B2e — full-contour changepoints rather than per-fragment lines
+
+The first image-plane overlay on the corrected background-first v2 silhouette
+failed to find most expected visual bends despite a much more credible outer
+trace. Root cause: the original \`asscher_profile_outline_changepoints\`
+function was called *separately for each uninterrupted supported pixel run*.
+Short 1–5-pixel quality-control gaps fragmented each crown into four separate
+regressions; a typical run was too short to justify more than one line.
+It also used a fixed y≈212 split to represent crown/pavilion, before the
+outer girdle region had been localized.
+
+The new **independent** module
+\`diamond360.asscher_profile_auto_changepoints\` consumes only frozen
+\`diamond360-asscher-auto-exterior/2\` source coordinates and a pinned method
+SHA-256, not any optical internal edge, Sergey target angle or inferred
+physical facet label. Earlier assisted human-review and manual trace APIs
+are unchanged.
+
+- Combine **all supported rows** separately on the left and right, keeping
+  missing spans absent rather than filling them with guesses.
+- Jointly find a *band* of near-maximum projected width where both external
+  contours are supported. Its actual y interval is an observed envelope
+  candidate, **not a certified girdle physical junction or a forced symmetry
+  rule**. An unavailable band blocks subsequent semantic inference.
+- Fit crown and pavilion independently, excluding the widest band, with a
+  **continuous piecewise-linear hinge function** \(x(y)\), not independent
+  unconnected lines. The fitting cap is three supported straight stretches
+  per crown/pavilion side, but 1/2/unavailable outcomes are allowed.
+- Minimum span, source sample count, and model-complexity penalty are fixed
+  before comparison with any targets. No \`ground-truth.json\` reading.
+- Rerun model selection at four predetermined additional-segment penalties
+  to expose which breakpoint candidates disappear when the parsimony cost
+  changes. These are **stability diagnostics**, NOT posterior probabilities
+  or calibrated measurement intervals. Left/right choices remain independent.
+- Draw supported original contour and inferred continuous line fits only
+  between nearby *actual* observed source rows; no overlay across long
+  missing-image intervals.
+
+Example on the one archived original photo (image-only coordinates, **not**
+polished angles): a shared widest region around y≈201–221; crown slope-change
+candidates around left y≈80/132 and right y≈80/118; a model-dependent right
+pavilion bend around y≈246. These locations are only visual hypotheses.
+The latter and the right crown model are sensitive to complexity penalty.
+The lower pavilion and shadow/culet are still weakly observed; their physical
+facet-plane attribution remains unsupported.
+
+**Important:** The fact that a piecewise straight line can follow the outer
+profile does not prove it is a specific polished pavilion facet. A profile
+silhouette is the projected extremal envelope of a 3-D faceted stone and may
+switch generators with camera pose or obscure physical tiers. In particular,
+it is not valid to label those bends P1/P2/P3 or compare numerical slopes
+against Sergey before the target-blind geometry output is frozen and a camera
+model is assessed. No change is made to the #75 face-up frozen method.
+
+Run the new experiment after source-hash-pinned v2 contour generation:
+
+\`\`\`bash
+python -m diamond360.asscher_profile_auto_changepoints \
+  --image docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG \
+  --auto-json outputs/asscher-profile-physical-evidence/auto-exterior.json \
+  --output outputs/asscher-profile-physical-evidence
+\`\`\`
+
+Inspect \`joint-changepoints-overlay.png\` and \`joint-changepoints.json\`
+from the focused CI artifact. Yellow dots indicate candidates surviving
+all four penalty variants; orange dots indicate model-sensitive candidates.
+The two amber horizontal lines delimit the **candidate** maximum-width band.
+
+Dedicated synthetic regression checks include 1/2/3 visible straight
+stretches, small missing-evidence gaps, an unavailable one-sided contour,
+an internal-reflection negative control and the source-locked original.
+This is an image-only change-point feasibility experiment, not a scored
+reconstruction of the diamond's physical three-tier facet model.
