@@ -11,6 +11,7 @@ on:
       - "diamond360/asscher_profile_auto_changepoints.py"
       - "diamond360/asscher_profile_endpoint_candidates.py"
       - "diamond360/asscher_profile_conditional_symmetry.py"
+      - "diamond360/asscher_profile_pavilion_fit.py"
       - "diamond360/asscher_profile_feasibility.py"
       - "tests/test_asscher_profile_physical_evidence.py"
       - "tests/test_asscher_profile_outer_contour.py"
@@ -20,6 +21,7 @@ on:
       - "tests/test_asscher_profile_auto_changepoints.py"
       - "tests/test_asscher_profile_endpoint_candidates.py"
       - "tests/test_asscher_profile_conditional_symmetry.py"
+      - "tests/test_asscher_profile_pavilion_fit.py"
       - "tests/test_asscher_profile_feasibility.py"
       - "docs/360/asscher-geometry-validation/PROFILE-PHYSICAL-EVIDENCE.md"
       - "docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG"
@@ -48,7 +50,8 @@ jobs:
             tests.test_asscher_profile_auto_exterior \
             tests.test_asscher_profile_auto_changepoints \
             tests.test_asscher_profile_endpoint_candidates \
-            tests.test_asscher_profile_conditional_symmetry -v
+            tests.test_asscher_profile_conditional_symmetry \
+            tests.test_asscher_profile_pavilion_fit -v
       - name: Emit source-pinned evidence review template
         run: |
           python -m diamond360.asscher_profile_physical_evidence \
@@ -248,6 +251,37 @@ jobs:
           print("Unconfirmed head-on view: mirrored right terminal only a conditional PREVIEW")
           print("Mirror candidate:",r["right_terminal_symmetry_hypothesis"].get("xy_px"))
           print("Image-only proxy:",r["image_only_symmetry_diagnostic"])
+          PY
+      - name: Fit pavilion evidence only and render conditional mirror preview
+        run: |
+          python -m diamond360.asscher_profile_pavilion_fit \
+            --image docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG \
+            --auto-json outputs/asscher-profile-physical-evidence/auto-exterior.json \
+            --joint-json outputs/asscher-profile-physical-evidence/joint-changepoints.json \
+            --endpoint-json outputs/asscher-profile-physical-evidence/endpoint-candidates.json \
+            --output outputs/asscher-profile-physical-evidence
+      - name: Assert pavilion symmetry has not overwritten observed outline or tip
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          directory=Path("outputs/asscher-profile-physical-evidence")
+          report=json.loads((directory/"pavilion-fit.json").read_text())
+          assert report["physical_facet_angles"] == "all_unavailable"
+          assert report["comparison_targets_loaded"] is False
+          assert report["pose_assessment"]["status"] == "not_confirmed"
+          assert report["shared_symmetry_model"]["status"] == "counterfactual_not_adopted"
+          assert report["shadow_unresolved_region"]["tip_or_culet_xy_px"] is None
+          assert all(m["physical_facet_correspondence"]=="not_established"
+                     for m in report["independent_pavilion_models"].values())
+          assert all(p["provenance"]=="MODEL_ONLY_NOT_PIXEL_OBSERVED"
+                     for p in report["shared_symmetry_model"]["inferred_right_points_only_where_no_right_source_support"])
+          assert (directory/"pavilion-only-overlay.png").is_file()
+          print("Pavilion observations preserved, symmetry is preview only, shadow tip unavailable")
+          print("Independent segments:",{side:m["selected_segment_count"]
+                                        for side,m in report["independent_pavilion_models"].items()})
+          print("Pavilion paired QC:",report["pavilion_paired_alignment"])
+          print("Mirrored-only points:",len(report["shared_symmetry_model"]["inferred_right_points_only_where_no_right_source_support"]))
           PY
       - name: Upload review template
         uses: actions/upload-artifact@v4
