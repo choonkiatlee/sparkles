@@ -233,7 +233,9 @@ class ProgressiveRotationProcessor:
             {
                 "supplier": source,
                 "frame_count": FRAME_COUNT,
+                "dimensions": expected_dimensions or frames[0].dimensions,
                 "sequence_complete": True,
+                "physical_angle_calibrated": False,
                 "ordering": "scramble inverse permutation + progressive odd-position interleave",
             }
         )
