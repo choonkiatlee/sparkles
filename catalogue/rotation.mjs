@@ -93,7 +93,7 @@ export function createFramePreloader({
 
   let stopped=false, active=0;
   const entries=new Map(), decoded=new Map(), completed=new Set(), failures=new Set();
-  const background=[], listeners=new Set();
+  const background=[], backgroundSet=new Set(), listeners=new Set();
   let urgent=[];
 
   const stats=()=>({mode,active,queued:background.length+urgent.length,
@@ -127,7 +127,9 @@ export function createFramePreloader({
   }
   function pump() {
     while(!stopped && active<maxConcurrent && (urgent.length || background.length)) {
-      const url=urgent.length?urgent.shift():background.shift();
+      const fromUrgent=urgent.length>0;
+      const url=fromUrgent?urgent.shift():background.shift();
+      if(!fromUrgent)backgroundSet.delete(url);
       const record=entries.get(url);
       if(!record || record.state!=="queued") continue;
       record.state="loading";active++;
@@ -203,7 +205,9 @@ export function createFramePreloader({
           const frame=seq.frames[i];
           if(!frame)continue;
           const record=queuedRecord(frame.url);
-          if(record.state==="queued")background.push(frame.url);
+          if(record.state==="queued" && !backgroundSet.has(frame.url)){
+            background.push(frame.url);backgroundSet.add(frame.url);
+          }
         }
       }
     }else{
@@ -214,7 +218,9 @@ export function createFramePreloader({
                  (current-i+seq.frameCount)%seq.frameCount]){
             const url=seq.frames[index].url;
             const record=queuedRecord(url);
-            if(record.state==="queued")background.push(url);
+            if(record.state==="queued" && !backgroundSet.has(url)){
+              background.push(url);backgroundSet.add(url);
+            }
           }
         }
       }
@@ -231,7 +237,7 @@ export function createFramePreloader({
   }
   function stop() {
     if(stopped)return;
-    stopped=true;urgent=[];background.length=0;
+    stopped=true;urgent=[];background.length=0;backgroundSet.clear();
     for(const record of entries.values()){
       if(record.state==="queued")record.resolve(null);
       // Any active request will settle itself when its browser event fires;
