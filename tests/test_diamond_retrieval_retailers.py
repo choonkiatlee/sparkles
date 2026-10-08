@@ -10,6 +10,8 @@ from diamond_retrieval import (
     CERTIFICATE,
     ROTATION,
     STILL,
+    VIDEO,
+    StandardRetrievalPolicy,
     CompletionAssessment,
     EvidenceStatus,
     HttpResponse,
@@ -28,6 +30,8 @@ from diamond_retrieval.retailers import (
 FIXTURES = Path(__file__).parent / "fixtures" / "diamond_retrieval"
 MOTION_AUDITS = json.loads((FIXTURES / "motion-audits.json").read_text())["audits"]
 GRAPHQL_URL = "https://g.nivoda.com/graphql-public-loupe360"
+DIRECT_VIDEO = "https://media.example.test/exact-stone.mp4"
+VIDEO_BYTES = b"\x00\x00\x00\x18ftypisom\x00\x00\x02\x00isommp41fixture"
 DIYONA_URL = "https://diyona.com/pages/diamond-detail?sku=B934F4533"
 QD_URL = (
     "https://www.qualitydiamonds.co.uk/loose-diamonds/"
@@ -409,6 +413,151 @@ class RetailerEndToEndTests(unittest.TestCase):
                 )
             },
         )
+
+    @staticmethod
+    def add_listing_media(http, *tags):
+        html, media_type = http.responses[QD_URL]
+        http.responses[QD_URL] = (
+            html.replace(b"</body>", ("".join(tags) + "</body>").encode()),
+            media_type,
+        )
+
+    def test_two_direct_supplier_rotations_are_retained(self):
+        http = self.qd_http()
+        dia_viewer = "https://vision.diajewel360.com/Vision360.html?d=MULTI-A-1"
+        dia_root = "https://vision.diajewel360.com/imaged/MULTI-A-1"
+        core_viewer = "https://v3603703.v360.in/vision360.html?d=MULTI-B-1"
+        core_root = "https://v3603703.v360.in/imaged/MULTI-B-1"
+        self.add_listing_media(
+            http,
+            f'<iframe src="{dia_viewer}"></iframe>',
+            f'<iframe src="{core_viewer}"></iframe>',
+            f'<a href="{dia_viewer}">duplicate link</a>',
+        )
+        http.responses.update(
+            _progressive_source_responses(MOTION_AUDITS[0], dia_root, version=1)
+        )
+        http.responses.update(
+            _progressive_source_responses(
+                MOTION_AUDITS[1], core_root, version=2, workshop=True
+            )
+        )
+        result = retrieve_diamond(QD_URL, config=default_config(http))
+        self.assertEqual(result.status, ResultStatus.COMPLETE)
+        self.assertEqual(len(result.rotations), 2)
+        self.assertEqual([x.metadata["supplier"] for x in result.rotations], ["diajewel", "core360"])
+        self.assertTrue(all(len(x.frames) == 256 for x in result.rotations))
+        self.assertEqual(len(result.certificates), 1)
+        self.assertEqual(len(http.post_calls), 0)
+        self.assertEqual(http.calls.count(dia_root + "/0.json"), 1)
+
+    def test_direct_rotation_and_video_are_both_preserved_and_independently_selectable(self):
+        http = self.qd_http()
+        viewer = "https://vision.diajewel360.com/Vision360.html?d=ROT-VIDEO-1"
+        root = "https://vision.diajewel360.com/imaged/ROT-VIDEO-1"
+        self.add_listing_media(
+            http,
+            f'<iframe src="{viewer}"></iframe>',
+            f'<video src="{DIRECT_VIDEO}"></video>',
+        )
+        http.responses.update(
+            _progressive_source_responses(MOTION_AUDITS[0], root, version=1)
+        )
+        http.responses[DIRECT_VIDEO] = (VIDEO_BYTES, "video/mp4")
+        result = retrieve_diamond(QD_URL, config=default_config(http))
+        self.assertEqual(result.status, ResultStatus.COMPLETE)
+        self.assertEqual(len(result.rotations), 1)
+        self.assertEqual(len(result.videos), 1)
+        self.assertEqual(result.videos[0].payload, VIDEO_BYTES)
+        self.assertEqual(result.videos[0].media_type, "video/mp4")
+        self.assertEqual(len(result.rotations[0].frames), 256)
+        self.assertEqual(http.calls.count(DIRECT_VIDEO), 1)
+        self.assertEqual(len(http.post_calls), 0)
+
+        class ExcludeVideoPolicy(StandardRetrievalPolicy):
+            def select(self, listing, reference):
+                return reference.kind != VIDEO and super().select(listing, reference)
+
+        other_http = self.qd_http()
+        self.add_listing_media(
+            other_http,
+            f'<iframe src="{viewer}"></iframe>',
+            f'<video src="{DIRECT_VIDEO}"></video>',
+        )
+        other_http.responses.update(
+            _progressive_source_responses(MOTION_AUDITS[0], root, version=1)
+        )
+        config = default_config(other_http)
+        from dataclasses import replace
+        filtered = retrieve_diamond(
+            QD_URL, config=replace(config, policy=ExcludeVideoPolicy())
+        )
+        self.assertEqual(filtered.status, ResultStatus.COMPLETE)
+        self.assertEqual(len(filtered.rotations), 1)
+        self.assertEqual(filtered.videos, ())
+        self.assertNotIn(DIRECT_VIDEO, other_http.calls)
+        self.assertTrue(
+            any(x.kind == VIDEO and x.status == EvidenceStatus.NOT_REQUESTED for x in filtered.attempts)
+        )
+
+    def test_loupe_record_with_rotation_and_video_downloads_both(self):
+        http = self.qd_http()
+        payload = json.loads(http.post_responses[GRAPHQL_URL][0])
+        payload["data"]["certificate_by_cert_number"]["video"] = DIRECT_VIDEO
+        http.post_responses[GRAPHQL_URL] = (
+            json.dumps(payload).encode(), "application/json"
+        )
+        http.responses[DIRECT_VIDEO] = (VIDEO_BYTES, "video/mp4")
+        result = retrieve_diamond(QD_URL, config=default_config(http))
+        self.assertEqual(result.status, ResultStatus.COMPLETE)
+        self.assertEqual(len(result.rotations), 1)
+        self.assertEqual(len(result.videos), 1)
+        self.assertEqual(result.videos[0].payload, VIDEO_BYTES)
+        self.assertEqual(len(http.post_calls), 1)
+
+    def test_listing_and_loupe_duplicate_asset_download_once_and_keep_both_sources(self):
+        http = self.qd_http()
+        core_viewer = "https://v3603703.v360.in/vision360.html?d=QD-TEST-713574578"
+        root = "https://v3603703.v360.in/imaged/QD-TEST-713574578"
+        loupe = "https://loupe360.com/diamond/qd-fixture-certificate"
+        self.add_listing_media(
+            http,
+            f'<iframe src="{core_viewer}"></iframe>',
+            f'<a href="{loupe}">Loupe</a>',
+        )
+        result = retrieve_diamond(QD_URL, config=default_config(http))
+        self.assertEqual(result.status, ResultStatus.COMPLETE)
+        self.assertEqual(len(result.rotations), 1)
+        self.assertEqual(len(http.post_calls), 1)
+        self.assertEqual(http.calls.count(root + "/0.json?version="), 1)
+        self.assertTrue(
+            any(x.status == EvidenceStatus.DUPLICATE and x.kind == ROTATION for x in result.attempts)
+        )
+        sources = {step.source for step in result.rotations[0].provenance}
+        self.assertIn("quality_diamonds_listing", sources)
+        self.assertIn("loupe360_exact_certificate", sources)
+
+    def test_second_supported_media_failure_keeps_first_and_marks_partial(self):
+        http = self.qd_http()
+        core_viewer = "https://v3603703.v360.in/vision360.html?d=QD-TEST-713574578"
+        self.add_listing_media(
+            http,
+            f'<iframe src="{core_viewer}"></iframe>',
+            f'<video src="{DIRECT_VIDEO}"></video>',
+        )
+        # Deliberately no video response; fake HTTP returns 404.
+        result = retrieve_diamond(QD_URL, config=default_config(http))
+        self.assertEqual(result.status, ResultStatus.PARTIAL)
+        self.assertEqual(len(result.certificates), 1)
+        self.assertEqual(len(result.rotations), 1)
+        self.assertEqual(result.videos, ())
+        failures = [
+            x for x in result.attempts
+            if x.kind == VIDEO and x.status == EvidenceStatus.DOWNLOAD_FAILED or
+            x.kind == VIDEO and x.status == EvidenceStatus.MISSING
+        ]
+        self.assertEqual(len(failures), 1)
+        self.assertEqual(failures[0].locator, DIRECT_VIDEO)
 
     def test_default_composition_quality_diamonds_returns_complete_ordered_motion(self):
         http = self.qd_http()
