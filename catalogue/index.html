@@ -7,6 +7,7 @@
   <title>Sparkles · Saved diamond catalogue</title>
   <link rel="stylesheet" href="./styles.css">
   <script src="./app.mjs" type="module"></script>
+  <script src="./ingest-request-form.mjs" type="module"></script>
 </head>
 <body>
   <a class="skip" href="#catalogue">Skip to saved diamonds</a>
@@ -21,6 +22,21 @@
       <p class="eyebrow">Diamond research · Saved evidence</p>
       <h1>Saved diamonds</h1>
       <p>Scan the essentials, select 2–5 stones, then open the detailed comparison. Prices retain their original currencies and tax qualifications.</p>
+    </section>
+    <section class="ingest-request" aria-labelledby="add-diamond-heading">
+      <div class="ingest-description">
+        <h2 id="add-diamond-heading">Add a diamond</h2>
+        <p>Paste an exact Quality Diamonds or Diyona listing. Sparkles will retrieve its available certificate, images and 360 evidence.</p>
+      </div>
+      <form id="add-diamond-form">
+        <label for="diamond-request-url">Diamond listing URL</label>
+        <div class="ingest-fields">
+          <input id="diamond-request-url" name="diamond_url" type="url" placeholder="https://www.qualitydiamonds.co.uk/..." inputmode="url" autocomplete="url" spellcheck="false" required>
+          <button type="submit">Continue on GitHub ↗</button>
+        </div>
+        <p class="ingest-hint">Review and submit the prefilled GitHub issue. Only requests created by the repository owner launch ingestion; no token is stored on this page.</p>
+        <p class="ingest-error" id="diamond-request-error" role="alert" hidden></p>
+      </form>
     </section>
     <section id="catalogue" aria-labelledby="catalogue-title">
       <div class="section-heading">
