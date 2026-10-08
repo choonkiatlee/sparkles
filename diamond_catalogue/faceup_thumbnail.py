@@ -125,7 +125,7 @@ def assess_image(image: Image.Image, *, position: int) -> dict:
 def choose_frame(assessments: list[dict], *, sequence_complete: bool) -> dict:
     """Select a likely crown view where resolved, otherwise review-only crop."""
     records = [a["record"] for a in assessments]
-    if not records or [r["position"] for r in records] != list(range(len(records))):
+    if len(records) < 16 or [r["position"] for r in records] != list(range(len(records))):
         return {"status": "unavailable", "reason": "incomplete_sample_set"}
     face = asscher_pose_sequence.resolve_face_lobes(
         records, sequence_complete=sequence_complete,
