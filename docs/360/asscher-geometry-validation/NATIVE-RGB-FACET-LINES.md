@@ -18,14 +18,60 @@ This follow-on PR tests a different primitive: **long, coherent straight segment
 
 The detector does not use the frozen C3 `u=.478/.579` positions, existing radial contrast maxima, the v3/v4 selection score, or any certificate-specific tuning.
 
+## First four-stone visual/measurement result (8 Oct 2026)
+
+The full hash-pinned original camera-RGB diagnostic finished successfully in
+[workflow run 37797799152](https://github.com/choonkiatlee/sparkles/actions/runs/37797799152).
+Its artifact contains original RGB, observed-only line segments and independent
+corner QC for all 20 selected images (5 per stone).
+
+| Diamond | Independently supported inner side counts, selected frames | Closed corner-supported rings |
+| --- | --- | --- |
+| IGI-LG756520111 | 4, 3, 3, 4, 4 (src 16, 13, 18, 19, 17) | 0/5 |
+| IGI-LG756580087 | 4, 7, 6, 7, 2 (src 19, 5, 2, 4, 250) | 0/5 |
+| IGI-LG818659722 | 3, 3, 3, 5, 4 (src 8, 13, 11, 6, 10) | 0/5 |
+| IGI-LG836619414 | 5, 4, 3, 3, 4 (src 16, 252, 5, 2, 3) | 0/5 |
+
+**The fail-closed corner rule is working:** none of 20 frames passes all
+eight independently supported side requirements and no octagon is invented.
+Native RGB inspection of LG756520111 src13/src16 and LG818659722 src10
+also shows that some independently detected *straight* gradient fragments
+appear **inside visible facets**, or along virtual/reflection features,
+rather than demonstrated facet-to-facet junctions. Segment straightness
+is insufficient to establish physical boundary identity.
+
+The #73 face-lobe resolution is not always decisive:
+LG756520111 and LG818659722 have `face_selection.status=resolved`
+with selected views marked `likely_crown_lobe`, whereas LG756580087
+and LG836619414 have `face_selection.status=not_needed` and selected
+views have `face_role=unresolved`. Do not assume these latter sources
+confirm crown/table structure from the current metadata.
+
+**Research disposition: REVISE, no estimator promotion.** Keep the
+observed-segment diagnostic as a reproducible negative baseline.
+The next method should inspect junction/corner **co-occurrence and
+connected facet boundary networks** on original RGB rather than
+promoting any long contrast line into an octagon. Explicitly distinguish
+unresolved face identity and insufficient junction evidence from failure
+of the optimization. No certificate-specific radial priors.
+
 ## Limitations and acceptance
 
-The sequence normalization is a **2D similarity**, not calibrated view rectification. Broad side-family orientation is only a hypothesis about true inner facet junctions. Corner intersections are not automatically evidence of polished facet corners. Even coherent long lines can be reflections.
+The sequence normalization is a **2D similarity**, not calibrated view rectification.
+Broad side-family orientation is only a hypothesis about true inner facet
+junctions. Corner intersections are not automatically evidence of polished facet
+corners. Even coherent long lines can be reflections.
 
-- [ ] Synthetic tests show line support, missing-side abstention, valid camera map, independent corner intersections; frozen production method unchanged.
-- [ ] All four fixed-source rotations replay with unchanged selected crown frames.
-- [ ] Inspect source camera-RGB panels, especially LG756520111 source 13/16 and LG818659722. Determine whether any accepted *segments* actually lie on real facet junctions.
-- [ ] Preserve unavailable/partial observations instead of forcing eight supported lines.
-- [ ] Declare REVISE/KEEP/REJECT for this observational approach. Do not infer true facet topology solely from its geometric regularity.
+- [x] Synthetic and exact-camera-projection tests passed, and the immutable
+      estimator specification remains unchanged.
+- [x] All four fixed-source rotations replayed with unchanged #96 source
+      selection; all five CI workflows completed successfully.
+- [x] Reviewed source camera-RGB panels including LG756520111 source 13/16
+      and LG818659722. Identified interior contrast fragments and missing
+      junction support; true-facet identity **not established**.
+- [x] Preserved unavailable/partial observations instead of forcing
+      eight supported lines (0/20 closed polygons).
+- [x] Research disposition declared: **REVISE**, keep diagnostic only.
 
-No #90 source stress. No alteration to `asscher_steps`, `asscher_wireframe`, estimator routing or product quality score.
+No #90 source stress. No alteration to `asscher_steps`, `asscher_wireframe`,
+estimator routing or product quality score.
