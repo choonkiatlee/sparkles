@@ -101,7 +101,7 @@ class AssistedProfileReviewTests(unittest.TestCase):
     def test_rejects_trace_outside_review_roi_and_source(self):
         cases = (
             ([[3, 3], [20, 10]], "outside stated review ROI"),
-            ([[60, 175], [490, 195]], "outside source-image coordinates"),
+            ([[60, 195], [490, 195]], "outside source-image coordinates"),
             ([[55, 165]], "trace must be empty"),
         )
         for trace, message in cases:
