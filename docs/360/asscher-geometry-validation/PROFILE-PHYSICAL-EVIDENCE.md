@@ -1,3 +1,26 @@
+> **CRITICAL SOURCE-ORIENTATION CORRECTION — 2026-10-08 (#91 / draft #118).**
+> This photograph is viewed upside-down relative to the first software labels.
+> The **pointed upper source-image region (y≈54–201)** is the **PAVILION**
+> (pointed culet-region tip at the top); the wider y≈201–221 transition is
+> a **candidate GIRLDE BAND** (not verified); and the **shorter, broad lower
+> region (y≈221–~290)** is the **CROWN / table-region side**.
+>
+> Prior sections below document historical experiments using the **wrong
+> labels**: prior \`left_crown/right_crown\` fits near y≈80/132 were in fact
+> pavilion fits; old lower y≈251–273 \`pavilion\` experiments were **crown
+> evidence**, not P1/P2/P3 measurements. They must not be cited as physical
+> pavilion results. The orientation-aware source methods now use the
+> \`pointed_upper_pavilion_broad_lower_crown\` contract, with versioned
+> outputs and fail-closed checks; original pixel y coordinates are unchanged.
+> The old misnamed \`asscher_profile_pavilion_fit.py\` and its tests were
+> removed. The remaining \`asscher_profile_pavilion_refinement.py\` is
+> rebuilt to fit **upper** source-image rows only, excluding all lower crown
+> pixels. A small rasterized point at the top is a *culet-region / tip
+> candidate*, **not** a certified polished culet facet.
+>
+> This scientific correction was prompted by visual anatomy review and
+> did **not** involve tuning toward Sergey target angles.
+>
 # #91 PR B1: separate physical from optical/virtual-facet evidence
 
 ## Why this correction matters
