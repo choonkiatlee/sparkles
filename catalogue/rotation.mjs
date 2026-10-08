@@ -47,7 +47,9 @@ export function extractRotation(evidence) {
     });
     if (frames.some(x=>x===null) ||
         new Set(frames.map(x=>x.sourceIndex)).size !== count) continue;
-    return {status:"available",frameCount:count,frames};
+    const totalBytes=rotation.frames.reduce((sum,frame)=>
+      sum+(Number.isFinite(frame.asset?.byte_count) ? frame.asset.byte_count : 0),0);
+    return {status:"available",frameCount:count,frames,totalBytes};
   }
   const hasVideo=Array.isArray(evidence) && evidence.some(e=>
     e?.kind==="video" && e.status==="success" && assetUrl(e.payload_asset));
@@ -95,6 +97,7 @@ export function createFramePreloader({
   const entries=new Map(), decoded=new Map(), completed=new Set(), failures=new Set();
   const background=[], backgroundSet=new Set(), listeners=new Set();
   let urgent=[];
+  let previousFullSignature="";
 
   const stats=()=>({mode,active,queued:background.length+urgent.length,
     total:entries.size,completed:completed.size,failed:failures.size,
@@ -197,6 +200,12 @@ export function createFramePreloader({
     if(stopped || mode==="none")return;
     const available=sequences.filter(seq=>seq?.status==="available");
     if(mode==="all"){
+      const signature=available.map(seq=>seq.frameCount+":"+seq.frames[0].url).join("|");
+      if(signature===previousFullSignature)return;
+      previousFullSignature=signature;
+      // Rebuild the not-yet-started queue so newly loaded stones are not
+      // starved behind the first stone's remaining 256 frames.
+      background.length=0;backgroundSet.clear();
       // Interleave stones: two 256-frame stones must both make progress,
       // rather than fully fetching the first before starting the second.
       const largest=Math.max(0,...available.map(seq=>seq.frameCount));
@@ -211,6 +220,7 @@ export function createFramePreloader({
         }
       }
     }else{
+      background.length=0;backgroundSet.clear();
       for(const seq of available){
         const current=frameIndexAt(position,seq.frameCount);
         for(let i=1;i<=nearbyRadius;i++){
