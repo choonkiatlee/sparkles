@@ -154,3 +154,12 @@ h1{font:normal clamp(42px,6vw,72px)/1.06 Georgia,"Times New Roman",serif;letter-
   .motion-image-stage{height:175px}
   .motion-prefetch-row{align-items:flex-start}
 }
+
+/* Small, token-free GitHub issue handoff above the saved diamond grid. */
+.ingest-request{display:grid;grid-template-columns:minmax(170px,.75fr) minmax(0,1.7fr);gap:16px 25px;align-items:center;margin:0 0 24px;padding:17px 20px;border:1px solid var(--line);border-radius:11px;background:var(--card)}
+.ingest-description h2{font-size:16px;margin:0 0 4px}.ingest-description p{font-size:12px;color:var(--muted);margin:0}
+.ingest-request form{min-width:0}.ingest-request form label{display:block;font-size:12px;font-weight:650;margin-bottom:5px}
+.ingest-fields{display:flex;align-items:stretch;gap:9px}.ingest-fields input{flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;background:white;color:var(--ink);padding:9px 11px;font-size:13px}
+.ingest-fields button{flex:0 0 auto;white-space:nowrap;font-size:12px;padding:9px 12px}
+.ingest-request .ingest-hint{font-size:11px;color:var(--muted);margin:7px 0 0}.ingest-request .ingest-error{font-size:12px;color:#8f3925;margin:7px 0 0}
+@media(max-width:700px){.ingest-request{grid-template-columns:1fr;padding:14px;gap:11px;margin-bottom:18px}.ingest-fields{flex-direction:column}.ingest-fields input{width:100%}}
