@@ -1,0 +1,31 @@
+name: diamond-catalogue-contract
+
+on:
+  pull_request:
+    paths:
+      - "diamond_catalogue/**"
+      - "tests/test_diamond_catalogue*.py"
+      - "docs/diamond-catalogue.md"
+      - "pyproject.toml"
+      - ".github/workflows/diamond-catalogue-contract.yml"
+  workflow_dispatch:
+
+jobs:
+  catalogue-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install package
+        run: python -m pip install -e .
+      - name: Verify catalogue contract and existing retrieval tests
+        run: |
+          python -m unittest tests.test_diamond_catalogue -v
+          python -m unittest tests.test_diamond_catalogue_integration -v
+          python -m unittest tests.test_diamond_retrieval -v
+          python -m unittest tests.test_diamond_retrieval_retailers -v
+          python -m unittest tests.test_diamond_retrieval_motion -v
+          python -m unittest tests.test_diamond_retrieval_media -v
