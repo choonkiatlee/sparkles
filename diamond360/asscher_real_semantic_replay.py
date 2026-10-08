@@ -1,8 +1,8 @@
 """#92 real crown-frame optical support replay (one pinned stone; no refit).
 
-Consumes the original #89 archived fixed stone-level scaffold AND its frame
-transfer records. Reruns the source preprocessing/pose registration solely
-to reconstruct source brightness arrays, not to alter semantic geometry.
+Reproduces the single #89 frozen-method primary fit ONCE on one pinned real
+stone, then applies the same frozen #89 fixed-ruler support diagnostics and
+samples actual canonical source frames. No per-frame estimator refit.
 """
 from __future__ import annotations
 
@@ -18,6 +18,7 @@ from . import asscher_pose_sequence as pose
 from . import asscher_geometry_stability as stability
 from . import asscher_semantic_optical_handoff as handoff
 from . import pipeline, asscher_wireframe as wireframe
+from . import asscher_geometry_validation as validation
 
 SCHEMA = "diamond360-asscher-real-fixed-ruler-optical-replay/1"
 CERTIFICATE = "IGI-LG756520111"
@@ -31,7 +32,10 @@ POLICY = {
     "frozen_89_artifact_run": 37830584391,
     "frozen_89_primary_sha256": FROZEN_PRIMARY_SHA256,
     "frozen_89_transfer_sha256": FROZEN_TRANSFER_SHA256,
-    "no_estimator_fit_called": True,
+    "one_primary_frozen_method_fit": True,
+    "per_frame_estimator_refit_count": 0,
+    "reference_89_original_selected_source_indices": [13,16,17,18,19],
+    "reference_89_original_semantic_gauge_id": "asscher-sequence-gauge-v1:253:0",
     "brightness": "real_original_source_canonical_lowpass_brightness",
     "preprocessing": "recompute_source_gauge_only_using_frozen_89_code",
     "source_camera_for_qc": "original_rgb_optional_unchanged_scaffold_projection",
@@ -144,8 +148,8 @@ def _render_examples(processed_path, record_map, report, frozen_scaffold, output
     output_img.save(output/"real-crown-fixed-ruler-rgb.png")
 
 
-def replay(source_dir, source_manifest, frozen_primary, frozen_transfer, output):
-    scaffold, transfers=verify_frozen_archive(frozen_primary,frozen_transfer)
+def replay(source_dir, source_manifest, output):
+    """One audited primary fit; no later geometry fit for source brightness."""
     output=Path(output)
     output.mkdir(parents=True,exist_ok=True)
     proc=output/"processed"
@@ -153,48 +157,94 @@ def replay(source_dir, source_manifest, frozen_primary, frozen_transfer, output)
     pipeline.run(source_dir,proc,source_manifest,gain=1.0,accept_review=True)
     pose.analyse_processed_sequence(proc,posed,persist_canonical=True)
     source_payload=json.loads((posed/"asscher-pose.json").read_text(encoding="utf-8"))
+    validation.assert_frozen_method(validation.OUTER_METHOD)
     gauge_id=wireframe._gauge_id(source_payload)
-    if gauge_id != scaffold["semantic_gauge"]["gauge_id"]:
-        raise ValueError("reprocessed source gauge differs from original frozen #89")
+    if gauge_id != POLICY["reference_89_original_semantic_gauge_id"]:
+        raise ValueError("reprocessed source gauge differs from archived #89")
+    primary, selected, _, _ = stability._primary_fit(
+        posed,source_payload,method=validation.OUTER_METHOD
+    )
+    if primary.get("scaffold") is None:
+        raise ValueError("reproduced primary geometry unavailable")
+    scaffold=primary["scaffold"]
+    if scaffold["semantic_gauge"]["gauge_id"] != gauge_id:
+        raise ValueError("primary semantic gauge does not match source")
+    selected_ids=sorted(v["source_index"] for v in selected)
+    if selected_ids != POLICY["reference_89_original_selected_source_indices"]:
+        raise ValueError("reproduced source selection differs from frozen #89")
     by_index={record.get("source_index"):record
               for record in source_payload.get("frames",[])}
-    records=[]
+    selected_positions={row.get("position") for row in selected}
+    crown_peak=source_payload.get("face_selection",{}).get(
+        "likely_crown_peak_position"
+    )
+    if source_payload.get("face_selection",{}).get("status")!="resolved":
+        raise ValueError("selected source crown face role unresolved")
     frames=[]
+    records=[]
     for index in SELECTED_SOURCE_INDICES:
         record=by_index.get(index)
         if not record or not (record.get("canonical") or {}).get("path"):
-            raise ValueError(f"source frame {index} unavailable in recomputed pose")
-        transfer=transfers[index]
-        meta=stability._metadata(record)
-        if meta["position"] != transfer.get("position"):
-            raise ValueError("recomputed source position differs from original #89")
-        if meta["gauge_quarter_turn"] != transfer.get("gauge_quarter_turn"):
-            raise ValueError("recomputed quarter-turn branch differs from #89")
-        phase=meta["rotation_phase_deg"]
-        frozen_phase=transfer.get("rotation_phase_deg")
-        if phase is None or frozen_phase is None or abs(phase-frozen_phase)>1e-8:
-            raise ValueError("recomputed source phase differs from original #89")
+            raise ValueError(f"source frame {index} unavailable")
         brightness,gauge_mask,valid=stability._load_gauged_arrays(posed,record)
+        u,frame_evidence=wireframe.extract_sector_evidence(
+            brightness,gauge_mask,valid
+        )
+        meta=stability._metadata(record)
+        if meta["source_index"] != index or meta["position"] != index:
+            raise ValueError("reprocessed source position differs from frozen #89")
+        expected_phase=(index+3)*360.0/256.0
+        if (meta["rotation_phase_deg"] is None
+             or abs(meta["rotation_phase_deg"]-expected_phase)>1e-8
+             or meta["gauge_quarter_turn"]!=0):
+            raise ValueError("reprocessed #80 phase/quarter turn differs from frozen #89")
+        transfer=stability.transfer_fixed_ruler_frame(
+            frame_evidence,u,primary,frame_metadata=meta,
+            crown_peak_position=crown_peak,
+            sequence_size=len(source_payload.get("frames",[])),
+            in_primary_fit=record.get("position") in selected_positions,
+        )
+        transfer["transfer_scope"]="crown_view_window"
+        if transfer.get("refit_performed") is not False:
+            raise ValueError("unexpected per-frame geometric refit")
         frames.append((transfer,brightness,gauge_mask,valid,None))
         records.append(record)
     report=handoff.sample_sequence(scaffold,frames)
+    expected_status_counts={
+        4:(30,21,4),8:(31,20,4),12:(34,17,4),16:(34,17,4),
+        20:(32,19,4),24:(30,21,4),28:(27,24,4),
+    }
+    for frame in report["frames"]:
+        counts=tuple(sum(row["geometry_support_status"]==status
+                         for row in frame["entities"])
+                     for status in ("ok","review","unavailable"))
+        if counts!=expected_status_counts[frame["source_index"]]:
+            raise ValueError(
+                "fixed semantic support differs from archived #89 "
+                f"for source {frame['source_index']}: {counts}"
+            )
     report.update({
         "replay_schema_version":SCHEMA,
         "real_source_certificate":CERTIFICATE,
         "source_frame_indices":list(SELECTED_SOURCE_INDICES),
-        "frozen_primary_sha256":FROZEN_PRIMARY_SHA256,
-        "frozen_transfer_sha256":FROZEN_TRANSFER_SHA256,
+        "archived_89_primary_sha256":FROZEN_PRIMARY_SHA256,
+        "archived_89_transfer_sha256":FROZEN_TRANSFER_SHA256,
         "reprocessed_gauge_equals_original":True,
-        "has_any_new_geometry_fits":False,
-        "face_role":"likely_crown_lobe_frozen_89",
+        "frozen_method_primary_fit_count":1,
+        "per_frame_geometry_refit_count":0,
+        "frozen_89_source_selection_verified":True,
+        "frozen_89_7_frame_status_counts_verified":True,
+        "has_any_new_geometry_fits":True,
+        "face_role":"likely_crown_lobe_from_89",
         "source_reading":"canonical_measurement_brightness_not_raw_RGB",
         "normalized_values_present":False,
         "physical_inner_facets_verified":False,
         "quality_or_optical_score_computed":False,
         "interpretation":(
-            "These are image-plane pixel mean brightness values from real "
-            "source frames, sampled with a frozen stone-level semantic scaffold. "
-            "They do not identify a polished facet or separate virtual optics."
+            "A single source-wide #89 frozen-method primary geometry fit "
+            "was reproduced before frame sampling. The ruler is held fixed "
+            "through seven actual crown frames; per-frame refit count is zero. "
+            "Image-plane brightness cannot prove polished-facet ownership."
         ),
     })
     (output/"real-crown-handoff.json").write_text(
@@ -203,23 +253,20 @@ def replay(source_dir, source_manifest, frozen_primary, frozen_transfer, output)
     _render_examples(proc,{x["source_index"]:x for x in records},report,scaffold,output)
     return report
 
-
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source",required=True,type=Path)
     parser.add_argument("--source-manifest",required=True,type=Path)
-    parser.add_argument("--frozen-primary",required=True,type=Path)
-    parser.add_argument("--frozen-transfer",required=True,type=Path)
     parser.add_argument("--output",required=True,type=Path)
     args=parser.parse_args()
-    result=replay(args.source,args.source_manifest,args.frozen_primary,
-                  args.frozen_transfer,args.output)
+    result=replay(args.source,args.source_manifest,args.output)
     print(json.dumps({
         "status":result["status"],
         "certificate":result["real_source_certificate"],
         "frames":result["counts"]["frames"],
         "entities":result["counts"]["entities"],
-        "refit":result["has_any_new_geometry_fits"],
+        "primary_fit_count":result["frozen_method_primary_fit_count"],
+        "per_frame_refit_count":result["per_frame_geometry_refit_count"],
     },sort_keys=True))
 
 
