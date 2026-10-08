@@ -76,3 +76,61 @@ test("360 player keeps prior decoded frames until both new columns are ready",as
     globalThis.document=priorDocument;globalThis.Image=priorImage;
   }
 });
+
+test("drag gestures coalesce to one seek per paint and do not flicker captions",async()=>{
+  const oldDoc=globalThis.document,oldImage=globalThis.Image;
+  const oldRaf=globalThis.requestAnimationFrame,oldCancel=globalThis.cancelAnimationFrame;
+  const requests=[],pendingFrames=[],cancelled=[];
+  class FakeImage extends Element {
+    set src(url){this._src=url;requests.push(this);}
+    get src(){return this._src;}
+    decode(){return Promise.resolve();}
+  }
+  globalThis.document={createElement:tag=>new Element(tag)};
+  globalThis.Image=FakeImage;
+  globalThis.requestAnimationFrame=callback=>{pendingFrames.push(callback);return pendingFrames.length;};
+  globalThis.cancelAnimationFrame=id=>cancelled.push(id);
+  try {
+    const host=new Element("div"),slot=new Element("td");
+    const player=createRotationPlayer({host,slots:new Map([["a",slot]]),
+      config:{mode:"none",nearbyRadius:2,maxConcurrent:4,maxDecoded:8}});
+    player.setStone("a",makeSequence("a"),null,"IGI A");
+    const figure=slot.children[0],stage=figure.children[0];
+    assert.equal(figure.children.length,2,"no per-frame figcaption below the image");
+    assert.equal(host.children[1].children.length,1,"no fast-changing preload counter");
+    requests[0].onload();
+    await flush();
+    assert.ok(stage.children[0].src.endsWith("/0.jpg"));
+
+    stage.handlers.pointerdown({type:"pointerdown",pointerType:"mouse",button:0,
+      pointerId:4,clientX:100});
+    stage.handlers.pointermove({type:"pointermove",pointerId:4,clientX:130});
+    stage.handlers.pointermove({type:"pointermove",pointerId:4,clientX:190});
+    stage.handlers.pointermove({type:"pointermove",pointerId:4,clientX:325});
+    assert.equal(pendingFrames.length,1,"only the latest pointer movement is scheduled");
+    assert.equal(requests.length,1,"no intermediate image fetches");
+    pendingFrames.shift()();
+    assert.equal(requests.length,2);
+    assert.ok(requests[1].src.endsWith("/2.jpg"));
+    requests[1].onload();
+    await flush();
+    assert.ok(stage.children[0].src.endsWith("/2.jpg"));
+    stage.handlers.pointerup({type:"pointerup",pointerId:4,clientX:325});
+
+    const slider=host.children[0].children[1].children[3].children[0];
+    slider.value="600";slider.handlers.input();
+    slider.value="900";slider.handlers.input();
+    assert.equal(pendingFrames.length,1,"slider also coalesces fast scrubbing");
+    pendingFrames.shift()();
+    assert.ok(requests[2].src.endsWith("/3.jpg"));
+    requests[2].onload();
+    await flush();
+    assert.ok(stage.children[0].src.endsWith("/3.jpg"));
+    assert.equal(figure.children.length,2);
+    player.destroy();
+    assert.equal(cancelled.length,0);
+  }finally{
+    globalThis.document=oldDoc;globalThis.Image=oldImage;
+    globalThis.requestAnimationFrame=oldRaf;globalThis.cancelAnimationFrame=oldCancel;
+  }
+});

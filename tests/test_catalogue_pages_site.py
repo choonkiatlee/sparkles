@@ -26,7 +26,9 @@ class PagesCatalogueTests(unittest.TestCase):
             by_id = {r["id"]: r for r in index["diamonds"]}
             self.assertEqual(by_id["igi-lg756520111"]["retrieval_status"], "partial")
             self.assertEqual(by_id["igi-lg816611062"]["retrieval_status"], "complete")
-            self.assertTrue(all(row["has_motion"] for row in by_id.values()))
+            # Other legitimate catalogue stones may have only still evidence.
+            self.assertTrue(by_id["igi-lg756520111"]["has_motion"])
+            self.assertTrue(by_id["igi-lg816611062"]["has_motion"])
             self.assertFalse((out / ".github").exists())
             self.assertFalse((out / "diamond_retrieval").exists())
 
@@ -54,7 +56,10 @@ class PagesCatalogueTests(unittest.TestCase):
         self.assertIn("createBufferedFrameCoordinator", model)
         self.assertIn("maxDecoded: 24", model)
         self.assertIn("Preload all frames", player)
-        self.assertIn("previous frame retained", player)
+        self.assertIn("pointerdown", player)
+        self.assertIn("requestAnimationFrame", player)
+        self.assertNotIn("motion-frame-caption", player)
+        self.assertNotIn("motion-prefetch-progress", player)
         self.assertIn("coordinator.seek", player)
         self.assertIn('"all"', model)
         self.assertIn("asset?.storage?.url", model)

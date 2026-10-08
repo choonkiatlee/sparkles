@@ -129,10 +129,8 @@ h1{font:normal clamp(42px,6vw,72px)/1.06 Georgia,"Times New Roman",serif;letter-
 .motion-range-label{display:flex;align-items:center;gap:10px;font-weight:650;font-size:12px;min-width:185px;flex:1}
 .motion-slider{accent-color:var(--accent);min-width:95px;flex:1;cursor:pointer}
 .motion-slider:disabled{cursor:not-allowed}
-.motion-position{min-width:35px;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
 .motion-figure{margin:0}
 .motion-image,.motion-static{display:block;width:100%;height:195px;object-fit:contain;background:#e9ece6;border:1px solid var(--line);border-radius:7px}
-.motion-frame-caption{margin-top:7px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
 .motion-empty{display:flex;flex-direction:column;gap:7px}
 .motion-unavailable{font-size:12px;color:var(--muted);display:block}
 .motion-frame-error{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:#8f3925;font-size:12px;padding:18px 0}
@@ -146,15 +144,13 @@ h1{font:normal clamp(42px,6vw,72px)/1.06 Georgia,"Times New Roman",serif;letter-
 
 
 /* C3b: keep previous decoded frame mounted while the requested frame loads. */
-.motion-image-stage{display:flex;align-items:center;justify-content:center;width:100%;height:195px;background:#e9ece6;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.motion-image-stage{display:flex;align-items:center;justify-content:center;width:100%;height:195px;background:#e9ece6;border:1px solid var(--line);border-radius:7px;overflow:hidden;cursor:ew-resize;touch-action:pan-y;user-select:none;-webkit-user-select:none}
 .motion-image-stage .motion-image{height:100%;width:100%;border:0;border-radius:0;object-fit:contain}
 .motion-prefetch-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px 18px;border-top:1px solid var(--line);padding-top:9px;margin-top:9px}
 .motion-prefetch-label{display:flex;gap:7px;align-items:center;font-size:12px;font-weight:650;cursor:pointer}
 .motion-prefetch-label input{accent-color:var(--accent);width:16px;height:16px}
-.motion-prefetch-progress{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
 .motion-frame-error{margin-top:4px;padding:7px 0;color:#8f3925}
 @media(max-width:700px){
   .motion-image-stage{height:175px}
   .motion-prefetch-row{align-items:flex-start}
-  .motion-prefetch-progress{flex-basis:100%}
 }

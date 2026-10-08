@@ -94,10 +94,13 @@ test("full prefetch prioritizes newly scrubbed frame over queued backgrounds",as
   preload.observe([seq],0);
   assert.equal(requests.length,1);
   const focused=preload.focus([seq.frames[9].url]);
-  images[0].onload();
+  // Interactive focus gets an extra bounded connection immediately, even
+  // while all normal prefetch slots are occupied.
   assert.equal(requests[1],seq.frames[9].url);
+  assert.equal(preload.stats().active,2);
   images[1].onload();
   const [ready]=await focused;
+  images[0].onload();
   assert.ok(ready);
   for(let i=2;i<10;i++) images[i].onload();
   assert.equal(preload.stats().completed,10);
