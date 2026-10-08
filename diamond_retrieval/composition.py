@@ -8,6 +8,7 @@ from .downloaders import LinkedEvidenceDownloader
 from .http import UrllibHttpClient
 from .motion import ProgressiveRotationProcessor
 from .motion_sources import (
+    Core360RotationDownloader,
     D360RotationDownloader,
     DiajewelRotationDownloader,
     WorkshopRotationDownloader,
@@ -72,6 +73,7 @@ def default_config(http_client: HttpClient | None = None) -> RetrievalConfig:
             LinkedEvidenceDownloader(client),
             DiajewelRotationDownloader(client),
             WorkshopRotationDownloader(client),
+            Core360RotationDownloader(client),
             D360RotationDownloader(client),
             DirectVideoDownloader(client),
         ),
