@@ -103,10 +103,17 @@ def main():
                     d=data[0]
                     print("Supabase columns",sorted(d.keys()))
                     print("Supabase sku",d.get("sku"))
-                    for k in ("lab","report_number","certificate_number","certificate_no","certificate","igi_number","certNumber","carat","shape","v360","video"):
+                    for k in ("lab","report_number","certificate_number","certificate_no","certificate","igi_number","certNumber","carat","shape","price_usd","markup_price","origin","v360","video"):
                         if k in d:
                             val=d[k]
                             print("Supabase",k,str(val)[:90] if isinstance(val,(str,int,float)) else type(val).__name__)
+                    for k in ("video_url","image_url","certificate_url"):
+                        val=d.get(k)
+                        if isinstance(val,str) and val.startswith("https://"):
+                            p=urllib.parse.urlsplit(val)
+                            print("Supabase",k,"host",p.hostname,"path",p.path)
+                        else:
+                            print("Supabase",k,"present",bool(val))
         except Exception as e:
             print("Supabase request failed",type(e).__name__)
     # A handful of scripts only, bounded by total response size.
