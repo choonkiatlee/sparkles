@@ -11,35 +11,46 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Install package
-        run: python -m pip install -e .
-      - name: Inspect Quality Diamonds exact media target
+      - name: Inspect exact Core360 viewer wire references
         run: |
           python - <<'PY'
-          import json, urllib.request
-          from diamond_retrieval.resolvers import Loupe360CertificateResolver
-          endpoint="https://g.nivoda.com/graphql-public-loupe360"
-          query='''query($cert:String!){
-            certificate_by_cert_number(cert_number:$cert) {
-              id certNumber lab video
-              v360 { url frame_count top_index id }
-            }
-          }'''
-          body=json.dumps({"query":query,"variables":{"cert":"LG713574578"}}).encode()
-          req=urllib.request.Request(
-              endpoint,data=body,method="POST",
-              headers={"User-Agent":"Mozilla/5.0 SparklesIssue100/1","Accept":"application/json","Content-Type":"application/json"},
-          )
+          import re, urllib.parse, urllib.request
+          viewer="https://v3603703.v360.in/vision360.html?d=NGS-05-413"
+          headers={"User-Agent":"Mozilla/5.0 SparklesIssue100/1","Accept":"text/html,*/*"}
+          req=urllib.request.Request(viewer,headers=headers)
           with urllib.request.urlopen(req,timeout=20) as response:
-              record=json.loads(response.read())["data"]["certificate_by_cert_number"]
-          print("record=",json.dumps(record,sort_keys=True))
-          wrapped=(record.get("v360") or {}).get("url")
-          if wrapped:
-              decoded=Loupe360CertificateResolver._unwrap_v360(wrapped)
-              print("decoded_v360=",decoded)
-              print("supported=",Loupe360CertificateResolver._is_supported_rotation_url(decoded))
+              raw=response.read()
+              final=response.geturl()
+          text=raw.decode("utf-8","replace")
+          print("viewer_final=",final,"bytes=",len(raw))
+          for needle in ("imaged","0.json","360view","vision360","data/","version"):
+              positions=[m.start() for m in re.finditer(re.escape(needle),text,re.I)]
+              print("page_hit=",needle,positions[:10])
+              for pos in positions[:2]:
+                  print(text[max(0,pos-300):min(len(text),pos+700)])
+          scripts=re.findall(r'<script[^>]+src=["\']([^"\']+)',text,re.I)
+          print("script_srcs=",scripts)
+          for src in scripts:
+              url=urllib.parse.urljoin(final,src)
+              if urllib.parse.urlsplit(url).netloc != urllib.parse.urlsplit(final).netloc:
+                  continue
+              try:
+                  req=urllib.request.Request(url,headers={"User-Agent":headers["User-Agent"],"Accept":"*/*","Referer":final})
+                  with urllib.request.urlopen(req,timeout=20) as response:
+                      body=response.read().decode("utf-8","replace")
+                  hits=[]
+                  for needle in ("imaged","0.json","data/","scramble","version"):
+                      p=body.lower().find(needle.lower())
+                      if p>=0:
+                          hits.append((needle,p))
+                  if hits:
+                      print("script=",url,"bytes=",len(body),"hits=",hits)
+                      for needle,pos in hits:
+                          print("script_hit=",needle)
+                          print(body[max(0,pos-500):min(len(body),pos+1200)])
+              except Exception as exc:
+                  print("script_error=",url,type(exc).__name__,str(exc))
           PY
