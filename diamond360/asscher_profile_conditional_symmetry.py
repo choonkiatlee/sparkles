@@ -153,7 +153,7 @@ def analyse(contour, report, endpoints, pose_review=None):
     pose = _validate_pose(pose_review)
     proxy = _outline_symmetry_proxy(contour, report, endpoints)
     left = endpoints.get("last_crown_changepoint_candidates", {}).get("left", {})
-    right = endpoints.get("last_pavilion_changepoint_candidates", {}).get("right", {})
+    right = endpoints.get("last_crown_changepoint_candidates", {}).get("right", {})
     mirror = {
         "status": "unavailable",
         "reason": "requires_observed_left_terminal_and_shared_width_axis",
@@ -267,7 +267,7 @@ def main():
         "status": r["status"],
         "pose": r["pose_review"]["status"],
         "image_only_symmetry_proxy": r["image_only_symmetry_diagnostic"]["status"],
-        "right_mirrored": r["right_terminal_symmetry_hypothesis"]["status"],
+        "right_mirrored": r["right_crown_terminal_symmetry_hypothesis"]["status"],
         "mirror_xy_px": r["right_terminal_symmetry_hypothesis"]["xy_px"],
     }, sort_keys=True))
 
