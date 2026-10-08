@@ -747,3 +747,82 @@ assumption for conditional adoption, retained independent right
 candidate, forged/stale source/target data and a source-hash-locked,
 reproducible real-photo overlay. The true stone's physical facet tiers
 and optical interior remain separate tasks (#91 PR C and #123).
+
+
+## B2h — pavilion-first connected fit and observed-vs-symmetry comparison
+
+Prioritization after reviewing the near-correct profile outline: the crown
+has small residual placement errors, but the **pavilion step geometry and
+terminal transition** are the more valuable remaining problem. The crown
+modules and chosen crown breakpoints are therefore unchanged by B2h.
+
+Module: \`diamond360.asscher_profile_pavilion_refinement\`.
+Schema: \`diamond360-asscher-profile-pavilion-refinement/1\`.
+
+**Source-only connected pavilion model**
+
+- Begin immediately *below* the independently supported maximum-width
+  region, retaining its full uncertainty and **not declaring it a verified
+  girdle**. Keep separately measured left/right exterior contours.
+- Combine each side's automatic background-first **supported** source rows
+  (weight 1.0) and only its own independently source-supported lower-terminal
+  extension (weight 0.55). Lower extension pixels are inherently more
+  shadow-sensitive. Record exact xy and provenance of every input; preserve
+  missing y intervals instead of fabricating contour observations.
+- Fit a continuous piecewise-linear \`x(y)\` profile separately on each
+  side using weighted least squares and a complexity penalty. Asscher
+  topology imposes only a **maximum of three visible apparent stretches**;
+  one, two, or no supported slopes is possible.
+- Four predeclared penalties (40, 80, 140, 220 px²) expose whether a change
+  remains stable or is model-sensitive, without implying calibrated
+  uncertainty. Preserve each independent side's breakpoint hypothesis.
+
+**Symmetry is a second, gated model, never extra observed pixels**
+
+- Publish a default **counterfactual right-side mirror preview** (purple)
+  from the independently observed left terminal and independently estimated
+  maximum-width symmetry axis. No unreviewed pose or symmetrical-stone
+  assumption can activate this as reconstructed geometry.
+- If a *separate* source-hashed review confirms the camera is approximately
+  head-on and explicitly assumes near-mirror-symmetric stone geometry, and
+  the original paired contour/apex diagnostics are compatible, optionally
+  fit a **common radial pavilion shape** using source-supported left/right
+  points. Each side's independently observed fit remains unchanged. The
+  radial model is \`conditional_symmetry_model_inferred\`, not an observation.
+- Deliberately retain genuine asymmetric pavilion variation if a single
+  common curve does not explain the pixels. Do not make symmetry an
+  unconditional hard constraint based on the 2D outline alone.
+- The optional model cannot overwrite source data, certify P1/P2/P3,
+  recover physical facet angles, or compare against Sergey photo estimates.
+
+**Review artifact**
+
+\`pavilion-observed-vs-symmetry.png\` uses two side-by-side zoomed views
+of the original pavilion. The left panel overlays distinct green (left
+source) and blue (right source) lines, orange shadow-limited terminal
+extension, and continuous white candidate straight-segment fits with
+yellow/orange image-plane slope changes. The right panel additionally
+shows the explicitly *unapplied* purple mirrored terminal hypothesis,
+separately from the observed right contour. Orange horizontal guides are
+the shared widest-band **hypothesis**, not a physical girdle determination.
+The accompanying \`pavilion-refinement.json\` includes every sampled
+source xy coordinate, per-side fit residual/model candidates, provenance,
+unsupported rows, pose gate and unavailable physical facet angles.
+
+Reproduce after the earlier source-pinned stages:
+
+\`\`\`bash
+python -m diamond360.asscher_profile_pavilion_refinement \
+  --image docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG \
+  --auto-json outputs/asscher-profile-physical-evidence/auto-exterior.json \
+  --joint-json outputs/asscher-profile-physical-evidence/joint-changepoints.json \
+  --endpoint-json outputs/asscher-profile-physical-evidence/endpoint-candidates.json \
+  --output outputs/asscher-profile-physical-evidence
+\`\`\`
+
+Synthetic tests cover one/two/three pavilion stretches, gaps, reduced
+confidence for shadow-limited extensions, false target-angle ingestion,
+genuine asymmetry under a conditional model, and the original source.
+The source's projected silhouette remains an *extremal 3D envelope*, not
+proof of an individual polished facet plane. Genuine right-hand terminal
+evidence must not be replaced by a mirrored hypothetical point.
