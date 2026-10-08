@@ -104,6 +104,8 @@ class Loupe360CertificateResolver:
             return False
         if reference.metadata.get("resolver") == "loupe360_certificate":
             return True
+        if self.http_client is None:
+            return False
         if not reference.locator or not _report_number(reference):
             return False
         return urlsplit(reference.locator).netloc.lower() in {
