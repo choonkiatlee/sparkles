@@ -9,35 +9,84 @@ on:
 jobs:
   inspect:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 12
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Verify Core360 bootstrap format
+      - name: Install package
+        run: python -m pip install -e .
+      - name: Bounded live motion smoke
         run: |
           python - <<'PY'
-          import hashlib, json, urllib.request
-          viewer="https://v3603703.v360.in/vision360.html?d=NGS-05-413"
-          root="https://v3603703.v360.in/imaged/NGS-05-413"
-          headers={"User-Agent":"Mozilla/5.0 SparklesIssue100/1","Accept":"*/*","Referer":viewer}
-          for url in (root+"/0.json?version=",):
-              req=urllib.request.Request(url,headers=headers)
-              with urllib.request.urlopen(req,timeout=20) as response:
-                  raw=response.read()
-              data=json.loads(raw)
-              print("url=",url)
-              print("sha256=",hashlib.sha256(raw).hexdigest(),"bytes=",len(raw))
-              print("keys=",sorted(data.keys()))
-              print("dimensions=",data.get("width"),data.get("height"))
-              print("version=",data.get("version"),"quality=",data.get("quality"))
-              scramble=data.get("scramble")
-              print("scramble_type=",type(scramble).__name__,"scramble_len=",len(scramble) if isinstance(scramble,str) else None)
-              version=data.get("version")
-              batch_url=f"{root}/1.json?version={version}"
-              req2=urllib.request.Request(batch_url,headers=headers)
-              with urllib.request.urlopen(req2,timeout=20) as response:
-                  batch_raw=response.read()
-              batch=json.loads(batch_raw)
-              print("batch1_url=",batch_url,"count=",len(batch) if isinstance(batch,list) else None,"bytes=",len(batch_raw))
+          from diamond_retrieval import (
+              ROTATION,
+              D360RotationDownloader,
+              DiajewelRotationDownloader,
+              EvidenceReference,
+              ProgressiveRotationProcessor,
+              ProvenanceStep,
+              UrllibHttpClient,
+              retrieve_diamond,
+          )
+
+          print("=== quality-diamonds exact listing ===")
+          qd="https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133%2FF74D0EF67"
+          try:
+              result=retrieve_diamond(qd)
+              print("report=",result.metadata.report_number)
+              print("status=",result.status.value)
+              print("certificates=",len(result.certificates))
+              print("stills=",len(result.stills))
+              print("rotations=",len(result.rotations))
+              print("rotation_frames=",[len(x.frames) for x in result.rotations])
+              print("rotation_suppliers=",[x.metadata.get("supplier") for x in result.rotations])
+              print("attempts=",[(x.kind,x.status.value,x.message) for x in result.attempts])
+          except Exception as exc:
+              print("error=",type(exc).__name__,str(exc))
+
+          client=UrllibHttpClient(max_bytes=16*1024*1024)
+          processor=ProgressiveRotationProcessor()
+
+          def ref(url,name):
+              return EvidenceReference(
+                  identifier=name,
+                  kind=ROTATION,
+                  retrieval_key=url,
+                  locator=url,
+                  provenance=(ProvenanceStep("live_smoke",url),),
+              )
+
+          print("=== diajewel exact viewer ===")
+          dj="https://vision.diajewel360.com/Vision360.html?d=PD-249203"
+          try:
+              raw=DiajewelRotationDownloader(client).download(ref(dj,"diajewel-live"))
+              rotation=processor.process(raw)[0]
+              print("supplier=",rotation.metadata.get("supplier"))
+              print("frames=",len(rotation.frames))
+              print("dimensions=",rotation.metadata.get("dimensions"))
+              print("first_sha256=",rotation.frames[0].sha256)
+          except Exception as exc:
+              print("error=",type(exc).__name__,str(exc))
+
+          print("=== d360 exact viewer ===")
+          d360="https://d360.tech/view.html?d=79-BB-5159600"
+          try:
+              raw=D360RotationDownloader(client).download(ref(d360,"d360-live"))
+              rotation=processor.process(raw)[0]
+              print("supplier=",rotation.metadata.get("supplier"))
+              print("frames=",len(rotation.frames))
+              print("dimensions=",rotation.metadata.get("dimensions"))
+              print("first_sha256=",rotation.frames[0].sha256)
+          except Exception as exc:
+              print("error=",type(exc).__name__,str(exc))
+
+          print("=== diyona exact listing availability ===")
+          diyona="https://diyona.com/pages/diamond-detail?sku=B934F4533"
+          try:
+              result=retrieve_diamond(diyona)
+              print("report=",result.metadata.report_number,"status=",result.status.value)
+          except Exception as exc:
+              print("error=",type(exc).__name__,str(exc))
           PY
