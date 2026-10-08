@@ -14,11 +14,13 @@ const assetUrl = asset => {
 
 export const PREFETCH_MODES = Object.freeze(["none","nearby","all"]);
 export const FRAME_PREFETCH = Object.freeze({
-  // Change only this mode to "all" to opt into downloading all frames for
-  // the *selected* stones when their comparison is opened.
-  mode: "none",
-  nearbyRadius: 2,
-  maxConcurrent: 4,
+  // Full fetch is chosen deliberately after C3a exposed very visible flicker.
+  // Runs ONLY on selected manifest rotations in the open comparison.
+  // Use "nearby" or "none" here if bandwidth/storage becomes an issue.
+  mode: "all",
+  nearbyRadius: 3,
+  maxConcurrent: 6,
+  maxDecodedImages: 24, // bound retained decoded images, NOT network downloads
 });
 
 const isImage = asset => !asset?.media_type ||
@@ -66,53 +68,135 @@ export function stepPosition(position, frameCount, direction=1) {
   return next/frameCount;
 }
 
+// A bounded-concurrency HTTP-cache warmer and decoded-frame cache.
+// Full mode requests each selected source URL, but retains at most
+// maxDecodedImages decoded Image objects. Browser HTTP cache may evict images.
 export function createFramePreloader({mode=FRAME_PREFETCH.mode,
   nearbyRadius=FRAME_PREFETCH.nearbyRadius,
   maxConcurrent=FRAME_PREFETCH.maxConcurrent,
+  maxDecodedImages=FRAME_PREFETCH.maxDecodedImages,
   imageFactory=()=>new Image()}={}) {
   if (!PREFETCH_MODES.includes(mode)) throw new RangeError("Invalid frame prefetch mode");
   if (!Number.isInteger(nearbyRadius) || nearbyRadius<0 || nearbyRadius>16 ||
-      !Number.isInteger(maxConcurrent) || maxConcurrent<1 || maxConcurrent>12)
+      !Number.isInteger(maxConcurrent) || maxConcurrent<1 || maxConcurrent>12 ||
+      !Number.isInteger(maxDecodedImages) || maxDecodedImages<2 || maxDecodedImages>128)
     throw new RangeError("Invalid prefetch limits");
-  let stopped=false,active=0;
-  const seen=new Set(),queue=[];
+  let stopped=false, active=0;
+  const records=new Map(), queue=[], decoded=new Map(), listeners=new Set();
+  const notify=()=>{for(const callback of listeners)callback(stats());};
+  const stats=()=>{
+    let loaded=0,failed=0;
+    for(const value of records.values()) {
+      if(value.everLoaded) loaded++;
+      if(value.state==="failed") failed++;
+    }
+    return {mode,total:records.size,loaded,failed,active,queued:queue.length,retained:decoded.size};
+  };
+  const touch=(url,image)=>{
+    decoded.delete(url);decoded.set(url,image);
+    while(decoded.size>maxDecodedImages)decoded.delete(decoded.keys().next().value);
+  };
   function pump() {
-    while (!stopped && active<maxConcurrent && queue.length) {
-      const url=queue.shift();
-      active++;
-      let image;
+    while(!stopped && active<maxConcurrent && queue.length) {
+      const entry=queue.shift();
+      if(entry.state!=="queued")continue;
+      entry.state="loading";active++;
       try {
-        image=imageFactory();
-        const done=()=>{image.onload=null;image.onerror=null;active--;pump();};
-        image.onload=done;
-        image.onerror=()=>{seen.delete(url);done();};
-        image.src=url;
+        const image=imageFactory();
+        image.decoding="async";
+        const finish=(success)=>{
+          image.onload=null;image.onerror=null;active--;
+          if(stopped)return;
+          if(success) {
+            entry.state="loaded";entry.everLoaded=true;
+            touch(entry.url,image);
+          } else entry.state="failed";
+          const callbacks=entry.waiters.splice(0);
+          callbacks.forEach(resolve=>resolve(success ? image : null));
+          notify();pump();
+        };
+        image.onload=()=>finish(true);
+        image.onerror=()=>finish(false);
+        image.src=entry.url;
       } catch {
-        seen.delete(url);active--;
+        entry.state="failed";active--;
+        entry.waiters.splice(0).forEach(resolve=>resolve(null));
+        notify();
       }
     }
   }
-  function add(url) {
-    if (!url || seen.has(url)) return;
-    seen.add(url);queue.push(url);
+  function enqueue(url,{priority=false,retry=false}={}) {
+    if(stopped || !url)return null;
+    let entry=records.get(url);
+    if(!entry) {
+      entry={url,state:"queued",everLoaded:false,waiters:[]};
+      records.set(url,entry); queue.push(entry);
+    } else if(entry.state==="failed" && retry) {
+      entry.state="queued";queue.push(entry);
+    } else if(entry.state==="loaded" && !decoded.has(url)) {
+      // Decoded image evicted. Loading again usually hits the browser HTTP cache.
+      entry.state="queued";queue.push(entry);
+    }
+    if(priority && entry.state==="queued"){
+      const i=queue.indexOf(entry);
+      if(i>0) {queue.splice(i,1);queue.unshift(entry);}
+    }
+    return entry;
+  }
+  function peek(url) {
+    if(stopped)return null;
+    const image=decoded.get(url);
+    if(image)touch(url,image);
+    return image || null;
+  }
+  function ensure(url,{priority=true,retry=false}={}) {
+    const loaded=peek(url);
+    if(loaded)return Promise.resolve(loaded);
+    const entry=enqueue(url,{priority,retry});
+    if(!entry || entry.state==="failed")return Promise.resolve(null);
+    const result=new Promise(resolve=>entry.waiters.push(resolve));
+    pump();notify();
+    return result;
   }
   function observe(sequences,position) {
-    if (stopped || mode==="none") return;
-    for (const seq of sequences) {
-      if (seq?.status!=="available") continue;
-      if (mode==="all") {
-        for (const frame of seq.frames) add(frame.url);
-      } else {
-        const current=frameIndexAt(position,seq.frameCount);
-        // Current frame is loaded by the visible <img>, only prefetch neighbors.
-        for (let k=1;k<=nearbyRadius;k++) {
-          add(seq.frames[(current+k)%seq.frameCount].url);
-          add(seq.frames[(current-k+seq.frameCount)%seq.frameCount].url);
+    if(stopped || mode==="none")return;
+    const valid=sequences.filter(seq=>seq?.status==="available");
+    // In all-mode collect frames in a round-robin layout so one stone doesn't
+    // monopolize the network while others are still unbuffered.
+    if(mode==="all"){
+      const highest=Math.max(0,...valid.map(seq=>seq.frameCount));
+      for(let offset=0;offset<highest;offset++){
+        for(const seq of valid){
+          if(offset<seq.frameCount){
+            const ix=(frameIndexAt(position,seq.frameCount)+offset)%seq.frameCount;
+            // Only queue if not already visited. Never redownload all evicted frames.
+            const url=seq.frames[ix].url;
+            if(!records.has(url))enqueue(url);
+          }
+        }
+      }
+    } else {
+      for(const seq of valid){
+        const center=frameIndexAt(position,seq.frameCount);
+        for(let k=1;k<=nearbyRadius;k++){
+          for(const sign of [1,-1]){
+            const url=seq.frames[(center+sign*k+seq.frameCount)%seq.frameCount].url;
+            if(!records.has(url))enqueue(url);
+          }
         }
       }
     }
-    pump();
+    pump();notify();
   }
-  function stop() {stopped=true;queue.length=0;seen.clear();}
-  return {mode,observe,stop,stats:()=>({active,queued:queue.length,seen:seen.size})};
+  function subscribe(callback){
+    listeners.add(callback);callback(stats());
+    return ()=>listeners.delete(callback);
+  }
+  function stop(){
+    stopped=true;
+    // Complete pending waiters, and disable events from retired player state.
+    for(const item of records.values())item.waiters.splice(0).forEach(resolve=>resolve(null));
+    queue.length=0;decoded.clear();listeners.clear();records.clear();
+  }
+  return {mode,observe,ensure,peek,subscribe,stop,stats};
 }

@@ -54,48 +54,80 @@ test("incomplete, missing and video-only evidence never masquerades as rotation"
   assert.equal(extractRotation([{...rotation([f(0),f(1)]),metadata:{sequence_complete:true,frame_count:255}}]).status,"unavailable");
 });
 
-test("full prefetch exists, is opt-in, loads selected frames, and respects concurrency",()=>{
+
+const sequence = (size,prefix="https://example.test/")=>extractRotation([{
+  kind:"rotation",status:"success",metadata:{sequence_complete:true},
+  frames:Array.from({length:size},(_,i)=>({source_index:i,
+    asset:{media_type:"image/jpeg",storage:{url:prefix+i+".jpg"}}}))
+}]);
+
+test("full prefetch is default ONLY on selected observed sequences, with concurrency caps",async()=>{
   assert.deepEqual(PREFETCH_MODES,["none","nearby","all"]);
-  assert.equal(FRAME_PREFETCH.mode,"none");
-  const seq=extractRotation([{
-    kind:"rotation",status:"success",metadata:{sequence_complete:true},
-    frames:Array.from({length:8},(_,i)=>({source_index:i,
-      asset:{storage:{url:"https://example.test/"+i+".jpg"},media_type:"image/jpeg"}}))
-  }]);
-  const requests=[], pending=[];
-  const imageFactory=()=>{
+  assert.equal(FRAME_PREFETCH.mode,"all");
+  const requests=[],pending=[];
+  const factory=()=>{
     const image={onload:null,onerror:null};
     Object.defineProperty(image,"src",{set(url){requests.push(url);pending.push(image);}});
     return image;
   };
-  const idle=createFramePreloader({mode:"none",imageFactory});
-  idle.observe([seq],0);
-  assert.equal(requests.length,0);
-  idle.stop();
-  const preload=createFramePreloader({mode:"all",maxConcurrent:2,imageFactory});
-  preload.observe([seq],0);
+  const p=createFramePreloader({mode:"all",maxConcurrent:2,maxDecodedImages:3,imageFactory:factory});
+  assert.equal(p.stats().total,0);
+  const a=sequence(8),b=sequence(4,"https://r2.example.test/");
+  p.observe([a,b],0);
   assert.equal(requests.length,2);
-  assert.equal(preload.stats().queued,6);
-  for(let i=0;i<8;i++) pending[i].onload();
-  assert.equal(requests.length,8);
-  assert.equal(new Set(requests).size,8);
-  preload.observe([seq],0.5);
-  assert.equal(requests.length,8);
-  preload.stop();
-  assert.equal(preload.stats().queued,0);
+  assert.equal(p.stats().queued,10);
+  for(let i=0;i<12;i++)pending[i].onload();
+  assert.equal(requests.length,12);
+  assert.equal(p.stats().loaded,12);
+  assert.equal(p.stats().total,12);
+  assert.ok(p.stats().retained<=3);
+  p.observe([a,b],0.5);
+  assert.equal(requests.length,12,"full mode must not requeue evicted frames on seek");
+  p.stop();
+  assert.equal(p.stats().total,0);
 });
 
-test("nearby prefetch wraps and remains bounded to neighboring image URLs",()=>{
-  const frames=Array.from({length:6},(_,i)=>({source_index:i,
-    asset:{storage:{backend:"github_release",url:"https://github.com/assets/"+i+".jpg"},media_type:"image/jpeg"}}));
-  const seq=extractRotation([{kind:"rotation",status:"success",metadata:{sequence_complete:true},frames}]);
-  const requested=[];
-  const preloader=createFramePreloader({mode:"nearby",nearbyRadius:1,imageFactory:()=>{
+test("demand priority, retry, dedup and safe cleanup",async()=>{
+  const pending=[],requests=[];
+  const factory=()=>{
     const image={onload:null,onerror:null};
-    Object.defineProperty(image,"src",{set(url){requested.push(url);image.onload();}});
+    Object.defineProperty(image,"src",{set(url){requests.push(url);pending.push(image);}});
+    return image;
+  };
+  const p=createFramePreloader({mode:"all",maxConcurrent:1,maxDecodedImages:2,imageFactory:factory});
+  const seq=sequence(5);
+  p.observe([seq],0);
+  const fourth=seq.frames[4].url;
+  const promise=p.ensure(fourth);
+  pending[0].onload();
+  assert.equal(requests[1],fourth,"demand should jump ahead of background queue");
+  pending[1].onerror();
+  assert.equal(await promise,null);
+  assert.equal(p.stats().failed,1);
+  const promise2=p.ensure(fourth,{retry:true});
+  // A previously failed frame is retried after active background network work.
+  let ix=2;
+  while(requests.at(-1)!==fourth && ix<10){pending[ix].onload();ix++;}
+  assert.equal(requests.at(-1),fourth);
+  pending.at(-1).onload();
+  assert.equal((await promise2)!==null,true);
+  p.stop();
+  const p2=createFramePreloader({mode:"none",imageFactory:factory});
+  p2.observe([seq],0);
+  assert.equal(p2.stats().total,0);
+  p2.stop();
+});
+
+test("nearby mode limits requests to just requested neighbors with wrap",async()=>{
+  const requests=[];
+  const p=createFramePreloader({mode:"nearby",nearbyRadius:1,imageFactory:()=>{
+    const image={onload:null,onerror:null};
+    Object.defineProperty(image,"src",{set(url){requests.push(url);image.onload();}});
     return image;
   }});
-  preloader.observe([seq],0);
-  assert.deepEqual(requested.sort(),["https://github.com/assets/1.jpg","https://github.com/assets/5.jpg"]);
-  preloader.stop();
+  const seq=sequence(6,"https://github.com/assets/");
+  p.observe([seq],0);
+  assert.deepEqual(requests.sort(),["https://github.com/assets/1.jpg","https://github.com/assets/5.jpg"]);
+  assert.equal(p.stats().total,2);
+  p.stop();
 });
