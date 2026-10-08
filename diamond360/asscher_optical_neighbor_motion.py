@@ -240,7 +240,7 @@ def _source_crop(source,mask,matrix):
 
 
 def render_pair(source_a,source_b,mask_a,mask_b,matrix_a,matrix_b,
-                a,b,measurement,source_indices):
+                a,b,measurement,source_indices,*,valid_a=None,valid_b=None):
     """Show original RGB pair + registered *appearance* change, no facet masks."""
     im_a=_source_crop(source_a,mask_a,matrix_a)
     im_b=_source_crop(source_b,mask_b,matrix_b)
@@ -258,6 +258,10 @@ def render_pair(source_a,source_b,mask_a,mask_b,matrix_a,matrix_b,
         # margins and off-stone pixels otherwise form fictitious orange
         # "motion" bars at the boundary of a heatmap.
         common=np.asarray(mask_a,bool)&np.asarray(mask_b,bool)
+        if valid_a is not None:
+            common &= np.asarray(valid_a,bool)
+        if valid_b is not None:
+            common &= np.asarray(valid_b,bool)
         common=ndi.binary_erosion(
             common,iterations=max(3,int(min(a.shape)*.015))
         )
@@ -353,7 +357,8 @@ def run_stone(pose_dir,processed,output,*,certificate):
         if measure["status"]=="observed":
             name=f"adjacent-pos-{pa:04d}-{pb:04d}.jpg"
             render_pair(src_a,src_b,mask_a,mask_b,mat_a,mat_b,
-                        lum_a,lum_b,measure,row["source_indices"]).save(
+                        lum_a,lum_b,measure,row["source_indices"],
+                        valid_a=valid_a,valid_b=valid_b).save(
                             output/name,quality=90)
             row["camera_RGB_QC"]=name
     report["pairs"]=results
