@@ -20,22 +20,23 @@ from . import asscher_profile_auto_exterior as auto
 from . import asscher_profile_auto_changepoints as joint
 from . import asscher_profile_endpoint_candidates as endpoint
 
-SCHEMA = "diamond360-asscher-conditional-profile-symmetry/1"
+SCHEMA = "diamond360-asscher-conditional-profile-symmetry/2"
 POSE_SCHEMA = "diamond360-asscher-pose-review/1"
 POLICY = {
     "source": "independent_left_and_right_outer_silhouette_image_only",
     "symmetry_axis": "midpoint_of_left_and_right_width_band_edge_midpoints",
     "pose_proxy_is_not_pose_proof": True,
-    "max_crown_median_mirror_axis_offset_px": 7.0,
-    "max_crown_p90_mirror_axis_offset_px": 14.0,
-    "minimum_paired_supported_crown_rows": 30,
+    "max_pavilion_median_mirror_axis_offset_px": 7.0,
+    "max_pavilion_p90_mirror_axis_offset_px": 14.0,
+    "minimum_paired_supported_pavilion_rows": 30,
     "max_top_apex_offset_from_axis_px": 12.0,
-    "mirror_scope": "only_missing_or_unavailable_right_terminal_bend",
+    "mirror_scope": "only_missing_or_unavailable_right_lower_crown_terminal_bend",
     "do_not_overwrite_observed_right_breaks": True,
     "pose_confirmation": "explicit_independent_human_or_calibrated_review_required",
     "stone_mirror_symmetry_assumption": "must_be_declared_separately_from_pose",
     "uncertainty": "mirror_prediction_conditional_not_pixel_confidence_or_physical_angle",
     "target_angle_data": "not_permitted",
+    "source_orientation": "pointed_upper_pavilion_broad_lower_crown",
 }
 
 
@@ -96,8 +97,8 @@ def _outline_symmetry_proxy(contour, report, endpoints):
     left = float(np.mean(band["left_edge_x_range_px"]))
     right = float(np.mean(band["right_edge_x_range_px"]))
     axis = (left + right) / 2
-    lrows = _supported(contour, "left", "crown")
-    rrows = _supported(contour, "right", "crown")
+    lrows = _supported(contour, "left", "pavilion")
+    rrows = _supported(contour, "right", "pavilion")
     shared = sorted(set(lrows) & set(rrows))
     if len(shared) < POLICY["minimum_paired_supported_crown_rows"]:
         return {
@@ -110,8 +111,8 @@ def _outline_symmetry_proxy(contour, report, endpoints):
         (np.array([lrows[y] for y in shared]) +
          np.array([rrows[y] for y in shared])) / 2.0 - axis
     )
-    top = endpoints.get("top_cap_candidate", {})
-    apex_xy = top.get("projected_apex_xy_px") if top.get("status") == "candidate_only" else None
+    top = endpoints.get("top_pavilion_tip_candidate", {})
+    apex_xy = top.get("projected_pavilion_tip_xy_px") if top.get("status") == "candidate_only" else None
     apex_offset = abs(float(apex_xy[0]) - axis) if apex_xy is not None else None
     median = float(np.median(offsets))
     p90 = float(np.percentile(offsets, 90))
@@ -124,7 +125,7 @@ def _outline_symmetry_proxy(contour, report, endpoints):
     return {
         "status": "image_only_compatible_not_pose_proof" if plausible else "image_only_inconsistent",
         "axis_x_px": round(axis, 3),
-        "paired_crown_rows": len(shared),
+        "paired_pavilion_rows": len(shared),
         "median_axis_offset_px": round(median, 3),
         "p90_axis_offset_px": round(p90, 3),
         "apex_axis_offset_px": None if apex_offset is None else round(apex_offset, 3),
@@ -133,6 +134,8 @@ def _outline_symmetry_proxy(contour, report, endpoints):
 
 
 def analyse(contour, report, endpoints, pose_review=None):
+    if contour.get("policy", {}).get("source_orientation") != POLICY["source_orientation"]:
+        raise ValueError("source orientation mismatch")
     if (contour.get("schema_version") != auto.SCHEMA
         or report.get("schema_version") != joint.SCHEMA
         or endpoints.get("schema_version") != endpoint.SCHEMA):
@@ -149,7 +152,7 @@ def analyse(contour, report, endpoints, pose_review=None):
         raise ValueError("expert-angle targets cannot enter symmetry assistance")
     pose = _validate_pose(pose_review)
     proxy = _outline_symmetry_proxy(contour, report, endpoints)
-    left = endpoints.get("last_pavilion_changepoint_candidates", {}).get("left", {})
+    left = endpoints.get("last_crown_changepoint_candidates", {}).get("left", {})
     right = endpoints.get("last_pavilion_changepoint_candidates", {}).get("right", {})
     mirror = {
         "status": "unavailable",
@@ -187,11 +190,12 @@ def analyse(contour, report, endpoints, pose_review=None):
         "source_sha256": feasibility.ORIGINAL_PROFILE_SHA256,
         "policy": POLICY,
         "policy_sha256": feasibility.canonical_sha256(POLICY),
-        "top_shape_interpretation": "point_like_projected_apex_not_physical_culet_or_confirmed_table",
+        "top_shape_interpretation": "upper_pointed_pavilion_tip_culet_region_not_verified_culet_facet",
+        "source_orientation": POLICY["source_orientation"],
         "pose_review": pose,
         "image_only_symmetry_diagnostic": proxy,
-        "independent_terminal_candidates": {"left": left, "right": right},
-        "right_terminal_symmetry_hypothesis": mirror,
+        "independent_crown_terminal_candidates": {"left": left, "right": right},
+        "right_crown_terminal_symmetry_hypothesis": mirror,
         "status": (
             "conditional_model_inference" if mirror["status"] == "conditional_symmetry_model_inferred"
             else "preview_only_not_adopted"
@@ -200,7 +204,7 @@ def analyse(contour, report, endpoints, pose_review=None):
         "physical_facet_angles": "all_unavailable",
         "interpretation": (
             "Mirroring is a geometrical conditional model, not a right-side observation. "
-            "The 2D external shape cannot itself verify camera pose or physical mirror symmetry. "
+            "The pointed upper pavilion outline cannot itself verify camera pose or physical mirror symmetry. This mirror predicts the LOWER CROWN, not the pavilion. "
             "Never overwrite the right observed silhouette or create P1/P2/P3 angles."
         ),
     }
@@ -209,7 +213,7 @@ def analyse(contour, report, endpoints, pose_review=None):
 def render_overlay(base, result):
     overlay = base.copy()
     d = ImageDraw.Draw(overlay)
-    mirror = result["right_terminal_symmetry_hypothesis"]
+    mirror = result["right_crown_terminal_symmetry_hypothesis"]
     proxy = result["image_only_symmetry_diagnostic"]
     axis = proxy.get("axis_x_px")
     if axis is not None:
