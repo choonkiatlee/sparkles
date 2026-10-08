@@ -367,14 +367,17 @@ class DiyonaListingProvider:
             parsed.text,
             re.I,
         )
-        if not header or not identity:
+        # The certified SKU + IGI report is the publishability-critical fact.
+        # A carat/shape display heading is useful but not an identity check:
+        # live storefront layouts can omit it while showing the certificate.
+        if not identity:
             raise RetrievalError("Diyona exact listing no longer exposes certificate-bound diamond data")
         sku, report_number = identity.group(1), identity.group(2).upper()
         if sku.upper() != expected_sku.upper():
             raise RetrievalError("Diyona listing SKU does not match the requested exact URL")
 
-        carat = Decimal(header.group(1))
-        shape = header.group(2).strip()
+        carat = Decimal(header.group(1)) if header else None
+        shape = header.group(2).strip() if header else None
         colour = _field(parsed.text, "Color")
         clarity = _field(parsed.text, "Clarity")
         dimensions = _dimensions(parsed.text)
@@ -385,7 +388,11 @@ class DiyonaListingProvider:
         )
         price = _decimal(price_match.group(1)) if price_match else None
 
-        fields = ["report_number", "lab", "retailer_sku", "origin", "shape", "carat"]
+        fields = ["report_number", "lab", "retailer_sku", "origin"]
+        if shape:
+            fields.append("shape")
+        if carat is not None:
+            fields.append("carat")
         if colour:
             fields.append("colour")
         if clarity:

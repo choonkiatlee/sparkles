@@ -7,7 +7,12 @@ import re
 import sys
 from urllib.error import URLError
 
-from diamond_retrieval import retrieve_diamond
+from dataclasses import replace
+
+from diamond_retrieval import default_config, retrieve_diamond
+from diamond_retrieval.http import UrllibHttpClient
+from diamond_retrieval.retailers import DiyonaListingProvider
+from .diyona_browser import RenderedDiyonaListingProvider
 from diamond_retrieval.errors import (
     IdentityConflictError, RetrievalError, UnsupportedInputError,
 )
@@ -23,6 +28,18 @@ _HTTP_LISTING_ERROR = re.compile(
 # Deliberately match only messages emitted by our own adapter. Never render
 # arbitrary upstream exception text, URLs, HTML, tokens or response bodies.
 _KNOWN_LISTING_ERRORS = {
+    "Diyona browser rendering failed":
+        ("listing_render_failed",
+         "The publicly accessible Diyona page could not be rendered in Chromium."),
+    "Diyona rendered listing did not expose certificate-bound diamond data":
+        ("listing_render_missing_identity",
+         "The rendered Diyona page did not reveal the requested certificate-bound SKU and IGI report."),
+    "Diyona browser navigation changed the exact listing":
+        ("listing_render_identity_mismatch",
+         "The browser navigated away from the requested exact Diyona stone."),
+    "Diyona rendered HTML exceeded safe size limit":
+        ("listing_render_too_large",
+         "The rendered Diyona HTML exceeded the configured safety limit."),
     "Diyona exact listing no longer exposes certificate-bound diamond data":
         ("listing_missing_identity",
          "Diyona did not expose the report number and SKU required for safe publication."),
@@ -84,6 +101,20 @@ def safe_failure(exc: Exception) -> tuple[str, str]:
             "An unexpected error occurred; inspect the failing stage without sharing secrets.")
 
 
+def retrieve_for_publication(url: str):
+    """Call the public retriever; add browser fallback only for exact Diyona."""
+    if DiyonaListingProvider(None).supports(url):
+        client = UrllibHttpClient()
+        config = default_config(client)
+        providers = tuple(
+            RenderedDiyonaListingProvider(client)
+            if isinstance(provider, DiyonaListingProvider) else provider
+            for provider in config.providers
+        )
+        return retrieve_diamond(url, config=replace(config, providers=providers))
+    return retrieve_diamond(url)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Publish one certificate-bound listing")
     parser.add_argument("--dry-run", action="store_true",
@@ -97,7 +128,7 @@ def main(argv: list[str] | None = None) -> int:
 
     stage = "listing retrieval"
     try:
-        result = retrieve_diamond(url)
+        result = retrieve_for_publication(url)
         stage = "publishability validation"
         plan = plan_publication(result)  # fail-closed gate before remote mutations
         kinds: dict[str, int] = {}
