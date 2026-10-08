@@ -27,3 +27,6 @@ A full human acceptance pass on a real mobile device is still worth doing.
 If this test fails, keep #153/#138 open and address concrete failures before
 closing the programme. This test must never silently skip missing assets or
 claim that a timed-out warmup is a success.
+
+
+Extended cross-engine acceptance: repeat the same live-original-media smoke in Chromium desktop, Android-emulated Chromium, WebKit with an iPhone 13 preset, and Firefox desktop. WebKit iPhone emulation is still not a physical iPhone. The source downloads are incurred once per independent browser profile. Inspect all four screenshots in the action artifact.

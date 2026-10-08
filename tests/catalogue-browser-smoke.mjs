@@ -5,16 +5,15 @@
 import assert from "node:assert/strict";
 import {mkdir,writeFile} from "node:fs/promises";
 import path from "node:path";
-import {chromium,devices} from "playwright";
+import {chromium,firefox,webkit,devices} from "playwright";
 
 const origin=process.env.CATALOGUE_SMOKE_ORIGIN || "http://127.0.0.1:8765";
 const route="/catalogue/?selected=igi-lg756520111%2Cigi-lg816611062&compare=1";
 const resultDir=path.resolve("browser-smoke-results");
 await mkdir(resultDir,{recursive:true});
 const summaries=[];
-const browser=await chromium.launch({headless:true});
-
-async function runProfile(label,device) {
+async function runProfile(label,device,browserType=chromium) {
+  const browser=await browserType.launch({headless:true});
   const context=await browser.newContext(device);
   const page=await context.newPage();
   const errors=[];
@@ -96,7 +95,7 @@ async function runProfile(label,device) {
     const bounds=await page.locator(".motion-slider").boundingBox();
     assert.ok(bounds && bounds.width>=75 && bounds.height>0,
       "Shared scrubber must be visible and usable at this viewport");
-    if(label==="mobile"){
+    if(label.includes("mobile") || label.includes("iphone")){
       await page.touchscreen.tap(bounds.x+bounds.width*0.75,bounds.y+bounds.height/2);
       assert.notEqual(await page.locator(".motion-slider").inputValue(),"500",
         "Touch interaction must move the shared scrubber");
@@ -121,12 +120,14 @@ async function runProfile(label,device) {
   }finally{
     summaries.push(summary);
     await context.close();
+    await browser.close();
   }
 }
 try{
-  await runProfile("desktop",{viewport:{width:1280,height:900}});
-  await runProfile("mobile",{...devices["Pixel 7"],viewport:{width:390,height:844}});
+  await runProfile("chromium-desktop",{viewport:{width:1280,height:900}});
+  await runProfile("chromium-mobile",{...devices["Pixel 7"],viewport:{width:390,height:844}});
+  await runProfile("webkit-iphone",{...devices["iPhone 13"],viewport:{width:390,height:844}},webkit);
+  await runProfile("firefox-desktop",{viewport:{width:1280,height:900}},firefox);
 }finally{
   await writeFile(path.join(resultDir,"results.json"),JSON.stringify(summaries,null,2));
-  await browser.close();
 }

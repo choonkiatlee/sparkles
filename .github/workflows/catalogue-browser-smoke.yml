@@ -13,7 +13,7 @@ permissions:
 jobs:
   real-rotation-browser-smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,8 +22,8 @@ jobs:
       - name: Install headless Chromium for standalone smoke test
         run: |
           npm install --no-save --no-package-lock playwright@1.56.1
-          npx playwright install --with-deps chromium
-      - name: Run desktop and emulated mobile Chromium against two original published 256-frame rotations
+          npx playwright install --with-deps chromium firefox webkit
+      - name: Run Chromium desktop/Android, WebKit iPhone, and Firefox desktop against original 256-frame rotations
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/sparkles-browser-site.log 2>&1 &
           web_pid=$!
