@@ -76,7 +76,7 @@ test("incomplete and malicious rotation data cannot be presented as a validated 
   assert.match(motionUnavailable([{kind:"rotation",status:"failed"}]),/Rotation incomplete/);
   assert.match(motionUnavailable([{kind:"video",status:"success",
     payload_asset:{storage:{url:"https://example.test/movie.mp4"}}}]),/video only/i);
-  assert.match(motionUnavailable([]),/No ordered rotation/);
+  assert.match(motionUnavailable([]),/No recovered motion evidence/);
 });
 
 test("bounded nearby mode is the default; all-mode queues exactly other frames only",()=>{
