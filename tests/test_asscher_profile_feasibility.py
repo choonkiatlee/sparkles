@@ -53,6 +53,10 @@ class ProfileFeasibilityTests(unittest.TestCase):
                     self.assertIsNone(row["uncertainty_deg"])
                     self.assertEqual(row["image_support"], [])
             self.assertEqual(
+                set(result["image_evidence"]["horizontal_band_proposals"]),
+                {"upper_central_band", "lower_central_band"},
+            )
+            self.assertEqual(
                 result["landmark_assessment"]["table"]["status"],
                 "not_assessed",
             )
@@ -73,7 +77,20 @@ class ProfileFeasibilityTests(unittest.TestCase):
                 self.assertIsNone(line["facet_identity"])
                 self.assertEqual(line["status"], "candidate_only")
                 self.assertGreater(line["vote_strength"], 0)
-                for x, y in line["endpoints_xy_px"]:
+                self.assertEqual(line["support_policy"], "strongest_connected_run_not_full_hough_line")
+                self.assertGreaterEqual(
+                    line["support_edgel_count"],
+                    feasibility.POLICY["min_connected_support_edgels"],
+                )
+                self.assertGreaterEqual(
+                    line["support_span_px"],
+                    feasibility.POLICY["min_connected_support_span_px"],
+                )
+                self.assertLess(
+                    line["support_span_px"],
+                    float(np.hypot(w, h)),
+                )
+                for x, y in line["supported_segment_xy_px"]:
                     self.assertGreaterEqual(x, 0)
                     self.assertLess(x, w)
                     self.assertGreaterEqual(y, 0)
@@ -88,6 +105,10 @@ class ProfileFeasibilityTests(unittest.TestCase):
             result, _, _ = feasibility.analyse_image(path)
             self.assertEqual(result["status"], "unavailable")
             self.assertEqual(result["image_evidence"]["line_candidates"], [])
+            self.assertTrue(all(
+                row["status"] == "unavailable"
+                for row in result["image_evidence"]["horizontal_band_proposals"].values()
+            ))
             self.assertIsNone(
                 result["image_evidence"]["activity_bbox_xyxy_px"]
             )
