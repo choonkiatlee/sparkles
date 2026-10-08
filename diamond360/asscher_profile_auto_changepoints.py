@@ -18,10 +18,11 @@ from PIL import Image, ImageDraw
 from . import asscher_profile_feasibility as feasibility
 from . import asscher_profile_auto_exterior as auto_exterior
 
-SCHEMA = "diamond360-asscher-auto-outline-changepoints/1"
+SCHEMA = "diamond360-asscher-auto-outline-changepoints/2"
 INPUT_SCHEMA = auto_exterior.SCHEMA
 POLICY = {
     "width_band_search_y_fraction": [0.54, 0.74],
+    "source_orientation": "pointed_upper_pavilion_broad_lower_crown",
     "width_band_within_peak_px": 5.0,
     "maximum_gap_within_band_px": 2,
     "minimum_band_rows": 6,
@@ -43,7 +44,7 @@ POLICY = {
 
 def _supported_points(record, side):
     data = {}
-    for phase in ("crown", "pavilion"):
+    for phase in ("pavilion", "crown"):
         path = record["paths"][f"{side}_{phase}"]
         for row in path["points"]:
             xy = row.get("xy_px")
@@ -148,7 +149,7 @@ def _region(record, band, side, phase):
     if band["status"] != "candidate_only":
         return {"status": "unavailable", "reason": "joint_maximum_width_unavailable"}
     full = _supported_points(record, side)
-    if phase == "crown":
+    if phase == "pavilion":
         ys = sorted(y for y in full if y < band["y_first_px"])
     else:
         ys = sorted(y for y in full if y > band["y_last_px"])
@@ -211,13 +212,15 @@ def _region(record, band, side, phase):
 
 def analyse(record):
     if record.get("schema_version") != INPUT_SCHEMA:
-        raise ValueError("requires background-first auto-exterior/2")
+        raise ValueError("requires oriented background-first auto-exterior/3")
     if record.get("comparison_targets_loaded") is not False:
         raise ValueError("expert angle targets must not enter extraction")
     if record.get("policy_sha256") != feasibility.canonical_sha256(auto_exterior.POLICY):
         raise ValueError("input contour method revision differs from pinned v2")
     if record.get("source_dimensions_xy_px") != [410, 319]:
         raise ValueError("expected source dimensions for archived profile")
+    if record.get("policy", {}).get("source_orientation") != POLICY["source_orientation"]:
+        raise ValueError("source orientation is missing or inverted")
     band = _candidate_widest_band(record)
     regions = {
         f"{side}_{phase}": _region(record, band, side, phase)
@@ -230,6 +233,7 @@ def analyse(record):
         "policy": POLICY,
         "policy_sha256": feasibility.canonical_sha256(POLICY),
         "widest_band_candidate": band,
+        "source_orientation": POLICY["source_orientation"],
         "regions": regions,
         "status": (
             "review" if any(row["status"] == "review" for row in regions.values())
@@ -251,10 +255,10 @@ def render_overlay(image_path, result):
     d = ImageDraw.Draw(image)
     scale = 3
     colors = {
-        "left_crown": (5, 190, 220),
-        "right_crown": (40, 75, 235),
-        "left_pavilion": (160, 52, 238),
-        "right_pavilion": (243, 45, 108),
+        "left_pavilion": (5, 190, 220),
+        "right_pavilion": (40, 75, 235),
+        "left_crown": (160, 52, 238),
+        "right_crown": (243, 45, 108),
     }
     band = result["widest_band_candidate"]
     if band["status"] == "candidate_only":
