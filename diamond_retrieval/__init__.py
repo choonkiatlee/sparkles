@@ -17,6 +17,12 @@ from .errors import (
 )
 from .http import UrllibHttpClient, validate_public_http_url
 from .identity import DiamondIdentityValidator, StrictIdentityValidator
+from .motion import ProgressiveRotationProcessor, decode_vision360_scramble
+from .motion_sources import (
+    D360RotationDownloader,
+    DiajewelRotationDownloader,
+    WorkshopRotationDownloader,
+)
 from .models import (
     CERTIFICATE,
     ROTATION,
@@ -61,6 +67,7 @@ from .protocols import (
 from .resolvers import IgiReportPdfResolver, Loupe360CertificateResolver
 from .retailers import DiyonaListingProvider, QualityDiamondsListingProvider
 from .retriever import DiamondRetriever
+from .video import DirectVideoDownloader, DirectVideoProcessor
 
 
 def retrieve_diamond(url: str, config: RetrievalConfig | None = None) -> DiamondResult:
@@ -79,6 +86,10 @@ __all__ = [
     "DiamondResult",
     "DiamondRetrievalError",
     "DiamondRetriever",
+    "D360RotationDownloader",
+    "DiajewelRotationDownloader",
+    "DirectVideoDownloader",
+    "DirectVideoProcessor",
     "DiyonaListingProvider",
     "Evidence",
     "EvidenceAttempt",
@@ -104,6 +115,7 @@ __all__ = [
     "Loupe360CertificateResolver",
     "MissingEvidenceError",
     "PdfCertificateProcessor",
+    "ProgressiveRotationProcessor",
     "ProvenanceStep",
     "QualityDiamondsListingProvider",
     "ROTATION",
@@ -127,7 +139,9 @@ __all__ = [
     "UrllibHttpClient",
     "VIDEO",
     "VideoEvidence",
+    "decode_vision360_scramble",
     "default_config",
     "retrieve_diamond",
     "validate_public_http_url",
+    "WorkshopRotationDownloader",
 ]
