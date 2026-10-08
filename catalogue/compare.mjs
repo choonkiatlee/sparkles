@@ -1,5 +1,6 @@
 // Pure manifest-to-comparison projection. No DOM, network, or source API calls.
 import { dimensionsText, priceText, displayValue } from "./core.mjs";
+import { extractRotation } from "./rotation.mjs";
 
 const ID = /^[a-z0-9][a-z0-9-]*$/;
 const SCHEMA = "sparkles-diamond-catalogue/1";
@@ -113,7 +114,7 @@ export function projectComparison(row, candidate) {
   };
   return {
     id:doc.id, report:field(doc.identity.report_number), lab:field(doc.identity.lab),
-    values, representative:representativeAsset(evidence),
+    values, representative:representativeAsset(evidence), rotation:extractRotation(evidence),
     certificate, verification, certificateRecovered:Boolean(pdf),
     listings, retrievals, evidence, currentListing, currentRetrieval,
     latestAt:dateText(currentRetrieval.retrieved_at),

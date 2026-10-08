@@ -1,6 +1,16 @@
 // C3a pure, storage-neutral ordered-motion model and configurable prefetch policy.
 // A playback position is *ordinal* and never a calibrated physical viewing angle.
-import { assetUrl } from "./compare.mjs";
+// Resolve the already-published storage URL directly, without depending on C2
+// metadata projection or requiring a specific provider/backend.
+const assetUrl = asset => {
+  const value=asset?.storage?.url;
+  if (typeof value !== "string") return null;
+  try {
+    const parsed=new URL(value);
+    return ["https:","http:"].includes(parsed.protocol) &&
+      !parsed.username && !parsed.password ? parsed.href : null;
+  } catch { return null; }
+};
 
 export const PREFETCH_MODES = Object.freeze(["none","nearby","all"]);
 export const FRAME_PREFETCH = Object.freeze({
