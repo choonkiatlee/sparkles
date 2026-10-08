@@ -112,6 +112,27 @@ class IngestionDiagnosticTests(unittest.TestCase):
         self.assertIn("listing_missing_identity", output.getvalue())
 
 
+    def test_diyona_public_api_403_is_reported_without_url_or_token(self):
+        code, hint = safe_failure(wrapped_retrieval_error(
+            "Diyona public diamond lookup returned HTTP 403"
+        ))
+        self.assertEqual(code, "listing_access_denied")
+        self.assertIn("HTTP 403", hint)
+        self.assertNotIn("example.com", hint)
+
+    def test_diyona_public_api_absent_sku_is_reported_as_missing(self):
+        code, hint = safe_failure(wrapped_retrieval_error(
+            "Diyona public diamond lookup has no unique exact SKU record"
+        ))
+        self.assertEqual(code, "listing_missing_identity")
+        self.assertNotIn("DO_NOT_LEAK", hint)
+
+    def test_diyona_source_change_is_not_silently_accepted(self):
+        code, _ = safe_failure(wrapped_retrieval_error(
+            "Diyona page advertises an unexpected diamond data source"
+        ))
+        self.assertEqual(code, "listing_api_source_changed")
+
     def test_quality_diamonds_known_parse_failure(self):
         issue = wrapped_retrieval_error(
             "Quality Diamonds exact listing does not expose certificate-bound diamond data"
