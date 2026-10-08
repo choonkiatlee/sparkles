@@ -1,0 +1,291 @@
+name: asscher-profile-physical-evidence
+
+on:
+  pull_request:
+    paths:
+      - "diamond360/asscher_profile_physical_evidence.py"
+      - "diamond360/asscher_profile_outer_contour.py"
+      - "diamond360/asscher_profile_assisted_review.py"
+      - "diamond360/asscher_profile_outline_changepoints.py"
+      - "diamond360/asscher_profile_auto_exterior.py"
+      - "diamond360/asscher_profile_auto_changepoints.py"
+      - "diamond360/asscher_profile_endpoint_candidates.py"
+      - "diamond360/asscher_profile_conditional_symmetry.py"
+      - "diamond360/asscher_profile_pavilion_refinement.py"
+      - "diamond360/asscher_profile_feasibility.py"
+      - "tests/test_asscher_profile_physical_evidence.py"
+      - "tests/test_asscher_profile_outer_contour.py"
+      - "tests/test_asscher_profile_assisted_review.py"
+      - "tests/test_asscher_profile_outline_changepoints.py"
+      - "tests/test_asscher_profile_auto_exterior.py"
+      - "tests/test_asscher_profile_auto_changepoints.py"
+      - "tests/test_asscher_profile_endpoint_candidates.py"
+      - "tests/test_asscher_profile_conditional_symmetry.py"
+      - "tests/test_asscher_profile_pavilion_refinement.py"
+      - "tests/test_asscher_profile_feasibility.py"
+      - "docs/360/asscher-geometry-validation/PROFILE-PHYSICAL-EVIDENCE.md"
+      - "docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG"
+      - ".github/workflows/asscher-profile-physical-evidence.yml"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install package
+        run: python -m pip install -e .
+      - name: Run target-blind physical-versus-optical separation tests
+        run: |
+          python -m unittest \
+            tests.test_asscher_profile_feasibility \
+            tests.test_asscher_profile_physical_evidence \
+            tests.test_asscher_profile_outer_contour \
+            tests.test_asscher_profile_assisted_review \
+            tests.test_asscher_profile_outline_changepoints \
+            tests.test_asscher_profile_auto_exterior \
+            tests.test_asscher_profile_auto_changepoints \
+            tests.test_asscher_profile_endpoint_candidates \
+            tests.test_asscher_profile_conditional_symmetry \
+            tests.test_asscher_profile_pavilion_refinement -v
+      - name: Emit source-pinned evidence review template
+        run: |
+          python -m diamond360.asscher_profile_physical_evidence \
+            --image docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG \
+            --require-original \
+            --output outputs/asscher-profile-physical-evidence/review-template.json
+      - name: Enforce no physical geometry or expert targets
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path("outputs/asscher-profile-physical-evidence/review-template.json")
+          doc = json.loads(p.read_text())
+          assert doc["source"]["archived_original_match"] is True
+          assert not doc["physical_boundary_annotations"]
+          assert doc["comparison"]["external_targets_loaded"] is False
+          assert all(not r["physical_measurement_eligible"] and r["semantic_facet_id"] is None
+                     for r in doc["image_only_evidence"])
+          assert all(facet["status"] == "unavailable" and facet["apparent_angle_deg"] is None
+                     for side in doc["semantic_measurements"].values()
+                     for facet in side.values())
+          print("Physical correspondence remains unverified, and all 8 angle slots are unavailable.")
+          PY
+      - name: Generate independent exterior-contour QC
+        run: |
+          python -m diamond360.asscher_profile_outer_contour \
+            --image docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG \
+            --require-original \
+            --output outputs/asscher-profile-physical-evidence
+      - name: Assert contour never promoted to facet angles
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          directory = Path("outputs/asscher-profile-physical-evidence")
+          record = json.loads((directory / "outer-contour.json").read_text())
+          assert record["source"]["original_verified"]
+          assert record["status"] in {"review", "unavailable"}
+          assert (directory / "outer-contour-candidates.png").is_file()
+          assert record["physical_landmark_status"]["table"]["status"] == "unavailable"
+          assert record["physical_landmark_status"]["girdle"]["status"] == "unavailable"
+          assert all(row["physical_angle_deg"] is None
+                     for side in record["semantic_measurements"].values()
+                     for row in side.values())
+          print("B2 physical contour isolated; anatomical landmarks/angles remain unverified.")
+          print("QC rows:", record["qc"])
+          print("Region proposals:", record["anatomical_candidates"])
+          PY
+      - name: Generate assisted anatomical annotation worksheet
+        run: |
+          python -m diamond360.asscher_profile_assisted_review \
+            --image docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG \
+            --output outputs/asscher-profile-physical-evidence
+      - name: Assert review workflow preserves unavailable physical angles
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          directory = Path("outputs/asscher-profile-physical-evidence")
+          p = json.loads((directory / "assisted-worksheet.json").read_text())
+          assert p["source"]["original_verified"] is True
+          assert p["comparison_targets_loaded"] is False
+          assert len(p["region_proposals"]) == 7
+          assert all(r["reviewer_verdict"] == "unreviewed"
+                     and r["independently_verified_physical_junction"] is False
+                     for r in p["region_proposals"])
+          assert all(x["status"] == "unavailable"
+                     for side in p["semantic_measurements"].values()
+                     for x in side.values())
+          assert (directory / "assisted-review-regions.png").is_file()
+          assert (directory / "assisted-review.html").is_file()
+          print("Image-only human worksheet verified; no numerical facets made up.")
+          PY
+      - name: Generate independent silhouette trace editor and changepoint baseline
+        run: |
+          python -m diamond360.asscher_profile_outline_changepoints \
+            --image docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG \
+            --output outputs/asscher-profile-physical-evidence
+      - name: Check no invented silhouette changepoints before review
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path("outputs/asscher-profile-physical-evidence")
+          result = json.loads((root/"exterior-changepoints.json").read_text())
+          assert result["status"] == "unavailable"
+          assert len(result["contours"]) == 4
+          assert all(item["status"] == "unavailable" for item in result["contours"].values())
+          assert all(row["physical_angle_deg"] is None
+                     for side in result["semantic_measurements"].values()
+                     for row in side.values())
+          assert (root/"exterior-tracer.html").is_file()
+          assert (root/"exterior-changepoints-overlay.png").is_file()
+          print("No physical contours or angles invented without separately reviewed traces.")
+          PY
+      - name: Generate automatically traced source silhouette
+        run: |
+          python -m diamond360.asscher_profile_auto_exterior \
+            --image docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG \
+            --require-original \
+            --output outputs/asscher-profile-physical-evidence
+      - name: Check automatic tracing remains an unverified proposal
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path("outputs/asscher-profile-physical-evidence")
+          result=json.loads((p/"auto-exterior.json").read_text())
+          assert result["original_verified"] and not result["comparison_targets_loaded"]
+          assert len(result["paths"]) == 4
+          assert (p/"auto-exterior-overlay.png").is_file()
+          for record in result["paths"].values():
+              assert record["physical_facet_correspondence"] == "not_established"
+              assert record["named_facet_angles"] == "unavailable"
+              for run in record["supported_runs"]:
+                  assert all(s["semantic_facet_id"] is None for s in run["fitted"]["segments"])
+          assert all(r["physical_angle_deg"] is None
+                     for side in result["semantic_measurements"].values()
+                     for r in side.values())
+          print("Auto-proposed external contour only; no expert targets or physical-angle claims.")
+          print({k: v["supported_fraction"] for k,v in result["paths"].items()})
+          PY
+      - name: Fit joint projected-contour changepoints without virtual facets
+        run: |
+          python -m diamond360.asscher_profile_auto_changepoints \
+            --image docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG \
+            --auto-json outputs/asscher-profile-physical-evidence/auto-exterior.json \
+            --output outputs/asscher-profile-physical-evidence
+      - name: Assert girdle interval and change points are only candidates
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path("outputs/asscher-profile-physical-evidence")
+          report = json.loads((root / "joint-changepoints.json").read_text())
+          assert report["physical_facet_angles"] == "all_unavailable"
+          assert report["comparison_targets_loaded"] is False
+          assert report["widest_band_candidate"]["status"] in ("candidate_only","unavailable")
+          for region in report["regions"].values():
+              if region["status"] == "review":
+                  assert region["selected_segment_count"] <= 3
+                  assert region["physical_facet_correspondence"] == "not_established"
+                  assert all(mark["status"] == "candidate_only"
+                             for mark in region["candidate_breakpoints"])
+          assert (root / "joint-changepoints-overlay.png").is_file()
+          print("Joint exterior changepoints candidate-only, no physical angles.")
+          print("Band:", report["widest_band_candidate"])
+          print("Segment counts:",
+                {k:v.get("selected_segment_count") for k,v in report["regions"].items()})
+          PY
+      - name: Generate upper pavilion tip and lower crown endpoint candidates
+        run: |
+          python -m diamond360.asscher_profile_endpoint_candidates \
+            --image docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG \
+            --auto-json outputs/asscher-profile-physical-evidence/auto-exterior.json \
+            --joint-json outputs/asscher-profile-physical-evidence/joint-changepoints.json \
+            --output outputs/asscher-profile-physical-evidence
+      - name: Check no physical angles or forced lower crown terminal symmetry
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          folder=Path("outputs/asscher-profile-physical-evidence")
+          doc=json.loads((folder/"endpoint-candidates.json").read_text())
+          assert doc["top_pavilion_tip_candidate"]["status"] in ("candidate_only", "unavailable")
+          assert doc["physical_facet_angle_status"] == "all_unavailable"
+          assert doc["comparison_targets_loaded"] is False
+          assert set(doc["lower_crown_contours"])=={"left","right"}
+          assert set(doc["last_crown_changepoint_candidates"])=={"left","right"}
+          assert (folder/"endpoint-review-overlay.png").is_file()
+          print("Top candidate:",doc["top_pavilion_tip_candidate"]["status"])
+          print("Terminal candidates:",{s:v["status"] for s,v in doc["last_crown_changepoint_candidates"].items()})
+          PY
+      - name: Generate unreviewed conditional symmetry preview
+        run: |
+          python -m diamond360.asscher_profile_conditional_symmetry \
+            --image docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG \
+            --auto-json outputs/asscher-profile-physical-evidence/auto-exterior.json \
+            --joint-json outputs/asscher-profile-physical-evidence/joint-changepoints.json \
+            --endpoint-json outputs/asscher-profile-physical-evidence/endpoint-candidates.json \
+            --output outputs/asscher-profile-physical-evidence
+      - name: Verify mirror is not accepted without independently confirmed head-on pose
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("outputs/asscher-profile-physical-evidence")
+          r=json.loads((p/"conditional-symmetry.json").read_text())
+          assert r["status"] == "preview_only_not_adopted"
+          assert r["pose_review"]["status"] == "not_confirmed"
+          assert r["physical_facet_angles"] == "all_unavailable"
+          assert r["right_crown_terminal_symmetry_hypothesis"]["status"] in {
+              "counterfactual_mirror_preview_not_applied","unavailable"}
+          assert r["independent_crown_terminal_candidates"]["right"]["status"] == "unavailable"
+          assert (p/"conditional-symmetry-preview.png").is_file()
+          assert (p/"pose-review-template.json").is_file()
+          print("Unconfirmed head-on: mirrored LOWER CROWN terminal remains a PREVIEW")
+          print("Mirror candidate:",r["right_crown_terminal_symmetry_hypothesis"].get("xy_px"))
+          print("Image-only proxy:",r["image_only_symmetry_diagnostic"])
+          PY
+      - name: Pavilion-specific independent versus optional symmetry model
+        run: |
+          python -m diamond360.asscher_profile_pavilion_refinement \
+            --image docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG \
+            --auto-json outputs/asscher-profile-physical-evidence/auto-exterior.json \
+            --joint-json outputs/asscher-profile-physical-evidence/joint-changepoints.json \
+            --endpoint-json outputs/asscher-profile-physical-evidence/endpoint-candidates.json \
+            --output outputs/asscher-profile-physical-evidence
+      - name: Verify observed pavilion remains separate from symmetry
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path("outputs/asscher-profile-physical-evidence")
+          r=json.loads((root/"pavilion-refinement.json").read_text())
+          assert r["physical_facet_angles"] == "all_unavailable"
+          assert r["comparison_targets_loaded"] is False
+          assert r["conditional_pavilion_model"]["status"] == "not_adopted_pose_unconfirmed_or_inconsistent"
+          assert all(r["independent_pavilion"][side]["status"] in {"review","unavailable"}
+                     for side in ("left","right"))
+          assert r["source_orientation"] == "pointed_upper_pavilion_broad_lower_crown"
+          assert all(y < r["widest_width_band_candidate"]["y_first_px"]
+                     for side in r["observed_supported_points"].values()
+                     for item in side for y in [item["xy_px"][1]])
+          assert (root/"pavilion-observed-vs-symmetry.png").is_file()
+          print("Upper pavilion evidence alone; lower crown excluded; mirror not adopted")
+          print({k: {"segments":v.get("selected_segment_count"),
+                     "breaks":[m["xy_px"] for m in v.get("breakpoints",[])]}
+                 for k,v in r["independent_pavilion"].items()})
+          PY
+      - name: Upload review template
+        uses: actions/upload-artifact@v4
+        with:
+          name: asscher-profile-physical-evidence
+          path: outputs/asscher-profile-physical-evidence
+          if-no-files-found: error
+          retention-days: 90
