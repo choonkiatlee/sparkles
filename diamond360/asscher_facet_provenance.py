@@ -105,7 +105,20 @@ def pairwise_support(observations, selected):
 
 
 def build_stone_record(lines, junctions):
-    """Merge independent source-RGB evidence while preserving provenance."""
+    """Merge independent source-RGB evidence while preserving provenance.
+
+    A previous contract accepted input diagnostic claims without checking
+    whether they had already promoted an optical edge or polygon into
+    purported physical geometry. Reject such upstream claims explicitly.
+    """
+    if lines.get("original_outer_method_unchanged") is not True:
+        raise ValueError("frozen observed outer silhouette provenance required")
+    if lines.get("physical_facet_claim") is not False:
+        raise ValueError("RGB line input cannot claim physical facet identity")
+    if junctions.get("production_estimator_changed") is not False:
+        raise ValueError("junction input must preserve frozen estimator")
+    if junctions.get("physical_facet_identity_verified") is not False:
+        raise ValueError("junction input cannot assert physical facet identity")
     certificate=lines.get("certificate")
     if not certificate or certificate != junctions.get("certificate"):
         raise ValueError("line and junction certificates disagree")
@@ -159,6 +172,8 @@ def build_stone_record(lines, junctions):
             if side.get("side")!=sector:
                 raise ValueError("line candidate side order changed")
             for rank,candidate in enumerate(side.get("detected_candidates") or []):
+                if candidate.get("rendered_segment_policy") != "only_contiguous_observed_RGB_gradient_pixels":
+                    raise ValueError("RGB line is not an observed contiguous segment")
                 fraction=candidate.get("fraction")
                 start,end=(candidate.get("sample_start"),
                            candidate.get("sample_end"))
@@ -186,8 +201,22 @@ def build_stone_record(lines, junctions):
                     "physical_facet_semantic_id":None,
                 })
         graph=jrow.get("junction_evidence") or {}
+        if graph.get("physical_facet_identity_verified") is not False:
+            raise ValueError("local RGB junction cannot be verified physical")
+        if graph.get("polygon") is not None:
+            raise ValueError("optical junction polygon cannot claim physical geometry")
         nodes=graph.get("nodes") or []
+        valid_line_refs=set()
+        for observed_side in raw_sides:
+            sector=observed_side["side"]
+            for rank in range(len(observed_side.get("detected_candidates") or [])):
+                valid_line_refs.add((str(sector),rank))
         for node in nodes:
+            refs=node.get("line_candidate_indices") or {}
+            if (len(refs)!=2 or
+                    any(type(rank) is not int or (sid,rank) not in valid_line_refs
+                        for sid,rank in refs.items())):
+                raise ValueError("junction references unobserved RGB line segment")
             if (type(node.get("id")) is not int or
                     type(node.get("corner_index")) is not int or
                     not 0<=node["corner_index"]<8):
