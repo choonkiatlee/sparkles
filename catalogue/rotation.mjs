@@ -129,8 +129,13 @@ export function createFramePreloader({
     return record;
   }
   function pump() {
-    while(!stopped && active<maxConcurrent && (urgent.length || background.length)) {
+    while(!stopped && (urgent.length || background.length)) {
       const fromUrgent=urgent.length>0;
+      // A full prefetch may occupy every background slot for seconds.
+      // Let user-requested frames temporarily use a couple of extra bounded
+      // connections instead of waiting for background downloads to finish.
+      const capacity=maxConcurrent+(fromUrgent ? Math.min(2,maxConcurrent) : 0);
+      if(active>=capacity)break;
       const url=fromUrgent?urgent.shift():background.shift();
       if(!fromUrgent)backgroundSet.delete(url);
       const record=entries.get(url);
