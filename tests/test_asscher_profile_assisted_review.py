@@ -132,6 +132,20 @@ class AssistedProfileReviewTests(unittest.TestCase):
                 "decisions": [{"region_id": "H", "verdict": "ambiguous", "note": "bad"}],
             })
 
+    def test_top_pavilion_tip_cannot_be_reviewed_as_table(self):
+        proposal = {
+            "schema_version": "diamond360-asscher-profile-human-review/1",
+            "source_sha256": feasibility.ORIGINAL_PROFILE_SHA256,
+            "decisions": [{
+                "region_id": "A",
+                "verdict": "possible_table_edge",
+                "note": "Anatomically inverted annotation must be refused.",
+                "trace_xy_px": [],
+            }],
+        }
+        with self.assertRaisesRegex(ValueError, "pointed upper pavilion tip"):
+            review.apply_review(self.template, proposal)
+
     def test_export_produces_usable_image_and_self_contained_touch_ui(self):
         with tempfile.TemporaryDirectory() as tmp:
             folder = Path(tmp)
