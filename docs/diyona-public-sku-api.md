@@ -13,7 +13,7 @@ even for a live, purchasable stone.
    an attempt to parse certificate details from the page.
 3. Perform the exact same read-only public query as Diyona's JavaScript:
 
-   `GET https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=*&sku=eq.<SKU>&limit=1`
+   `GET https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=*&sku=eq.<SKU>&limit=2`
 
    The public anonymous token from the page is passed as `apikey` and
    `Authorization: Bearer` for this one trusted host and is **never logged,
@@ -61,3 +61,11 @@ Test fixture coverage is not proof that the current original assets remain
 downloadable; that is verified separately by live ingestion. The optional
 `igi_report` workflow field from #120 remains an exceptional manual fallback
 when the retailer public API is unavailable, never the default.
+
+## Unique-SKU lookup guard
+
+The REST read requests up to **two** rows for the exact SKU (rather than
+`limit=1`). This ensures a duplicate SKU is actually observable: zero or two
+rows fail closed before any certificate or media retrieval. A one-row result
+must also match the supplied SKU exactly. This is a correctness safeguard
+if the public table's uniqueness constraints ever change.

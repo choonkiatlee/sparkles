@@ -19,7 +19,7 @@ from tests.test_diamond_retrieval_retailers import (
 PAGE = "https://diyona.com/pages/diamond-detail?sku=A69835AA4"
 BASE = "https://ofjwrrqzzbcnmkkmlawl.supabase.co"
 API = BASE + "/rest/v1/public_diamonds?" + urlencode(
-    {"select":"*", "sku":"eq.A69835AA4", "limit":"1"}
+    {"select":"*", "sku":"eq.A69835AA4", "limit":"2"}
 )
 ANON = "public-anon-test-key-with-no-privileged-access-1234567890"
 REPORT = "LG816611062"

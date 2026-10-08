@@ -62,7 +62,7 @@ def query_public_diyona_record(
     # It is used only for an exact row read on this pinned Supabase host.
     anon_key = match_key.group(1)
     api_url = _PUBLIC_PROJECT + "/rest/v1/public_diamonds?" + urlencode(
-        {"select": "*", "sku": "eq." + sku, "limit": "1"}
+        {"select": "*", "sku": "eq." + sku, "limit": "2"}
     )
     response = client.get(
         api_url, timeout=timeout,
