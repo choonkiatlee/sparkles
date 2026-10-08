@@ -143,6 +143,29 @@
       "source_url": "https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/3F40DCFE6",
       "tax_basis": "inc. VAT",
       "thumbnail_url": "https://github.com/choonkiatlee/sparkles/releases/download/sparkles-diamond-igi-lg825659883/asset-728633e5b479c0683aa487f20be6cf99b3f2ea571f5b6ebc81495a87d0253e35.jpg"
+    },
+    {
+      "carat": "2.55",
+      "clarity": "VVS1",
+      "colour": "D",
+      "currency": "USD",
+      "dimensions": [
+        7.57,
+        7.46,
+        4.93
+      ],
+      "has_motion": true,
+      "id": "igi-lg836619414",
+      "lab": "IGI",
+      "manifest_path": "data/diamonds/igi-lg836619414.json",
+      "price": "712.81",
+      "report_number": "LG836619414",
+      "retailer": "diyona.com",
+      "retrieval_status": "complete",
+      "shape": "Asscher",
+      "source_url": "https://diyona.com/pages/diamond-detail?sku=F8D42074F",
+      "tax_basis": "public API USD price; storefront/tax basis not verified",
+      "thumbnail_url": "https://github.com/choonkiatlee/sparkles/releases/download/sparkles-diamond-igi-lg836619414/asset-20a51979bfd6ceb49cfcdb974c906127797ccd854c4647d67e9e4917f99c3cbf.jpg"
     }
   ],
   "schema": "sparkles-diamond-index/1"
