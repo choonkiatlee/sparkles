@@ -216,7 +216,7 @@ class RemoteV360RotationDownloader(_ProgressiveDownloader):
     """
 
     source_name = "v360-remote"
-    _CDN_HOST = re.compile(r"^s[0-9]+\\.v360\\.in$", re.IGNORECASE)
+    _CDN_HOST = re.compile(r"^s[0-9]+\.v360\.in$", re.IGNORECASE)
     _CDN_PATH = re.compile(r"^/images/company/[0-9]+/$")
 
     def _source(self, reference: EvidenceReference) -> tuple[str, str, str]:
