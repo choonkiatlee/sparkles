@@ -1,43 +1,31 @@
 """#91 PR C comparison is separate from untouched image-only source fitting."""
 from copy import deepcopy
 import hashlib
+import os
 import json
 from pathlib import Path
 import tempfile
 import unittest
 
 from diamond360 import asscher_profile_external_comparison as external
-from diamond360 import asscher_profile_auto_exterior as exterior
-from diamond360 import asscher_profile_auto_changepoints as changepoints
-from diamond360 import asscher_profile_endpoint_candidates as endpoints
-from diamond360 import asscher_profile_pavilion_refinement as pavilion
-from diamond360 import asscher_profile_feasibility as source
 
 ROOT = Path(__file__).resolve().parents[1]
-IMAGE = ROOT / "docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG"
 REFERENCE = ROOT / "docs/360/geometry-ground-truth/diagem-2008-asscher/ground-truth.json"
 
 
 class ProfilePostFreezeComparisonTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        # Generate target-blind frozen geometry. Do not import/read reference
-        # until ALL geometry outputs have passed the frozen byte hash check.
-        cls.working = tempfile.TemporaryDirectory()
-        out = Path(cls.working.name)
-        exterior.write_qc(IMAGE, out, source.ORIGINAL_PROFILE_SHA256)
-        changepoints.write_report(IMAGE, out / "auto-exterior.json", out)
-        endpoints.write_report(IMAGE, out / "auto-exterior.json",
-                               out / "joint-changepoints.json", out)
-        pavilion.write_report(IMAGE, out / "auto-exterior.json",
-                              out / "joint-changepoints.json",
-                              out / "endpoint-candidates.json", out)
-        cls.frozen = (out / "pavilion-refinement.json").read_bytes()
-        cls.frozen_path = out / "pavilion-refinement.json"
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.working.cleanup()
+        # Fetch original PR #118 archived artifact before tests, never
+        # regenerate the source under a potentially modified environment.
+        artifact = os.environ.get("SPARKLES_FROZEN_PR118_JSON")
+        if not artifact:
+            raise RuntimeError(
+                "Set SPARKLES_FROZEN_PR118_JSON to the exact archived "
+                "CI run 37798814740 pavilion-refinement.json, not a re-fit"
+            )
+        cls.frozen_path = Path(artifact)
+        cls.frozen = cls.frozen_path.read_bytes()
 
     def test_exact_original_ci_artifact_is_reproducible_before_opening_targets(self):
         self.assertEqual(
