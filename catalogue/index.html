@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Sparkles saved diamond catalogue: browse and select certified diamonds for research comparison.">
+  <title>Sparkles · Saved diamond catalogue</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./app.mjs" type="module"></script>
+</head>
+<body>
+  <a class="skip" href="#catalogue">Skip to saved diamonds</a>
+  <header class="topbar shell">
+    <a class="wordmark" href="../">◇ <span>Sparkles</span></a>
+    <nav aria-label="Main navigation">
+      <a href="../">Research archive</a><a aria-current="page" href="./">Saved catalogue</a>
+    </nav>
+  </header>
+  <main class="shell">
+    <section class="intro">
+      <p class="eyebrow">Diamond research · saved evidence</p>
+      <h1>Your saved stones,<br>side by side.</h1>
+      <p>Browse certified diamonds already recovered into the archive. Prices are historical observations in their original currencies; retrieval completeness is not a quality judgment.</p>
+    </section>
+    <section id="catalogue" aria-labelledby="catalogue-title">
+      <div class="section-heading">
+        <div><h2 id="catalogue-title">Catalogue</h2><p id="count" role="status" aria-live="polite">Loading published catalogue…</p></div>
+        <span class="source-note">Original evidence · No optical ranking</span>
+      </div>
+      <div class="tools" aria-label="Catalogue controls">
+        <label class="search-field">Search <input id="search" type="search" placeholder="Report, retailer, grade…" disabled></label>
+        <label>Status <select id="status-filter" disabled><option value="all">All retrieval statuses</option><option value="complete">Complete</option><option value="partial">Partial</option></select></label>
+        <label>Sort <select id="sort" disabled><option value="report">Report number</option><option value="carat">Carat (ascending)</option><option value="price">Price (grouped by currency)</option></select></label>
+      </div>
+      <div id="error" class="error" role="alert" hidden></div>
+      <div id="cards" class="cards" aria-live="off"></div>
+      <p id="empty" class="empty" hidden>No diamonds match these filters.</p>
+    </section>
+    <section class="selection" aria-label="Selected diamonds">
+      <div class="selection-line"><div><h2>Selected for comparison</h2><p id="selected-count" aria-live="polite">Select two to five diamonds.</p></div>
+        <div class="selection-buttons"><button type="button" class="outline" id="clear-selection">Clear</button><button type="button" id="compare-button" disabled>Compare selected</button></div></div>
+      <div id="selected-chips" class="selected-chips"></div>
+      <div id="comparison" hidden><h3>Selected stone overview</h3><p class="subtle">This initial preview uses catalogue metadata. Full side-by-side evidence, provenance and synchronized rotations follow in C2/C3.</p><div id="comparison-grid" class="comparison-grid"></div></div>
+    </section>
+  </main>
+  <footer class="shell foot"><span>Sparkles · Research contact sheet</span><a href="https://github.com/choonkiatlee/sparkles">Source archive ↗</a></footer>
+</body>
+</html>
