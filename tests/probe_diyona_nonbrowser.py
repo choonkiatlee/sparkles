@@ -80,6 +80,35 @@ def main():
                 snippet=body[max(0,pos-100):min(len(body),pos+210)].replace("\\n"," ")
                 snippet=re.sub(r"""(?i)(?:apikey|access_token|authorization|anon_key|password)\\s*[:=]\\s*["'][^"']+["']""","[redacted]",snippet)
                 print("    ",term,repr(snippet[:310]))
+    # Reproduce the page's public Supabase read-only query over plain HTTP.
+    inline = next((x for x in parsed.inline
+                   if "public_diamonds" in x and "SUPABASE_ANON" in x), "")
+    host = re.search(r"SUPABASE_URL\\s*=\\s*['\\\"](https://[a-z0-9-]+\\.supabase\\.co)['\\\"]",inline)
+    key = re.search(r"SUPABASE_ANON\\s*=\\s*['\\\"]([A-Za-z0-9._-]+)['\\\"]",inline)
+    print("public query config", bool(host), bool(key))
+    if host and key:
+        api_url = host.group(1) + "/rest/v1/public_diamonds?" + urllib.parse.urlencode({
+            "sku": "eq.A69835AA4", "select": "*", "limit": "1"
+        })
+        try:
+            res = client._request(api_url,timeout=20,method="GET",
+                     headers={"apikey":key.group(1),"Authorization":"Bearer "+key.group(1),
+                              "Accept":"application/json"})
+            print("Supabase status",res.status_code,"bytes",len(res.content))
+            if res.status_code==200:
+                import json
+                data=json.loads(res.content)
+                print("Supabase rows",len(data) if isinstance(data,list) else "not-list")
+                if isinstance(data,list) and data:
+                    d=data[0]
+                    print("Supabase columns",sorted(d.keys()))
+                    print("Supabase sku",d.get("sku"))
+                    for k in ("lab","report_number","certificate_number","certificate_no","certificate","igi_number","certNumber","carat","shape","v360","video"):
+                        if k in d:
+                            val=d[k]
+                            print("Supabase",k,str(val)[:90] if isinstance(val,(str,int,float)) else type(val).__name__)
+        except Exception as e:
+            print("Supabase request failed",type(e).__name__)
     # A handful of scripts only, bounded by total response size.
     for i,s in enumerate(parsed.scripts[:24]):
         if s.startswith("https://") and urllib.parse.urlsplit(s).hostname in {"diyona.com","www.diyona.com","cdn.shopify.com"}:
