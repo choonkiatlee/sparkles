@@ -100,10 +100,10 @@ def _outline_symmetry_proxy(contour, report, endpoints):
     lrows = _supported(contour, "left", "pavilion")
     rrows = _supported(contour, "right", "pavilion")
     shared = sorted(set(lrows) & set(rrows))
-    if len(shared) < POLICY["minimum_paired_supported_crown_rows"]:
+    if len(shared) < POLICY["minimum_paired_supported_pavilion_rows"]:
         return {
             "status": "unavailable",
-            "reason": "insufficient_independently_supported_crown_pairs",
+            "reason": "insufficient_independently_supported_pavilion_pairs",
             "paired_rows": len(shared),
             "axis_x_px": round(axis, 3),
         }
@@ -117,8 +117,8 @@ def _outline_symmetry_proxy(contour, report, endpoints):
     median = float(np.median(offsets))
     p90 = float(np.percentile(offsets, 90))
     plausible = (
-        median <= POLICY["max_crown_median_mirror_axis_offset_px"]
-        and p90 <= POLICY["max_crown_p90_mirror_axis_offset_px"]
+        median <= POLICY["max_pavilion_median_mirror_axis_offset_px"]
+        and p90 <= POLICY["max_pavilion_p90_mirror_axis_offset_px"]
         and (apex_offset is None or
              apex_offset <= POLICY["max_top_apex_offset_from_axis_px"])
     )
