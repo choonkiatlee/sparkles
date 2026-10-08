@@ -78,6 +78,7 @@ class DiamondRetriever:
         evidence: list[Evidence] = []
         resolved_keys: set[str] = set()
         downloaded_keys: set[str] = set()
+        evidence_by_key: dict[str, tuple[int, ...]] = {}
 
         while queue:
             reference, depth = queue.popleft()
@@ -120,6 +121,18 @@ class DiamondRetriever:
                 continue
 
             if reference.retrieval_key in downloaded_keys:
+                # The bytes belong to one asset, but the same source can be
+                # advertised by both the listing and exact-certificate resolver.
+                # Keep both discovery paths on the one retained evidence object.
+                for index in evidence_by_key.get(reference.retrieval_key, ()):
+                    item = evidence[index]
+                    additional = tuple(
+                        step for step in reference.provenance if step not in item.provenance
+                    )
+                    if additional:
+                        evidence[index] = replace(
+                            item, provenance=item.provenance + additional
+                        )
                 attempts.append(
                     self._attempt(reference, EvidenceStatus.DUPLICATE, "asset already downloaded")
                 )
@@ -159,7 +172,11 @@ class DiamondRetriever:
             except Exception as exc:
                 attempts.append(self._attempt(reference, EvidenceStatus.PROCESSING_FAILED, str(exc)))
                 continue
+            first_index = len(evidence)
             evidence.extend(processed)
+            evidence_by_key[reference.retrieval_key] = tuple(
+                range(first_index, len(evidence))
+            )
             attempt_status = (
                 EvidenceStatus.EXTRACTION_FAILED
                 if any(item.status == EvidenceStatus.EXTRACTION_FAILED for item in processed)

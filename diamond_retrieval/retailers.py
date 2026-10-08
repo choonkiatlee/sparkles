@@ -220,73 +220,77 @@ def _direct_video_locator(value: str) -> bool:
     )
 
 
-def _motion_reference(source: str, url: str, report_number: str, parsed: _ParsedHtml) -> EvidenceReference | None:
+def _motion_references(
+    source: str, url: str, report_number: str, parsed: _ParsedHtml
+) -> tuple[EvidenceReference, ...]:
+    """Retain all distinct exact-stone media advertised by the listing.
+
+    Loupe links are resolved in addition to direct media, but an unlinked
+    "360 View" label prompts a lookup only if no concrete source was found.
+    """
     values = (*parsed.hrefs, *parsed.media)
-    direct_rotation = next(
-        (value for value in values if _direct_rotation_locator(value)),
-        None,
-    )
-    if direct_rotation:
-        return EvidenceReference(
-            identifier=f"{source}:{report_number}:rotation",
-            kind=ROTATION,
-            retrieval_key=direct_rotation,
-            locator=direct_rotation,
-            provenance=(ProvenanceStep(source, url),),
-            metadata={"lab": "IGI", "report_number": report_number},
+    references: list[EvidenceReference] = []
+    seen: set[tuple[str, str]] = set()
+
+    for value in values:
+        if _direct_rotation_locator(value):
+            kind = ROTATION
+        elif _direct_video_locator(value):
+            kind = VIDEO
+        else:
+            continue
+        key = (str(kind), value)
+        if key in seen:
+            continue
+        seen.add(key)
+        references.append(
+            EvidenceReference(
+                identifier=f"{source}:{report_number}:{kind}:{len(references)}",
+                kind=kind,
+                retrieval_key=value,
+                locator=value,
+                provenance=(ProvenanceStep(source, url, {"media_url": value}),),
+                metadata={
+                    "lab": "IGI",
+                    "report_number": report_number,
+                    **({"format": "video"} if kind == VIDEO else {}),
+                },
+            )
         )
 
-    direct_video = next(
-        (value for value in values if _direct_video_locator(value)),
-        None,
-    )
-    if direct_video:
-        return EvidenceReference(
-            identifier=f"{source}:{report_number}:video",
-            kind=VIDEO,
-            retrieval_key=direct_video,
-            locator=direct_video,
-            provenance=(ProvenanceStep(source, url),),
-            metadata={
-                "lab": "IGI",
-                "report_number": report_number,
-                "format": "video",
-            },
-        )
-
-    candidates = [
+    # One certificate-bound lookup can yield either evidence kind or both.
+    # Two policy-selectable references share a retrieval key so that only
+    # one lookup occurs when both rotation and video are requested.
+    loupe_links = tuple(dict.fromkeys(
         value
         for value in values
-        if "loupe360.com" in urlsplit(value).netloc.lower()
-    ]
-    if candidates:
-        locator = candidates[0]
-        return EvidenceReference(
-            identifier=f"{source}:{report_number}:rotation",
-            kind=ROTATION,
-            retrieval_key=locator,
-            locator=locator,
-            provenance=(ProvenanceStep(source, url),),
-            metadata={
-                "lab": "IGI",
-                "report_number": report_number,
-                "resolver": "loupe360_certificate",
-            },
+        if urlsplit(value).netloc.lower() in {"loupe360.com", "www.loupe360.com"}
+        and urlsplit(value).scheme in {"http", "https"}
+    ))
+    has_unlinked_motion = (
+        "360°" in parsed.text or "Loading 360" in parsed.text or "360 View" in parsed.text
+    )
+    if loupe_links or (not references and has_unlinked_motion):
+        locator = loupe_links[0] if loupe_links else f"loupe360-report:{report_number}"
+        provenance = (
+            ProvenanceStep(source, url, {"loupe360_links": loupe_links}),
         )
-    if "360°" in parsed.text or "Loading 360" in parsed.text or "360 View" in parsed.text:
-        return EvidenceReference(
-            identifier=f"{source}:{report_number}:rotation",
-            kind=ROTATION,
-            retrieval_key=f"loupe360-report:{report_number}",
-            locator=f"loupe360-report:{report_number}",
-            provenance=(ProvenanceStep(source, url),),
-            metadata={
-                "lab": "IGI",
-                "report_number": report_number,
-                "resolver": "loupe360_certificate",
-            },
-        )
-    return None
+        for kind in (ROTATION, VIDEO):
+            references.append(
+                EvidenceReference(
+                    identifier=f"{source}:{report_number}:loupe360:{kind}",
+                    kind=kind,
+                    retrieval_key=f"loupe360-report:{report_number}",
+                    locator=locator,
+                    provenance=provenance,
+                    metadata={
+                        "lab": "IGI",
+                        "report_number": report_number,
+                        "resolver": "loupe360_certificate",
+                    },
+                )
+            )
+    return tuple(references)
 
 
 def _still_references(
@@ -424,9 +428,7 @@ class DiyonaListingProvider:
                 parsed=parsed,
             )
         )
-        motion = _motion_reference("diyona_listing", url, report_number, parsed)
-        if motion:
-            references.append(motion)
+        references.extend(_motion_references("diyona_listing", url, report_number, parsed))
 
         sanitized = _sanitize_retained_html(raw)
         return ListingRecord(
@@ -572,11 +574,9 @@ class QualityDiamondsListingProvider:
                 hosts=self._still_hosts,
             )
         )
-        motion = _motion_reference(
-            "quality_diamonds_listing", url, report_number, parsed
+        references.extend(
+            _motion_references("quality_diamonds_listing", url, report_number, parsed)
         )
-        if motion:
-            references.append(motion)
 
         sanitized = _sanitize_retained_html(raw)
         return ListingRecord(
