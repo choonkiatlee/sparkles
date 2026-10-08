@@ -14,7 +14,8 @@ class PagesCatalogueTests(unittest.TestCase):
                 "index.html", ".nojekyll", "catalogue/index.html",
                 "catalogue/core.mjs", "catalogue/app.mjs", "catalogue/styles.css",
                 "catalogue/compare.mjs", "catalogue/comparison-view.mjs",
-                "catalogue/rotation.mjs", "catalogue/rotation-player.mjs",
+                "catalogue/rotation.mjs", "catalogue/rotation-canvas.mjs",
+                "catalogue/rotation-player.mjs",
                 "data/catalog.json", "data/diamonds/igi-lg756520111.json",
                 "data/diamonds/igi-lg816611062.json",
             ):
@@ -61,6 +62,9 @@ class PagesCatalogueTests(unittest.TestCase):
         self.assertNotIn("motion-frame-caption", player)
         self.assertNotIn("motion-prefetch-progress", player)
         self.assertIn("coordinator.seek", player)
+        self.assertIn("createPreviewCache", player)
+        self.assertIn("createCanvasSurface", player)
+        self.assertIn("subscribeFrames", model)
         self.assertIn('"all"', model)
         self.assertIn("asset?.storage?.url", model)
         self.assertNotIn("api.github.com", model)

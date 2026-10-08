@@ -2,6 +2,7 @@
 // every selected next frame is ready; avoid frame-by-frame DOM status updates.
 import { FRAME_PREFETCH, createFramePreloader, createBufferedFrameCoordinator,
   frameIndexAt,stepPosition } from "./rotation.mjs";
+import {createPreviewCache,createCanvasSurface} from "./rotation-canvas.mjs";
 
 const el=(tag,className="",text=null)=>{
   const node=document.createElement(tag);
@@ -13,7 +14,8 @@ const el=(tag,className="",text=null)=>{
 export function createRotationPlayer({host,slots,config=FRAME_PREFETCH}) {
   const stones=new Map();
   let position=0, timer=null, playToken=0, destroyed=false;
-  let preloader;
+  let preloader,frameUnsubscribe;
+  const previews=createPreviewCache();
   let scrubRaf=null, pendingScrub=null, drag=null;
   const coordinator=createBufferedFrameCoordinator(urls=>preloader.focus(urls));
 
@@ -52,10 +54,12 @@ export function createRotationPlayer({host,slots,config=FRAME_PREFETCH}) {
   const steps=()=>Math.max(1,...ready().map(item=>item.rotation.frameCount));
   const allUrls=()=>ready().map(item=>item.rotation);
   function installPreloader(mode) {
+    frameUnsubscribe?.();
     preloader?.stop();
     preloader=createFramePreloader({mode,nearbyRadius:config.nearbyRadius,
       maxConcurrent:config.maxConcurrent,maxDecoded:config.maxDecoded});
-   }
+    frameUnsubscribe=preloader.subscribeFrames((url,image)=>previews.add(url,image));
+  }
   function syncControls() {
     const enabled=ready().length>0;
     for(const control of [play,back,forward,slider])control.disabled=!enabled;
@@ -72,13 +76,13 @@ export function createRotationPlayer({host,slots,config=FRAME_PREFETCH}) {
     pendingScrub=next;
     if(scrubRaf!==null)return;
     if(typeof globalThis.requestAnimationFrame!=="function"){
-      pendingScrub=null;seek(next);return;
+      pendingScrub=null;seek(next,{interactive:true});return;
     }
     scrubRaf=globalThis.requestAnimationFrame(()=>{
       scrubRaf=null;
       const latest=pendingScrub;
       pendingScrub=null;
-      if(latest!==null)seek(latest);
+      if(latest!==null)seek(latest,{interactive:true});
     });
   }
   function pause() {
@@ -88,18 +92,33 @@ export function createRotationPlayer({host,slots,config=FRAME_PREFETCH}) {
     play.setAttribute("aria-label","Play synchronized original rotations");
   }
   function present(item,frame,index,image) {
-    // This is an already-decoded <img>. The old frame stays in place until this
-    // synchronous replacement, so there is no blank intermediary src change.
-    image.className="motion-image";
-    image.alt="Original frame "+(index+1)+" of "+item.rotation.frameCount+
-      " for "+item.report+"; camera angle not calibrated";
-    image.draggable=false;
-    item.stage.replaceChildren(image);
+    if(item.surface){
+      if(!item.surface.draw(image))return false;
+    }else{
+      // Canvas2D unavailable: retain the original decoded <img> fallback.
+      image.className="motion-image";
+      image.alt="Original frame "+(index+1)+" of "+item.rotation.frameCount+
+        " for "+item.report+"; camera angle not calibrated";
+      image.draggable=false;
+      item.stage.replaceChildren(image);
+    }
     item.currentURL=frame.url;
     item.currentIndex=index;
     item.error.hidden=true;
-   }
-  async function seek(next) {
+    return true;
+  }
+  // The preview cache stores downscaled canvases derived from source frames
+  // as full-resolution downloads finish. Both columns must have previews
+  // before we display either, preserving the aligned ordinal comparison.
+  function showPreviews(targets) {
+    if(!targets.every(({item})=>Boolean(item.surface)))return false;
+    const images=targets.map(({frame})=>previews.get(frame.url));
+    if(images.some(image=>!image))return false;
+    coordinator.invalidate();
+    return targets.every(({item,index,frame},i)=>
+      present(item,frame,index,images[i]));
+  }
+  async function seek(next,{interactive=false}={}) {
     if(destroyed || !Number.isFinite(next))return false;
     position=Math.max(0,Math.min(0.999999,next));
     syncControls();
@@ -109,31 +128,40 @@ export function createRotationPlayer({host,slots,config=FRAME_PREFETCH}) {
       const index=frameIndexAt(position,item.rotation.frameCount);
       return {item,index,frame:item.rotation.frames[index]};
     });
+    const previewShown=showPreviews(targets);
+    // While dragging or playing, a cached small preview is enough. When the
+    // user releases the gesture (or steps), seek originals for full detail.
+    // If any preview is missing, wait for all original frames as before.
+    if(previewShown && interactive){
+      preloader.observe(allUrls(),position);
+      return true;
+    }
     const promise=coordinator.seek(targets.map(x=>x.frame.url),images=>{
       targets.forEach(({item,index,frame},i)=>{
         const image=images[i];
         if(image)present(item,frame,index,image);
-        else {
-          // Preserve the last successfully decoded frame on all network errors.
+        else if(!previews.get(frame.url)){
+          // Keep the last successfully painted frame, even on network errors.
           item.error.hidden=false;
-         }
+        }
       });
     });
-    // Make the requested frames high priority before scheduling bulk work.
     preloader.observe(allUrls(),position);
     return promise;
   }
   async function playNext(token) {
     if(destroyed || token!==playToken)return;
     const target=stepPosition(position,steps(),1);
-    await seek(target);
+    await seek(target,{interactive:true});
     if(destroyed || token!==playToken)return;
     // Wait for all selected next frames before advancing. Slow networking
     // reduces frame rate instead of presenting blank/mismatched columns.
     timer=setTimeout(()=>playNext(token),55);
   }
   function togglePlay() {
-    if(timer!==null || play.textContent==="Pause"){pause();return;}
+    if(timer!==null || play.textContent==="Pause"){
+      pause();cancelScrub();seek(position);return;
+    }
     if(!ready().length)return;
     pause();cancelScrub();
     play.textContent="Pause";
@@ -146,6 +174,10 @@ export function createRotationPlayer({host,slots,config=FRAME_PREFETCH}) {
   });
   back.addEventListener("click",()=>{pause();cancelScrub();seek(stepPosition(position,steps(),-1));});
   forward.addEventListener("click",()=>{pause();cancelScrub();seek(stepPosition(position,steps(),1));});
+  slider.addEventListener("change",()=>{
+    const latest=pendingScrub;
+    cancelScrub();seek(latest===null?position:latest);
+  });
   play.addEventListener("click",togglePlay);
   prefetchToggle.addEventListener("change",()=>{
     pause();cancelScrub();coordinator.invalidate();
@@ -174,6 +206,11 @@ export function createRotationPlayer({host,slots,config=FRAME_PREFETCH}) {
     const finish=event=>{
       if(drag?.item!==item || drag.pointerId!==event.pointerId)return;
       drag=null;
+      const latest=pendingScrub;
+      cancelScrub();
+      // A release may arrive before the queued animation-frame callback.
+      // Always paint its latest target, then refine from the original.
+      seek(latest===null?position:latest);
       if(event.type!=="lostpointercapture")stage.releasePointerCapture?.(event.pointerId);
     };
     for(const type of ["pointerup","pointercancel","lostpointercapture"])
@@ -204,6 +241,7 @@ export function createRotationPlayer({host,slots,config=FRAME_PREFETCH}) {
     const figure=el("figure","motion-figure");
     item.stage=el("div","motion-image-stage");
     item.stage.append(el("span","motion-unavailable","Loading original frame…"));
+    item.surface=createCanvasSurface(item.stage,report);
     installDrag(item);
     item.error=el("div","motion-frame-error");
     item.error.hidden=true;
@@ -232,7 +270,7 @@ export function createRotationPlayer({host,slots,config=FRAME_PREFETCH}) {
   function destroy() {
     if(destroyed)return;
     destroyed=true;pause();cancelScrub();coordinator.close();
-    preloader.stop();stones.clear();drag=null;
+    frameUnsubscribe?.();preloader.stop();previews.clear();stones.clear();drag=null;
   }
 
   installPreloader(config.mode);
