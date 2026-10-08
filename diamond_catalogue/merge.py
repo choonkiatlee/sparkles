@@ -8,7 +8,7 @@ from .identity import diamond_id
 from .models import CatalogueError, SCHEMA
 from .serialization import canonical_json
 
-_CERT_FIELDS = ("shape", "origin", "carat", "colour", "clarity", "dimensions", "reported_proportions")
+_CERT_FIELDS = ("shape", "origin", "carat", "colour", "clarity", "dimensions")
 
 
 def _equivalent(left, right) -> bool:
@@ -67,6 +67,21 @@ def merge_manifest(existing: dict | None, incoming: dict) -> dict:
                 raise CatalogueError(f"Conflicting certified metadata: {field}")
             if older is None and newer is not None:
                 old_meta[field] = newer
+        # Proportions are selectively reported by retailers, not certified
+        # wholesale as one indivisible dict. A new observation may add a
+        # previously missing polish or girdle grade without conflicting with
+        # the already known table/depth values. Never overwrite a different
+        # known value silently.
+        old_props = old_meta.setdefault("reported_proportions", {})
+        for key, newer in (new_meta.get("reported_proportions") or {}).items():
+            if newer is None:
+                continue
+            older = old_props.get(key)
+            if older is not None and not _equivalent(older, newer):
+                raise CatalogueError(f"Conflicting reported proportion: {key}")
+            if older is None:
+                old_props[key] = copy.deepcopy(newer)
+        old_meta["reported_proportions"] = dict(sorted(old_props.items()))
         old_meta.setdefault("attribution", {}).update({
             k: v for k, v in new_meta.get("attribution", {}).items()
             if k not in old_meta.get("attribution", {})
