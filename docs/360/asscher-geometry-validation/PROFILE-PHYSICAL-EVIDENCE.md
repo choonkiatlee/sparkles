@@ -112,3 +112,71 @@ targets. The original 410×319 JPEG and exact SHA-256 are checked by
 
 Non-goals: using internal contrast as geometry, universal 3D reconstruction,
 physical length inference from projected facet widths, or quality scoring.
+
+
+## B2 — independent background-separated exterior contour proposals
+
+Module: \`diamond360.asscher_profile_outer_contour\`, schema
+\`diamond360-asscher-profile-outer-contour/1\`.
+
+The purpose of this increment is to establish whether the **outer projected
+silhouette** can be traced from the uniform background without consulting
+interior step/virtual-facet edges. It is not a geometry-to-physical-angle fit.
+
+**Mechanism:** estimate the encoded-RGB background from two small upper corner
+patches; Gaussian-smooth the RGB image; segment pixels distinct from that
+background at three fixed RGB-distance thresholds; close tiny breaks and take
+the largest connected foreground component with holes filled. Only the
+predeclared upper/main image region is processed. The low/shadow band is
+excluded. At every source-image row, report left/right silhouette candidates
+separately from three threshold runs. Rows with missing evidence, border bleed
+or a cross-threshold endpoint spread over 8 pixels are downgraded to
+\`review\` / \`unavailable\`, never silently averaged into a precise contour.
+The background itself is rejected if reference patches are inconsistent.
+
+**Two image-only proposals** are emitted:
+
+- \`upper_profile_width_region\`: a narrow upper outer width region; **not
+  automatically the polished table**.
+- \`maximum_outer_width_region\`: the widest stable contour region; **not
+  automatically the girdle plane**.
+
+The proposed silhouette is only a *projection*. Even when its outline is
+well separated from background, a photograph does not directly determine
+which polished side-facet plane produced a given apparent segment. Table,
+girdle and culet remain \`unavailable\` pending independent verification.
+All eight named facet-angle slots remain \`unavailable\`, with no virtual
+edges used in geometry estimation.
+
+### Adversarial falsification gate
+
+On synthetic profiles, changing numerous strong internal horizontal/diagonal
+virtual-looking lines without changing the exterior must leave contour
+coordinates essentially unchanged. Blank sources fail closed. Tested tilted
+and partially occluded images must not imply physical angles or accepted
+camera projection. This proves a **specific algorithmic isolation property**,
+not source-level accuracy on an actual refractive diamond.
+
+Generate QC:
+
+\`\`\`bash
+python -m unittest tests.test_asscher_profile_outer_contour -v
+python -m diamond360.asscher_profile_outer_contour \
+  --image docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG \
+  --require-original \
+  --output outputs/asscher-profile-outer-contour
+\`\`\`
+
+Produces \`outer-contour.json\` and \`outer-contour-candidates.png\`.
+Green contour points mean cross-threshold stable *candidates*; orange points
+mean threshold-sensitive rows; blue rectangles are broad image-only regions.
+All are proposals, not accepted anatomical boundaries. Inspect these on the
+original photo before attempting to fit named P1/P2/P3/C1.
+
+**Limitations:** a bright/transparent outer edge may resemble the background,
+and table/wing reflections may touch the actual silhouette. Largest-component
+segmentation can therefore miss or absorb source detail; uncertainty is
+exposed with multi-threshold support but cannot make a wrong silhouette true.
+A human reviewer should explicitly assess each outer interval and reject
+unsupported regions. Changing this fixed policy after seeing expert targets
+would require a new declared method revision.
