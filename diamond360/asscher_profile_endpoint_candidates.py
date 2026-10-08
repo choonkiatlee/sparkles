@@ -1,8 +1,8 @@
-"""Image-only projected top-apex and terminal pavilion-contour hypotheses for #91.
+"""Image-only upper pavilion point and lower crown-contour hypotheses for #91.
 
-The existing joint crown/pavilion changepoint model covers the long outline.
+The existing joint pavilion/crown changepoint model covers the long outline.
 This *separate* endpoint experiment handles two regions its fixed ROI omits:
-the tiny top silhouette cap, and the faint terminal pavilion beside the
+the point-like pavilion tip at the top, and faint lower crown beside the
 photographic platform. Missing/shadow-contaminated endpoints FAIL CLOSED.
 No physical facet identities or Sergey angles are assigned.
 """
@@ -20,7 +20,7 @@ from . import asscher_profile_feasibility as feasibility
 from . import asscher_profile_auto_exterior as exterior
 from . import asscher_profile_auto_changepoints as joint
 
-SCHEMA = "diamond360-asscher-profile-endpoints/1"
+SCHEMA = "diamond360-asscher-profile-endpoints/2"
 POLICY = {
     "upper_source_column_fraction": [0.44, 0.56],
     "upper_search_rows_px": [40, 85],
@@ -43,7 +43,8 @@ POLICY = {
     "terminal_joint_penalty_sensitivity_px2": [40.0, 100.0, 250.0],
     "terminal_break_search_near_end_rows_px": 24,
     "top_edge_identity": "projected_point_like_apex_not_verified_table_or_culet",
-    "terminal_edge_identity": "outside_projection_candidate_not_verified_pavilion_facet",
+    "terminal_edge_identity": "outside_projection_candidate_not_verified_crown_facet",
+    "source_orientation": "pointed_upper_pavilion_broad_lower_crown",
     "do_not_fill_missing_side_from_symmetry": True,
     "no_internal_virtual_facets_or_expert_angles": True,
 }
@@ -92,16 +93,16 @@ def _top_cap(distance):
     central = min(valid, key=lambda run: abs((run[0][0]+run[-1][0])/2-(w-1)/2))
     return {
         "status": "candidate_only",
-        "kind": "projected_point_like_outer_apex_not_verified_table_or_culet",
-        "projected_apex_xy_px": [round((central[0][0] + central[-1][0])/2, 2), int(min_y)],
+        "kind": "projected_pavilion_tip_culet_region_not_polished_culet_facet",
+        "projected_pavilion_tip_xy_px": [round((central[0][0] + central[-1][0])/2, 2), int(min_y)],
         "appearance": "point_like_at_this_source_resolution",
         "source_xy_px": central,
         "left_endpoint_xy_px": central[0],
         "right_endpoint_xy_px": central[-1],
         "observed_width_px": central[-1][0] - central[0][0] + 1,
         "top_source_y_px": min_y,
-        "physical_table_identity": "not_established",
-        "physical_culet_identity": "not_established",
+        "physical_table_identity": "lower_broad_end_not_yet_verified",
+        "physical_culet_identity": "pointed_upper_region_candidate_not_culet_facet_verified",
         "reason": "first_sustained_source_background_contact_from_top",
     }
 
@@ -109,7 +110,7 @@ def _top_cap(distance):
 def _source_supported(record, side):
     return {
         int(p["xy_px"][1]): int(p["xy_px"][0])
-        for p in record["paths"][side + "_pavilion"]["points"]
+        for p in record["paths"][side + "_crown"]["points"]
         if p["xy_px"] is not None and p["support"] == "edge_supported_candidate"
     }
 
@@ -119,13 +120,13 @@ def _lower_trace(distance, record, side):
     known = _source_supported(record, side)
     seed_ys = sorted(y for y in known if y < POLICY["lower_start_row_px"])[-10:]
     if len(seed_ys) < POLICY["lower_seed_min_supported_points"]:
-        return {"status": "unavailable", "reason": "missing_supported_lower_pavilion_seed", "points": []}
+        return {"status": "unavailable", "reason": "missing_supported_lower_crown_seed", "points": []}
     seed_y = seed_ys[-1]
     seed_x = float(known[seed_y])
     velocity = float(np.polyfit(seed_ys, [known[y] for y in seed_ys], 1)[0])
     sign = 1 if side == "left" else -1
     if velocity * sign < 0:
-        return {"status": "unavailable", "reason": "last_supported_pavilion_is_not_inward", "points": []}
+        return {"status": "unavailable", "reason": "last_supported_crown_is_not_inward", "points": []}
     velocity = float(np.clip(velocity, -3.5, 3.5))
     prev, misses = seed_x, 0
     points = []
@@ -229,17 +230,21 @@ def _terminal_bend(record, extension, side):
         "xy_px": [round(x0, 2), y0],
         "breakpoint_y_candidates_px": knots,
         "reason": "image_only_terminal_slope_change_cross_penalty_support",
-        "physical_pavilion_facet_identity": "not_established",
+        "physical_crown_facet_identity": "not_established",
     }
 
 
 def analyse(rgb, contour, joint_report):
+    if contour.get("policy", {}).get("source_orientation") != POLICY["source_orientation"]:
+        raise ValueError("source orientation mismatch")
     if contour.get("schema_version") != exterior.SCHEMA or (
         contour.get("policy_sha256") != feasibility.canonical_sha256(exterior.POLICY)
     ):
         raise ValueError("endpoint tool requires frozen background-first auto contour v2")
     if contour.get("source_sha256") != feasibility.ORIGINAL_PROFILE_SHA256:
         raise ValueError("wrong source hash")
+    if joint_report.get("source_orientation") != POLICY["source_orientation"]:
+        raise ValueError("joint source orientation mismatch")
     if joint_report.get("schema_version") != joint.SCHEMA or (
         joint_report.get("source_sha256") != feasibility.ORIGINAL_PROFILE_SHA256
     ):
@@ -256,33 +261,34 @@ def analyse(rgb, contour, joint_report):
     return {
         "schema_version": SCHEMA,
         "source_sha256": feasibility.ORIGINAL_PROFILE_SHA256,
+        "source_orientation": POLICY["source_orientation"],
         "policy": POLICY,
         "policy_sha256": feasibility.canonical_sha256(POLICY),
-        "top_cap_candidate": top,
-        "terminal_contours": lower,
-        "last_pavilion_changepoint_candidates": bends,
+        "top_pavilion_tip_candidate": top,
+        "lower_crown_contours": lower,
+        "last_crown_changepoint_candidates": bends,
         "comparison_targets_loaded": False,
         "physical_facet_angle_status": "all_unavailable",
-        "interpretation": "Original-photo boundary candidates only. The top is a point-like PROJECTED apex, not an identified polished table or culet. Bottom shadows may hide pavilion steps. No enforced mirror symmetry without verified head-on geometry.",
+        "interpretation": "Original-photo boundary candidates only. The upper tip is a POINT-LIKE PAVILION/CULET-REGION candidate, not a polished culet facet. The lower shadow may obscure CROWN and table-region geometry. No enforced mirror symmetry without verified head-on geometry.",
     }
 
 
 def render_overlay(base_image, result):
     image = base_image.copy()
     draw = ImageDraw.Draw(image)
-    top = result["top_cap_candidate"]
+    top = result["top_pavilion_tip_candidate"]
     if top["status"] == "candidate_only":
         # A tiny 8-pixel imaging plateau does not prove a flat table or
         # two physical breakpoints. Present one apex hypothesis instead.
-        x, y = top["projected_apex_xy_px"]
+        x, y = top["projected_pavilion_tip_xy_px"]
         draw.ellipse((3*x-9, 3*y-9, 3*x+9, 3*y+9),
                      fill=(0, 240, 226), outline=(0,0,0), width=2)
-    for side, row in result["terminal_contours"].items():
+    for side, row in result["lower_crown_contours"].items():
         for p in row["points"]:
             x,y = p["xy_px"]
             color = (28,225,115) if p["status"]=="candidate_only" else (248,145,34)
             draw.ellipse((3*x-3,3*y-3,3*x+3,3*y+3),fill=color)
-    for side, bend in result["last_pavilion_changepoint_candidates"].items():
+    for side, bend in result["last_crown_changepoint_candidates"].items():
         if bend["status"]=="candidate_only":
             x,y = bend["xy_px"]
             draw.ellipse((3*x-9,3*y-9,3*x+9,3*y+9),
@@ -316,8 +322,8 @@ def main():
     args = parser.parse_args()
     result = write_report(args.image,args.auto_json,args.joint_json,args.output)
     print(json.dumps({
-        "top_cap":result["top_cap_candidate"]["status"],
-        "last_pavilion_bends":{side:row["status"] for side,row in result["last_pavilion_changepoint_candidates"].items()},
+        "upper_pavilion_tip":result["top_cap_candidate"]["status"],
+        "last_crown_bends":{side:row["status"] for side,row in result["last_pavilion_changepoint_candidates"].items()},
         "physical_angles":"unavailable",
     },sort_keys=True))
 
