@@ -17,13 +17,13 @@ from PIL import Image, ImageDraw, ImageFont
 
 from . import asscher_profile_feasibility as feasibility
 
-SCHEMA = "diamond360-asscher-profile-assisted-review/1"
+SCHEMA = "diamond360-asscher-profile-assisted-review/2"
 # Broad regions identified from the source photograph itself. Their names
 # describe a question, not a certified feature or automatic facet boundary.
 # All coordinates refer to the archived 410 x 319 source pixel grid.
 REGIONS = (
-    ("A", "upper central edge candidate", "possible_table_region", (145, 49, 264, 105),
-     "Is a genuine external table edge visible here, rather than a bright internal reflection?"),
+    ("A", "upper pointed pavilion tip", "pavilion_culet_point_region", (145, 49, 264, 105),
+     "Is the projected pointed pavilion/culet-region tip visible? It need not be a polished culet facet."),
     ("B", "left upper exterior", "silhouette_region", (43, 87, 168, 214),
      "Which visible boundary, if any, separates the LEFT exterior from background?"),
     ("C", "right upper exterior", "silhouette_region", (242, 86, 374, 214),
@@ -32,8 +32,8 @@ REGIONS = (
      "Is an exterior girdle junction actually identifiable at the LEFT widest region?"),
     ("E", "right widest profile", "possible_girdle_region", (301, 181, 380, 243),
      "Is an exterior girdle junction actually identifiable at the RIGHT widest region?"),
-    ("F", "lower profile / culet vicinity", "lower_contour_region", (93, 225, 316, 307),
-     "Is the pavilion exterior recoverable independently of reflections and floor shadow?"),
+    ("F", "lower crown / table vicinity", "lower_crown_table_region", (93, 225, 316, 307),
+     "Is the LOWER crown and broad table-region outline recoverable despite platform shadow?"),
     ("G", "central optical bands", "interior_appearance_control", (115, 112, 295, 200),
      "Do these conspicuous straight bands look like REFLECTED/virtual features, or is physical correspondence genuinely established?"),
 )
@@ -84,6 +84,7 @@ def make_worksheet(image_path):
     } for key, label, kind, roi, question in REGIONS]
     return {
         "schema_version": SCHEMA,
+        "source_orientation": "pointed_upper_pavilion_broad_lower_crown",
         "source": {
             "sha256": sha, "width_px": w, "height_px": h,
             "original_verified": True,
@@ -115,6 +116,8 @@ def make_worksheet(image_path):
 def validate_worksheet(data):
     if data.get("schema_version") != SCHEMA:
         raise ValueError("wrong assisted review schema")
+    if data.get("source_orientation") != "pointed_upper_pavilion_broad_lower_crown":
+        raise ValueError("inverted source orientation")
     source = data.get("source", {})
     if source.get("sha256") != feasibility.ORIGINAL_PROFILE_SHA256 or (
         source.get("width_px"), source.get("height_px")
@@ -214,9 +217,9 @@ def draw_overview(worksheet, image):
     draw = ImageDraw.Draw(out)
     color_map = {
         "silhouette_region": (38, 180, 70),
-        "possible_table_region": (39, 128, 224),
+        "pavilion_culet_point_region": (39, 128, 224),
         "possible_girdle_region": (242, 150, 35),
-        "lower_contour_region": (187, 83, 207),
+        "lower_crown_table_region": (187, 83, 207),
         "interior_appearance_control": (206, 58, 70),
     }
     for item in worksheet["region_proposals"]:
