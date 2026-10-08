@@ -237,7 +237,7 @@ class CommittedOccupancyArtifactTests(unittest.TestCase):
         self.assertEqual(committed, curated)
 
         payload = json.loads((self.ROOT / "dispositions.json").read_text())
-        self.assertEqual(payload["redundancy_with_switching"], "pending_issue_28")
+        # Issue #28 now has its own resolved disposition; do not freeze its old pending status here.
         self.assertIn("intentionally omitted from Git", payload["benchmark_evidence"]["note"])
         survivor = payload["surviving_state_definition"]
         self.assertEqual(survivor["representation"], "coarse")
