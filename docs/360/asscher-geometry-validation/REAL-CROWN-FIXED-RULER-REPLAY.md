@@ -1,8 +1,7 @@
 # #92 — Seven original crown frames with one frozen geometry ruler
 
 This PR replays **one** original 256-frame Asscher rotation,
-\`IGI-LG756520111\`, using its exact frozen #89 output (CI artifact from run
-37830584391). There is no new geometric fitting or threshold selection.
+\`IGI-LG756520111\`, using the unchanged frozen #89 geometric method. **One stone-level primary fit** is reproduced, then fixed for all seven frames. There is **no per-frame geometric refitting or threshold selection**.
 
 ## Why this replay matters
 
@@ -32,17 +31,25 @@ image-plane semantic ruler.
 - **Source-face classification:** likely crown lobe (from frozen #89);
   this does NOT verify C3/table's polished facet boundaries.
 
-The archived primary and per-frame transfer are loaded **unchanged**
-after byte-level SHA verification. If they drift, the replay fails.
-The original hash-pinned source archive is the only downloaded image input.
-The preprocessing and #73/#80 pose registration are replayed to
-recover exact canonical measurement-frame arrays and source-camera mapping;
-the resulting gauge/position/phase/quarter turn must reproduce #89.
+The originally archived #89 primary and transfer SHA-256 digests above are
+**historical reference fingerprints**. We inspected their frozen source
+selection, phase, semantic gauge, and per-frame entity support counts.
+The workflow first tried downloading the original archive from GitHub
+Actions, but its job token returned HTTP 401. Rather than skip the real
+photographs or disguise a re-fit, the implementation instead **reproduces
+one primary geometry fit** with the exact frozen `outer_octagon_v2`
+specification on the one pinned source stone. It then hard-checks the
+**original #89 chosen source indices (13,16,17,18,19), sequence gauge,
+seven source phases/quarter-turns, and the #89 per-frame entity
+ok/review/unavailable counts** before accepting the result.
 
-The **geometry estimator is never called**: no
-\`asscher_wireframe.fit_from_sector_evidence\`, no tuning of #96, no
-new selection. Only the frozen \`asscher_semantic_optical_handoff\`
-brightness sampler runs on seven actual gauged frames.
+Only the first step calls the original frozen method fitter; **none of
+the seven transfer frames refits or moves geometry**. This is a
+frozen-method reconstruction, not a byte-for-byte loaded archived
+primary scaffold. The alternative `verify_frozen_archive` method
+remains available for a separately authenticated downloaded artifact,
+with strict SHA matching. Source preprocessing and #73/#80 pose
+registration still recover real canonical measurement-frame pixels.
 
 ## Deliverables
 
