@@ -53,11 +53,29 @@ A real disagreement raises `IdentityConflictError` with source-linked comparison
 
 ## Supplier motion and Loupe360 resolution
 
-The default factory registers Diajewel, Workshop/Core360, D360 and direct public video downloaders. Progressive rotations are decoded and validated as complete ordered 256-frame sequences, preserving original JPEG bytes, dimensions, hashes and source positions; video bytes are retained without frame decoding. Unknown valid source IDs do not require registration or a hardcoded allowlist.
+The default factory registers Diajewel, Workshop/Core360, V360 4.0 (including Loupe360-linked remote-media viewers), D360 and direct public video downloaders. Progressive rotations are decoded and validated as complete ordered 256-frame sequences, preserving original JPEG bytes, dimensions, hashes and source positions; video bytes are retained without frame decoding. Unknown valid source IDs do not require registration or a hardcoded allowlist.
 
 All distinct supported rotation/viewer and direct video URLs advertised on the exact listing are retained as independent evidence references. The certificate-bound Loupe360/Nivoda public resolver can find a supported supplier viewer **and** a supported direct video in one lookup (rather than choosing only one) using the full report identity. It does not search unrelated records or guess supplier IDs. Both direct listing links and Loupe360-resolved sources work through the same default `retrieve_diamond(url)` API. Duplicate asset URLs are downloaded once and their listing/lookup provenance is combined in the retained evidence record; each discovered reference still has an explicit attempt status. One unsuccessful selected asset makes standard-policy completion `partial` even if another rotation or video succeeded. Video and rotation kinds can be excluded independently by an injected policy.
 
 The default completion policy still requires a successfully downloaded and identity-matched certificate plus validated motion. A certificate URL alone is not sufficient for `complete`. Callers can supply an injected certificate-only policy if appropriate.
+
+### Vision360 4.0 remote media
+
+Loupe360 exact-certificate resolution can return an external Vision360 4.0 viewer like
+`https://v360.in/viewer4.0/vision360.html?d=VDC-32-50&surl=https://s10.v360.in/images/company/1546/`.
+The `RemoteV360RotationDownloader` uses the **supplied exact** `d` and `surl`
+to locate the progressive JSON sequence below
+`https://s10.v360.in/images/company/1546/VDC-32-50/`.
+It requires a public HTTPS V360 CDN root of the form
+`s<digits>.v360.in/images/company/<digits>/` (or the documented same-origin
+viewer default without `surl`), rejects arbitrary external hosts and path
+traversal, and keeps original source bytes and frame ordering through the
+existing `ProgressiveRotationProcessor`. No inventory search or guessed
+supplier movie identifier is involved.
+
+A simulated regression uses the viewer returned for IGI LG781646632.
+The real supplier endpoint must still be exercised by rerunning that diamond
+after merge; simulated 256-frame fixtures are not proof of live availability.
 
 ## Public HTTP safety
 
