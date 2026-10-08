@@ -97,7 +97,7 @@ def _fit_records(pose_output, records, gauge_id, *, method=validation.OUTER_METH
     evidence, u, masks, brightness, metadata = _load_evidence(
         pose_output, records
     )
-    if method == validation.OUTER_METHOD:
+    if method in (validation.OUTER_METHOD, validation.WINDOW_METHOD):
         outer_fit = outer_octagon.fit_consensus(
             masks, frame_metadata=metadata
         )
@@ -118,6 +118,11 @@ def _fit_records(pose_output, records, gauge_id, *, method=validation.OUTER_METH
         frame_metadata=metadata,
         outer_vertices=outer_vertices,
         outer_confidence=outer_confidence,
+        step_peak_policy=(
+            wireframe.steps.WINDOW_PEAK_POLICY
+            if method == validation.WINDOW_METHOD
+            else wireframe.steps.GLOBAL_PEAK_POLICY
+        ),
     )
     result["selected_frames"] = metadata
     if outer_fit is not None:
@@ -134,7 +139,7 @@ def _primary_fit(pose_output, pose_payload, *, method=validation.OUTER_METHOD):
             "reason": "stable_sequence_gauge_unavailable",
             "scaffold": None,
         }, [], [], []
-    if method == validation.OUTER_METHOD:
+    if method in (validation.OUTER_METHOD, validation.WINDOW_METHOD):
         coarse = wireframe._select_geometry_records(
             pose_payload, max_frames=None
         )
@@ -1166,7 +1171,8 @@ def main():
         default=Path("docs/360/benchmark/source-bundles.json"),
     )
     parser.add_argument(
-        "--method", choices=(validation.LEGACY_METHOD, validation.OUTER_METHOD),
+        "--method", choices=(validation.LEGACY_METHOD, validation.OUTER_METHOD,
+                   validation.WINDOW_METHOD),
         default=validation.OUTER_METHOD,
     )
     args = parser.parse_args()
