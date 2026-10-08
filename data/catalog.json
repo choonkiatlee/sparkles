@@ -95,6 +95,29 @@
       "source_url": "https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/62B27BC48",
       "tax_basis": "inc. VAT",
       "thumbnail_url": "https://github.com/choonkiatlee/sparkles/releases/download/sparkles-diamond-igi-lg818659722/asset-c74e440724c25ec6582ad1d54bd858e87b8bfd86d49941f31e1125b3b637cd3a.jpg"
+    },
+    {
+      "carat": "2.44",
+      "clarity": "VVS1",
+      "colour": "E",
+      "currency": "GBP",
+      "dimensions": [
+        7.57,
+        7.53,
+        4.68
+      ],
+      "has_motion": true,
+      "id": "igi-lg825659883",
+      "lab": "IGI",
+      "manifest_path": "data/diamonds/igi-lg825659883.json",
+      "price": "605.00",
+      "report_number": "LG825659883",
+      "retailer": "www.qualitydiamonds.co.uk",
+      "retrieval_status": "partial",
+      "shape": "Asscher",
+      "source_url": "https://www.qualitydiamonds.co.uk/loose-diamonds/buy-loose-diamonds?d=133/3F40DCFE6",
+      "tax_basis": "inc. VAT",
+      "thumbnail_url": "https://github.com/choonkiatlee/sparkles/releases/download/sparkles-diamond-igi-lg825659883/asset-728633e5b479c0683aa487f20be6cf99b3f2ea571f5b6ebc81495a87d0253e35.jpg"
     }
   ],
   "schema": "sparkles-diamond-index/1"
