@@ -14,43 +14,31 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Inspect exact Core360 viewer wire references
+      - name: Extract Core360 player transport constants
         run: |
           python - <<'PY'
-          import re, urllib.parse, urllib.request
+          import re, urllib.request
+          url="https://v3603703.v360.in/js/vision360.js"
           viewer="https://v3603703.v360.in/vision360.html?d=NGS-05-413"
-          headers={"User-Agent":"Mozilla/5.0 SparklesIssue100/1","Accept":"text/html,*/*"}
-          req=urllib.request.Request(viewer,headers=headers)
+          req=urllib.request.Request(
+              url,
+              headers={"User-Agent":"Mozilla/5.0 SparklesIssue100/1","Accept":"*/*","Referer":viewer},
+          )
           with urllib.request.urlopen(req,timeout=20) as response:
-              raw=response.read()
-              final=response.geturl()
-          text=raw.decode("utf-8","replace")
-          print("viewer_final=",final,"bytes=",len(raw))
-          for needle in ("imaged","0.json","360view","vision360","data/","version"):
-              positions=[m.start() for m in re.finditer(re.escape(needle),text,re.I)]
-              print("page_hit=",needle,positions[:10])
-              for pos in positions[:2]:
-                  print(text[max(0,pos-300):min(len(text),pos+700)])
-          scripts=re.findall(r'<script[^>]+src=["\']([^"\']+)',text,re.I)
-          print("script_srcs=",scripts)
-          for src in scripts:
-              url=urllib.parse.urljoin(final,src)
-              if urllib.parse.urlsplit(url).netloc != urllib.parse.urlsplit(final).netloc:
-                  continue
-              try:
-                  req=urllib.request.Request(url,headers={"User-Agent":headers["User-Agent"],"Accept":"*/*","Referer":final})
-                  with urllib.request.urlopen(req,timeout=20) as response:
-                      body=response.read().decode("utf-8","replace")
-                  hits=[]
-                  for needle in ("imaged","0.json","data/","scramble","version"):
-                      p=body.lower().find(needle.lower())
-                      if p>=0:
-                          hits.append((needle,p))
-                  if hits:
-                      print("script=",url,"bytes=",len(body),"hits=",hits)
-                      for needle,pos in hits:
-                          print("script_hit=",needle)
-                          print(body[max(0,pos-500):min(len(body),pos+1200)])
-              except Exception as exc:
-                  print("script_error=",url,type(exc).__name__,str(exc))
+              body=response.read().decode("utf-8","replace")
+          print("bytes=",len(body))
+          for needle in ("imaged","0.json",".json","version=","data/1","data1","v360.in"):
+              positions=[m.start() for m in re.finditer(re.escape(needle),body,re.I)]
+              print("needle=",needle,"positions=",positions[:30])
+              for pos in positions[:8]:
+                  print("CONTEXT",pos)
+                  print(body[max(0,pos-1500):min(len(body),pos+3000)])
+          literals=re.findall(r'["\']([^"\']{1,300})["\']',body)
+          interesting=[
+              value for value in literals
+              if any(token in value.lower() for token in ("imaged","json","version","data/","http","vision360"))
+          ]
+          print("interesting_literals_count=",len(interesting))
+          for value in interesting[:200]:
+              print("LITERAL",repr(value))
           PY
