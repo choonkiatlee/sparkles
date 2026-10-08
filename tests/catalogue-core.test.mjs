@@ -41,3 +41,15 @@ test("selection dedupes URL IDs, bounds at five, keeps bookmarkable compare stat
   assert.match(query,/utm_source=test/);
   assert.equal(MAX_SELECTION,5);
 });
+
+
+test("colour and clarity sorting obey certified grade order and keep unknown grades last",()=>{
+  const items = [
+    {...rows[0], id:"a",colour:"H",clarity:"SI1"},
+    {...rows[0], id:"b",colour:"D",clarity:"VVS2"},
+    {...rows[0], id:"c",colour:null,clarity:null},
+    {...rows[0], id:"d",colour:"E",clarity:"IF"}
+  ];
+  assert.deepEqual(visibleRows(items,{sort:"colour"}).map(r=>r.id),["b","d","a","c"]);
+  assert.deepEqual(visibleRows(items,{sort:"clarity"}).map(r=>r.id),["d","b","a","c"]);
+});
