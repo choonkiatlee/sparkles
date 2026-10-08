@@ -351,7 +351,8 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--reference-dir", type=Path)
     args = parser.parse_args()
-    r = run(args.source_root, args.source_manifest, args.output,\n            reference_dir=args.reference_dir)
+    r = run(args.source_root, args.source_manifest, args.output,
+            reference_dir=args.reference_dir)
     print("selected", r["selected_source_indices"])
     print("C3 table full", r["with_all"]["c3_selected_global_u"])
     other = r["without_focus_frame"]
