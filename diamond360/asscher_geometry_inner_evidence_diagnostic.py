@@ -34,6 +34,16 @@ def _finite_float(value):
     return float(value) if np.isfinite(value) else None
 
 
+def _nullable(values):
+    """JSON-safe NaN masking without silently inventing zero edge evidence."""
+    x = np.asarray(values, float)
+    if x.ndim == 1:
+        return [float(v) if np.isfinite(v) else None for v in x]
+    if x.ndim == 2:
+        return [_nullable(row) for row in x]
+    raise ValueError("expected one or two-dimensional evidence")
+
+
 def candidate_rows(template):
     """Replay discover_template's *unchanged* C3 candidate score."""
     values = [r["prominence"] for r in template.get("candidates", [])]
@@ -79,9 +89,9 @@ def template_summary(data, u):
         "reason": template.get("reason"),
         "c3_selected_global_u": selected,
         "c3_candidates": candidate_rows(template),
-        "consensus_profile": np.asarray(template["consensus"], float).tolist(),
-        "raw_sector_median_profile": raw.tolist(),
-        "per_sector_evidence": sector_medians.tolist(),
+        "consensus_profile": _nullable(template["consensus"]),
+        "raw_sector_median_profile": _nullable(raw),
+        "per_sector_evidence": _nullable(sector_medians),
     }
 
 
