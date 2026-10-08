@@ -74,7 +74,7 @@ class AsscherGeometryValidationTests(unittest.TestCase):
         )
         self.assertEqual(
             frozen["wireframe_specification_sha256"],
-            validation.FROZEN_WIREFRAME_SPEC_SHA256,
+            validation.FROZEN_OUTER_WIREFRAME_SPEC_SHA256,
         )
         snapshot = validation.benchmark_snapshot(benchmark_manifest())
         self.assertTrue(snapshot["manifest_matches_frozen_snapshot"])
