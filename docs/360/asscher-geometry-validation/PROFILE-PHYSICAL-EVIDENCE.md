@@ -195,3 +195,60 @@ Workflow [37757795235](https://github.com/choonkiatlee/sparkles/actions/runs/377
 **Visual verdict:** the contour proposal tracks parts of the real outer wing more usefully than the earlier internal-band Hough overlay, but insufficient consistent evidence survives around the projected girdle and lower pavilion. No numerical pavilion-angle experiment should proceed using these raw contours as certified physical boundaries. Next work must involve explicit independent outline corroboration (potentially assisted) and a projection/suitability assessment, not adjusting background thresholds to force a prettier fit.
 
 This photo-derived verdict is independent of Sergey's stored angle targets.
+
+
+## B2b — human-assisted anatomical source review (not physical truth)
+
+Rather than guessing that internal virtual facets correspond to polished planes,
+this stage presents seven broad source-image ROIs on the full **original**
+410×319 profile and asks a reviewer to decide what is actually observable:
+
+| Region | Question, not an automatic feature label |
+|---|---|
+| A | Upper central bright edge — is an external table edge genuinely visible? |
+| B/C | Left/right upper outer silhouettes, separately |
+| D/E | Left/right widest projected profile — possible girdle-region evidence |
+| F | Lower pavilion/culet vicinity — can the exterior be separated from shadow? |
+| G | Interior horizontal/diagonal band **negative control** — optical contrast, not automatically a physical junction |
+
+All proposal boxes are intentionally broad, pre-authored using **image-only
+visual inspection**, with \`proposed_by=assistant_visual_image_only\`,
+\`reviewer_verdict=unreviewed\` and null facet identity. They are **not**
+a hand-traced physical geometry ground truth.
+
+Module: \`diamond360.asscher_profile_assisted_review\`, schema
+\`diamond360-asscher-profile-assisted-review/1\`. The tool validates the
+archived original file's exact SHA-256, produces a numbered overlay
+(\`assisted-review-regions.png\`) and a standalone offline mobile-friendly
+\`assisted-review.html\` with the full photo embedded. No authentication,
+network dependency, third-party JavaScript, model prediction or target-angle
+JSON is used.
+
+A reviewer can select an ROI, assign \`likely_external_contour\`,
+\`possible_table_edge\`, \`possible_girdle_edge\`,
+\`optical_appearance_only\`, \`ambiguous\` or \`not_visible\`; provide
+reasoning; and optionally tap 2-40 points in the original source coordinate
+system for *tentative* physical-region candidates. Taps remain inside
+the chosen ROI. The HTML exports a compact source-hashed reviewer JSON,
+which can be validated and merged into the untouched worksheet via:
+
+\`\`\`bash
+python -m diamond360.asscher_profile_assisted_review \
+  --image docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG \
+  --output outputs/asscher-profile-physical-evidence \
+  --review path/to/profile-human-review.json
+\`\`\`
+
+No reviewer assertion, however confident, becomes a certified physical facet
+or automatically yields P1/P2/P3/C1 angles. The validator rejects attempts to
+mark the internal negative-control region G as exterior contour, rejects
+out-of-ROI traces, altered source identity, missing notes and any externally
+loaded targets. This preserves the provenance distinction between
+\`assistant_visual_image_only\` suggestions and
+\`image_only_reviewer_assessment\`. A future independent geometric model or
+more views are still required to establish actual physical facet families.
+
+**Next handoff:** inspect the numbered original overlay, explicitly review
+at least the outer regions B/C and ambiguous lower regions D/E/F, and return
+the export JSON or written verdicts. Only after the evidence is reviewed should
+we attempt angle extraction; ambiguous optical bands should stay excluded.
