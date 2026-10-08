@@ -106,6 +106,21 @@ class FixedOpticalSupportSensitivityTests(unittest.TestCase):
         self.assertTrue(all(r["counterfactual_exposure"]["gain_0_85"]["quantile_contrast"] is None
                             for r in sampled))
 
+    def test_zero_valid_pixels_keeps_all_sensitivity_values_null(self):
+        scaffold,transfer,raw,gauge,valid=fixture()
+        missing=np.zeros_like(valid,dtype=bool)
+        output=sens.analyse_frame(scaffold,transfer,raw,gauge,missing)
+        self.assertEqual(output["image_reference"]["nominal"]["status"],
+                         "unavailable_no_valid_stone_pixels")
+        for row in output["entities"]:
+            self.assertEqual(row["nominal_pixel_count"],0)
+            self.assertEqual(row["core_1px_count"],0)
+            self.assertEqual(row["expanded_1px_count"],0)
+            self.assertIsNone(row["nominal_raw_mean"])
+            self.assertIsNone(row["nominal_quantile_contrast"])
+            self.assertTrue(all(v["raw_mean"] is None
+                                for v in row["counterfactual_exposure"].values()))
+
     def test_invalid_geometry_rejected_before_perturbation(self):
         scaffold,transfer,raw,gauge,valid=fixture()
         bad=deepcopy(transfer)
