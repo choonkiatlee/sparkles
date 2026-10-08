@@ -148,7 +148,7 @@ _FLUORESCENCE_NAMES = {
 _GRADE_TOKENS = r"(?:Very\s+Good|Excellent|Ideal|Good|Fair|Poor|EX|VG|GD|ID|PR|G|F|P)"
 _FLUORESCENCE_TOKENS = (
     r"(?:Very\s+Strong|Very\s+Slight|Negligible|Medium|"
-    r"Strong|Slight|Faint|None|Nil|Non|No|Med|VS|S|F|N)"
+    r"Strong|Slight|Faint|None|Nil|Non|No|Med|VS)"
 )
 _GIRDLE_LEVEL = (
     r"(?:Extremely\s+Thin|Very\s+Thin|Slightly\s+Thin|Thin|"
