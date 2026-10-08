@@ -335,9 +335,9 @@ class ProgressiveMotionContractTests(unittest.TestCase):
         audit = AUDITS[0]
         viewer = "https://v3603703.v360.in/vision360.html?d=NGS-05-413"
         root = "https://v3603703.v360.in/imaged/NGS-05-413"
-        http = FakeHttpClient(
-            _progressive_source_responses(audit, root, version=1, workshop=True)
-        )
+        responses = _progressive_source_responses(audit, root, version=1)
+        responses[root + "/0.json?version="] = responses.pop(root + "/0.json")
+        http = FakeHttpClient(responses)
         downloader = Core360RotationDownloader(http)
         ref = _reference("core360", viewer)
 
