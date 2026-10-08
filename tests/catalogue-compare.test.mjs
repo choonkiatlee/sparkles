@@ -34,6 +34,10 @@ test("published real manifests validate; certificate/partial provenance remains 
   assert.match(complete.values.motion,/256 frames/);
   assert.match(complete.values.motion,/not angle-calibrated/);
   assert.equal(comparisonRows.length,16);
+  assert.equal(partial.rotation.status,"available");
+  assert.equal(partial.rotation.frameCount,256);
+  assert.equal(complete.rotation.status,"available");
+  assert.equal(complete.rotation.frameCount,256);
 });
 test("URLs reject traversal, wrong identity, cross-site protocol and malformed assets",()=>{
   assert.equal(manifestURL(qdRow),"../data/diamonds/igi-lg756520111.json");
@@ -95,5 +99,6 @@ test("nulls, multiple retailer observations and missing evidence are explicit",(
   assert.equal(p.currentListing.retailer,"other");
   assert.deepEqual(p.reasons,["upstream unavailable"]);
   assert.equal(p.representative,null);
+  assert.equal(p.rotation.status,"unavailable");
   assert.equal(dateText(null),"Unknown");
 });

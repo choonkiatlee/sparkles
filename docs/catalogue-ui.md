@@ -90,3 +90,50 @@ The default catalogue browse view is a **dense selectable table** rather than th
 The row prefers the automatically generated `overview_thumbnail_url` (128px source-hash-verified WebP) if available and falls back to the original `thumbnail_url` otherwise. The crop is generated with existing Asscher silhouette/pose code but does not assert a physically calibrated face-up viewing angle. The detailed C2 comparison still uses full original media unchanged. See `docs/catalogue-thumbnails.md`.
 
 Keyboard-accessible checkboxes and the C1 2–5 selection/shareable URL behavior are preserved; C2 manifest-backed detail remains below the table. On narrow screens the table scrolls horizontally, with selection and report/thumbnail columns sticky to maintain identity while scanning metrics.
+
+
+## C3a: synchronized original 360 viewer (#152)
+
+The detailed comparison now includes an **Original rotation** row for every
+selected stone, with a single shared play/pause control, step forward/backward,
+and scrubber. The original C2 still/photo remains in the column header; it and
+all certificate/provenance details are unaffected.
+
+The manifest is loaded *only when Compare is open*; its selected original
+`evidence.kind=rotation`, successful and complete ordered `frames[]`, and
+resolved `asset.storage.url` provide the player source. Frames are taken in
+the **existing array order**: supplier `stored_position` is scrambled and
+must not be sorted. The player uses a single normalized `p ∈ [0,1)`, showing
+`floor(p × N)` for each stone independently. Different frame counts work,
+but no physical angle or face-up camera phase is calibrated or aligned.
+
+The player reports frame number/source-index, links to no new APIs, and falls
+back to a representative original still for failed/missing/incomplete/video-only
+sequences. A broken current frame has Retry. Closing or changing the comparison
+tears down the animation timer and queued prefetch.
+
+### All-frame prefetch option (present, disabled)
+
+In `catalogue/rotation.mjs`:
+
+```js
+export const FRAME_PREFETCH = Object.freeze({
+  mode: "none", // change to "nearby" or "all" when desired
+  nearbyRadius: 2,
+  maxConcurrent: 4,
+});
+```
+
+`none` (C3a default) fetches **only the visible current frame**.
+`nearby` preloads ±2 neighboring original frames on seeking/playing.
+`all` preloads every original frame **only for selected stones after opening
+comparison**, with concurrency capped to 4. It may consume substantial
+bandwidth/cache on five 256-frame rotations, so is opt-in rather than default.
+URLs are taken directly from the storage-neutral manifest; no cross-origin
+fetch/canvas needed. C3b #153 will harden caching, bandwidth and mobile UX.
+
+To test model/policy behavior:
+
+```sh
+node --test tests/catalogue-rotation.test.mjs
+```
