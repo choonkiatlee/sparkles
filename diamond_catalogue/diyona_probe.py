@@ -85,6 +85,34 @@ def run():
         label:sum(label.lower() in x.lower() for x in parsed.inline)
         for label in ["A69835AA4","LG816611062","certificate","api/","fetch(","diamond","graphql"]
     })
+    # Static analysis of page inline JS; do not execute scripts or expose
+    # arbitrary literals (which can include public API tokens).
+    for index, source in enumerate(parsed.inline):
+        low=source.lower()
+        if not any(k in low for k in ("supabase","diamond","sku=","cert_number","certnumber")):
+            continue
+        print("INLINE",index,"len",len(source),
+              "terms",{k:low.count(k) for k in
+                       ("supabase","diamond","sku","certificate","cert_number",
+                        "report_number","igi","fetch(","from(",".select(",".eq(",".rpc(")})
+        for op in ("from", "eq", "rpc", "select"):
+            pattern=r'\\.'+op+r'\\(\\s*([\\x27\\x22])([A-Za-z_][A-Za-z0-9_., *-]{0,100})\\1'
+            matches=sorted(set(x[1] for x in re.findall(pattern,source)))
+            if matches:
+                print("INLINE op",index,op,matches[:30])
+        hosts=sorted(set(re.findall(r'https?://([A-Za-z0-9.-]{5,100})',source)))
+        if hosts:
+            print("INLINE hosts",index,hosts[:20])
+        for term in (".from(", ".rpc(", "createClient(", "createClient (",
+                     "fetch(", "diamond-detail", "supabase"):
+            at=low.find(term.lower())
+            if at>=0:
+                fragment=source[max(0,at-90):at+190].replace("\\n"," ")
+                # only output source control flow, never strings or values
+                fragment=re.sub(r'([\\x27\\x22\\x60])(?:\\\\.|(?!\\1).)*?\\1',
+                                '[LITERAL]',fragment)
+                print("INLINE structure",index,term,fragment[:230])
+
     # Limit front-end JS to same-host or CDN-origin scripts advertised by the
     # public HTML and do not execute JS. Log only regex-discovered generic API
     # route literals and external API hostnames, never query parameters.
