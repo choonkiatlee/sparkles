@@ -16,6 +16,7 @@ from PIL import Image, ImageDraw
 
 from . import asscher_geometry_stability as stability
 from . import asscher_semantic_optical_handoff as handoff
+from . import asscher_semantic_optical_sensitivity as sensitivity
 from . import asscher_pose_sequence as pose
 from . import pipeline
 from . import asscher_wireframe as wireframe
@@ -83,7 +84,7 @@ def _load_stone_archived(frozen_root, certificate):
     }
 
 
-def replay_stone(cert, source, source_manifest, frozen_root, output):
+def replay_stone(cert, source, source_manifest, frozen_root, output, *, sensitivity_check=False):
     if cert not in STONES:
         raise ValueError("stone not in predeclared replay group")
     output = Path(output)
@@ -110,6 +111,7 @@ def replay_stone(cert, source, source_manifest, frozen_root, output):
     # The #89 transfer has the authoritative fixed semantic gauge ID; each
     # canonical frame is only used when its per-source gauge record agrees.
     rows = []
+    sensitivity_rows = []
     records = []
     for idx in SOURCE_INDICES:
         record = by_source.get(idx)
@@ -130,6 +132,10 @@ def replay_stone(cert, source, source_manifest, frozen_root, output):
         report = handoff.sample_fixed_frame(
             scaffold, expected, bright, mask, valid,
             normalized_brightness=None)
+        if sensitivity_check:
+            sensitivity_rows.append(sensitivity.analyse_frame(
+                scaffold, expected, bright, mask, valid
+            ))
         report["face_role_archived"] = expected.get("face_role")
         report["pose_status_archived"] = expected.get("pose_status")
         report["frame_support_status_archived"] = expected.get("status")
@@ -180,6 +186,14 @@ def replay_stone(cert, source, source_manifest, frozen_root, output):
     (output / "real-fixed-ruler-brightness.json").write_text(
         json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     render_traces(payload, output / "real-fixed-ruler-traces.png")
+    if sensitivity_check:
+        sensitivity_result=sensitivity.write_report(
+            sensitivity_rows,cert,digests,payload["archived_crown_face_selection"],
+            output / "real-fixed-ruler-sensitivity.json"
+        )
+        sensitivity.draw_perturbation_summary(
+            sensitivity_result,output / "real-fixed-ruler-sensitivity.png"
+        )
     # Keep no intermediate 256-frame canonical image arrays in final artifact.
     return payload
 
@@ -239,9 +253,12 @@ def main():
     parser.add_argument("--source-manifest",type=Path,required=True)
     parser.add_argument("--frozen-root",type=Path,required=True)
     parser.add_argument("--output",type=Path,required=True)
+    parser.add_argument("--sensitivity",action="store_true",
+                        help="Paired fixed-mask exposure and morphology checks (no refit)")
     args=parser.parse_args()
     o=replay_stone(args.certificate,args.source_root/args.certificate,
-                   args.source_manifest,args.frozen_root,args.output/args.certificate)
+                   args.source_manifest,args.frozen_root,args.output/args.certificate,
+                   sensitivity_check=args.sensitivity)
     print(json.dumps({
         "certificate":o["certificate"],
         "samples":o["frame_count"],
