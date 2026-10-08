@@ -138,7 +138,7 @@ The background itself is rejected if reference patches are inconsistent.
 
 - \`upper_profile_width_region\`: a narrow upper outer width region; **not
   automatically the polished table**.
-- \`maximum_outer_width_region\`: the widest stable contour region; **not
+- \`widest_cross_threshold_stable_region\`: the widest stable contour region; **not
   automatically the girdle plane**.
 
 The proposed silhouette is only a *projection*. Even when its outline is
@@ -180,3 +180,18 @@ exposed with multi-threshold support but cannot make a wrong silhouette true.
 A human reviewer should explicitly assess each outer interval and reject
 unsupported regions. Changing this fixed policy after seeing expert targets
 would require a new declared method revision.
+
+
+### Original photo result — fixed B2 algorithm, 2026-10-08
+
+Workflow [37757795235](https://github.com/choonkiatlee/sparkles/actions/runs/37757795235) completed successfully. The archived JPEG hash matched; all focused synthetic/integration tests passed. The original-photo output is intentionally **unavailable**, not \`ok\` or a physical-facet fit:
+
+- 207 source rows evaluated; 46 stable contour rows, 97 threshold-sensitive rows, remainder unavailable.
+- Relatively stable outer-rim candidates exist near the tip/upper crown, for example at y=75 x≈173–242 and y=85 x≈160–250.
+- Lower sides are unstable, e.g. y=200 candidate x≈45–362 varies by as much as 70 pixels across the predeclared background thresholds; rows near y=210–245 fail the contour-QC width/background checks.
+- Thus the widest *stable* supported row (around y=174–176) does **not** mark the true widest stone/girdle region; do not promote the blue QC rectangle to a girdle measurement.
+- \`table\`, \`girdle\`, \`culet\`, projection suitability, and P1/P2/P3/C1 family identities remain unverified/unavailable.
+
+**Visual verdict:** the contour proposal tracks parts of the real outer wing more usefully than the earlier internal-band Hough overlay, but insufficient consistent evidence survives around the projected girdle and lower pavilion. No numerical pavilion-angle experiment should proceed using these raw contours as certified physical boundaries. Next work must involve explicit independent outline corroboration (potentially assisted) and a projection/suitability assessment, not adjusting background thresholds to force a prettier fit.
+
+This photo-derived verdict is independent of Sergey's stored angle targets.
