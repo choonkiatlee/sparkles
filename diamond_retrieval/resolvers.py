@@ -269,36 +269,41 @@ class Loupe360CertificateResolver:
         if isinstance(v360, dict):
             wrapped = v360.get("url")
             if isinstance(wrapped, str) and wrapped:
-                locator = self._unwrap_v360(wrapped)
-                if self._is_supported_rotation_url(locator):
-                    rotation_metadata = {
-                        **metadata,
-                        "supplier_frame_count": v360.get("frame_count"),
-                        "supplier_top_index": v360.get("top_index"),
-                        "loupe360_v360_id": v360.get("id"),
-                        "loupe360_v360_url": wrapped,
-                    }
-                    references.append(
-                        EvidenceReference(
-                            identifier=f"{reference.identifier}:supplier-rotation",
-                            kind=ROTATION,
-                            retrieval_key=locator,
-                            locator=locator,
-                            provenance=(
-                                ProvenanceStep(
-                                    "loupe360_exact_certificate",
-                                    self.endpoint,
-                                    {
-                                        "report_number": report,
-                                        "certificate_id": record.get("id"),
-                                        "frame_count": v360.get("frame_count"),
-                                        "top_index": v360.get("top_index"),
-                                    },
-                                ),
+                try:
+                    locator = self._unwrap_v360(wrapped)
+                except ValueError:
+                    # Preserve malformed/unknown viewer references for a
+                    # structured unsupported attempt; never block a separately
+                    # supported video asset from the same certificate record.
+                    locator = wrapped
+                rotation_metadata = {
+                    **metadata,
+                    "supplier_frame_count": v360.get("frame_count"),
+                    "supplier_top_index": v360.get("top_index"),
+                    "loupe360_v360_id": v360.get("id"),
+                    "loupe360_v360_url": wrapped,
+                }
+                references.append(
+                    EvidenceReference(
+                        identifier=f"{reference.identifier}:supplier-rotation",
+                        kind=ROTATION,
+                        retrieval_key=locator,
+                        locator=locator,
+                        provenance=(
+                            ProvenanceStep(
+                                "loupe360_exact_certificate",
+                                self.endpoint,
+                                {
+                                    "report_number": report,
+                                    "certificate_id": record.get("id"),
+                                    "frame_count": v360.get("frame_count"),
+                                    "top_index": v360.get("top_index"),
+                                },
                             ),
-                            metadata=rotation_metadata,
-                        )
+                        ),
+                        metadata=rotation_metadata,
                     )
+                )
 
         video = record.get("video")
         if isinstance(video, str) and self._is_direct_video_url(video):
