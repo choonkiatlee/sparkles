@@ -95,7 +95,7 @@ test("nulls, multiple retailer observations and missing evidence are explicit",(
   assert.equal(p.values.dimensions,"Unknown");
   assert.equal(p.values.price,"Price unavailable");
   assert.equal(p.values.tax,"Unknown");
-  assert.equal(p.listings.length,2);
+  assert.equal(p.listings.length,qdDoc.listings.length+1);
   assert.equal(p.currentListing.retailer,"other");
   assert.deepEqual(p.reasons,["upstream unavailable"]);
   assert.equal(p.representative,null);

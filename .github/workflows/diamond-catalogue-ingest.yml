@@ -56,11 +56,3 @@ jobs:
           GITHUB_REF: refs/heads/master
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python -m diamond_catalogue.auto_thumbnail_batch --limit 100
-
-  deploy-pages:
-    needs: publish
-    uses: ./.github/workflows/catalogue-pages.yml
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
