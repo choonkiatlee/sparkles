@@ -1,0 +1,102 @@
+name: asscher-optical-motion-spatial-atlas
+
+concurrency:
+  group: asscher-optical-motion-spatial-atlas-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+
+on:
+  pull_request:
+    paths:
+      - "diamond360/asscher_optical_motion_atlas.py"
+      - "tests/test_asscher_optical_motion_atlas.py"
+      - "docs/360/asscher-geometry-validation/OPTICAL-MOTION-ATLAS.md"
+      - ".github/workflows/asscher-optical-motion-spatial-atlas.yml"
+  workflow_dispatch:
+
+jobs:
+  atlas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: python -m pip install -e .
+
+      - name: Run atlas and optical/physical negative controls
+        run: |
+          python -m unittest \
+            tests.test_asscher_optical_motion_atlas \
+            tests.test_asscher_optical_neighbor_motion \
+            tests.test_asscher_provenance_contract_agreement -v
+
+      - name: Retrieve immutable #178 original-camera RGB neighboring-pair artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: asscher-neighbor-optical-motion
+          run-id: 37854076791
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: outputs/frozen-neighbor-motion
+
+      - name: Build descriptive spatial atlas without re-running 360 ingestion
+        run: |
+          python -m diamond360.asscher_optical_motion_atlas \
+            --source-root outputs/frozen-neighbor-motion \
+            --output outputs/asscher-optical-motion-atlas
+
+      - name: Check four-stone provenance, original RGB, abstentions and no geometry
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path("outputs/asscher-optical-motion-atlas")
+          src=Path("outputs/frozen-neighbor-motion")
+          result=json.loads((root/"summary.json").read_text())
+          old=json.loads((src/"summary.json").read_text())
+          assert len(result["stones"])==len(old["stones"])==4
+          assert result["production_estimator_unchanged"]
+          assert result["not_a_quality_score"]
+          assert result["physical_facet_correspondence"]=="unavailable"
+          expected=0
+          for a,b in zip(result["stones"],old["stones"]):
+              assert a["certificate"]==b["certificate"]
+              assert a["frozen_anchor_source_indices"]==b["frozen_anchor_source_indices"]
+              assert a["face_identity"]==b["face_identity"]
+              assert a["mapped_pair_count"]==b["measured_pair_count"]
+              cert=a["certificate"]
+              evidence=json.loads((root/"per-stone"/cert/
+                                   "optical-motion-atlas.json").read_text())
+              assert evidence["no_physical_facet_labels"] and evidence["no_estimator_change"]
+              assert len(evidence["aggregate_tile_status"])==16
+              assert sum(a["tile_status_totals"].values())==a["mapped_pair_count"]*16
+              for pair in evidence["pairs"]:
+                  if pair["status"]!="observational_only":
+                      continue
+                  assert all(t["physical_facet_semantic_id"] is None
+                             for t in pair["tiles"])
+                  assert pair["physical_facet_identity_verified"] is False
+                  assert (root/"per-stone"/cert/
+                          pair["RGB_plus_atlas_QC"]).is_file()
+              print(cert,"RGB pairs",a["mapped_pair_count"],
+                    "tiles",a["tile_status_totals"],
+                    "shared reference",a["pairs_with_shared_shift"],
+                    "IoU caution",a["pairs_with_registration_caution"])
+              expected+=a["mapped_pair_count"]
+          assert expected==34
+          PY
+
+      - name: Upload original RGB + observed optical motion/uncertainty atlases
+        uses: actions/upload-artifact@v4
+        with:
+          name: asscher-optical-motion-spatial-atlas
+          path: outputs/asscher-optical-motion-atlas
+          if-no-files-found: error
+          retention-days: 90
