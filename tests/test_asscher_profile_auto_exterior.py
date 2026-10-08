@@ -54,6 +54,47 @@ class AutoExteriorTests(unittest.TestCase):
                     for segment in run["fitted"]["segments"]:
                         self.assertIsNone(segment["semantic_facet_id"])
 
+    def test_weaker_exterior_beats_brighter_internal_virtual_band(self):
+        """A faint real silhouette must win over a brilliant internal face."""
+        image = Image.new("RGB", (410, 319), (207, 207, 209))
+        d = ImageDraw.Draw(image)
+        shape = [(205, 60), (242, 84), (311, 143), (368, 212),
+                 (337, 229), (281, 271), (204, 287),
+                 (129, 271), (75, 229), (42, 212),
+                 (99, 143), (168, 84)]
+        # Deliberately weak exterior/flat fill; bright central virtual face
+        # is much higher contrast but does not touch the outside boundary.
+        d.polygon(shape, fill=(201, 202, 202))
+        baseline = auto.analyse_array(np.asarray(image, dtype=np.uint8))
+        d.polygon([(183, 80), (225, 80), (255, 183), (153, 183)],
+                  fill=(250, 250, 251), outline=(18, 18, 18))
+        with_virtual_face = auto.analyse_array(np.asarray(image, dtype=np.uint8))
+        for name in baseline["paths"]:
+            before = [p["xy_px"] for p in baseline["paths"][name]["points"]]
+            after = [p["xy_px"] for p in with_virtual_face["paths"][name]["points"]]
+            self.assertEqual(before, after, name)
+            self.assertTrue(all(
+                p["support"] != "edge_supported_candidate"
+                or p["xy_px"] is not None
+                for p in with_virtual_face["paths"][name]["points"]
+            ))
+
+    def test_actual_photo_chooses_outer_crown_not_bright_internal_table(self):
+        record, = (auto.write_qc(
+            ORIGINAL, Path(tempfile.mkdtemp()),
+            feasibility.ORIGINAL_PROFILE_SHA256
+        ),)
+        left = {p["xy_px"][1]: p for p in record["paths"]["left_crown"]["points"]
+                if p["xy_px"] is not None}
+        right = {p["xy_px"][1]: p for p in record["paths"]["right_crown"]["points"]
+                 if p["xy_px"] is not None}
+        # Image-only silhouette sanity ranges, not Sergey angle targets:
+        # the brightest central face would put x much closer to the center.
+        self.assertLess(left[100]["xy_px"][0], 150)
+        self.assertGreater(right[100]["xy_px"][0], 260)
+        self.assertLess(left[160]["xy_px"][0], 110)
+        self.assertGreater(right[160]["xy_px"][0], 300)
+
     def test_blank_source_does_not_become_a_supported_diamond(self):
         result = auto.analyse_array(synthetic(blank=True))
         self.assertEqual(result["status"], "partial_or_unavailable")
