@@ -1,0 +1,73 @@
+name: asscher-profile-post-freeze-comparison
+
+on:
+  pull_request:
+    paths:
+      - "diamond360/asscher_profile_external_comparison.py"
+      - "tests/test_asscher_profile_external_comparison.py"
+      - "docs/360/asscher-geometry-validation/PROFILE-POST-FREEZE-COMPARISON.md"
+      - ".github/workflows/asscher-profile-post-freeze-comparison.yml"
+  workflow_dispatch:
+
+jobs:
+  independent-comparison:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install package
+        run: python -m pip install -e .
+      - name: Target-blind pinned artifact and strict comparison tests
+        run: python -m unittest tests.test_asscher_profile_external_comparison -v
+      - name: Recreate original profile evidence without external reference
+        run: |
+          IMG=docs/360/geometry-ground-truth/diagem-2008-asscher/profile-photo.JPG
+          OUT=outputs/asscher-profile-post-freeze
+          mkdir -p "$OUT"
+          python -m diamond360.asscher_profile_auto_exterior --image "$IMG" --require-original --output "$OUT"
+          python -m diamond360.asscher_profile_auto_changepoints --image "$IMG" \
+            --auto-json "$OUT/auto-exterior.json" --output "$OUT"
+          python -m diamond360.asscher_profile_endpoint_candidates --image "$IMG" \
+            --auto-json "$OUT/auto-exterior.json" \
+            --joint-json "$OUT/joint-changepoints.json" --output "$OUT"
+          python -m diamond360.asscher_profile_pavilion_refinement --image "$IMG" \
+            --auto-json "$OUT/auto-exterior.json" \
+            --joint-json "$OUT/joint-changepoints.json" \
+            --endpoint-json "$OUT/endpoint-candidates.json" --output "$OUT"
+      - name: Open separate expert reference only after exact byte hash verification
+        run: |
+          python -m diamond360.asscher_profile_external_comparison \
+            --frozen-profile-json outputs/asscher-profile-post-freeze/pavilion-refinement.json \
+            --reference-json docs/360/geometry-ground-truth/diagem-2008-asscher/ground-truth.json \
+            --output outputs/asscher-profile-post-freeze/post-freeze-comparison.json
+      - name: Reject unsupported physical or photo-angle agreement claims
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          path=Path("outputs/asscher-profile-post-freeze/post-freeze-comparison.json")
+          o=json.loads(path.read_text())
+          assert o["status"]=="inconclusive_physical_facet_correspondence"
+          assert o["numeric_deltas_available"]==0
+          assert o["requested_slots"]==8
+          assert o["physical_facet_angles_claimed"]==0
+          assert all(row["residual_deg"] is None and
+                     row["sparkles_image_derived_facet_angle_deg"] is None and
+                     row["status"]=="not_comparable_unverified_physical_facet_correspondence"
+                     for side in o["semantic_facet_comparison"].values()
+                     for row in side.values())
+          assert all(row["physical_facet_correspondence"]=="not_established"
+                     for row in o["frozen_image_only_evidence"].values())
+          print("All eight external references preserved; zero invented deltas.")
+          PY
+      - name: Upload post-freeze independent comparison
+        uses: actions/upload-artifact@v4
+        with:
+          name: asscher-profile-post-freeze-independent-comparison
+          path: |
+            outputs/asscher-profile-post-freeze/post-freeze-comparison.json
+            outputs/asscher-profile-post-freeze/pavilion-observed-vs-symmetry.png
+          if-no-files-found: error
