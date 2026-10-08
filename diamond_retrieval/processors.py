@@ -42,14 +42,33 @@ def _pdf_fields(text: str) -> dict[str, object]:
     if re.search(r"INTERNATIONAL\s+GEMOLOGICAL\s+INSTITUTE", text, re.I):
         fields["lab"] = "IGI"
 
-    shape = re.search(
-        r"SHAPE(?:\s+AND\s+CUT)?\s*:?[ ]*"
-        r"([A-Z][A-Z \-/]+?)(?=\s+(?:MEASUREMENTS|CARAT\s+WEIGHT|COLOR\s+GRADE|COLOUR\s+GRADE|CLARITY\s+GRADE)|\n|$)",
+    # IGI reports can label this field "Shape and Cutting Style".
+    # Previously "AND CUT" matched the beginning of "CUTTING", wrongly
+    # extracting the remaining fragment "ting Style" as a stone shape.
+    # Only a complete label and a recognized shape can become an identity
+    # observation; uncertainty is missing data, not an invented conflict.
+    shape_label = re.search(
+        r"(?im)^[ \t]*SHAPE(?:[ \t]+AND[ \t]+(?:CUTTING[ \t]+STYLE|CUT))?"
+        r"[ \t]*:?[ \t]*(.*)$",
         text,
-        re.I,
     )
-    if shape:
-        fields["shape"] = re.sub(r"\s+", " ", shape.group(1)).strip()
+    if shape_label:
+        value = shape_label.group(1).strip()
+        if not value:
+            remaining = text[shape_label.end():].splitlines()
+            value = next((line.strip() for line in remaining if line.strip()), "")
+        value = re.sub(r"\s+", " ", value).upper()
+        valid_shapes = {
+            "ROUND", "ROUND BRILLIANT", "ROUND BRILLIANT CUT",
+            "OVAL", "OVAL BRILLIANT", "OVAL MODIFIED BRILLIANT",
+            "ASSCHER", "ASSCHER CUT", "EMERALD", "EMERALD CUT",
+            "CUSHION", "CUSHION BRILLIANT", "CUSHION MODIFIED BRILLIANT",
+            "PRINCESS", "PRINCESS CUT", "RADIANT", "RADIANT CUT",
+            "PEAR", "PEAR BRILLIANT", "MARQUISE", "MARQUISE BRILLIANT",
+            "HEART", "HEART BRILLIANT",
+        }
+        if value in valid_shapes:
+            fields["shape"] = value
 
     measurements = re.search(
         r"MEASUREMENTS\s*:?[ ]*"
