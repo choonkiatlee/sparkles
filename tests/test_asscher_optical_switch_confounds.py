@@ -68,7 +68,9 @@ class SwitchingConfoundTests(unittest.TestCase):
         self.assertIsNone(report["facet_semantic_ids"])
 
     def test_one_pixel_registration_injects_optical_changes(self):
-        im,valid=scene()
+        rng=np.random.default_rng(16)
+        im=.25+.42*rng.random((160,160))
+        valid=np.ones_like(im,bool)
         report=confounds.run_pair(im,im,valid,valid,valid,valid)
         shifted=next(x for x in report["scenarios"]
                      if x["scenario"]=="x_plus_1px")
