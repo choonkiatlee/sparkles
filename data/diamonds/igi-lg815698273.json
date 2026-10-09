@@ -1,4 +1,60 @@
 {
+  "derived_media": {
+    "overview_thumbnail": {
+      "asset": {
+        "byte_count": 4130,
+        "media_type": "image/webp",
+        "sha256": "c620f97ffed45f9f8c31f7af0909e2298cbd6f15da7596cb37e9f506e90e5f97",
+        "storage": {
+          "backend": "github_release",
+          "locator": "sparkles-diamond-igi-lg815698273/asset-c620f97ffed45f9f8c31f7af0909e2298cbd6f15da7596cb37e9f506e90e5f97.webp",
+          "url": "https://github.com/choonkiatlee/sparkles/releases/download/sparkles-diamond-igi-lg815698273/asset-c620f97ffed45f9f8c31f7af0909e2298cbd6f15da7596cb37e9f506e90e5f97.webp"
+        }
+      },
+      "crop_source_bbox_xyxy": [
+        25,
+        0,
+        720,
+        578
+      ],
+      "derivation": {
+        "algorithm": {
+          "face_lobes": "diamond360-asscher-pose-sequence/1",
+          "original_frame_count": 256,
+          "outer": "diamond360-asscher-outer-octagon/1",
+          "pose": "diamond360-asscher-pose/1",
+          "sample_count": 32,
+          "sampling": "uniform_cyclic_stratified",
+          "segmentation": "diamond360.segmentation.segment",
+          "silhouette": "diamond360.geometry.fit_asscher_outline"
+        },
+        "candidate_status": "unverified_pose_candidate",
+        "physical_angle_calibrated": false,
+        "schema": "sparkles-faceup-thumbnail-candidate/1",
+        "selection": {
+          "face_on_error": 0.06431307791542387,
+          "outer_quality": 0.9283192860855094,
+          "pose_status": "review",
+          "reason": "competing_face_lobes_not_optically_separated",
+          "sample_index": 0,
+          "selection_method": "outer_usable_face_unresolved",
+          "status": "unverified_pose_candidate"
+        }
+      },
+      "generation": {
+        "human_verified": false,
+        "pose_status": "unverified",
+        "status": "automatic"
+      },
+      "source": {
+        "evidence_kind": "rotation",
+        "frame_position": 0,
+        "sha256": "50ba3506f5113e7b842f570acbe14b1454a409f9ff6cb0329dc737520c18e78d",
+        "source_index": 0,
+        "stored_position": 3
+      }
+    }
+  },
   "diamond_metadata": {
     "attribution": {
       "carat": {
