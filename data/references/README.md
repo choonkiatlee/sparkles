@@ -6,7 +6,7 @@ An external ChatGPT/coding-agent session reads a source (PriceScope thread, arti
 
 ## Add a reference from an external session
 
-1. Read [the schema](reference.schema.json) and one of the [seed records](ps285166-r07.json). Work from the actual source and cite it; do not guess an IGI certificate, expert judgement, physical angle, or media availability.
+1. Read [the schema](../reference.schema.json) and one of the [seed records](ps285166-r07.json). Work from the actual source and cite it; do not guess an IGI certificate, expert judgement, physical angle, or media availability.
 2. Create **one** file at data/references/<stable-id>.json (all lowercase alphanumeric/hyphens; e.g. ps285166-r07); the filename must equal its id.
 3. Supply a short label, one **consolidated commentary** explaining what the experts noticed (with post numbers and disagreements where useful), and at least one source link. Optional identity, specifications, topic slugs and direct media URLs are helpful, but a reference without local media is valid.
 4. Put **viewer/image/direct-video URLs** in media_sources with status linked_unverified. Put PriceScope pages, retailer listings and real-world YouTube videos in source_links. A linked viewer is *not* recovered validated motion.
