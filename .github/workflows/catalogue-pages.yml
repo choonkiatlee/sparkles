@@ -9,6 +9,8 @@ on:
       - "catalogue/**"
       - "data/catalog.json"
       - "data/diamonds/**"
+      - "data/reference-index.json"
+      - "data/references/**"
       - "evaluations/**"
       - "resources/**"
       - "tools/build_catalogue_pages.py"
