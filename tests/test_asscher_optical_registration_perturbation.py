@@ -67,9 +67,17 @@ class OpticalPerturbationTests(unittest.TestCase):
         mask[40:120,40:120]=True
         b[:30,:]=1.
         out=perturb.perturbation_grid(a,b,mask,mask,mask,mask)
+        unchanged=perturb.perturbation_grid(a,a,mask,mask,mask,mask)
         self.assertEqual(out["status"],"evaluated")
-        self.assertTrue(all(row["median_gain_normalized_abs_change"]<1e-12
-                            for row in out["trials"] if row["status"]=="observed"))
+        self.assertEqual(out["supported_trial_count"],
+                         unchanged["supported_trial_count"])
+        for trial,reference in zip(out["trials"],unchanged["trials"]):
+            self.assertEqual(trial["status"],reference["status"])
+            if trial["status"]=="observed":
+                for key in perturb.MEASURES:
+                    self.assertAlmostEqual(trial[key],reference[key],places=12)
+        self.assertAlmostEqual(
+            out["baseline"]["median_gain_normalized_abs_change"],0.,places=12)
 
     def test_empty_overlap_fails_closed_with_explicit_missing_trials(self):
         a=np.ones((100,100),float)*.3
