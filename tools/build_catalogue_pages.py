@@ -9,7 +9,7 @@ import shutil
 from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
-STATIC_PATHS = ("index.html", ".nojekyll", "catalogue", "data/catalog.json", "data/diamonds", "evaluations", "resources")
+STATIC_PATHS = ("index.html", ".nojekyll", "catalogue", "data/catalog.json", "data/diamonds", "data/reference-index.json", "data/references", "evaluations", "resources")
 ID_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 
 class Links(HTMLParser):
@@ -39,6 +39,24 @@ def validate_site(directory: Path) -> None:
         manifest = json.loads((directory / path).read_text(encoding="utf-8"))
         if manifest.get("id") != identifier:
             raise ValueError("Index and manifest identity mismatch")
+    references = json.loads((directory / "data/reference-index.json").read_text(encoding="utf-8"))
+    if references.get("schema") != "sparkles-reference-index/1" or not isinstance(references.get("references"), list):
+        raise ValueError("Invalid static reference index")
+    reference_ids = set()
+    for row in references["references"]:
+        identifier = row.get("id")
+        if (not isinstance(identifier, str) or not ID_PATTERN.fullmatch(identifier)
+                or identifier in reference_ids or row.get("selection_id") != f"ref-{identifier}"):
+            raise ValueError("Invalid/duplicate reference or comparison selection ID")
+        reference_ids.add(identifier)
+        path = row.get("manifest_path")
+        if path != f"data/references/{identifier}.json":
+            raise ValueError("Unsafe/noncanonical reference path")
+        manifest = json.loads((directory / path).read_text(encoding="utf-8"))
+        if manifest.get("schema") != "sparkles-reference/1" or manifest.get("id") != identifier:
+            raise ValueError("Reference index/manifest mismatch")
+        if row["selection_id"] in seen:
+            raise ValueError("Shared basket selection ID collision")
     for rel in ("index.html", "catalogue/index.html"):
         doc = directory / rel
         parser = Links()
