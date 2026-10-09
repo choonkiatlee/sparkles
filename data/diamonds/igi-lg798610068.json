@@ -1,4 +1,44 @@
 {
+  "derived_media": {
+    "overview_thumbnail": {
+      "asset": {
+        "byte_count": 3906,
+        "media_type": "image/webp",
+        "sha256": "52d8a42802a209cf8c5f4da49f21c48db6ad17c0772a7421c2427efb7ceae209",
+        "storage": {
+          "backend": "github_release",
+          "locator": "sparkles-diamond-igi-lg798610068/asset-52d8a42802a209cf8c5f4da49f21c48db6ad17c0772a7421c2427efb7ceae209.webp",
+          "url": "https://github.com/choonkiatlee/sparkles/releases/download/sparkles-diamond-igi-lg798610068/asset-52d8a42802a209cf8c5f4da49f21c48db6ad17c0772a7421c2427efb7ceae209.webp"
+        }
+      },
+      "crop_source_bbox_xyxy": [
+        23,
+        106,
+        653,
+        671
+      ],
+      "derivation": {
+        "algorithm": {
+          "sampling": "single_still",
+          "segmentation": "diamond360.segmentation.segment",
+          "silhouette": "diamond360.geometry.fit_asscher_outline"
+        },
+        "candidate_status": "unverified_still_crop",
+        "physical_angle_calibrated": false,
+        "schema": "sparkles-faceup-thumbnail-candidate/1",
+        "selection": null
+      },
+      "generation": {
+        "human_verified": false,
+        "pose_status": "unverified",
+        "status": "automatic"
+      },
+      "source": {
+        "evidence_kind": "still",
+        "sha256": "a2c5d0d3ff631b1eb51e7ff8dd61611a0a779a80a57ec82f8df3c049f6eb55da"
+      }
+    }
+  },
   "diamond_metadata": {
     "attribution": {
       "carat": {
