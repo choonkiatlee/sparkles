@@ -1,0 +1,208 @@
+{
+  "$id": "https://github.com/choonkiatlee/sparkles/blob/master/data/references/reference.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Agent-authored curation, separate from deterministic technical/media enrichment.",
+  "properties": {
+    "commentary": {
+      "maxLength": 8000,
+      "minLength": 1,
+      "type": "string"
+    },
+    "diamond_metadata": {
+      "additionalProperties": false,
+      "properties": {
+        "carat": {
+          "type": [
+            "string",
+            "number",
+            "null"
+          ]
+        },
+        "clarity": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "colour": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dimensions": {
+          "items": {
+            "exclusiveMinimum": 0,
+            "type": "number"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "origin": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reported_proportions": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "shape": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "evidence": {
+      "default": [],
+      "items": {
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "id": {
+      "maxLength": 96,
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "type": "string"
+    },
+    "identity": {
+      "additionalProperties": false,
+      "properties": {
+        "lab": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "report_number": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "enum": [
+            "unverified",
+            "reported",
+            "linked"
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "lab",
+        "report_number"
+      ],
+      "type": "object"
+    },
+    "label": {
+      "maxLength": 180,
+      "minLength": 1,
+      "type": "string"
+    },
+    "linked_diamond_id": {
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "media_sources": {
+      "default": [],
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "viewer",
+              "still",
+              "video"
+            ]
+          },
+          "provider": {
+            "maxLength": 80,
+            "minLength": 1,
+            "type": "string"
+          },
+          "status": {
+            "const": "linked_unverified"
+          },
+          "url": {
+            "format": "uri",
+            "pattern": "^https://",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "provider",
+          "url",
+          "status"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "schema": {
+      "const": "sparkles-reference/1"
+    },
+    "source_links": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "maxLength": 60,
+            "minLength": 1,
+            "type": "string"
+          },
+          "note": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "url": {
+            "format": "uri",
+            "pattern": "^https://",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "url"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "topics": {
+      "default": [],
+      "items": {
+        "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+        "type": "string"
+      },
+      "type": "array",
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "schema",
+    "id",
+    "label",
+    "identity",
+    "diamond_metadata",
+    "commentary",
+    "source_links"
+  ],
+  "title": "Sparkles curated learning reference",
+  "type": "object"
+}
