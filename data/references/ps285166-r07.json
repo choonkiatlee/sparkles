@@ -1,0 +1,38 @@
+{
+  "commentary": "lovedogs liked this option (#25/#27), and Karl_K saw potential (#28). 0-0-0 instead noted leakage on tilt (#29), describing under-table steps that fail to flash and stronger-tilt through-view (#32). This is a particularly useful example of different reactions to the same stone. The IGI report was linked in post #24 but its exact number has not been independently established here. The supplied v360.diamonds URL is not proof of a locally recoverable v360.in frame sequence.",
+  "diamond_metadata": {
+    "carat": "2.12",
+    "origin": "HPHT lab-grown",
+    "shape": "Asscher"
+  },
+  "evidence": [],
+  "id": "ps285166-r07",
+  "identity": {
+    "lab": null,
+    "report_number": null,
+    "status": "unverified"
+  },
+  "label": "2.12ct HPHT - under-table through-view on tilt",
+  "linked_diamond_id": null,
+  "media_sources": [
+    {
+      "kind": "viewer",
+      "provider": "v360.diamonds",
+      "status": "linked_unverified",
+      "url": "https://v360.diamonds/c/72c0cf42-7370-4210-92b0-c1bc7d27ef4b?a=625406458&m=i"
+    }
+  ],
+  "schema": "sparkles-reference/1",
+  "source_links": [
+    {
+      "kind": "discussion",
+      "note": "PriceScope Asscher evaluation thread; post numbers cited in commentary.",
+      "url": "https://www.pricescope.com/community/threads/asscher-evaluation-seeking-help.285166/"
+    }
+  ],
+  "topics": [
+    "under-table-leakage",
+    "tilt",
+    "mixed-reactions"
+  ]
+}

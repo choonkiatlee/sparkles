@@ -1,0 +1,35 @@
+{
+  "commentary": "Brilliance SKU LG25670839. This is a distinct stone from R05, despite identical 2.54ct E VS1 headline specs. Ibrakeforpossums thought the middle stayed relatively static during rotation (#39/#40), making it a useful example of subdued central motion.",
+  "diamond_metadata": {
+    "carat": "2.54",
+    "clarity": "VS1",
+    "colour": "E",
+    "shape": "Asscher"
+  },
+  "evidence": [],
+  "id": "ps285166-r10",
+  "identity": {
+    "lab": "IGI",
+    "report_number": "LG644473759",
+    "status": "reported"
+  },
+  "label": "2.54ct E VS1 - relatively static centre",
+  "linked_diamond_id": null,
+  "media_sources": [],
+  "schema": "sparkles-reference/1",
+  "source_links": [
+    {
+      "kind": "discussion",
+      "note": "PriceScope Asscher evaluation thread; post numbers cited in commentary.",
+      "url": "https://www.pricescope.com/community/threads/asscher-evaluation-seeking-help.285166/"
+    },
+    {
+      "kind": "listing",
+      "url": "https://www.brilliance.com/lab-grown-diamonds/asscher/2-54-carat-e-color-super-ideal-make-vs1-clarity-igi-certified-SKU-LG25670839"
+    }
+  ],
+  "topics": [
+    "quiet-middle",
+    "liveliness"
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "commentary": "Brilliance SKU LG26366041 (not the other 2.54ct E VS1, R10). 0-0-0 preferred its cut among the shortlisted videos (#20/#21); lovedogs liked it but worried about too much darkness at certain angles (#27), while Karl_K thought it had potential (#28). The buyer noted a face-up bullseye effect (#20). A useful positive/mixed contrast example rather than unanimous endorsement.",
+  "diamond_metadata": {
+    "carat": "2.54",
+    "clarity": "VS1",
+    "colour": "E",
+    "shape": "Asscher"
+  },
+  "evidence": [],
+  "id": "ps285166-r05",
+  "identity": {
+    "lab": "IGI",
+    "report_number": "644442866",
+    "status": "reported"
+  },
+  "label": "2.54ct E VS1 - preferred but darker at angles",
+  "linked_diamond_id": null,
+  "media_sources": [
+    {
+      "kind": "viewer",
+      "provider": "loupe360",
+      "status": "linked_unverified",
+      "url": "https://loupe360.com/diamond/a8a02d88-2480-5194-b9ce-4d805c7abaa6/video/500/500/autoplay"
+    }
+  ],
+  "schema": "sparkles-reference/1",
+  "source_links": [
+    {
+      "kind": "discussion",
+      "note": "PriceScope Asscher evaluation thread; post numbers cited in commentary.",
+      "url": "https://www.pricescope.com/community/threads/asscher-evaluation-seeking-help.285166/"
+    },
+    {
+      "kind": "listing",
+      "url": "https://www.brilliance.com/lab-grown-diamonds/asscher/2-54-carat-e-color-super-ideal-make-vs1-clarity-igi-certified-SKU-LG26366041"
+    }
+  ],
+  "topics": [
+    "contrast",
+    "simultaneous-darkness",
+    "mixed-reactions"
+  ]
+}

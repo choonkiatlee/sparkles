@@ -1,0 +1,36 @@
+{
+  "commentary": "The buyer re-linked an earlier 3.10ct option (#26); 0-0-0 described it as leaky when tilted (#29). The IGI identifier LG657468099 comes from the curated discussion inventory and should be corroborated before linking to a certified catalogue manifest.",
+  "diamond_metadata": {
+    "carat": "3.10",
+    "shape": "Asscher"
+  },
+  "evidence": [],
+  "id": "ps285166-r08",
+  "identity": {
+    "lab": "IGI",
+    "report_number": "LG657468099",
+    "status": "reported"
+  },
+  "label": "3.10ct - leakage on tilt",
+  "linked_diamond_id": null,
+  "media_sources": [
+    {
+      "kind": "viewer",
+      "provider": "loupe360",
+      "status": "linked_unverified",
+      "url": "https://loupe360.com/diamond/LG657468099"
+    }
+  ],
+  "schema": "sparkles-reference/1",
+  "source_links": [
+    {
+      "kind": "discussion",
+      "note": "PriceScope Asscher evaluation thread; post numbers cited in commentary.",
+      "url": "https://www.pricescope.com/community/threads/asscher-evaluation-seeking-help.285166/"
+    }
+  ],
+  "topics": [
+    "under-table-leakage",
+    "tilt"
+  ]
+}
