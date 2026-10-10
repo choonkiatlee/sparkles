@@ -20,6 +20,7 @@ from .models import (
 )
 from .protocols import HttpClient
 from .resolvers import IgiReportPdfResolver, Loupe360CertificateResolver
+from .opaque_loupe_viewer import PinnedOpaqueLoupeViewerResolver
 
 _ID = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*\Z")
 _REPORT = re.compile(r"[A-Za-z0-9-]{5,64}\Z")
@@ -95,8 +96,9 @@ def retrieve_reference_media(
     a local reference:<id> locator, NOT a supplier page or certified identity.
 
     A direct media URL is attempted before exact-report discovery. Unsupported
-    viewer formats (including v360.diamonds and Loupe360 UUID/numeric pages)
-    stay UNSUPPORTED, never guessed into a certified report. An exact IGI lab
+    viewer formats (including v360.diamonds and arbitrary Loupe360 UUID/numeric pages)
+    stay UNSUPPORTED. The uniquely pinned R03 browser-proven numeric source may
+    expose unverified proxy motion without ever becoming a certified report. An exact IGI lab
     and report enable a best-effort Loupe/Nivoda lookup and optional IGI PDF.
     IdentityConflictError fails closed; callers must not publish a partial
     result after an identity conflict.
@@ -201,6 +203,7 @@ def retrieve_reference_media(
             resolvers=(
                 IgiReportPdfResolver(),
                 Loupe360CertificateResolver(client, include_image=True),
+                PinnedOpaqueLoupeViewerResolver(client),
             ),
             policy=ReferenceMediaPolicy(),
         )
