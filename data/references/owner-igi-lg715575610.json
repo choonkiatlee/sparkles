@@ -1,7 +1,83 @@
 {
   "commentary": "The owner personally viewed this diamond in person and liked its appearance. This is a positive first-hand preference, not a claim of expert cut quality or any specific optical behaviour. The IGI report number LG715575610 was provided by the owner; the grading report, diamond specifications and supplier 360° media have not yet been independently verified. Keep this stone as a real-world positive reference for later side-by-side comparisons with seller footage and other saved diamonds, if identity-matched media becomes available.",
   "diamond_metadata": {},
-  "evidence": [],
+  "enrichment_attempts": [
+    {
+      "kind": "certificate",
+      "locator": "igi-report:LG715575610",
+      "reference_identifier": "owner-igi-lg715575610:igi-report",
+      "status": "resolved"
+    },
+    {
+      "kind": "certificate",
+      "locator": "https://api.igi.org/viewpdf.php?r=LG715575610",
+      "reference_identifier": "owner-igi-lg715575610:igi-report:pdf",
+      "status": "download_failed"
+    },
+    {
+      "kind": "rotation",
+      "locator": "loupe360-report:LG715575610",
+      "reference_identifier": "owner-igi-lg715575610:loupe-report",
+      "status": "resolved"
+    },
+    {
+      "kind": "rotation",
+      "locator": "https://v360.diamonds/c/22971515-3849-41bb-ae0a-3bb31e3a7ae9?m=i&a=FA-121",
+      "reference_identifier": "owner-igi-lg715575610:loupe-report:supplier-rotation",
+      "status": "unsupported"
+    },
+    {
+      "kind": "still",
+      "locator": "https://assets-images.pixorac.com/6b247608-e42d-46f9-8924-74c21896fb2d.jpg",
+      "reference_identifier": "owner-igi-lg715575610:loupe-report:supplier-still",
+      "status": "success"
+    }
+  ],
+  "evidence": [
+    {
+      "dimensions": [
+        1046,
+        1046
+      ],
+      "identifier": "owner-igi-lg715575610:loupe-report:supplier-still",
+      "identity_observations": [],
+      "kind": "still",
+      "metadata": {
+        "media_type": "image/jpeg",
+        "sha256": "f20df2c1af1dd60f0fb983158ceb84c86bc3ef746132ffb2c23e7d6849d183a2"
+      },
+      "payload_asset": {
+        "byte_count": 78223,
+        "media_type": "image/jpeg",
+        "sha256": "f20df2c1af1dd60f0fb983158ceb84c86bc3ef746132ffb2c23e7d6849d183a2",
+        "storage": {
+          "backend": "github_release",
+          "locator": "sparkles-reference-owner-igi-lg715575610/asset-f20df2c1af1dd60f0fb983158ceb84c86bc3ef746132ffb2c23e7d6849d183a2.jpg",
+          "url": "https://github.com/choonkiatlee/sparkles/releases/download/sparkles-reference-owner-igi-lg715575610/asset-f20df2c1af1dd60f0fb983158ceb84c86bc3ef746132ffb2c23e7d6849d183a2.jpg"
+        }
+      },
+      "provenance": [
+        {
+          "locator": "reference:owner-igi-lg715575610",
+          "source": "curated_reference"
+        },
+        {
+          "locator": null,
+          "source": "curated_report"
+        },
+        {
+          "locator": "https://g.nivoda.com/graphql-public-loupe360",
+          "source": "loupe360_exact_certificate"
+        },
+        {
+          "locator": "https://assets-images.pixorac.com/6b247608-e42d-46f9-8924-74c21896fb2d.jpg",
+          "source": "still_image"
+        }
+      ],
+      "record_key": "357ec71abddc7a20ec5da7c5e11363ba66142ba81fa0a013cc35f4a092eddd8d",
+      "status": "success"
+    }
+  ],
   "id": "owner-igi-lg715575610",
   "identity": {
     "lab": "IGI",
