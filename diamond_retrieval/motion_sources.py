@@ -235,6 +235,65 @@ class Labgrowns3RotationDownloader(_ProgressiveDownloader):
         )
 
 
+class Gem360RotationDownloader(_ProgressiveDownloader):
+    """Download original progressive frames from an exact Gem360 viewer.
+
+    Gem360's public viewer is hosted on view.gem360.in while the original
+    progressive media lives on the fixed videos.gem360.in origin. The
+    catalogue case LG833634461 resolves to
+    /gem360.html?d=2208261115-MV25-13A. We accept only Gem360's two exact
+    public URL shapes and derive no host from user-controlled parameters.
+    """
+
+    source_name = "gem360"
+    _VIEW_HOST = "view.gem360.in"
+    _MEDIA_HOST = "videos.gem360.in"
+    _DISPLAY_PARAMS = {"controls", "btn", "sv", "v"}
+
+    def _source(self, reference: EvidenceReference) -> tuple[str, str, str]:
+        locator = reference.locator or ""
+        parts = urlsplit(locator)
+        if (
+            parts.scheme != "https"
+            or parts.netloc.lower() != self._VIEW_HOST
+            or parts.fragment
+        ):
+            raise ValueError("not an exact Gem360 viewer URL")
+
+        query = parse_qs(parts.query, keep_blank_values=True)
+        item_id: str | None = None
+
+        if parts.path.lower() == "/gem360.html":
+            values = query.get("d", [])
+            if (
+                len(values) != 1
+                or set(query) - ({"d"} | self._DISPLAY_PARAMS)
+                or any(
+                    key != "d" and (
+                        len(query[key]) != 1 or query[key][0] not in {"0", "1"}
+                    )
+                    for key in query
+                )
+            ):
+                raise ValueError("Gem360 viewer query is ambiguous or unsupported")
+            item_id = values[0]
+        else:
+            match = re.fullmatch(
+                r"/gem360/([^/]+)/gem360-([^/]+)\.html",
+                parts.path,
+                flags=re.IGNORECASE,
+            )
+            if match and not query and match.group(1) == match.group(2):
+                item_id = match.group(1)
+
+        if not item_id or not _ITEM_ID.fullmatch(item_id):
+            raise ValueError("Gem360 viewer is missing a valid exact item ID")
+
+        viewer = f"https://{self._VIEW_HOST}/gem360.html?d={item_id}"
+        source_root = f"https://{self._MEDIA_HOST}/imaged/{item_id}"
+        return viewer, source_root, f"{source_root}/0.json?version="
+
+
 class DiajewelRotationDownloader(_ProgressiveDownloader):
     source_name = "diajewel"
 
