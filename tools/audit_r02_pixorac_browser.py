@@ -23,8 +23,10 @@ def classify_resource(item: dict) -> dict:
     host = raw.get("host", "")
     path = (raw.get("path") or "").lower()
     if host == "assets-images.pixorac.com":
-        kind = ("indexed_jpeg" if path.endswith(".jpg")
-                else "indexed_webp" if path.endswith(".webp")
+        matched = _INDEXED.fullmatch(path)
+        kind = ("indexed_jpeg" if matched and path.endswith(".jpg")
+                else "indexed_webp" if matched and path.endswith(".webp")
+                else "standalone_image" if path.endswith((".jpg", ".webp"))
                 else "pixorac_other")
     elif path.endswith((".mp4", ".mov", ".m4v", ".webm")):
         kind = "direct_video"
@@ -34,7 +36,17 @@ def classify_resource(item: dict) -> dict:
         kind = "html_viewer"
     else:
         kind = "other"
+    pieces = [x for x in path.split("/") if x]
+    last = pieces[-1] if pieces else ""
+    path_shape = {
+        "depth": len(pieces),
+        "first_component_length": len(pieces[0]) if pieces else 0,
+        "has_query": bool(raw.get("has_query")),
+        "last_numeric_image": bool(re.fullmatch(r"[0-9]{1,3}\\.(?:jpg|webp)", last)),
+        "suffix": "webp" if last.endswith(".webp") else "jpg" if last.endswith(".jpg") else "other",
+    }
     return {
+        "path_shape": path_shape,
         "host": host[:120],
         "kind": kind,
         "status": item.get("status"),
@@ -62,6 +74,8 @@ def summarize_browser(records: list[dict]) -> dict:
             "pixorac_requests": len(pixorac),
             "pixorac_indexed": sum(x["kind"] in ("indexed_jpeg", "indexed_webp") for x in pixorac),
             "pixorac_statuses": [x.get("status") for x in pixorac[:12]],
+            "pixorac_path_shapes": [x.get("path_shape") for x in pixorac[:12]],
+            "pixorac_kinds": dict(Counter(x["kind"] for x in pixorac)),
             "video_requests": len(video),
             "video_statuses": [x.get("status") for x in video[:12]],
             "error_type": record.get("browser_error_type"),
