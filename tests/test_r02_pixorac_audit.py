@@ -3,10 +3,11 @@ from __future__ import annotations
 
 import base64
 import unittest
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from tools.audit_r02_pixorac import (
-    LAB, REPORT, REFERENCE, audit, proxy_source, report_matches, trust_anchor,
+    LAB, REPORT, REFERENCE, audit, proxy_source, probe_exact_video, report_matches, trust_anchor,
 )
 
 
@@ -104,6 +105,50 @@ class R02PixoracAuditTests(unittest.TestCase):
         self.assertFalse(result["publication"])
         self.assertNotIn("proxy_url", result)
         frames.assert_called_once_with(client, exact, 7)
+
+
+    @patch("tools.audit_r02_pixorac.UrllibHttpClient")
+    def test_generic_video_page_is_not_direct_bytes(self, http):
+        result = probe_exact_video("https://loupe360.com/diamond/LG634479985/video/500/500")
+        self.assertEqual(result["outcome"], "video_field_is_not_direct_media")
+        http.assert_not_called()
+
+    @patch("tools.audit_r02_pixorac.UrllibHttpClient")
+    def test_http_video_is_rejected_before_fetch(self, http):
+        self.assertEqual(
+            probe_exact_video("http://media.example/video.mp4")["outcome"],
+            "unsupported_video_url",
+        )
+        http.assert_not_called()
+
+    @patch("tools.audit_r02_pixorac.UrllibHttpClient")
+    def test_verified_direct_video_requires_real_wire_magic(self, http):
+        url = "https://media.example.org/real-video.mp4"
+        payload = b"\\x00\\x00\\x08\\x00ftyp" + b"x" * 1500
+        http.return_value.get.return_value = SimpleNamespace(
+            status_code=200, url=url, content=payload)
+        result = probe_exact_video(url)
+        self.assertEqual(result["outcome"], "validated_exact_direct_video")
+        self.assertEqual(result["byte_count"], len(payload))
+        self.assertEqual(result["source_host"], "media.example.org")
+        http.assert_called_once_with(max_bytes=25 * 1024 * 1024)
+
+    @patch("tools.audit_r02_pixorac.UrllibHttpClient")
+    def test_html_at_mp4_route_is_not_valid_media(self, http):
+        url = "https://media.example.org/file.mp4"
+        http.return_value.get.return_value = SimpleNamespace(
+            status_code=200, url=url, content=b"<html>" + b"x" * 1500)
+        self.assertEqual(probe_exact_video(url)["outcome"], "invalid_video_wire_bytes")
+
+    @patch("tools.audit_r02_pixorac.probe_exact_video")
+    @patch("tools.audit_r02_pixorac.query_record")
+    def test_provider_video_only_probed_after_exact_lab_report(self, lookup, video_probe):
+        lookup.side_effect = [None, {
+            "certNumber": "LG000000000", "lab": LAB,
+            "video": "https://media.example.org/video.mp4",
+        }]
+        audit(object())
+        video_probe.assert_not_called()
 
 
 if __name__ == "__main__":
