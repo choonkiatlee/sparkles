@@ -86,7 +86,7 @@ class R03PinnedProxyTests(unittest.TestCase):
     def test_other_unverified_numeric_viewers_remain_unsupported(self):
         http = FakeHttp()
         other = [{"kind": "viewer", "provider": "loupe360", "status": "linked_unverified",
-                  "url": "https://loupe360.com/diamond/1498922544"}]
+                  "url": "https://loupe360.com/diamond/999999999"}]
         result = retrieve_reference_media("ps285166-r09", media_sources=other, http_client=http)
         self.assertFalse(result.rotations)
         self.assertFalse(http.post_calls)

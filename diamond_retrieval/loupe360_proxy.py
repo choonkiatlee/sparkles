@@ -8,7 +8,7 @@ byte identity with the original supplier's Vision360 transport.
 
 The downloader is never enabled for a bare user-supplied Pixorac URL.
 It normally requires a certificate-matched resolver; a single explicitly
-pinned, independently browser-audited R03 direct viewer may also create
+pinned, independently browser-audited R03/R09 direct viewer may also create
 an unverified-identity proxy candidate. No other numeric viewers qualify.
 """
 from __future__ import annotations
@@ -35,25 +35,26 @@ _TOKEN = re.compile(r"/[A-Za-z0-9_-]{20,1024}={0,2}\Z")
 
 
 def validated_proxy_root(reference: EvidenceReference) -> str:
-    """Accept only a URL from a successful exact-lab-and-report resolver."""
-    from .opaque_loupe_viewer import R03_REFERENCE_ID, R03_VIEWER, R03_PROXY_ROOT
+    """Accept an exact certificate or one of two individually source-pinned viewers."""
+    from .opaque_loupe_viewer import PINNED_VIEWERS
     unverified_viewer = reference.metadata.get("loupe360_proxy_exact_viewer") is True
+    pin = PINNED_VIEWERS.get(reference.metadata.get("reference_id")) if unverified_viewer else None
     if unverified_viewer:
-        # A *single* source with audited direct viewer -> proxy correspondence.
-        # Never interpret its numeric viewer ID as an IGI/GIA report.
+        # Only actual browser-audited direct viewer -> proxy correspondences.
+        # Neither numeric viewer identifier is promoted to an IGI/GIA report.
         if not (
-            reference.kind == ROTATION
-            and reference.metadata.get("reference_id") == R03_REFERENCE_ID
-            and reference.metadata.get("loupe360_viewer_source") == R03_VIEWER
+            pin is not None
+            and reference.kind == ROTATION
+            and reference.metadata.get("loupe360_viewer_source") == pin["viewer"]
             and reference.metadata.get("identity_status") == "unverified"
-            and reference.locator == R03_PROXY_ROOT
-            and reference.retrieval_key == R03_PROXY_ROOT
+            and reference.locator == pin["proxy"]
+            and reference.retrieval_key == pin["proxy"]
             and any(step.source == "loupe360_pinned_exact_viewer_proxy"
-                    and step.locator == R03_VIEWER for step in reference.provenance)
+                    and step.locator == pin["viewer"] for step in reference.provenance)
             and not reference.metadata.get("report_number")
             and not reference.metadata.get("lab")
         ):
-            raise ValueError("Pixorac source is not the pinned R03 viewer provenance")
+            raise ValueError("Pixorac source does not match any pinned viewer provenance")
     elif (
         reference.kind != ROTATION
         or reference.metadata.get("loupe360_proxy_exact_certificate") is not True
@@ -78,13 +79,16 @@ def validated_proxy_root(reference: EvidenceReference) -> str:
         decoded = Loupe360CertificateResolver._unwrap_v360(locator)
     except ValueError as exc:
         raise ValueError("Pixorac encoded viewer invalid") from exc
-    if (urlsplit(decoded).scheme != "https"
-            or not Loupe360CertificateResolver._is_supported_rotation_url(decoded)):
-        raise ValueError("Pixorac wrapper does not name a supported supplier viewer")
+    if urlsplit(decoded).scheme != "https" or (
+        decoded != pin["source_viewer"] if unverified_viewer
+        else not Loupe360CertificateResolver._is_supported_rotation_url(decoded)
+    ):
+        raise ValueError("Pixorac wrapper does not name the exact trusted supplier viewer")
     frame_count = reference.metadata.get("supplier_frame_count")
     top_index = reference.metadata.get("supplier_top_index")
-    if frame_count != FRAME_COUNT or isinstance(frame_count, bool):
-        raise ValueError("Pixorac V360Info must advertise exactly 256 frames")
+    expected_count = pin["frame_count"] if unverified_viewer else FRAME_COUNT
+    if frame_count != expected_count or isinstance(frame_count, bool):
+        raise ValueError("Pixorac frame count does not match source-specific contract")
     if unverified_viewer and top_index is None:
         # No known face-up hint: keep it absent rather than fabricating zero.
         return locator
@@ -92,7 +96,7 @@ def validated_proxy_root(reference: EvidenceReference) -> str:
         index = int(top_index)
     except (ValueError, TypeError) as exc:
         raise ValueError("Pixorac top_index missing") from exc
-    if isinstance(top_index, bool) or not 0 <= index < FRAME_COUNT:
+    if isinstance(top_index, bool) or not 0 <= index < expected_count:
         raise ValueError("Pixorac top_index out of range")
     return locator
 
@@ -113,11 +117,12 @@ class Loupe360ProxyRotationDownloader:
 
     def download(self, reference: EvidenceReference) -> RawEvidence:
         root = validated_proxy_root(reference)
+        count = reference.metadata["supplier_frame_count"]
         frames: list[str] = []
         hashes: set[str] = set()
         dimensions: tuple[int, int] | None = None
         total = 0
-        for index in range(FRAME_COUNT):
+        for index in range(count):
             url = f"{root}/{index}.jpg"
             response = self.http_client.get(url, timeout=self.timeout)
             if response.status_code == 404:
@@ -153,7 +158,7 @@ class Loupe360ProxyRotationDownloader:
         metadata = {
             **reference.metadata,
             "supplier": "loupe360-pixorac-proxy",
-            "frame_count": FRAME_COUNT,
+            "frame_count": count,
             "dimensions": dimensions,
             "source_root": root,
             "source_transport": ("pinned_unverified_viewer_indexed_proxy_jpeg"
@@ -166,6 +171,7 @@ class Loupe360ProxyRotationDownloader:
             "schema_version": "sparkles-indexed-proxy-rotation/1",
             "source": "loupe360-pixorac-proxy",
             "source_root": root,
+            "frame_count": count,
             "dimensions": list(dimensions),
             "face_up_hint": (int(reference.metadata["supplier_top_index"])
                              if reference.metadata["supplier_top_index"] is not None else None),
@@ -195,8 +201,26 @@ class IndexedProxyRotationProcessor:
             raise InvalidPayloadError("Unsupported indexed rotation bundle")
         frames_encoded = bundle.get("frames")
         declared_dimensions = bundle.get("dimensions")
-        if not isinstance(frames_encoded, list) or len(frames_encoded) != FRAME_COUNT:
-            raise InvalidPayloadError("Indexed proxy rotation requires exactly 256 frames")
+        count = bundle.get("frame_count", FRAME_COUNT)
+        if isinstance(count, bool) or count not in (255, 256):
+            raise InvalidPayloadError("Unexpected indexed proxy frame count")
+        if count == 255:
+            # The ONLY accepted 255-image contract is native R09: actual 0..254
+            # verified; original viewer advertised 255 and index 255 was 404.
+            from .opaque_loupe_viewer import R09_REFERENCE_ID
+            if not (
+                raw.reference.metadata.get("loupe360_proxy_exact_viewer") is True
+                and raw.reference.metadata.get("reference_id") == R09_REFERENCE_ID
+                and raw.reference.metadata.get("supplier_frame_count") == 255
+                and raw.metadata.get("frame_count") == 255
+            ):
+                raise InvalidPayloadError("255-position proxy is not the pinned R09 source")
+            try:
+                validated_proxy_root(raw.reference)
+            except ValueError as exc:
+                raise InvalidPayloadError("R09 indexed proxy provenance invalid") from exc
+        if not isinstance(frames_encoded, list) or len(frames_encoded) != count:
+            raise InvalidPayloadError("Indexed proxy rotation has incomplete source-declared frames")
         if (
             not isinstance(declared_dimensions, list)
             or len(declared_dimensions) != 2
@@ -234,15 +258,15 @@ class IndexedProxyRotationProcessor:
         hint = bundle.get("face_up_hint")
         if hint is None and raw.reference.metadata.get("loupe360_proxy_exact_viewer") is True:
             pass  # Reviewer-visible orientation is unknown, not guessed.
-        elif isinstance(hint, bool) or not isinstance(hint, int) or not 0 <= hint < FRAME_COUNT:
+        elif isinstance(hint, bool) or not isinstance(hint, int) or not 0 <= hint < count:
             raise InvalidPayloadError("Indexed proxy face-up hint out of range")
         metadata = {
             **raw.metadata,
             "supplier": "loupe360-pixorac-proxy",
-            "frame_count": FRAME_COUNT,
+            "frame_count": count,
             "dimensions": tuple(declared_dimensions),
             "sequence_complete": True,
-            "ordering": "proxy indexed source positions 0..255",
+            "ordering": f"proxy indexed source positions 0..{count - 1}",
             "physical_angle_calibrated": False,
             "supplier_original_bytes_verified": False,
         }
@@ -250,7 +274,7 @@ class IndexedProxyRotationProcessor:
             ProvenanceStep(
                 "loupe360_pixorac_proxy_indexed_jpeg",
                 raw.reference.locator,
-                {"frame_count": FRAME_COUNT, "supplier_original_bytes_verified": False},
+                {"frame_count": count, "supplier_original_bytes_verified": False},
             ),
         )
         return (RotationEvidence(

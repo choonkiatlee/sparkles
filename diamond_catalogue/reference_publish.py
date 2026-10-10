@@ -195,11 +195,24 @@ def plan_reference_media(result, reference_id: str) -> PublicationPlan:
     if any(c.outcome == IdentityOutcome.CONFLICT for c in result.identity_comparisons):
         raise CatalogueError("Conflicting reference evidence identity")
     for entry in result.evidence:
-        if isinstance(entry, RotationEvidence) and (
+        if not isinstance(entry, RotationEvidence):
+            continue
+        # The only non-256 native source accepted is the explicitly pinned R09
+        # proxy: all 255 real original proxy JPEGs, with no invented frame 255.
+        native_r09_255 = (
+            reference_id == "ps285166-r09"
+            and entry.metadata.get("supplier") == "loupe360-pixorac-proxy"
+            and entry.metadata.get("source_transport") == "pinned_unverified_viewer_indexed_proxy_jpeg"
+            and entry.metadata.get("frame_count") == 255
+            and entry.metadata.get("supplier_original_bytes_verified") is False
+            and entry.metadata.get("ordering") == "proxy indexed source positions 0..254"
+        )
+        count = 255 if native_r09_255 else 256
+        if (
             entry.status.value != "success" or
             entry.metadata.get("sequence_complete") is not True or
-            len(entry.frames) != 256 or
-            sorted(frame.source_index for frame in entry.frames) != list(range(256))
+            len(entry.frames) != count or
+            sorted(frame.source_index for frame in entry.frames) != list(range(count))
         ):
             raise CatalogueError("Refusing to publish incomplete reference rotation")
     evidence, assets = plan_evidence_assets(result, reference_id)
