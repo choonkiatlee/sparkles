@@ -42,11 +42,10 @@ export function validateExpertGuide(index, validReferenceIds) {
   return index.lessons;
 }
 
-// A category can teach one, two or many references. The comparison pair is optional
-// and explicitly chosen by the editor; adding an example does not change deep links.
-export function comparisonPair(lesson, validIds) {
-  if (!lesson || !Array.isArray(lesson.featured_pair)) return [];
-  const ids = lesson.featured_pair.map(referenceSelectionId);
-  return ids.length === 2 && new Set(ids).size === 2 &&
-    ids.every(id => validIds.has(id)) ? ids : [];
+// Compare all teaching examples in editorial order. Never silently truncate.
+export function comparisonExamples(lesson, validIds, maxSelection=10) {
+  if (!lesson || !Array.isArray(lesson.examples) ||
+      lesson.examples.length < 2 || lesson.examples.length > maxSelection) return [];
+  const ids=lesson.examples.map(example=>referenceSelectionId(example.id));
+  return new Set(ids).size===ids.length && ids.every(id=>validIds.has(id)) ? ids : [];
 }

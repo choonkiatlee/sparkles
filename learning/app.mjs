@@ -3,11 +3,11 @@ import {MAX_SELECTION,MIN_COMPARISON,validateIndex,
   selectionFromSearch,selectionSearch,toggleSelection} from "../catalogue/core.mjs";
 import {createComparisonView} from "../catalogue/comparison-view.mjs";
 import {validateReferenceIndex,createReferenceManifestLoader} from "../catalogue/reference.mjs";
-import {validateExpertGuide,comparisonPair} from "./guide.mjs";
+import {validateExpertGuide,comparisonExamples} from "./guide.mjs";
 
 const $ = id => document.getElementById(id);
 const state = {references:[], certified:[], allRows:[], docs:new Map(),
-  failures:new Set(),selected:[],comparing:false,ready:false,focusLesson:null,guide:[]};
+  failures:new Set(),selected:[],comparing:false,ready:false,focusLesson:null,compareLessonId:null,guide:[]};
 const loadReference = createReferenceManifestLoader((...args)=>fetch(...args));
 const comparisonView = createComparisonView({
   container:$("comparison"),grid:$("comparison-grid"),fetcher:(...args)=>fetch(...args)
@@ -37,10 +37,14 @@ function updateLinks() {
   $("browse-catalogue").href="../catalogue/"+suffix;
 }
 function updateURL() {
-  const params=selectionSearch(location.search,state.selected,state.comparing);
-  history.replaceState(null,"",location.pathname+(params?"?"+params:"")+location.hash);
+  const params=new URLSearchParams(selectionSearch(location.search,state.selected,state.comparing));
+  if(state.comparing && state.compareLessonId)params.set("lesson",state.compareLessonId);
+  else params.delete("lesson");
+  const query=params.toString();
+  history.replaceState(null,"",location.pathname+(query?"?"+query:"")+location.hash);
 }
 function select(id) {
+  state.compareLessonId=null;
   state.selected=toggleSelection(state.selected,id);
   state.comparing=state.comparing && state.selected.length>=MIN_COMPARISON;
   updateURL();
@@ -48,8 +52,8 @@ function select(id) {
   document.getElementById("pick-"+id)?.focus();
 }
 // Guide example controls work against the same basket and comparison player as the gallery.
-function guidePair(lesson) {
-  return comparisonPair(lesson,new Set(state.references.map(row=>row.id)));
+function guideSelection(lesson) {
+  return comparisonExamples(lesson,new Set(state.references.map(row=>row.id)),MAX_SELECTION);
 }
 function studyLesson(lesson) {
   state.focusLesson=lesson;
@@ -59,10 +63,11 @@ function studyLesson(lesson) {
   $("references").scrollIntoView({behavior:"smooth",block:"start"});
 }
 function compareLesson(lesson) {
-  const pair=guidePair(lesson);
-  if(pair.length!==2)return;
-  // Deliberately explicit: this action replaces the basket rather than silently adding items.
-  state.selected=pair;
+  const ids=guideSelection(lesson);
+  if(ids.length<MIN_COMPARISON)return;
+  // Replace the existing shared basket with every example from this segment.
+  state.selected=ids;
+  state.compareLessonId=lesson.id;
   state.comparing=true;
   updateURL();
   render();
@@ -83,12 +88,11 @@ function guideExample(example) {
   } else {
     media.append(node("span","",example.id.split("-").at(-1).toUpperCase()));
   }
-  wrapper.append(media);
   const copy=node("div","guide-example-copy");
   copy.append(node("strong","",example.label));
   copy.append(node("p","",example.comment));
   if(row)copy.append(node("span","guide-example-id",row.label));
-  wrapper.append(copy);
+  wrapper.append(copy,media);
   return wrapper;
 }
 function makeGuideCard(lesson,position) {
@@ -114,16 +118,19 @@ function makeGuideCard(lesson,position) {
   inspect.type="button";
   inspect.disabled=!lesson.examples.length;
   inspect.addEventListener("click",()=>studyLesson(lesson));
-  const compare=node("button","","Compare this pair");
+  const ids=guideSelection(lesson);
+  const compare=node("button","","Compare all "+lesson.examples.length+" examples");
   compare.type="button";
-  compare.disabled=guidePair(lesson).length!==2;
+  compare.disabled=ids.length<MIN_COMPARISON;
   compare.addEventListener("click",()=>compareLesson(lesson));
   actions.append(inspect,compare);
   card.append(actions);
-  if(guidePair(lesson).length===2)
-    card.append(node("p","guide-basket-note","Comparing the featured pair replaces your current basket."));
-  else
-    card.append(node("p","guide-basket-note","One example can teach a topic; add a featured_pair to enable direct comparison."));
+  card.append(node("p","guide-basket-note",
+    ids.length>=MIN_COMPARISON ?
+      "Compares every example in this segment, replacing your current basket. Expert notes appear above the images." :
+      lesson.examples.length<MIN_COMPARISON ?
+        "Add a second curated example to enable comparison." :
+        "This category exceeds the "+MAX_SELECTION+"-diamond shared comparison limit."));
 
   return card;
 }
@@ -207,7 +214,7 @@ function render() {
     $("focused-lesson-label").textContent="Studying: "+state.focusLesson.title+" · "+visible.length+" relevant examples";
   $("empty").hidden=visible.length>0;
   const n=state.selected.length;
-  $("selected-count").textContent=n===0?"Choose two to five stones to compare." :
+  $("selected-count").textContent=n===0?"Choose two to "+MAX_SELECTION+" stones to compare." :
     n<MIN_COMPARISON?"1 selected · choose at least one more." :
     n+" selected · ready to compare"+(n===MAX_SELECTION?" (maximum).":".");
   $("selected-chips").replaceChildren(...state.selected.map(id=>
@@ -216,13 +223,22 @@ function render() {
   $("compare-button").disabled=n<MIN_COMPARISON;
   $("compare-button").textContent=state.comparing?"Hide comparison":"Compare "+n+" selected";
   updateLinks();
-  comparisonView.update(state.allRows,state.selected,state.comparing);
+  const lesson=state.guide.find(item=>item.id===state.compareLessonId);
+  const notesById=new Map((lesson?.examples||[]).map(example=>
+    ["ref-"+example.id,{label:example.label,comment:example.comment}]));
+  comparisonView.update(state.allRows,state.selected,state.comparing,
+    {notesById,contextKey:lesson?.id||""});
 }
 function navigationState() {
   if(!state.ready)return;
   const ids=new Set(state.allRows.map(row=>row.id));
   const next=selectionFromSearch(location.search,ids);
   state.selected=next.selected;state.comparing=next.comparing;
+  const lessonId=new URLSearchParams(location.search).get("lesson");
+  const candidate=state.guide.find(lesson=>lesson.id===lessonId);
+  const examples=candidate?guideSelection(candidate):[];
+  state.compareLessonId=next.comparing && examples.length===next.selected.length &&
+    examples.every((id,i)=>id===next.selected[i]) ? candidate.id : null;
   render();
 }
 async function getJSON(url) {
@@ -237,7 +253,7 @@ async function boot() {
     state.focusLesson=null;$("search").value="";$("topic").value="all";render();
   });
   $("clear-selection").addEventListener("click",()=>{
-    state.selected=[];state.comparing=false;updateURL();render();
+    state.selected=[];state.comparing=false;state.compareLessonId=null;updateURL();render();
   });
   $("compare-button").addEventListener("click",()=>{
     if(state.selected.length<MIN_COMPARISON)return;

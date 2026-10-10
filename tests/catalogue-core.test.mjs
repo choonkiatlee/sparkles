@@ -29,17 +29,19 @@ test("dimensions and null fields remain honest",()=>{
   assert.equal(dimensionsText(rows[0]),"7.58 × 7.55 × 4.88 mm");
   assert.equal(dimensionsText({dimensions:null}),"Unknown");
 });
-test("selection dedupes URL IDs, bounds at five, keeps bookmarkable compare state",()=>{
+test("selection dedupes URL IDs, supports six-plus lessons, and remains bookmarkable",()=>{
   const ids=new Set(rows.map(r=>r.id));
   const state=selectionFromSearch("?selected="+rows[0].id+","+rows[1].id+","+rows[1].id+",fake&compare=1",ids);
   assert.deepEqual(state.selected,[rows[0].id,rows[1].id]);
   assert.equal(state.comparing,true);
   assert.deepEqual(toggleSelection(state.selected,rows[0].id),[rows[1].id]);
-  assert.deepEqual(toggleSelection([1,2,3,4,5],6),[1,2,3,4,5]);
+  assert.deepEqual(toggleSelection([1,2,3,4,5],6),[1,2,3,4,5,6]);
+  const full=Array.from({length:MAX_SELECTION},(_,i)=>i);
+  assert.deepEqual(toggleSelection(full,MAX_SELECTION),full);
   const query=selectionSearch("?utm_source=test",state.selected,true);
   assert.equal(selectionFromSearch("?"+query,ids).comparing,true);
   assert.match(query,/utm_source=test/);
-  assert.equal(MAX_SELECTION,5);
+  assert.equal(MAX_SELECTION,10);
 });
 
 
