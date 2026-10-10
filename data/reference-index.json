@@ -1,6 +1,29 @@
 {
   "references": [
     {
+      "carat": null,
+      "clarity": null,
+      "colour": null,
+      "commentary_excerpt": "The owner personally viewed this diamond in person and liked its appearance. This is a positive first-hand preference, not a claim of expert cut quality or any specific optical beh",
+      "has_motion": false,
+      "id": "owner-igi-lg715575610",
+      "identity_status": "reported",
+      "lab": "IGI",
+      "label": "IGI LG715575610 — liked in person",
+      "linked_diamond_id": null,
+      "manifest_path": "data/references/owner-igi-lg715575610.json",
+      "report_number": "LG715575610",
+      "selection_id": "ref-owner-igi-lg715575610",
+      "shape": null,
+      "source_url": "https://www.igi.org/verify-your-report/",
+      "thumbnail_url": null,
+      "topics": [
+        "in-person-positive",
+        "owner-preference",
+        "real-world-viewing"
+      ]
+    },
+    {
       "carat": "3.03",
       "clarity": "VVS2",
       "colour": "I",
