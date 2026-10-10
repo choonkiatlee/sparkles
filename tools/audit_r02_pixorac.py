@@ -31,8 +31,8 @@ PROXY_HOST = "assets-images.pixorac.com"
 FRAME_COUNT = 256
 MAX_FRAME_BYTES = 1024 * 1024
 MAX_TOTAL_BYTES = 25 * 1024 * 1024
-_TOKEN = re.compile(r"/[A-Za-z0-9_-]{20,1024}={0,2}\\Z")
-_D = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,90}\\Z")
+_TOKEN = re.compile(r"/[A-Za-z0-9_-]{20,1024}={0,2}\Z")
+_D = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,90}\Z")
 
 
 def trust_anchor() -> None:
