@@ -15,6 +15,29 @@ class ReferenceBatchTests(unittest.TestCase):
             "ps285166-r11",
         ))
 
+    def test_labgrowns3_filter_uses_exact_trusted_source_and_skips_existing_motion(self):
+        from diamond_catalogue.references import REFERENCE_DIR
+        selected = batch_targets(supplier="labgrowns3")
+        self.assertEqual(selected, tuple(sorted(set(selected))))
+        self.assertTrue(set(selected) <= set(batch_targets()))
+        for ref_id in selected:
+            record = json.loads(
+                (REFERENCE_DIR / f"{ref_id}.json").read_text(encoding="utf-8")
+            )
+            self.assertTrue(any(
+                "labgrowns3.s3.ap-southeast-1.amazonaws.com/stoneimages360.html?d="
+                in (attempt.get("locator") or "")
+                for attempt in record.get("enrichment_attempts", [])
+            ) or any(
+                "labgrowns3.s3.ap-southeast-1.amazonaws.com/stoneimages360.html?d="
+                in media["url"]
+                for media in record.get("media_sources", [])
+            ))
+        with self.assertRaisesRegex(ValueError, "supplier"):
+            # Invalid option cannot broaden the privileged batch.
+            from diamond_catalogue.models import CatalogueError
+            batch_targets(supplier="arbitrary.example.test")
+
     def test_unsupported_opaque_loupe_or_v360_viewer_not_dispatched(self):
         from diamond_catalogue.references import SCHEMA
         with tempfile.TemporaryDirectory() as folder:
