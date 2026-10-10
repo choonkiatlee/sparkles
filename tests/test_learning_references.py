@@ -145,7 +145,7 @@ class ReferenceContractTests(unittest.TestCase):
             self.assertEqual(validate_reference(doc, expected_id=key), doc)
             self.assertTrue(doc["commentary"])
             self.assertIn("pricescope.com", doc["source_links"][0]["url"])
-            self.assertEqual(doc["evidence"], [])  # New records are curation-only.
+            self.assertIsInstance(doc["evidence"], list)  # Enrichment may add validated media.
             self.assertIsNone(doc["linked_diamond_id"])
         # Vendor links, archived research and source albums are distinct from published media.
         r12, r13 = records["ps282648-r12"], records["ps282648-r13"]
