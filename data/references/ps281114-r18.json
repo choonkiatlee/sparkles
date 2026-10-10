@@ -1,0 +1,48 @@
+{
+  "schema": "sparkles-reference/1",
+  "id": "ps281114-r18",
+  "label": "Crispest — Karl_K's specific P3 leakage example",
+  "identity": {
+    "status": "unverified",
+    "lab": null,
+    "report_number": null
+  },
+  "linked_diamond_id": null,
+  "diamond_metadata": {
+    "shape": "Asscher"
+  },
+  "commentary": "Karl_K identified face-up P3 leakage in the top and bottom central V regions between the windmills of 'Crispest', judging it the worst of the initial three (#9), and called the crown relatively low (#10). This is a specifically localized expert diagnosis, unlike generic dark-pixel suspicion. The complete original D360 256-frame sequence is archived under #64, but not automatically playable as a Learning Corner reference until its evidence is explicitly linked and validated.",
+  "source_links": [
+    {
+      "kind": "discussion",
+      "url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/",
+      "note": "Karl_K technical comments #9 and #10."
+    },
+    {
+      "kind": "research_catalogue",
+      "url": "https://github.com/choonkiatlee/sparkles/blob/master/docs/360/external-benchmark/pricescope/source-catalog.json",
+      "note": "Archived benchmark ID: asscher-eval-crispest. Source identity/provenance, not a verified catalogue-media attachment."
+    },
+    {
+      "kind": "research_media_archive",
+      "url": "https://github.com/choonkiatlee/sparkles/releases/download/pricescope-research-2026-10-06-v1/pricescope-media-recovery-2026-10-06-v3.zip",
+      "note": "Existing #64 archive holds complete original D360 frames; reference media remains unverified."
+    }
+  ],
+  "media_sources": [
+    {
+      "kind": "viewer",
+      "provider": "d360.tech",
+      "status": "linked_unverified",
+      "url": "https://d360.tech/view.html?d=79-BT-5165227"
+    }
+  ],
+  "topics": [
+    "p3-leakage",
+    "under-table-leakage",
+    "crown-height",
+    "expert-localisation",
+    "research-archive"
+  ],
+  "evidence": []
+}
