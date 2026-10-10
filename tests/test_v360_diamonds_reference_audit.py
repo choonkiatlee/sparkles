@@ -1,8 +1,12 @@
 """Conservative, read-only LG715575610 v360.diamonds audit contracts."""
+import json
 import unittest
+
+from diamond_retrieval.protocols import HttpResponse
 
 from tools.audit_v360_diamonds_reference import (
     VIEWER, assert_source_pinned, categorize, sanitized_url,
+    audit_exact_certificate_lookup,
 )
 
 
@@ -34,6 +38,29 @@ class V360ExactAuditTests(unittest.TestCase):
         self.assertEqual(categorize(200, "video/mp4", b"<html>fake"), "html_not_motion")
         self.assertEqual(categorize(404, "video/mp4", b""), "not_available")
         self.assertEqual(categorize(200, "video/mp4", b"fake"), "unknown_not_proven_motion")
+
+    def test_exact_certificate_lookup_never_trusts_other_report(self):
+        class FakeClient:
+            def __init__(self, payload):
+                self.payload = payload
+            def post(self, url, *, timeout, content, headers):
+                self_url = "https://g.nivoda.com/graphql-public-loupe360"
+                if url != self_url:
+                    raise AssertionError("unexpected endpoint")
+                assert json.loads(content)["variables"] == {"cert": "LG715575610"}
+                return HttpResponse(200, url, {"Content-Type": "application/json"}, self.payload)
+        def record(report):
+            return json.dumps({"data": {"certificate_by_cert_number": {
+                "certNumber": report, "lab": "IGI", "image": None, "video": None,
+                "v360": {"url": VIEWER, "frame_count": 256, "top_index": 121}
+            }}}).encode()
+        valid = audit_exact_certificate_lookup(FakeClient(record("LG715575610")))
+        self.assertEqual(valid["outcome"], "exact_provider_report")
+        self.assertFalse(valid["v360"]["direct_video_url"])
+        self.assertNotIn("FA-121", str(valid))
+        other = audit_exact_certificate_lookup(FakeClient(record("LG000000000")))
+        self.assertEqual(other["outcome"], "identity_conflict")
+        self.assertNotIn("v360", other)
 
     def test_valid_media_magic_is_not_confused_with_html(self):
         self.assertEqual(categorize(200, "image/jpeg", b"\xff\xd8\xffjpeg"), "jpeg")
