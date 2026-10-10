@@ -59,7 +59,8 @@ def validated_proxy_root(reference: EvidenceReference) -> str:
         decoded = Loupe360CertificateResolver._unwrap_v360(locator)
     except ValueError as exc:
         raise ValueError("Pixorac encoded viewer invalid") from exc
-    if not Loupe360CertificateResolver._is_supported_rotation_url(decoded):
+    if (urlsplit(decoded).scheme != "https"
+            or not Loupe360CertificateResolver._is_supported_rotation_url(decoded)):
         raise ValueError("Pixorac wrapper does not name a supported supplier viewer")
     frame_count = reference.metadata.get("supplier_frame_count")
     top_index = reference.metadata.get("supplier_top_index")
