@@ -95,6 +95,52 @@ class ReferenceMediaLookupTests(unittest.TestCase):
         self.assertIn(("CERT", REPORT), http.calls)
         self.assertFalse(any("retailer" in url for _, url in http.calls if _ == "GET"))
 
+    def test_loupe_v360_direct_mp4_uses_video_path_not_fake_rotation(self):
+        # Reproduces the R21 / GIA 2135242286 source shape: the Nivoda
+        # exact-certificate v360.url points straight to an original MP4.
+        source = "https://idealbrilliant.s3.amazonaws.com/imaged/P970-3/video.mp4"
+        http = FakeHttp(
+            {source: (VIDEO_BYTES, "video/mp4"), STILL_URL: (_jpeg(), "image/jpeg")},
+            graphql=_graphql(
+                report="2135242286", lab="GIA", rotation=source,
+                video=None,
+            ),
+        )
+        result = retrieve_reference_media(
+            "ps281114-r21", lab="GIA", report_number="2135242286",
+            http_client=http,
+        )
+        self.assertEqual([e.kind for e in result.evidence], [VIDEO, STILL])
+        self.assertEqual(result.evidence[0].payload, VIDEO_BYTES)
+        self.assertFalse(result.rotations)
+        self.assertEqual(result.evidence[0].metadata["format"], "video")
+        self.assertNotIn("supplier_frame_count", result.evidence[0].metadata)
+        self.assertEqual(http.calls.count(("GET", source)), 1)
+        self.assertTrue(any(
+            a.locator == source and a.kind == VIDEO and
+            a.status == EvidenceStatus.SUCCESS for a in result.attempts
+        ))
+        self.assertFalse(any(
+            a.kind == ROTATION and a.locator == source for a in result.attempts
+        ))
+
+    def test_loupe_v360_direct_video_invalid_bytes_fail_closed(self):
+        source = "https://idealbrilliant.s3.amazonaws.com/imaged/P970-3/video.mp4"
+        http = FakeHttp(
+            {source: (b"not-video", "video/mp4")},
+            graphql=_graphql(rotation=source, video=None, image=None),
+        )
+        result = retrieve_reference_media(
+            "invalid-video", lab="IGI", report_number=REPORT,
+            http_client=http,
+        )
+        self.assertFalse(result.evidence)
+        self.assertTrue(any(
+            a.kind == VIDEO and a.locator == source and
+            a.status == EvidenceStatus.INVALID_PAYLOAD for a in result.attempts
+        ))
+        self.assertFalse(result.rotations)
+
     def test_explicit_direct_still_precedes_certificate_lookup(self):
         direct = "https://assets.example.test/my-still.jpg"
         http = FakeHttp(
