@@ -50,7 +50,7 @@ class R12AuditTests(unittest.TestCase):
             "status": "record_returned", "requested": "LG524247250",
             "returned_report": "LG000000000", "returned_lab": "IGI",
             "expected_lab_match": True, "v360_present": True,
-        }]), patch("tools.audit_r12_reference.media_dry_run") as download:
+        }]), patch("tools.audit_r12_reference.media_dry_run") as download, patch("tools.audit_r12_reference.probe_exact_loupe_viewer"):
             self.assertEqual(main(["--media"]), 0)
             download.assert_not_called()
 
