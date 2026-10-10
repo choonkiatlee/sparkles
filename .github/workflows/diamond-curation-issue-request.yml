@@ -1,0 +1,62 @@
+name: diamond-curation-issue-request
+
+on:
+  issues:
+    types: [opened]
+
+permissions: {}
+
+# Share the existing publisher lock: do not race ingestion, thumbnails or
+# another curation save on master. Git ref update also retries on conflict.
+concurrency:
+  group: sparkles-diamond-catalogue-master-publisher
+  cancel-in-progress: false
+
+jobs:
+  save-curation:
+    if: >-
+      github.repository == 'choonkiatlee/sparkles' &&
+      github.event.issue.user.login == 'choonkiatlee' &&
+      github.event.issue.title == 'Save diamond curation'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: write
+      issues: write
+    steps:
+      - name: Checkout trusted owner request handler
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          persist-credentials: false
+      - name: Apply validated sparse curation transitions atomically
+        id: apply
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python tools/apply_diamond_curation_issue.py --event "$GITHUB_EVENT_PATH" --github-output "$GITHUB_OUTPUT"
+      - name: Confirm committed Git state on issue
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          COMMIT_SHA: ${{ steps.apply.outputs.commit_sha }}
+          CHANGED: ${{ steps.apply.outputs.changed }}
+        run: |
+          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "Curation ${CHANGED:+processed} in Git at commit ${COMMIT_SHA}. Pages deployment runs separately; refresh the saved catalogue after it completes to reconcile pending browser drafts."
+          gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --reason completed
+      - name: Explain rejected or conflicted request
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "Curation was **not confirmed saved**. This request failed validation, encountered a concurrent edit, or GitHub could not commit it. Refresh the catalogue and review your browser-local pending changes before resubmitting. See the linked Actions run for diagnostics."
+
+  deploy-pages:
+    needs: save-curation
+    if: success()
+    uses: ./.github/workflows/catalogue-pages.yml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
