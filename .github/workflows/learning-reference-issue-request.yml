@@ -1,0 +1,92 @@
+name: learning-reference-issue-request
+
+on:
+  issues:
+    types: [opened]
+
+permissions: {}
+
+concurrency:
+  group: sparkles-diamond-catalogue-master-publisher
+  cancel-in-progress: false
+
+jobs:
+  enrich:
+    # Only the repository owner's exact-title requests may select an accepted
+    # reference already reviewed and committed on trusted master.
+    if: >-
+      github.repository == 'choonkiatlee/sparkles' &&
+      github.event.issue.user.login == 'choonkiatlee' &&
+      github.event.issue.title == 'Enrich learning reference'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: write
+      issues: write
+    steps:
+      - name: Checkout trusted master
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          persist-credentials: false
+
+      - name: Parse exact reference ID from owner request
+        id: request
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          import re
+
+          with open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8") as f:
+              event = json.load(f)
+          body = (event["issue"].get("body") or "").strip()
+          match = re.fullmatch(
+              r"reference_id: ([a-z0-9]+(?:-[a-z0-9]+)*)\\nmode: (media|all)", body
+          )
+          if not match:
+              raise SystemExit("Expected two lines: reference_id: <id> and mode: media|all")
+          reference_id, mode = match.groups()
+          path = Path("data/references") / (reference_id + ".json")
+          if not path.is_file():
+              raise SystemExit("Reference ID is not accepted on master")
+          record = json.loads(path.read_text(encoding="utf-8"))
+          if record.get("id") != reference_id:
+              raise SystemExit("Reference filename/ID mismatch")
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
+              f.write(f"reference_id={reference_id}\\nmode={mode}\\n")
+          PY
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Sparkles
+        run: python -m pip install -e .
+
+      - name: Enrich one accepted reference
+        env:
+          REFERENCE_ID: ${{ steps.request.outputs.reference_id }}
+          REFERENCE_MODE: ${{ steps.request.outputs.mode }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF: refs/heads/master
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python -m diamond_catalogue.reference_publish
+
+      - name: Link owner request to run
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body \
+            "Single-reference enrichment attempted. See the [Actions run](https://github.com/choonkiatlee/sparkles/actions/workflows/learning-reference-issue-request.yml) and the updated reference record for exact results."
+
+  deploy-pages:
+    needs: enrich
+    uses: ./.github/workflows/catalogue-pages.yml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
