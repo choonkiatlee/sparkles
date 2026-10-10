@@ -84,6 +84,23 @@ class BrowserAuditTests(unittest.TestCase):
             self.assertIsNone(candidate)
             self.assertNotEqual(result["outcome"], "one_exact_browser_observed_source")
 
+    def test_nested_browser_observed_webp_size_variant_is_exact(self):
+        supplier = "https://mediassests.s3.amazonaws.com/V360/Vision360.html"
+        token = base64.urlsafe_b64encode(supplier.encode()).decode().rstrip("=")
+        records = [{"input_route": "landing", "relevant_requests": [
+            {"resource": {"host": "assets-images.pixorac.com",
+                          "path": f"/{token}/500/213.webp", "has_query": False},
+             "status": 200}
+        ]}]
+        lookup = {"cert_matches": True, "lab": "IGI",
+                  "v360": {"frame_count": 256, "top_index": "213"}}
+        root, top, verdict = browser_cache_candidate(records, lookup)
+        self.assertEqual(root, f"https://assets-images.pixorac.com/{token}/500")
+        self.assertEqual(top, 213)
+        self.assertTrue(verdict["top_index_observed"])
+        self.assertTrue(verdict["media_variant_present"])
+        self.assertNotIn(token, json.dumps(verdict))
+
     def test_multiple_browser_pixorac_roots_refused(self):
         one = "https://mediassests.s3.amazonaws.com/V360/Vision360.html"
         two = one + "?d=source-ref-2"
