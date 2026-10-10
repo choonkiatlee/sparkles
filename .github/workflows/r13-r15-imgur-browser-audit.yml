@@ -1,0 +1,40 @@
+name: R13–R15 exact Imgur browser metadata audit
+
+on:
+  pull_request:
+    paths:
+      - "tools/audit_r13_r15_imgur_browser.py"
+      - "tests/test_r13_r15_imgur_browser.py"
+      - ".github/workflows/r13-r15-imgur-browser-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  metadata-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - name: Checkout reviewed source without credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Selenium for read-only Chrome
+        run: python -m pip install selenium
+      - name: Test strict URL/attribution/media-blocking contracts
+        run: python -m unittest tests.test_r13_r15_imgur_browser tests.test_r13_r15_imgur -v
+      - name: Inspect two public albums (DOM and headers only; block all media)
+        timeout-minutes: 4
+        run: python -m tools.audit_r13_r15_imgur_browser --out "$RUNNER_TEMP/r13-r15-browser-metadata.json"
+      - name: Retain sanitized metadata, never source video or image bytes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r13-r15-browser-metadata
+          path: ${{ runner.temp }}/r13-r15-browser-metadata.json
+          retention-days: 30
+          if-no-files-found: warn
