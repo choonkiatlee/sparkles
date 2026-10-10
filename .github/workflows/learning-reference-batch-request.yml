@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  enrich-reviewed-reference-media:
+  enrich:
     # Owner and exact issue title are the only event inputs used. Contents,
     # certificates and URLs are exclusively read from trusted master.
     if: >-
@@ -83,8 +83,8 @@ jobs:
 
   deploy-pages:
     # Even if one reference fails, successfully published others should appear.
-    if: always() && needs.enrich-reviewed-reference-media.result != 'skipped'
-    needs: enrich-reviewed-reference-media
+    if: always() && needs.enrich.result != 'skipped'
+    needs: enrich
     uses: ./.github/workflows/catalogue-pages.yml
     permissions:
       contents: read
