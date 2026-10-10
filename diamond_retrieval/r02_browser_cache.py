@@ -25,7 +25,7 @@ CACHE_REF = "r02-browser-observed-pixorac-sha256:" + EXPECTED_ROOT_SHA256
 # Only source-observed public indexed image URLs from the exact certificate's viewer.
 _INDEXED = re.compile(
     r"^/([A-Za-z0-9_-]{20,1024}={0,2})/([A-Za-z0-9._~+=:-]{1,24})/"
-    r"([0-9]{1,3})\\.(?:jpg|webp)$"
+    r"([0-9]{1,3})\.(?:jpg|webp)$"
 )
 
 
@@ -116,7 +116,7 @@ def main() -> int:
     root = discover_root()
     # GitHub env file belongs to this run; no URL or tokenized root in stdout.
     with args.github_env.open("a", encoding="utf-8") as output:
-        output.write("R02_PIXORAC_ROOT=" + root + "\\n")
+        output.write("R02_PIXORAC_ROOT=" + root + "\n")
     print("R02 exact public browser cache: verified SHA-256 " + EXPECTED_ROOT_SHA256)
     return 0
 
