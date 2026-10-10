@@ -42,7 +42,7 @@ def classify_resource(item: dict) -> dict:
         "depth": len(pieces),
         "first_component_length": len(pieces[0]) if pieces else 0,
         "has_query": bool(raw.get("has_query")),
-        "last_numeric_image": bool(re.fullmatch(r"[0-9]{1,3}\\.(?:jpg|webp)", last)),
+        "last_numeric_image": bool(re.fullmatch(r"[0-9]{1,3}\.(?:jpg|webp)", last)),
         "suffix": "webp" if last.endswith(".webp") else "jpg" if last.endswith(".jpg") else "other",
     }
     return {
