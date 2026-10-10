@@ -222,6 +222,44 @@ def audit_r23(http) -> list[dict]:
                 },
             })
     if preflight.get("preflight") == "missing_scramble":
+        # Summarize source preview vs vendor still and the MEDIA/PROPERTIES
+        # *schema only*: do not log supplier metadata values or images.
+        try:
+            bootstrap = json.loads(replies["0.json"].content)
+            preview_bytes = base64.b64decode(
+                "".join(bootstrap["image"].split()), validate=True
+            )
+            preview_dims = validate_jpeg_bytes(preview_bytes)
+            vendor_still = replies["still.jpg"].content
+            still_dims = validate_jpeg_bytes(vendor_still)
+            outputs.append({
+                "reference": R23_ID, "source": "preview_still_relation",
+                "exact_byte_match": preview_bytes == vendor_still,
+                "preview_dimensions": list(preview_dims),
+                "vendor_still_dimensions": list(still_dims),
+                "preview_sha256": hashlib.sha256(preview_bytes).hexdigest(),
+                "vendor_still_sha256": hashlib.sha256(vendor_still).hexdigest(),
+            })
+        except Exception as exc:
+            outputs.append({"reference": R23_ID, "source": "preview_still_relation",
+                            "state": "invalid_or_unavailable",
+                            "error_class": type(exc).__name__})
+        try:
+            metadata = json.loads(replies["metadata.json"].content)
+            if isinstance(metadata, dict):
+                for field in ("MEDIA", "PROPERTIES"):
+                    child = metadata.get(field)
+                    outputs.append({
+                        "reference": R23_ID, "source": "metadata:" + field,
+                        "value_type": type(child).__name__,
+                        "keys": sorted(
+                            k for k in child if isinstance(k, str)
+                            and len(k) <= 40 and k.isascii()
+                            and all(ch.isalnum() or ch in "_-" for ch in k)
+                        )[:35] if isinstance(child, dict) else [],
+                    })
+        except Exception:
+            pass
         # Probe the two established, same-item frame pack names only. This
         # confirms whether the underlying source frames still exist, but does
         # NOT assert a trustworthy ordered rotation without a scramble map.
