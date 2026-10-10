@@ -129,12 +129,13 @@ def browser_cache_candidate(records: list[dict], lookup: dict) -> tuple[str | No
             if not match:
                 continue
             index = int(match.group(3))
-            if index >= 256:
+            variant = match.group(2)
+            if index >= 256 or (variant and ".." in variant):
                 continue
             # Both the token and optional media-size segment were observed
             # verbatim in the trusted exact report's browser request. Neither
             # is derived from a guessed stone ID or an inventory search.
-            key = (match.group(1), match.group(2))
+            key = (match.group(1), variant)
             roots.setdefault(key, set()).add(index)
     output = {"indexed_requests_observed": pixorac_total,
               "distinct_indexed_roots": len(roots)}
