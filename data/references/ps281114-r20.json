@@ -1,34 +1,57 @@
 {
-  "schema": "sparkles-reference/1",
-  "id": "ps281114-r20",
-  "label": "Messy arrows — irregular contrast in a vendor video",
-  "identity": {
-    "status": "unverified",
-    "lab": null,
-    "report_number": null
-  },
-  "linked_diamond_id": null,
+  "commentary": "In the thread's original examples (#1), the buyer—not Karl_K—described this Kashi-sourced stone as showing poorly organised arrows, many adjacent black facets and brightness displaced away from the centre. This is a useful illustration of how face-up organisation can look disorderly, but the observations are the author's visual impressions, not an expert technical diagnosis. The MP4 was already archived under #64; it is linked here for provenance, not represented as a locally published reference video.",
   "diamond_metadata": {
     "shape": "Asscher"
   },
-  "commentary": "In the thread's original examples (#1), the buyer—not Karl_K—described this Kashi-sourced stone as showing poorly organised arrows, many adjacent black facets and brightness displaced away from the centre. This is a useful illustration of how face-up organisation can look disorderly, but the observations are the author's visual impressions, not an expert technical diagnosis. The MP4 was already archived under #64; it is linked here for provenance, not represented as a locally published reference video.",
-  "source_links": [
+  "enrichment_attempts": [
     {
-      "kind": "discussion",
-      "url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/",
-      "note": "Thread-author observations in original post #1; do not attribute to Karl_K."
-    },
-    {
-      "kind": "research_catalogue",
-      "url": "https://github.com/choonkiatlee/sparkles/blob/master/docs/360/external-benchmark/pricescope/source-catalog.json",
-      "note": "Archived benchmark sample: asscher-eval-messy-arrows. Provenance pointer only; not a certified catalogue identity."
-    },
-    {
-      "kind": "research_media_archive",
-      "url": "https://github.com/choonkiatlee/sparkles/releases/download/pricescope-research-2026-10-06-v1/pricescope-media-recovery-2026-10-06-v3.zip",
-      "note": "Archived original Kashi MP4 in #64; not a validated Learning Corner playable asset."
+      "kind": "video",
+      "locator": "https://www.kashiimports.com/video/22957.mp4",
+      "reference_identifier": "ps281114-r20:pricescope-archive-v3",
+      "status": "success"
     }
   ],
+  "evidence": [
+    {
+      "identifier": "ps281114-r20:archive-video",
+      "identity_observations": [],
+      "kind": "video",
+      "media_type": "video/mp4",
+      "metadata": {
+        "sha256": "ec4a17f8c89ce710dd5a9b8e4e8d08b8e398d99692e583e4f63f970bfd4f487a"
+      },
+      "payload_asset": {
+        "byte_count": 5886312,
+        "media_type": "video/mp4",
+        "sha256": "ec4a17f8c89ce710dd5a9b8e4e8d08b8e398d99692e583e4f63f970bfd4f487a",
+        "storage": {
+          "backend": "github_release",
+          "locator": "sparkles-reference-ps281114-r20/asset-ec4a17f8c89ce710dd5a9b8e4e8d08b8e398d99692e583e4f63f970bfd4f487a.mp4",
+          "url": "https://github.com/choonkiatlee/sparkles/releases/download/sparkles-reference-ps281114-r20/asset-ec4a17f8c89ce710dd5a9b8e4e8d08b8e398d99692e583e4f63f970bfd4f487a.mp4"
+        }
+      },
+      "provenance": [
+        {
+          "locator": "https://www.kashiimports.com/video/22957.mp4",
+          "source": "pricescope_archived_original"
+        },
+        {
+          "locator": "https://www.kashiimports.com/video/22957.mp4",
+          "source": "direct_video_validation"
+        }
+      ],
+      "record_key": "21e1b9c85bd9702e56fcbf95454c78d23284f256a07404e08e6338b0ae95016e",
+      "status": "success"
+    }
+  ],
+  "id": "ps281114-r20",
+  "identity": {
+    "lab": null,
+    "report_number": null,
+    "status": "unverified"
+  },
+  "label": "Messy arrows — irregular contrast in a vendor video",
+  "linked_diamond_id": null,
   "media_sources": [
     {
       "kind": "video",
@@ -37,12 +60,29 @@
       "url": "https://www.kashiimports.com/video/22957.mp4"
     }
   ],
+  "schema": "sparkles-reference/1",
+  "source_links": [
+    {
+      "kind": "discussion",
+      "note": "Thread-author observations in original post #1; do not attribute to Karl_K.",
+      "url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/"
+    },
+    {
+      "kind": "research_catalogue",
+      "note": "Archived benchmark sample: asscher-eval-messy-arrows. Provenance pointer only; not a certified catalogue identity.",
+      "url": "https://github.com/choonkiatlee/sparkles/blob/master/docs/360/external-benchmark/pricescope/source-catalog.json"
+    },
+    {
+      "kind": "research_media_archive",
+      "note": "Archived original Kashi MP4 in #64; not a validated Learning Corner playable asset.",
+      "url": "https://github.com/choonkiatlee/sparkles/releases/download/pricescope-research-2026-10-06-v1/pricescope-media-recovery-2026-10-06-v3.zip"
+    }
+  ],
   "topics": [
     "pattern-organisation",
     "simultaneous-darkness",
     "contrast",
     "author-observation",
     "research-archive"
-  ],
-  "evidence": []
+  ]
 }
