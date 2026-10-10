@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "tools/audit_loupe360_browser_references.py"
+      - "tools/audit_loupe360_frame_cache.py"
       - ".github/workflows/loupe360-browser-reference-audit.yml"
   workflow_dispatch:
 
@@ -25,11 +26,17 @@ jobs:
         run: |
           python tools/audit_loupe360_browser_references.py \
             --out "$RUNNER_TEMP/loupe360-r08-r11-browser.json"
+      - name: Validate exact indexed Nivoda image proxy frame availability
+        run: |
+          python tools/audit_loupe360_frame_cache.py \
+            --out "$RUNNER_TEMP/loupe360-r08-r11-frame-cache.json"
       - name: Preserve sanitized browser and source contract findings
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: loupe360-r08-r11-browser-audit
-          path: ${{ runner.temp }}/loupe360-r08-r11-browser.json
+          path: |
+            ${{ runner.temp }}/loupe360-r08-r11-browser.json
+            ${{ runner.temp }}/loupe360-r08-r11-frame-cache.json
           if-no-files-found: warn
           retention-days: 30
