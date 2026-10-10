@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
-import {validateExpertGuide,comparisonPair} from "../learning/guide.mjs";
+import {validateExpertGuide,comparisonExamples} from "../learning/guide.mjs";
 import {validateReferenceIndex} from "../catalogue/reference.mjs";
 import {selectionFromSearch,selectionSearch,MAX_SELECTION} from "../catalogue/core.mjs";
 
@@ -27,7 +27,9 @@ test("editable guide references real curated diamonds and trustworthy sources",(
       assert.ok(example.label.length>0);
       assert.ok(example.comment.length>10);
     }
-    if(lesson.featured_pair)assert.equal(comparisonPair(lesson,ids).length,2);
+    assert.deepEqual(comparisonExamples(lesson,ids),
+      lesson.examples.length>=2 && lesson.examples.length<=MAX_SELECTION ?
+        lesson.examples.map(example=>"ref-"+example.id):[]);
   }
   const annotated=lessons.find(lesson=>lesson.id==="tilt")?.annotated_source;
   assert.match(annotated.label,/screenshot.*reply/i);
@@ -42,13 +44,13 @@ test("all new references are taught in the expanded guide",()=>{
   for(const slug of ["evidence-reassessment","p3-specific-leakage","same-spec-comparison","performance-vs-preference"]){
     const lesson=lessons.find(x=>x.id===slug);
     assert.ok(lesson);
-    assert.equal(comparisonPair(lesson,ids).length,2);
+    assert.equal(comparisonExamples(lesson,ids).length,lesson.examples.length);
   }
 });
 
-test("featured comparison remains stable when later agents append examples",()=>{
-  for(const lesson of lessons.filter(x=>x.featured_pair)){
-    const selected=comparisonPair(lesson,ids);
+test("whole-segment comparison includes all examples and round-trips in the shared basket",()=>{
+  for(const lesson of lessons.filter(x=>x.examples.length>=2)){
+    const selected=comparisonExamples(lesson,ids);
     const query=selectionSearch("?source=learning",selected,true);
     assert.deepEqual(selectionFromSearch("?"+query,ids),{selected,comparing:true});
     assert.ok(selected.length<=MAX_SELECTION);
@@ -60,10 +62,11 @@ test("featured comparison remains stable when later agents append examples",()=>
   const extended={...base,examples:[...base.examples,
     {id:extra.reference_id,label:"Another example",comment:"Source-backed expert observation"}]};
   assert.equal(validateExpertGuide({schema:published.schema,lessons:[extended]},ids).length,1);
-  assert.deepEqual(comparisonPair(extended,ids),comparisonPair(base,ids));
+  assert.deepEqual(comparisonExamples(extended,ids),
+    [...comparisonExamples(base,ids),extra.id]);
 });
 
-test("new categories can start with one example and gain a featured pair later",()=>{
+test("new categories can start with one example and compare all as they grow",()=>{
   const [first,second]=refs;
   const newLesson={
     id:"new-teaching-concept",category:"Another useful phenomenon",
@@ -73,11 +76,11 @@ test("new categories can start with one example and gain a featured pair later",
     examples:[{id:first.reference_id,label:"First source",comment:"Reviewer describes a specific observation."}]
   };
   assert.equal(validateExpertGuide({schema:published.schema,lessons:[...lessons,newLesson]},ids).length,lessons.length+1);
-  assert.deepEqual(comparisonPair(newLesson,ids),[]);
+  assert.deepEqual(comparisonExamples(newLesson,ids),[]);
   const expanded={...newLesson,examples:[...newLesson.examples,
     {id:second.reference_id,label:"Counterexample",comment:"Another source-backed judgement."}],
-    featured_pair:[first.reference_id,second.reference_id]};
-  assert.deepEqual(comparisonPair(expanded,ids),[first.id,second.id]);
+    };
+  assert.deepEqual(comparisonExamples(expanded,ids),[first.id,second.id]);
   assert.equal(validateExpertGuide({schema:published.schema,lessons:[expanded]},ids).length,1);
 });
 
@@ -93,7 +96,11 @@ test("guide validation rejects orphan references, duplicate slugs and broken com
   assert.throws(()=>validateExpertGuide({schema:published.schema,lessons:[
     {...lessons[0],source_url:"javascript:alert(1)"}
   ]},ids),/category/);
-  assert.deepEqual(comparisonPair(lessons[0],new Set()),[]);
+  assert.deepEqual(comparisonExamples(lessons[0],new Set()),[]);
+  const overLimit={...lessons[0],examples:Array.from({length:MAX_SELECTION+1},(_,i)=>({
+    id:"r"+i,label:"Example",comment:"Observations"
+  }))};
+  assert.deepEqual(comparisonExamples(overLimit,ids),[]); // Do not silently truncate.
 });
 
 test("site uses authored schema, source-linked diagram and existing player",()=>{
@@ -110,5 +117,11 @@ test("site uses authored schema, source-linked diagram and existing player",()=>
   assert.match(app,/compareLesson/);
   assert.match(app,/studyLesson/);
   assert.match(app,/comparisonView\.update/);
-  assert.match(app,/state\.selected=pair/);
+  assert.match(app,/state\.selected=ids/);
+  assert.match(app,/Compare all /);
+  assert.match(app,/notesById/);
+  assert.match(app,/compareLessonId/);
+  const shared=readFileSync(new URL("../catalogue/comparison-view.mjs",import.meta.url),"utf8");
+  assert.match(shared,/compare-expert-note/);
+  assert.match(shared,/column\.note\?\.comment/);
 });
