@@ -103,6 +103,29 @@ def run() -> None:
     for index, code in enumerate(parser.inlines[:12],1):
         print("R23_PLAYER "+json.dumps({"source":f"inline-{index}",
             **code_windows(code,max_windows=18)},sort_keys=True),flush=True)
+    # Fixed bounded excerpts from the actual public, inlined (obfuscated)
+    # D360 player. No runtime JS, vendor requests or string-table eval.
+    if len(parser.inlines) >= 2:
+        code = parser.inlines[1]
+        anchors = (
+            "new Array(0x100)", "await fetch(", "fetch(",
+            "subtle", "atob(", "0x100", "0x80", "rotate",
+            "recordRotation", "frameContainer", "function _0x",
+        )
+        for label in anchors:
+            match = code.find(label)
+            if match < 0:
+                continue
+            start = max(0, match - 650)
+            snippet = code[start : min(len(code), match + 1700)]
+            snippet = re.sub(r"https?://[^\s\"'<>]+", "<redacted-url>", snippet)
+            snippet = re.sub(r"[A-Za-z0-9+/]{120,}={0,2}", "<redacted-token>", snippet)
+            # Public program code only: bounded excerpt, not supplier data or
+            # arbitrary media links.
+            print("R23_PLAYER_FOCUS "+json.dumps({
+                "anchor":label, "offset":match,
+                "snippet":" ".join(snippet.split())[:2200]
+            },sort_keys=True),flush=True)
     count=0
     for source in parser.externals:
         parsed=urlsplit(urljoin(VIEWER,source))
