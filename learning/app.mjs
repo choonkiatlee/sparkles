@@ -3,10 +3,11 @@ import {MAX_SELECTION,MIN_COMPARISON,validateIndex,
   selectionFromSearch,selectionSearch,toggleSelection} from "../catalogue/core.mjs";
 import {createComparisonView} from "../catalogue/comparison-view.mjs";
 import {validateReferenceIndex,createReferenceManifestLoader} from "../catalogue/reference.mjs";
+import {validateExpertGuide,comparisonPair} from "./guide.mjs";
 
 const $ = id => document.getElementById(id);
 const state = {references:[], certified:[], allRows:[], docs:new Map(),
-  failures:new Set(),selected:[],comparing:false,ready:false};
+  failures:new Set(),selected:[],comparing:false,ready:false,focusLesson:null,guide:[]};
 const loadReference = createReferenceManifestLoader((...args)=>fetch(...args));
 const comparisonView = createComparisonView({
   container:$("comparison"),grid:$("comparison-grid"),fetcher:(...args)=>fetch(...args)
@@ -46,10 +47,95 @@ function select(id) {
   render();
   document.getElementById("pick-"+id)?.focus();
 }
+// Guide example controls work against the same basket and comparison player as the gallery.
+function guidePair(lesson) {
+  return comparisonPair(lesson,new Set(state.references.map(row=>row.id)));
+}
+function studyLesson(lesson) {
+  state.focusLesson=lesson;
+  $("search").value="";
+  $("topic").value="all";
+  render();
+  $("references").scrollIntoView({behavior:"smooth",block:"start"});
+}
+function compareLesson(lesson) {
+  const pair=guidePair(lesson);
+  if(pair.length!==2)return;
+  // Deliberately explicit: this action replaces the basket rather than silently adding items.
+  state.selected=pair;
+  state.comparing=true;
+  updateURL();
+  render();
+  $("comparison").scrollIntoView({behavior:"smooth",block:"start"});
+}
+function guideExample(example) {
+  const row=state.references.find(row=>row.reference_id===example.id);
+  const wrapper=node("div","guide-example");
+  const media=node("div","guide-example-preview");
+  const imageURL=externalLink("Published still",row?.thumbnail_url);
+  if(imageURL){
+    const img=node("img");
+    img.src=imageURL.href;img.loading="lazy";img.alt="Published still for "+example.id;
+    img.addEventListener("error",()=>{
+      media.replaceChildren(node("span","",example.id.split("-").at(-1).toUpperCase()));
+    });
+    media.append(img);
+  } else {
+    media.append(node("span","",example.id.split("-").at(-1).toUpperCase()));
+  }
+  wrapper.append(media);
+  const copy=node("div","guide-example-copy");
+  copy.append(node("strong","",example.label));
+  copy.append(node("p","",example.comment));
+  if(row)copy.append(node("span","guide-example-id",row.label));
+  wrapper.append(copy);
+  return wrapper;
+}
+function makeGuideCard(lesson,position) {
+  const card=node("article","guide-card");
+  card.id="guide-"+lesson.id;
+  const eyebrow=node("p","guide-card-eyebrow",String(position+1).padStart(2,"0")+" / "+lesson.category);
+  const title=node("h3","",lesson.title);
+  card.append(eyebrow,title,node("p","guide-summary",lesson.summary));
+  card.append(node("p","guide-look-for","Look for: "+lesson.prompt));
+  const examples=node("div","guide-examples");
+  lesson.examples.forEach(example=>examples.append(guideExample(example)));
+  card.append(examples);
+  const sources=node("div","guide-source-links");
+  const original=externalLink("Read the original expert discussion ↗",lesson.source_url);
+  if(original)sources.append(original);
+  if(lesson.annotated_source){
+    const annotated=externalLink(lesson.annotated_source.label+" ↗",lesson.annotated_source.url);
+    if(annotated)sources.append(annotated);
+  }
+  card.append(sources);
+  const actions=node("div","guide-actions");
+  const inspect=node("button","outline","Study these examples");
+  inspect.type="button";
+  inspect.disabled=!lesson.examples.length;
+  inspect.addEventListener("click",()=>studyLesson(lesson));
+  const compare=node("button","","Compare this pair");
+  compare.type="button";
+  compare.disabled=guidePair(lesson).length!==2;
+  compare.addEventListener("click",()=>compareLesson(lesson));
+  actions.append(inspect,compare);
+  card.append(actions);
+  if(guidePair(lesson).length===2)
+    card.append(node("p","guide-basket-note","Comparing the featured pair replaces your current basket."));
+  else
+    card.append(node("p","guide-basket-note","One example can teach a topic; add a featured_pair to enable direct comparison."));
+
+  return card;
+}
+function renderGuide() {
+  $("guide-cards").replaceChildren(...state.guide.map(makeGuideCard));
+}
+
 function makeCard(row) {
   const doc=state.docs.get(row.id);
   const chosen=state.selected.includes(row.id);
   const card=node("article","reference-card"+(chosen?" is-selected":""));
+  card.id="reference-"+row.reference_id;
   card.append(node("span","case-label","Learning reference · "+row.reference_id));
   card.append(node("h3","",row.label));
   const grades=[row.carat==null?null:row.carat+" ct",row.colour,row.clarity]
@@ -104,7 +190,10 @@ function render() {
   if(!state.ready)return;
   const search=$("search").value.toLowerCase().trim();
   const topic=$("topic").value;
+  const focusedIds=state.focusLesson ?
+    new Set(state.focusLesson.examples.map(example=>example.id)) : null;
   const visible=state.references.filter(row=>{
+    if(focusedIds && !focusedIds.has(row.reference_id))return false;
     const doc=state.docs.get(row.id);
     if(topic!=="all" && !(doc?.topics||row.topics||[]).includes(topic))return false;
     const haystack=[row.id,row.label,row.carat,row.lab,row.report_number,
@@ -113,6 +202,9 @@ function render() {
   });
   $("cards").replaceChildren(...visible.map(makeCard));
   $("count").textContent=visible.length+" of "+state.references.length+" expert references";
+  $("focused-lesson").hidden=!state.focusLesson;
+  if(state.focusLesson)
+    $("focused-lesson-label").textContent="Studying: "+state.focusLesson.title+" · "+visible.length+" relevant examples";
   $("empty").hidden=visible.length>0;
   const n=state.selected.length;
   $("selected-count").textContent=n===0?"Choose two to five stones to compare." :
@@ -139,8 +231,11 @@ async function getJSON(url) {
   return response.json();
 }
 async function boot() {
-  $("search").addEventListener("input",render);
-  $("topic").addEventListener("change",render);
+  $("search").addEventListener("input",()=>{state.focusLesson=null;render();});
+  $("topic").addEventListener("change",()=>{state.focusLesson=null;render();});
+  $("show-all").addEventListener("click",()=>{
+    state.focusLesson=null;$("search").value="";$("topic").value="all";render();
+  });
   $("clear-selection").addEventListener("click",()=>{
     state.selected=[];state.comparing=false;updateURL();render();
   });
@@ -165,7 +260,16 @@ async function boot() {
       try{state.docs.set(row.id,await loadReference(row));}
       catch(error){state.failures.add(row.id);console.warn("Reference detail unavailable",row.id,error);}
     }));
+    try {
+      state.guide=validateExpertGuide(
+        await getJSON("../data/learning-guide.json"),
+        new Set(state.references.map(row=>row.id)));
+    } catch(error) {
+      console.warn("Learning guide unavailable",error);
+      $("guide-cards").append(node("p","error","The expert guide could not load; the reference gallery below remains available."));
+    }
     state.ready=true;
+    if(state.guide.length)renderGuide();
     $("search").disabled=false;$("topic").disabled=false;
     navigationState();
   }catch(error){

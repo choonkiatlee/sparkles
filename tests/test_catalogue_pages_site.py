@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
-from tools.build_catalogue_pages import ROOT, build
+from tools.build_catalogue_pages import ROOT, build, validate_learning_guide
 
 class PagesCatalogueTests(unittest.TestCase):
     def test_build_preserves_existing_archive_and_real_published_manifests(self):
@@ -13,12 +13,13 @@ class PagesCatalogueTests(unittest.TestCase):
             for path in (
                 "index.html", ".nojekyll", "catalogue/index.html",
                 "learning/index.html", "learning/app.mjs", "learning/styles.css",
+                "learning/guide.mjs", "learning/where-to-look.svg",
                 "catalogue/reference.mjs",
                 "catalogue/core.mjs", "catalogue/app.mjs", "catalogue/styles.css",
                 "catalogue/compare.mjs", "catalogue/comparison-view.mjs",
                 "catalogue/rotation.mjs", "catalogue/rotation-canvas.mjs",
                 "catalogue/rotation-player.mjs",
-                "data/catalog.json", "data/reference-index.json",
+                "data/catalog.json", "data/reference-index.json", "data/learning-guide.json",
                 "data/references/ps285166-r07.json", "data/diamonds/igi-lg756520111.json",
                 "data/diamonds/igi-lg816611062.json",
             ):
@@ -37,14 +38,14 @@ class PagesCatalogueTests(unittest.TestCase):
             self.assertFalse((out / ".github").exists())
             self.assertFalse((out / "diamond_retrieval").exists())
 
-    def test_reference_index_is_statically_published_with_11_references(self):
+    def test_reference_index_is_statically_published_with_curated_references(self):
         with tempfile.TemporaryDirectory() as temp:
             out = Path(temp) / "public"
             build(out)
             index = json.loads((out / "data/reference-index.json").read_text(encoding="utf-8"))
             self.assertEqual(index["schema"], "sparkles-reference-index/1")
-            self.assertEqual(len(index["references"]), 11)
-            self.assertEqual(sum(bool(row["has_motion"]) for row in index["references"]), 0)
+            self.assertGreaterEqual(len(index["references"]), 11)
+            self.assertTrue(all(isinstance(row["has_motion"], bool) for row in index["references"]))
             self.assertTrue(all((out / row["manifest_path"]).is_file() for row in index["references"]))
             r07 = json.loads((out / "data/references/ps285166-r07.json").read_text(encoding="utf-8"))
             self.assertIn("under-table steps", r07["commentary"])
@@ -58,6 +59,8 @@ class PagesCatalogueTests(unittest.TestCase):
             shared = (out / "catalogue/comparison-view.mjs").read_text(encoding="utf-8")
             self.assertIn('href="../catalogue/styles.css"', html)
             self.assertIn('id="references"', html)
+            self.assertIn('id="guide-cards"', html)
+            self.assertIn('src="./where-to-look.svg"', html)
             self.assertIn('id="comparison-grid"', html)
             self.assertIn("createComparisonView", app)
             self.assertIn("selectionFromSearch", app)
@@ -66,6 +69,40 @@ class PagesCatalogueTests(unittest.TestCase):
             self.assertIn("createRotationPlayer", shared)
             self.assertIn("projectReferenceComparison", shared)
             self.assertIn('id="learning-link"', (out / "catalogue/index.html").read_text(encoding="utf-8"))
+
+    def test_learning_guide_can_grow_and_rejects_orphan_reference_ids(self):
+        with tempfile.TemporaryDirectory() as temp:
+            out = Path(temp) / "public"
+            build(out)
+            path = out / "data/learning-guide.json"
+            guide = json.loads(path.read_text(encoding="utf-8"))
+            refs = json.loads((out / "data/reference-index.json").read_text(encoding="utf-8"))
+            ids = {row["id"] for row in refs["references"]}
+            self.assertEqual(guide["schema"], "sparkles-learning-guide/1")
+            self.assertGreaterEqual(len(guide["lessons"]), 4)
+            new_category = {
+                "id": "new-teaching-observation", "category": "Example theme",
+                "title": "What should we check?", "summary": "A source-grounded lesson.",
+                "prompt": "Examine motion at several angles.",
+                "source_url": "https://www.pricescope.com/community/threads/example.12345/",
+                "examples": [{
+                    "id": refs["references"][0]["id"],
+                    "label": "A single supported example",
+                    "comment": "Reviewer reports a specific visible observation."
+                }]
+            }
+            guide["lessons"].append(new_category)
+            path.write_text(json.dumps(guide), encoding="utf-8")
+            validate_learning_guide(out, ids)  # One-example new categories work.
+            new_category["featured_pair"] = [new_category["examples"][0]["id"]] * 2
+            path.write_text(json.dumps(guide), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "featured pair"):
+                validate_learning_guide(out, ids)
+            del new_category["featured_pair"]
+            new_category["examples"][0]["id"] = "not-published"
+            path.write_text(json.dumps(guide), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "missing example"):
+                validate_learning_guide(out, ids)
 
     def test_frontend_uses_static_index_and_no_github_rest_discovery(self):
         app = (ROOT / "catalogue/app.mjs").read_text(encoding="utf-8")

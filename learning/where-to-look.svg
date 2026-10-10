@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 310" role="img" aria-labelledby="title desc">
+  <title id="title">Illustrative Asscher face-up map</title>
+  <desc id="desc">A simplified clipped-square step-cut outline, with pointers to the outer step facets, the central table area, and diagonal corner features. Not a real diamond photograph or facet-exact map.</desc>
+  <rect width="860" height="310" rx="18" fill="#edf1ec"/>
+  <g transform="translate(26,13)">
+    <path d="M100 4H230L310 84V214L230 294H100L20 214V84Z" fill="#dee8de" stroke="#345b51" stroke-width="3"/>
+    <path d="M105 35H225L278 89V209L225 263H105L52 209V89Z" fill="#f9fbf8" stroke="#8da59b" stroke-width="3"/>
+    <path d="M111 65H219L248 95V203L219 233H111L82 203V95Z" fill="#e1e9e2" stroke="#7d998c" stroke-width="3"/>
+    <path d="M115 94H215L219 99V199L215 203H115L111 199V99Z" fill="#fffefa" stroke="#345b51" stroke-width="3"/>
+    <path d="M20 84L115 94M310 84L215 94M20 214L115 203M310 214L215 203" fill="none" stroke="#9daea5" stroke-width="2"/>
+    <path d="M100 4L111 65M230 4L219 65M100 294L111 233M230 294L219 233" fill="none" stroke="#a7b7ad" stroke-width="1.6"/>
+    <circle cx="164" cy="149" r="7" fill="#c68635"/>
+    <path d="M164 149H350" stroke="#bb7a2e" stroke-width="2.5" fill="none"/>
+    <circle cx="350" cy="149" r="4" fill="#bb7a2e"/>
+    <path d="M55 80L343 34" stroke="#678879" stroke-width="2.5" fill="none"/>
+    <circle cx="343" cy="34" r="4" fill="#678879"/>
+    <path d="M267 250L343 260" stroke="#678879" stroke-width="2.5" fill="none"/>
+    <circle cx="343" cy="260" r="4" fill="#678879"/>
+  </g>
+  <g font-family="system-ui, sans-serif" fill="#27332f">
+    <text x="390" y="51" font-size="17" font-weight="700">Outer steps</text>
+    <text x="390" y="72" font-size="13" fill="#5c6963">Follow changing bright/dark bands</text>
+    <text x="390" y="151" font-size="17" font-weight="700">Table &amp; central steps</text>
+    <text x="390" y="172" font-size="13" fill="#5c6963">Watch for a quiet or see-through middle</text>
+    <text x="390" y="264" font-size="17" font-weight="700">Diagonal/corner pattern</text>
+    <text x="390" y="285" font-size="13" fill="#5c6963">Notice the symmetry and dark/light contrast</text>
+  </g>
+</svg>

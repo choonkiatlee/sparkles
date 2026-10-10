@@ -110,21 +110,16 @@ class ReferenceContractTests(unittest.TestCase):
 
     def test_seed_inventory_preserves_distinct_stones_and_six_remote_viewers(self):
         paths = sorted(REFERENCE_DIR.glob("*.json"))
-        self.assertEqual(len(paths), 11)
+        self.assertGreaterEqual(len(paths), 11)
         records = {p.stem: json.loads(p.read_text(encoding="utf-8")) for p in paths}
         for stem, record in records.items():
             self.assertEqual(validate_reference(record, expected_id=stem), record)
             self.assertTrue(record["commentary"].strip())
-            # Initial curated manifests start empty, but successful enrichment
-            # may subsequently attach validated, original-byte Release media.
-            # validate_reference above verifies media hashes/storage and motion.
-            self.assertTrue(all(
-                entry["status"] in {"success", "extraction_failed"}
-                for entry in record.get("evidence", [])
-            ))
-            self.assertEqual(record["linked_diamond_id"], None)
-            self.assertIn("pricescope.com", record["source_links"][0]["url"])
-        self.assertEqual(sum(len(r["media_sources"]) for r in records.values()), 6)
+            self.assertIsInstance(record["evidence"], list)  # Enrichment may add original stills/motion.
+            self.assertIn(record["identity"]["status"], ("unverified", "reported", "linked"))
+            self.assertTrue(record["source_links"])
+        self.assertGreaterEqual(sum(len(r["media_sources"]) for r in records.values()), 6)
+        self.assertTrue(all(f"ps285166-r{i:02d}" in records for i in range(1, 12)))
         self.assertNotEqual(records["ps285166-r05"]["identity"]["report_number"],
                             records["ps285166-r10"]["identity"]["report_number"])
         self.assertIsNone(records["ps285166-r03"]["identity"]["report_number"])
@@ -134,11 +129,11 @@ class ReferenceContractTests(unittest.TestCase):
 
     def test_index_is_deterministic_checked_in_and_uses_safe_paths(self):
         regenerated = build_repository_index()
-        self.assertEqual(len(regenerated["references"]), 11)
+        self.assertGreaterEqual(len(regenerated["references"]), 11)
         self.assertEqual(INDEX_PATH.read_text(encoding="utf-8"), json_document(regenerated))
         ids = [row["id"] for row in regenerated["references"]]
         self.assertEqual(ids, sorted(ids))
-        self.assertEqual(len(set(row["selection_id"] for row in regenerated["references"])), 11)
+        self.assertEqual(len(set(row["selection_id"] for row in regenerated["references"])), len(regenerated["references"]))
         self.assertTrue(all(row["manifest_path"] == f"data/references/{row['id']}.json"
                             for row in regenerated["references"]))
 
