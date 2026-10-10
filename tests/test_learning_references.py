@@ -163,7 +163,7 @@ class ReferenceContractTests(unittest.TestCase):
             record = records[f"ps281114-r{num}"]
             self.assertTrue(any("pricescope-media-recovery" in x["url"] for x in record["source_links"]))
             self.assertTrue(record["media_sources"])
-        self.assertIn("thread author", records["ps281114-r20"]["commentary"])
+        self.assertIn("the buyer—not Karl_K", records["ps281114-r20"]["commentary"])
         self.assertIn("not necessarily", records["ps281114-r19"]["commentary"].lower().replace("not presumed", "not necessarily"))
         self.assertEqual(records["ps281114-r21"]["identity"]["report_number"], "2135242286")
         self.assertIn("E VS1", records["ps281114-r21"]["commentary"])
