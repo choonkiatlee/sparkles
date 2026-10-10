@@ -553,7 +553,7 @@
       "clarity": "VVS2",
       "colour": "F",
       "commentary_excerpt": "Among the original alternatives, Karl_K dismissed option 3 (#2) and lovedogs strongly disliked it (#3). The discussion inventory does not establish a specific optical mechanism for",
-      "has_motion": false,
+      "has_motion": true,
       "id": "ps285166-r11",
       "identity_status": "reported",
       "lab": "IGI",
