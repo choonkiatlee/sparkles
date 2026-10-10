@@ -5,6 +5,8 @@ on:
     paths:
       - "tools/reference_identity_audit.py"
       - "tests/test_reference_identity_audit.py"
+      - "tools/filesonsky_r05_audit.py"
+      - "tests/test_filesonsky_r05_audit.py"
       - ".github/workflows/reference-identity-readonly-audit.yml"
   workflow_dispatch:
 
@@ -26,7 +28,7 @@ jobs:
       - name: Install local Sparkles package
         run: python -m pip install -e .
       - name: Network-free source audit contract tests
-        run: python -m unittest tests.test_reference_identity_audit -v
+        run: python -m unittest tests.test_reference_identity_audit tests.test_filesonsky_r05_audit -v
       - name: Audit only R05/R07 numeric and LG-prefixed source reports
         run: python tools/reference_identity_audit.py
       - name: Read-only media dry-run (no stored bytes, no publication)
@@ -38,3 +40,8 @@ jobs:
         timeout-minutes: 5
         continue-on-error: true
         run: python tools/reference_identity_audit.py --probe
+
+      - name: R05 exact FilesOnSky Vision360 read-only bootstrap audit
+        timeout-minutes: 5
+        continue-on-error: true
+        run: python tools/filesonsky_r05_audit.py
