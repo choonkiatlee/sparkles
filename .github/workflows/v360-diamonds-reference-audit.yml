@@ -20,10 +20,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - name: Install retrieval and isolated browser dependencies
+        run: python -m pip install -e . selenium
       - name: Validate bounded diagnostic and safety guard fixtures
         run: python -m unittest tests.test_v360_diamonds_reference_audit -v
-      - name: Install isolated browser dependency
-        run: python -m pip install selenium
       - name: Probe exact owner-reviewed V360 link without saving media
         run: python tools/audit_v360_diamonds_reference.py --out "$RUNNER_TEMP/v360-lg715575610-source.json"
       - name: Retain sanitized metadata only
