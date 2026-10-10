@@ -18,13 +18,16 @@ class GitHubReleaseStorage:
     backend or R2 can implement the same AssetStorage protocol.
     """
 
-    def __init__(self, api):
+    def __init__(self, api, *, release_prefix: str = RELEASE_PREFIX):
+        if release_prefix not in {RELEASE_PREFIX, "sparkles-reference-"}:
+            raise CatalogueError("Unsupported GitHub Release namespace")
         self.api = api
+        self.release_prefix = release_prefix
 
     def _tag(self, diamond_id: str) -> str:
         if not diamond_id or not all(c.isalnum() or c == "-" for c in diamond_id):
             raise CatalogueError("Invalid stable diamond ID for release")
-        return RELEASE_PREFIX + diamond_id
+        return self.release_prefix + diamond_id
 
     def _release(self, tag: str) -> dict:
         path = f"{self.api.prefix}/releases/tags/{quote(tag, safe='')}"
@@ -37,7 +40,7 @@ class GitHubReleaseStorage:
             return self.api.post_json(f"{self.api.prefix}/releases", {
                 "tag_name": tag,
                 "target_commitish": "master",
-                "name": f"Sparkles original evidence — {tag.removeprefix(RELEASE_PREFIX)}",
+                "name": f"Sparkles original evidence — {tag.removeprefix(self.release_prefix)}",
                 "body": "Immutable original diamond evidence. See the versioned catalogue manifest in Git.",
                 "draft": False,
                 "prerelease": True,
@@ -86,7 +89,7 @@ class GitHubReleaseStorage:
             return {}
         ids = {a.diamond_id for a in assets}
         if len(ids) != 1:
-            raise CatalogueError("A publication plan must belong to one certified diamond")
+            raise CatalogueError("A publication plan must belong to one diamond or reference")
         names = {}
         for asset in assets:
             if not asset.payload or asset.byte_count != len(asset.payload):
