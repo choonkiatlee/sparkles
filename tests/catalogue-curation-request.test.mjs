@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {emptyCuration,emptyDraft,setDraftFlag,validateCuration} from "../catalogue/curation.mjs";
 import {CURATION_REQUEST_MARKER,CURATION_REQUEST_SCHEMA,CURATION_REQUEST_TITLE,
-  curationChanges,createCurationIssueUrl,curationDigest,MAX_REQUEST_CHANGES} from "../catalogue/curation-request.mjs";
+  curationChanges,createCurationIssueUrl,openCurationIssueInNewTab,curationDigest,MAX_REQUEST_CHANGES} from "../catalogue/curation-request.mjs";
 const ids=new Set(["igi-lg111","igi-lg222"]);
 test("issue save handoff is owner-confirmed, sparse and includes per-field expected state",async()=>{
   const published=validateCuration({schema:"sparkles-diamond-curation/1",diamonds:{
@@ -33,4 +33,40 @@ test("empty, oversized, forged and malformed drafts cannot be submitted",async()
   let draft=emptyDraft();
   for(const id of bigIds)draft=setDraftFlag(emptyCuration(),draft,id,"starred",true,bigIds);
   await assert.rejects(()=>createCurationIssueUrl(emptyCuration(),draft,bigIds),/at most/);
+});
+
+test("Save on GitHub opens new tab in click gesture, before async digest",async()=>{
+  const published=emptyCuration();
+  const draft=setDraftFlag(published,emptyDraft(),"igi-lg111","starred",true,ids);
+  const events=[];
+  let navigated="";
+  const tab={
+    opener:{secret:"main catalogue"},
+    location:{replace:(url)=>{events.push("navigate");navigated=url;}},
+    close:()=>events.push("close"),
+  };
+  const save=openCurationIssueInNewTab(published,draft,ids,()=>{
+    events.push("open");
+    return tab;
+  });
+  // The new tab opens during the original user gesture, not after await.
+  assert.deepEqual(events,["open"]);
+  assert.equal(tab.opener,null);
+  await save;
+  assert.deepEqual(events,["open","navigate"]);
+  const url=new URL(navigated);
+  assert.equal(url.host,"github.com");
+  assert.equal(url.pathname,"/choonkiatlee/sparkles/issues/new");
+  assert.equal(url.searchParams.get("title"),CURATION_REQUEST_TITLE);
+});
+test("blocked popups and URL errors do not navigate or lose original tab",async()=>{
+  const data=emptyCuration();
+  const draft=setDraftFlag(data,emptyDraft(),"igi-lg111","archived",true,ids);
+  await assert.rejects(
+    ()=>openCurationIssueInNewTab(data,draft,ids,()=>null),/blocked/);
+  let closed=false;
+  await assert.rejects(()=>openCurationIssueInNewTab(data,emptyDraft(),ids,
+    ()=>({opener:{},location:{replace:()=>assert.fail("must not navigate")},
+      close:()=>{closed=true;}})),/No unsaved changes/);
+  assert.equal(closed,true);
 });

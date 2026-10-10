@@ -41,3 +41,20 @@ export async function createCurationIssueUrl(published,draft,validIds) {
   })+"\n");
   return issue.href;
 }
+
+// Reserve a tab *synchronously* in the click handler before hashing the
+// published snapshot asynchronously, avoiding popup blockers. Keep the
+// catalogue (and unsaved browser draft) in the original tab.
+export async function openCurationIssueInNewTab(published,draft,validIds,
+  openTab=()=>window.open("about:blank","_blank")) {
+  const tab=openTab();
+  if(!tab) throw new Error("Your browser blocked the GitHub tab. Allow pop-ups for this site and retry.");
+  try {
+    tab.opener=null; // GitHub must not be able to reach the catalogue tab.
+    const url=await createCurationIssueUrl(published,draft,validIds);
+    tab.location.replace(url);
+  } catch(error) {
+    tab.close();
+    throw error;
+  }
+}
