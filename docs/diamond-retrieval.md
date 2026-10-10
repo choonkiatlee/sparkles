@@ -77,6 +77,64 @@ A simulated regression uses the viewer returned for IGI LG781646632.
 The real supplier endpoint must still be exercised by rerunning that diamond
 after merge; simulated 256-frame fixtures are not proof of live availability.
 
+
+### Loupe360/Nivoda indexed Pixorac fallback (R08 / R11; #221)
+
+An exact-lab-and-report lookup to the **public**
+`https://g.nivoda.com/graphql-public-loupe360` endpoint can resolve a
+`v360.url` that contains a base64url-encoded supplier viewer on the exact
+`https://assets-images.pixorac.com/<encoded-viewer>` host. The historic
+Workshop supplier bootstrap may return HTTP 404 even though Loupe360's own
+image proxy still has the complete indexed sequence.
+
+**Verified examples (10 October 2026):**
+
+| Reference | IGI exact-report lookup | Original Workshop source | Proxy indexed JPEG | Dimensions | Face-up hint |
+| --- | --- | --- | --- | --- | --- |
+| R08 | `LG657468099` | `0410243-YDC-13680`, `0.json` HTTP 404 | 256/256 | 600×600 | 194 |
+| R11 | `LG636432256` | `2905248-YDC-6456`, `0.json` HTTP 404 | 256/256 | 599×600 | 12 |
+
+Read-only evidence: [browser audit run 38063411967](https://github.com/choonkiatlee/sparkles/actions/runs/38063411967),
+[indexed JPEG validation run 38063623578](https://github.com/choonkiatlee/sparkles/actions/runs/38063623578)
+and [#221 outcome](https://github.com/choonkiatlee/sparkles/issues/221#issuecomment-6099134314).
+All 256 JPEGs for each example decoded with consistent dimensions and 256
+distinct hashes; no frame bytes were published by those *diagnostics*.
+
+**Production procedure:** when (and only when) the public exact-certificate
+resolver returns matching `certNumber` and lab, it preserves the original
+`v360.url` wrapper alongside the decoded supplier viewer. For a valid exact
+256-frame indexed wrapper it registers a separate *fallback-only* rotation
+reference annotated `loupe360_proxy_exact_certificate=True`. The normal
+supplier downloader runs first. If it succeeds, the proxy is marked
+`not_requested` and does not create a redundant second rotation. If the
+preferred source fails, `Loupe360ProxyRotationDownloader` retrieves exactly
+`/<index>.jpg` for indices 0 through 255 from that **same encoded root**;
+`IndexedProxyRotationProcessor` reconstructs those indices directly,
+without inventing Vision360 scramble metadata or manufacturing missing
+frames.
+
+The downloader and processor both fail closed on a missing, corrupt,
+inconsistent, oversized, incomplete or essentially static sequence. The
+downloader accepts only the certificate-matched exact Pixorac URL; it rejects
+arbitrary hosts, paths, input URL aliases and redirects, and retains the
+existing public-HTTP DNS/private-address controls. A source lookup error,
+certificate mismatch or unverified numeric Loupe viewer ID does **not**
+authorize a proxy URL.
+
+**Provenance matters:** frame bytes are preserved as returned by the
+Loupe360/Pixorac proxy, with per-frame SHA-256, indexed source position,
+complete-sequence metadata and `supplier_original_bytes_verified=False`.
+These are real source-linked JPEG frames, *not* synthetic motion and **not**
+cryptographic proof that the same bytes existed at the upstream Workshop
+server. They should not be labeled `original_supplier_JPEG` or used as
+evidence of calibrated real-world brightness or angles.
+
+The retrieval API is in memory; **publishing remains a separate opt-in**
+GitHub Releases step (#197) with its own authorization and validation.
+The existing published stills, curated comments, and broken historic supplier
+links are never overwritten merely by enabling the fallback. Regression
+coverage lives in `tests/test_loupe360_proxy_motion.py`.
+
 ## Public HTTP safety
 
 The default HTTP client uses finite timeouts, rejects non-HTTP(S), credential-bearing, local/private/reserved destinations and validates redirect destinations under the same rule. Components receive this client through constructor injection; processors perform no network reads.
