@@ -10,6 +10,7 @@ import hashlib
 import json
 import re
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from diamond_retrieval.http import UrllibHttpClient
 from diamond_retrieval.resolvers import Loupe360CertificateResolver
@@ -35,6 +36,31 @@ def _digest(value: object) -> str | None:
     if not isinstance(value, str) or not value:
         return None
     return hashlib.sha256(value.encode("utf-8")).hexdigest()[:16]
+
+
+
+def _safe_url_shape(value: object) -> dict:
+    """Describe a public source contract without exposing paths or query tokens."""
+    if not isinstance(value, str) or not value:
+        return {"present": False}
+    try:
+        raw = Loupe360CertificateResolver._unwrap_v360(value)
+        parsed = urlsplit(raw)
+        host = parsed.hostname or ""
+    except (ValueError, UnicodeError):
+        return {"present": True, "format": "malformed"}
+    if not re.fullmatch(r"[A-Za-z0-9.-]{1,120}", host):
+        host = "<invalid>"
+    path = parsed.path.lower()
+    return {
+        "present": True, "scheme": parsed.scheme,
+        "host": host,
+        "path_format": "mp4" if path.endswith(".mp4") else
+            "html" if path.endswith(".html") else
+            "other",
+        "supported_rotation": Loupe360CertificateResolver._is_supported_rotation_url(raw),
+        "direct_video_suffix": Loupe360CertificateResolver._is_direct_video_url(raw),
+    }
 
 
 def audit_one(client, *, reference_id: str, lab: str, report: str, requested: str) -> dict:
@@ -84,6 +110,8 @@ def audit_one(client, *, reference_id: str, lab: str, report: str, requested: st
         "report_relation": match, "expected_lab_match": returned_lab == lab,
         "certificate_id_hash": _digest(record.get("id")),
         "v360_url_hash": _digest(v360_url),
+        "v360_source_shape": _safe_url_shape(v360_url),
+        "video_source_shape": _safe_url_shape(record.get("video")),
         "v360_present": isinstance(v360_url, str) and bool(v360_url),
         "video_present": isinstance(record.get("video"), str) and bool(record["video"]),
         "image_present": isinstance(record.get("image"), str) and bool(record["image"]),
