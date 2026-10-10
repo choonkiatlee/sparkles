@@ -141,13 +141,14 @@ function changeCuration(id,field,value) {
     render();
   }
 }
-function saveOnGitHub() {
+async function saveOnGitHub() {
   if(state.localError) return;
   try {
     const ids=new Set(state.rows.map(row=>row.id));
     // GitHub will require the signed-in owner to confirm this prefilled issue.
     // Do not clear the browser draft until new published JSON confirms the save.
-    location.assign(createCurationIssueUrl(state.published,state.draft,ids));
+    $("save-curation").disabled=true;
+    location.assign(await createCurationIssueUrl(state.published,state.draft,ids));
   } catch(error) {
     state.refreshError="Could not prepare GitHub save ("+error.message+").";
     render();
