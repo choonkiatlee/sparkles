@@ -1,0 +1,48 @@
+{
+  "schema": "sparkles-reference/1",
+  "id": "ps281114-r22",
+  "label": "Nice dance — attractive motion with possible compromises",
+  "identity": {
+    "status": "unverified",
+    "lab": null,
+    "report_number": null
+  },
+  "linked_diamond_id": null,
+  "diamond_metadata": {
+    "shape": "Asscher"
+  },
+  "commentary": "The buyer called this Kashi video a nice table dance with pleasing bright/dark contrast (#22), while noting possible too-dark central steps, small windmills, a large reported table and crown questions. Ibrakeforpossums cautiously liked the stone provided that transparency or windowing was not a problem (#23). This is a source-qualified positive/mixed example, not an unconditional endorsement. The original MP4 exists in the #64 research archive but is not yet registered as playable Learning Corner evidence.",
+  "source_links": [
+    {
+      "kind": "discussion",
+      "url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/page-2",
+      "note": "Buyer observation #22 and conditional reaction #23."
+    },
+    {
+      "kind": "research_catalogue",
+      "url": "https://github.com/choonkiatlee/sparkles/blob/master/docs/360/external-benchmark/pricescope/source-catalog.json",
+      "note": "Archived benchmark sample: asscher-eval-nice-dance. Provenance pointer only; not a certified catalogue identity."
+    },
+    {
+      "kind": "research_media_archive",
+      "url": "https://github.com/choonkiatlee/sparkles/releases/download/pricescope-research-2026-10-06-v1/pricescope-media-recovery-2026-10-06-v3.zip",
+      "note": "Existing #64 research zip includes the original Kashi MP4; no duplicate download required."
+    }
+  ],
+  "media_sources": [
+    {
+      "kind": "video",
+      "provider": "kashiimports",
+      "status": "linked_unverified",
+      "url": "https://www.kashiimports.com/video/27196.mp4"
+    }
+  ],
+  "topics": [
+    "liveliness",
+    "contrast",
+    "windmills",
+    "mixed-reactions",
+    "research-archive"
+  ],
+  "evidence": []
+}
