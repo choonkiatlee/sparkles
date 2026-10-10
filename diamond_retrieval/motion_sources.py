@@ -371,6 +371,176 @@ class WorkshopRotationDownloader(_ProgressiveDownloader):
         return viewer, source_root, f"{source_root}/0.json?version="
 
 
+class D360LegacyCanonicalRotationDownloader:
+    """R23's audited no-scramble D360 transport (not a general fallback).
+
+    The exact public vendor player HTML audited in #252 constructs canonical
+    progressive positions when bootstrap.scramble is absent, and inserts
+    pack-frame serial s at canonical[s]-1. This *only* applies to the pinned
+    R23 source below; other D360 viewers keep their original strict contract.
+
+    The vendor's 0.json preview is source frame 0 (600x600), distinct from
+    its higher-resolution still.jpg (778x778). Both are separately verified.
+    """
+
+    source_name = "d360-legacy-canonical"
+    VIEWER = "https://d360.tech/view.html?d=89-AY-8102"
+    ROOT = "https://media.d360.us/imaged/89-AY-8102"
+    BOOTSTRAP_SHA256 = "c2a1eda06f5250c2e7ec4f698e45e2d041739aff9df881f0abb0c2ff8f34fd34"
+    METADATA_SHA256 = "5043aa1508fa5b3e9c8420d63f7bc244bf07a55fadf5a8e58ab3e694b86d68a5"
+    PREVIEW_SHA256 = "39cd59e0a7d85450be189a233149871245f01d54af034a8cef0f3298dd417191"
+    STILL_SHA256 = "ffe7dfcdc03d703a0dbbdfe34cffabe06fe44551c3e4c089afbfdf95b891264b"
+
+    def __init__(self, http_client: HttpClient, *, timeout: float = 20.0):
+        self.http_client = http_client
+        self.timeout = timeout
+
+    def supports(self, reference: EvidenceReference) -> bool:
+        return (
+            reference.kind == ROTATION
+            and reference.locator == self.VIEWER
+        )
+
+    def download(self, reference: EvidenceReference) -> RawEvidence:
+        if not self.supports(reference):
+            raise ValueError("not the exact audited R23 legacy D360 viewer")
+        # A Loupe/Nivoda report-resolved candidate must retain the same
+        # reported identity. Normal reference-publication identity validation
+        # remains authoritative; this check is additional fail-closed safety.
+        report = reference.metadata.get("report_number")
+        lab = reference.metadata.get("lab")
+        if report is not None and str(report).upper() != "13534682":
+            raise InvalidPayloadError("R23 legacy D360 report anchor mismatch")
+        if lab is not None and str(lab).upper() != "GIA":
+            raise InvalidPayloadError("R23 legacy D360 lab anchor mismatch")
+
+        responses = []
+        metadata_raw, response = _response_bytes(
+            self.http_client, self.ROOT + "/metadata.json",
+            timeout=self.timeout, source=self.source_name,
+        )
+        responses.append(response)
+        if hashlib.sha256(metadata_raw).hexdigest() != self.METADATA_SHA256:
+            raise InvalidPayloadError("R23 D360 source metadata changed since audit")
+        try:
+            metadata = json.loads(metadata_raw)
+        except Exception as exc:
+            raise InvalidPayloadError("R23 D360 metadata JSON is invalid") from exc
+        if not isinstance(metadata, dict) or not isinstance(metadata.get("PROPERTIES"), dict):
+            raise InvalidPayloadError("R23 D360 metadata shape changed")
+
+        raw_boot, response = _response_bytes(
+            self.http_client, self.ROOT + "/0.json",
+            timeout=self.timeout, source=self.source_name,
+        )
+        responses.append(response)
+        if hashlib.sha256(raw_boot).hexdigest() != self.BOOTSTRAP_SHA256:
+            raise InvalidPayloadError("R23 D360 bootstrap changed since ordering audit")
+        try:
+            bootstrap = json.loads(raw_boot)
+        except Exception as exc:
+            raise InvalidPayloadError("R23 D360 bootstrap is not JSON") from exc
+        if not isinstance(bootstrap, dict) or "scramble" in bootstrap:
+            raise InvalidPayloadError("R23 D360 no-scramble source contract changed")
+        try:
+            dimensions = (int(bootstrap["width"]), int(bootstrap["height"]))
+        except (KeyError, ValueError, TypeError) as exc:
+            raise InvalidPayloadError("R23 D360 bootstrap dimensions missing") from exc
+        if dimensions != (600, 600):
+            raise InvalidPayloadError("R23 D360 frame dimensions changed")
+        try:
+            preview = base64.b64decode(
+                "".join(bootstrap["image"].split()), validate=True,
+            )
+        except Exception as exc:
+            raise InvalidPayloadError("R23 D360 preview is malformed") from exc
+        if (hashlib.sha256(preview).hexdigest() != self.PREVIEW_SHA256
+                or validate_jpeg_bytes(preview) != dimensions):
+            raise InvalidPayloadError("R23 D360 source preview changed")
+
+        still_bytes, response = _response_bytes(
+            self.http_client, self.ROOT + "/still.jpg",
+            timeout=self.timeout, source=self.source_name,
+        )
+        responses.append(response)
+        if (hashlib.sha256(still_bytes).hexdigest() != self.STILL_SHA256
+                or validate_jpeg_bytes(still_bytes) != (778, 778)):
+            raise InvalidPayloadError("R23 D360 separate vendor still changed")
+        # Do not assume still.jpg matches the embedded 600x600 preview:
+        # this audited vendor variant deliberately supplies different originals.
+
+        bundles = []
+        original_hashes = set()
+        for number, count in enumerate(PACK_COUNTS, 1):
+            url = self.ROOT + f"/{number}.json"
+            batch, source_response = _response_json(
+                self.http_client, url, timeout=self.timeout,
+                source=self.source_name,
+            )
+            if (not isinstance(batch, list) or len(batch) != count
+                    or not all(isinstance(frame, str) for frame in batch)):
+                raise InvalidPayloadError(
+                    f"R23 D360 original pack {number} is incomplete"
+                )
+            for position, frame in enumerate(batch):
+                try:
+                    jpeg = base64.b64decode("".join(frame.split()), validate=True)
+                except Exception as exc:
+                    raise InvalidPayloadError(
+                        "R23 D360 original pack contains invalid JPEG Base64"
+                    ) from exc
+                if validate_jpeg_bytes(jpeg) != dimensions:
+                    raise InvalidPayloadError(
+                        "R23 D360 original frame dimensions disagree with source"
+                    )
+                if number == 1 and position == 0 and jpeg != preview:
+                    raise InvalidPayloadError(
+                        "R23 D360 first original frame differs from vendor preview"
+                    )
+                digest = hashlib.sha256(jpeg).hexdigest()
+                if digest in original_hashes:
+                    raise InvalidPayloadError("R23 D360 duplicate original frame bytes")
+                original_hashes.add(digest)
+            bundles.append({"batch": number, "source_url": url, "frames": batch})
+            responses.append(source_response)
+        if len(original_hashes) != 256:
+            raise InvalidPayloadError("R23 D360 original 256-frame set incomplete")
+
+        # An identity-level permutation is the mathematical representation of
+        # the *vendor default, unscrambled canonical progression*. This is not
+        # asserted to be a scramble field obtained from 0.json.
+        identity_levels = [list(range(n)) for n in PACK_COUNTS]
+        bundle = {
+            "schema_version": "sparkles-progressive-motion/1",
+            "source": self.source_name,
+            "viewer_url": self.VIEWER,
+            "dimensions": [600, 600],
+            "ordering_mode": "vendor_canonical_no_scramble",
+            "scramble": identity_levels,
+            "batches": bundles,
+        }
+        meta = dict(reference.metadata)
+        meta.update({
+            "supplier": self.source_name,
+            "item_id": "89-AY-8102",
+            "source_root": self.ROOT,
+            "metadata_sha256": self.METADATA_SHA256,
+            "bootstrap_sha256": self.BOOTSTRAP_SHA256,
+            "preview_sha256": self.PREVIEW_SHA256,
+            "still_sha256": self.STILL_SHA256,
+            "vendor_scramble_present": False,
+            "ordering_provenance": "exact D360 vendor player code audit, #252",
+        })
+        return RawEvidence(
+            reference=reference,
+            payload=json.dumps(bundle, separators=(",", ":")).encode(),
+            media_type="application/json",
+            format="progressive-rotation-json",
+            metadata=meta,
+            source_responses=tuple(responses),
+        )
+
+
 class D360RotationDownloader:
     """Download any exact d360.tech viewer that satisfies the audited wire contract."""
 
@@ -398,6 +568,11 @@ class D360RotationDownloader:
 
     def supports(self, reference: EvidenceReference) -> bool:
         if reference.kind != ROTATION:
+            return False
+        # Exact R23 source uses audited vendor-default canonical order, not
+        # this downloader's strict encrypted-scramble contract. Keep retriever
+        # select_unique deterministic: only one downloader claims that item.
+        if reference.locator == D360LegacyCanonicalRotationDownloader.VIEWER:
             return False
         try:
             self._source(reference)
