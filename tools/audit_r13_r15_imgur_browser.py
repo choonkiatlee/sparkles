@@ -44,7 +44,7 @@ def safe_location(url: str) -> dict:
         if part.port not in (None, 443):
             return {"valid_https": False}
         path = part.path or "/"
-        source = "imgur" if host in {"imgur.com", "www.imgur.com", "i.imgur.com", "s.imgur.com"} else "other"
+        source = "imgur" if host == "imgur.com" or host.endswith(".imgur.com") else "other"
         return {
             "valid_https": True,
             "provider": source,
@@ -76,10 +76,11 @@ def sanitise_labels(labels) -> list[dict]:
     return out
 
 
-def classify_browser(page: dict, network: list[dict], *, current_url: str) -> dict:
+def classify_browser(page: dict, network: list[dict], *, current_url: str, expected_url: str = "") -> dict:
     """Classify reachability while deliberately *abstaining* on stone mapping."""
     final = urlsplit(current_url)
     exact_host = final.scheme == "https" and final.hostname in {"imgur.com", "www.imgur.com"}
+    exact_album = exact_host and final.path == urlsplit(expected_url).path if expected_url else exact_host
     values = page if isinstance(page, dict) else {}
     title = str(values.get("title") or "")[:120]
     body_signals = values.get("body_signals") or {}
@@ -88,10 +89,16 @@ def classify_browser(page: dict, network: list[dict], *, current_url: str) -> di
     videos = values.get("video_nodes") or []
     if not exact_host:
         status = "redirected_outside_reviewed_album_host"
+    elif not exact_album:
+        status = "browser_navigated_away_from_reviewed_album"
     elif restricted:
         status = "region_or_access_restricted"
     elif error_page:
         status = "page_not_found"
+    elif title.startswith("Imgur: The magic of the Internet") and not any(
+        "asscher" in x.get("text", "").lower() for x in values.get("labels", []) if isinstance(x, dict)
+    ):
+        status = "generic_homepage_no_album_identity"
     elif videos or values.get("figure_nodes", 0) or values.get("image_nodes", 0):
         status = "browser_dom_media_elements_observed"
     else:
@@ -99,6 +106,7 @@ def classify_browser(page: dict, network: list[dict], *, current_url: str) -> di
 
     return {
         "status": status,
+        "exact_album_path_preserved": exact_album,
         "page_title": title,
         "ready_state": values.get("ready_state"),
         "dom": {
@@ -150,6 +158,92 @@ def summarize_performance(rows: list[dict]) -> list[dict]:
             if item["location"]["looks_like_video"]
             or item["resource_type"] in {"Media", "XHR", "Fetch"}
             or item.get("mime_type", "").startswith("video/")][:MAX_REQUESTS + 1]
+
+
+
+def _metadata_items(data: object) -> list[dict]:
+    """Public JSON keys only; never persist raw API documents or media locators."""
+    found = []
+    seen = set()
+
+    def visit(node: object, depth: int) -> None:
+        if depth > 7 or len(found) >= 16:
+            return
+        if isinstance(node, dict):
+            # Album media may be nested under data / media / images. Only emit
+            # metadata from records that explicitly describe media objects.
+            keys = set(node)
+            if (("id" in keys or "hash" in keys)
+                    and ({"type", "mime_type", "is_animated", "animated",
+                          "width", "height", "size", "duration"} & keys)):
+                label = node.get("title") or node.get("description") or node.get("caption")
+                ident = str(node.get("id") or node.get("hash") or "")
+                if ident and ident not in seen:
+                    seen.add(ident)
+                    found.append({
+                        "opaque_media_id_sha256": hashlib.sha256(ident.encode()).hexdigest(),
+                        "mime_type": str(node.get("mime_type") or node.get("type") or "")[:40],
+                        "width": node.get("width") if type(node.get("width")) is int else None,
+                        "height": node.get("height") if type(node.get("height")) is int else None,
+                        "label": " ".join(label.split())[:120] if isinstance(label, str) else None,
+                    })
+            for value in list(node.values())[:100]:
+                visit(value, depth + 1)
+        elif isinstance(node, list):
+            for value in node[:50]:
+                visit(value, depth + 1)
+
+    visit(data, 0)
+    return found
+
+
+def inspect_observed_album_json(browser, events: list[dict], album: str) -> list[dict]:
+    """Read ONLY small, already-delivered, public same-album JSON via CDP.
+
+    No new HTTP call, no video/image response body, no request-header/cookie
+    reads, and no guessed API routes. Omit responses without declared small size.
+    """
+    album_token = urlsplit(album).path.rsplit("/", 1)[-1]
+    out = []
+    seen = set()
+    for row in events:
+        if len(out) >= 4:
+            break
+        try:
+            event = json.loads(row["message"])["message"]
+            if event["method"] != "Network.responseReceived":
+                continue
+            params = event["params"]
+            response = params["response"]
+            url = response["url"]
+            part = urlsplit(url)
+            if part.hostname != "api.imgur.com" or album_token not in part.path:
+                continue
+            if response.get("status") != 200:
+                continue
+            mime = str(response.get("mimeType") or "").lower()
+            if not ("json" in mime):
+                continue
+            headers = {k.lower(): v for k, v in (response.get("headers") or {}).items()}
+            length = headers.get("content-length", "")
+            if not str(length).isdigit() or int(length) > 150_000:
+                continue
+            request_id = params["requestId"]
+            if request_id in seen:
+                continue
+            seen.add(request_id)
+            raw = browser.execute_cdp_cmd("Network.getResponseBody", {"requestId": request_id})
+            if raw.get("base64Encoded"):
+                continue
+            content = raw.get("body", "")
+            if len(content) > 150_000:
+                continue
+            parsed = json.loads(content)
+            out.append({"json_size": len(content), "observed_api_album": True,
+                        "media_item_hints": _metadata_items(parsed)})
+        except (KeyError, ValueError, TypeError, AttributeError, Exception):
+            continue
+    return out
 
 
 # Script only queries bounded public visible metadata; it does not fetch.
@@ -214,8 +308,10 @@ def run_browser_audit(*, dwell: float = 5.0) -> list[dict]:
                 browser.get(album)
                 time.sleep(dwell)
                 page = browser.execute_script(DOM_SCRIPT)
-                report.update(classify_browser(page, summarize_performance(browser.get_log("performance")),
-                                               current_url=browser.current_url))
+                events = browser.get_log("performance")
+                report.update(classify_browser(page, summarize_performance(events),
+                                               current_url=browser.current_url, expected_url=album))
+                report["album_api_metadata"] = inspect_observed_album_json(browser, events, album)
             except Exception as exc:
                 report.update({
                     "status": "browser_page_unavailable",
