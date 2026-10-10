@@ -160,6 +160,22 @@ class Loupe360CertificateResolver:
         # Vision360 player. A matched certificate plus this narrow supplier
         # contract permits the separately validated Pixorac indexed fallback;
         # it does not authorize arbitrary Gem360 URLs or infer an item key.
+        # Certificate-matched public Loupe/Pixorac cache can wrap a
+        # v360.diamonds viewer. The viewer itself is not downloadable (often
+        # HTTP 402); only the separately observed complete indexed proxy is
+        # eligible. Restrict this to the exact HTTPS /c/<uuid>?m=i&a=<id>
+        # shape before permitting the existing fail-closed proxy downloader.
+        if (
+            host == "v360.diamonds"
+            and parts.scheme == "https"
+            and not parts.fragment
+            and re.fullmatch(r"/c/[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}", parts.path)
+            and set(query) == {"m", "a"}
+            and query.get("m") == ["i"]
+            and len(query.get("a", ())) == 1
+            and bool(re.fullmatch(r"[A-Za-z0-9_-]{1,64}", query["a"][0]))
+        ):
+            return True
         if (
             host == "videos.gem360.in"
             and parts.scheme == "https"
