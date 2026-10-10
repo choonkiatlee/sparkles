@@ -96,8 +96,8 @@ def query_metadata(client, name: str, root: str) -> dict:
             "provider_lab_present": bool(record.get("lab")),
             "identity_independently_verified": False,
         }
-        if not match or count != 256 or isinstance(count, bool):
-            result["status"] = "not_confirmed_256_proxy"
+        if not match or count not in (255, 256) or isinstance(count, bool):
+            result["status"] = "not_confirmed_indexed_proxy"
         return result
     except Exception as exc:
         return {"status": "metadata_transport_error", "error_type": type(exc).__name__}
@@ -128,10 +128,12 @@ def request_one(client, root: str, index: int, fmt: str) -> dict:
         return {"valid": False, "status": "unavailable", "error_type": type(exc).__name__}
 
 
-def validate_full(client, root: str, fmt: str, first_samples: dict[int, dict]) -> dict:
+def validate_full(client, root: str, fmt: str, first_samples: dict[int, dict], count: int = FRAME_COUNT) -> dict:
+    if count not in (255, 256):
+        raise ValueError("Only observed 255/256 indexed protocols are auditable")
     hashes = {}
     shapes = set()
-    for idx in range(FRAME_COUNT):
+    for idx in range(count):
         item = first_samples[idx] if idx in first_samples else request_one(client, root, idx, fmt)
         if not item.get("valid") or not item.get("sha256"):
             return {"status": "incomplete", "first_missing_index": idx}
@@ -139,13 +141,13 @@ def validate_full(client, root: str, fmt: str, first_samples: dict[int, dict]) -
         shapes.add(tuple(item["dimensions"]))
     unique = len(set(hashes.values()))
     return {
-        "status": ("complete_256_proxy_frames" if unique >= 240 and len(shapes) == 1
+        "status": (f"complete_{count}_proxy_frames" if unique >= 240 and len(shapes) == 1
                    else "inconsistent_or_effectively_static"),
         "frame_count": len(hashes), "distinct_hashes": unique,
         "dimensions": [list(s) for s in sorted(shapes)],
-        "first_sha256": hashes[0], "last_sha256": hashes[255],
+        "first_sha256": hashes[0], "last_sha256": hashes[count - 1],
         "ordered_hash_digest": hashlib.sha256(
-            "".join(hashes[i] for i in range(FRAME_COUNT)).encode()
+            "".join(hashes[i] for i in range(count)).encode()
         ).hexdigest(),
         "supplier_original_bytes_verified": False,
     }
@@ -163,17 +165,23 @@ def audit_one(name: str, browser: dict) -> dict:
     meta = query_metadata(client, name, root)
     record["metadata"] = meta
     # Only exact matching metadata may establish a fully-indexed rotation.
-    if meta.get("status") != "proxy_match" or meta.get("frame_count") != 256:
+    count = meta.get("frame_count")
+    if meta.get("status") != "proxy_match" or count not in (255, 256) or (count == 255 and name != "R09"):
         return {**record, "status": "proxy_metadata_not_confirmed"}
 
     top = meta.get("top_index")
-    samples_idx = sorted({0, 1, 128, 255, top} - {None})
+    samples_idx = sorted({0, 1, 128, count - 1} | ({top} if top is not None and top < count else set()))
     for fmt in ("jpg", "webp"):
         samples = {idx: request_one(client, root, idx, fmt) for idx in samples_idx}
         record[fmt + "_samples"] = {str(k): v for k, v in samples.items()}
         if all(s.get("valid") and s.get("sha256") for s in samples.values()):
             record["format"] = fmt.upper()
-            record["validation"] = validate_full(client, root, fmt, samples)
+            record["validation"] = validate_full(client, root, fmt, samples, count=count)
+            if count == 255:
+                extra = request_one(client, root, 255, fmt)
+                record["index_255_beyond_declared_count"] = {
+                    "valid": extra.get("valid", False), "http": extra.get("http"),
+                }
             record["status"] = record["validation"]["status"]
             return record
     record["status"] = "no_consistently_decodable_indexed_cache"
