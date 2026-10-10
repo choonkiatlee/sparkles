@@ -25,6 +25,7 @@ from diamond_retrieval.motion import (
     validate_jpeg_bytes,
 )
 from diamond_retrieval.motion_sources import D360RotationDownloader
+from diamond360.d360_source import PACK_COUNTS
 from diamond_retrieval.reference_media import _safe_source_url
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -222,6 +223,63 @@ def audit_r23_viewer_scripts(http) -> list[dict]:
     return outputs
 
 
+def audit_r23_original_pack_set(http, root: str, dimensions: tuple[int, int]) -> dict:
+    """Read exactly 1..7.json and verify all frame bytes, without inventing order.
+
+    A set of 256 valid source JPEGs is *not* a reconstructed 360 rotation:
+    D360 stores them in progressive batches with a vendor-specific scramble.
+    The immutable per-frame SHA collection is summarized here without
+    displaying image contents or adding any motion evidence.
+    """
+    assert root == R23_ROOT and dimensions == (600, 600)
+    sha_set: set[str] = set()
+    counts: list[int] = []
+    total = 0
+    for batch_number, expected in enumerate(PACK_COUNTS, 1):
+        url = _safe_source_url(root + f"/{batch_number}.json")
+        assert urlsplit(url).hostname == "media.d360.us"
+        try:
+            response = http.get(url, timeout=25)
+            if response.status_code != 200:
+                return {
+                    "reference": R23_ID, "source": "full_unordered_frame_set",
+                    "status": "missing_batch", "batch": batch_number,
+                    "http": response.status_code,
+                }
+            entries = json.loads(response.content)
+            if not isinstance(entries, list) or len(entries) != expected:
+                return {
+                    "reference": R23_ID, "source": "full_unordered_frame_set",
+                    "status": "invalid_batch_count", "batch": batch_number,
+                    "expected": expected,
+                    "actual": len(entries) if isinstance(entries, list) else None,
+                }
+            for entry in entries:
+                if not isinstance(entry, str):
+                    raise ValueError("non-text frame payload")
+                frame = base64.b64decode("".join(entry.split()), validate=True)
+                if validate_jpeg_bytes(frame) != dimensions:
+                    raise ValueError("original frame resolution mismatch")
+                sha_set.add(hashlib.sha256(frame).hexdigest())
+            counts.append(len(entries))
+            total += len(entries)
+        except Exception as exc:
+            return {
+                "reference": R23_ID, "source": "full_unordered_frame_set",
+                "status": "invalid_or_unavailable_batch", "batch": batch_number,
+                "error_class": type(exc).__name__,
+            }
+    return {
+        "reference": R23_ID, "source": "full_unordered_frame_set",
+        "status": "verified_original_jpeg_set" if total == 256 and
+        len(sha_set) == 256 else "duplicate_or_missing_frames",
+        "counts": counts, "frame_count": total,
+        "unique_frame_hashes": len(sha_set),
+        "dimensions": list(dimensions),
+        "ordered_rotation_verified": False,
+    }
+
+
 def audit_r07(http) -> list[dict]:
     verified_record(R07_ID)
     url = _safe_source_url(R07_VIEWER)
@@ -354,6 +412,10 @@ def audit_r23(http) -> list[dict]:
                                 "state": "transport_failure",
                                 "error_class": type(exc).__name__})
     if preflight.get("preflight") == "missing_scramble":
+        # Valid-looking progressive packs do not imply an authenticated viewer
+        # order. Probe all original JPEGs to distinguish missing bytes from
+        # an unsupported unscrambled/legacy transport.
+        outputs.append(audit_r23_original_pack_set(http, root, (600, 600)))
         outputs.extend(audit_r23_viewer_scripts(http))
     if preflight.get("preflight") != "valid_original_bootstrap":
         return outputs
@@ -383,7 +445,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("reference", choices=("r07", "r23"))
     args = parser.parse_args()
-    client = UrllibHttpClient(max_bytes=2_000_000)
+    client = UrllibHttpClient(max_bytes=12_000_000)
     records = audit_r07(client) if args.reference == "r07" else audit_r23(client)
     for record in records:
         print("REFERENCE_ORIGINAL_AUDIT " + json.dumps(record, sort_keys=True), flush=True)
