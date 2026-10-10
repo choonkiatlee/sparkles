@@ -4,6 +4,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import re
 from urllib.parse import parse_qs, quote, urlsplit
 
 from .protocols import HttpClient
@@ -145,7 +146,7 @@ class Loupe360CertificateResolver:
             and bool(query.get("d", [""])[0])
         ):
             return True
-        if host == "workshop.360view.link":
+        if (\n            host == "labgrowns3.s3.ap-southeast-1.amazonaws.com"\n            and parts.scheme == "https"\n            and parts.path.lower() == "/stoneimages360.html"\n            and not parts.fragment\n            and set(query) == {"d"}\n            and len(query["d"]) == 1\n            and bool(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,90}", query["d"][0]))\n        ):\n            return True\n        if host == "workshop.360view.link":
             if parts.path.startswith("/view/") and len(parts.path.rstrip("/").split("/")) >= 3:
                 return True
             return (
