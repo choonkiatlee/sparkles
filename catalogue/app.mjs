@@ -4,10 +4,15 @@ import { MAX_SELECTION, MIN_COMPARISON, validateIndex, visibleRows,
 
 import { createComparisonView } from "./comparison-view.mjs";
 import { validateReferenceIndex } from "./reference.mjs";
+import { DRAFT_STORAGE_KEY, emptyDraft, validateCuration, validateDraft,
+  flagsFor, setDraftFlag, reconcileDraft, draftCount, archivedCount,
+  curationRows } from "./curation.mjs";
 
 const $ = id => document.getElementById(id);
 const controls = { search:$("search"), status:$("status-filter"), sort:$("sort") };
-const state = { rows:[], referenceRows:[], allRows:[], selected:[], comparing:false, ready:false };
+const curationControls = { archived:$("show-archived"), shortlist:$("shortlist-only") };
+const state = { rows:[], referenceRows:[], allRows:[], selected:[], comparing:false, ready:false,
+  published:null, draft:emptyDraft(), localError:"" };
 const comparisonView = createComparisonView({container:$("comparison"),grid:$("comparison-grid"),fetcher:(...args)=>fetch(...args)});
 const node = (tag, className="", text=null) => {
   const n = document.createElement(tag);
@@ -32,7 +37,8 @@ function link(text, href) {
 // Overview renders from the compact index only. Detailed manifests load on compare.
 function makeRow(row) {
   const selected = state.selected.includes(row.id);
-  const tr = node("tr", "overview-row"+(selected ? " is-selected":""));
+  const flags = flagsFor(state.published,state.draft,row.id);
+  const tr = node("tr", "overview-row"+(selected ? " is-selected":"")+(flags.archived ? " is-archived":""));
   const checkCell = node("td", "cell-select");
   const label = node("label", "row-selection");
   const input = node("input");
@@ -84,6 +90,7 @@ function makeRow(row) {
   else captions.append(node("strong","report-link",displayValue(row.lab)+" "+displayValue(row.report_number)));
   captions.append(node("small","retailer-name",displayValue(row.retailer)));
   captions.append(node("small","size-note",dimensionsText(row)));
+  if (flags.archived) captions.append(node("small","archive-label","Archived · hidden by default"));
   detail.append(thumb,captions);
   identity.append(detail);
   const carat = node("td","cell-number",row.carat == null ? "Unknown" : row.carat+" ct");
@@ -98,12 +105,49 @@ function makeRow(row) {
   status.append(node("span","status "+(/^(complete|partial)$/.test(row.retrieval_status)?row.retrieval_status:""),displayValue(row.retrieval_status)));
   const score = node("td","cell-score");
   score.append(node("span","not-scored","Not scored"));
-  tr.append(checkCell,identity,carat,colour,clarity,price,status,score);
+  const curation = node("td","cell-curation");
+  const actions = node("span","curation-actions");
+  const star = node("button","curation-star"+(flags.starred?" is-starred":""),flags.starred?"★":"☆");
+  star.type="button"; star.disabled=!!state.localError;
+  star.setAttribute("aria-label",(flags.starred?"Remove ":"Add ")+displayValue(row.report_number)+
+    (flags.starred?" from shortlist":" to shortlist"));
+  star.setAttribute("aria-pressed",String(flags.starred));
+  star.title=flags.starred?"Remove from shortlist":"Add to shortlist";
+  star.addEventListener("click",()=>changeCuration(row.id,"starred",!flags.starred));
+  const archive = node("button","curation-archive",flags.archived?"Restore":"Archive");
+  archive.type="button"; archive.disabled=!!state.localError;
+  archive.setAttribute("aria-label",(flags.archived?"Restore ":"Archive ")+displayValue(row.report_number));
+  archive.setAttribute("aria-pressed",String(flags.archived));
+  archive.addEventListener("click",()=>changeCuration(row.id,"archived",!flags.archived));
+  actions.append(star,archive); curation.append(actions);
+  tr.append(checkCell,identity,carat,colour,clarity,price,status,score,curation);
   tr.addEventListener("click", event=>{
     if (event.target.closest("input,a,label,button")) return;
     if (!input.disabled) toggle();
   });
   return tr;
+}
+function changeCuration(id,field,value) {
+  if (state.localError) return;
+  const ids=new Set(state.rows.map(row=>row.id));
+  try {
+    const next=setDraftFlag(state.published,state.draft,id,field,value,ids);
+    if (draftCount(next)) localStorage.setItem(DRAFT_STORAGE_KEY,JSON.stringify(next));
+    else localStorage.removeItem(DRAFT_STORAGE_KEY);
+    state.draft=next; render();
+  } catch (error) {
+    state.localError="Cannot save browser draft ("+error.message+"). Reset local changes to retry.";
+    render();
+  }
+}
+function resetDraft() {
+  try {
+    localStorage.removeItem(DRAFT_STORAGE_KEY);
+    state.draft=emptyDraft();state.localError="";render();
+  } catch (error) {
+    state.localError="Cannot clear browser draft ("+error.message+").";
+    render();
+  }
 }
 function syncURL() {
   const search = selectionSearch(location.search,state.selected,state.comparing);
@@ -111,10 +155,20 @@ function syncURL() {
 }
 function render() {
   if (!state.ready) return;
-  const rows = visibleRows(state.rows,{
+  const rows = curationRows(visibleRows(state.rows,{
     search:controls.search.value,status:controls.status.value,sort:controls.sort.value
-  });
-  $("count").textContent = rows.length+" of "+state.rows.length+" saved "+(state.rows.length===1?"stone":"stones");
+  }),{showArchived:curationControls.archived.checked,shortlistOnly:curationControls.shortlist.checked},
+    state.published,state.draft);
+  const archived = archivedCount(state.rows,state.published,state.draft);
+  $("count").textContent = rows.length+" shown · "+state.rows.length+" saved · "+archived+" archived";
+  $("archived-count").textContent = String(archived);
+  const pending=draftCount(state.draft);
+  $("curation-pending").textContent = pending ?
+    pending+" unsynced change"+(pending===1?"":"s")+" · saved only in this browser, NOT in GitHub. GitHub saving follows in #290." :
+    "Star/archive changes are local to this browser until GitHub saving ships in #290.";
+  $("curation-local-error").textContent=state.localError;
+  $("curation-local-error").hidden=!state.localError;
+  $("reset-curation").disabled=!pending && !state.localError;
   const cards = $("cards");
   cards.replaceChildren(...rows.map(makeRow));
   $("empty").hidden = rows.length > 0;
@@ -144,6 +198,8 @@ async function boot() {
   for (const c of Object.values(controls)) {
     c.addEventListener(c===controls.search?"input":"change",render);
   }
+  for (const c of Object.values(curationControls)) c.addEventListener("change",render);
+  $("reset-curation").addEventListener("click",resetDraft);
   $("compare-button").addEventListener("click",()=>{
     if (state.selected.length < MIN_COMPARISON) return;
     state.comparing = !state.comparing; syncURL(); render();
@@ -157,6 +213,23 @@ async function boot() {
     const response = await fetch("../data/catalog.json",{cache:"no-cache"});
     if (!response.ok) throw new Error("HTTP "+response.status);
     state.rows = validateIndex(await response.json());
+    // Never silently show archived records if the authoritative curation fails.
+    const curated=await fetch("../data/diamond-curation.json",{cache:"no-cache"});
+    if (!curated.ok) throw new Error("Curation HTTP "+curated.status);
+    const ids=new Set(state.rows.map(row=>row.id));
+    state.published=validateCuration(await curated.json(),ids);
+    try {
+      const saved=localStorage.getItem(DRAFT_STORAGE_KEY);
+      state.draft=saved ? reconcileDraft(state.published,
+        validateDraft(JSON.parse(saved),ids),ids) : emptyDraft();
+      // A confirmed Git write in PR B will drop matching local overrides.
+      if (saved && !draftCount(state.draft)) localStorage.removeItem(DRAFT_STORAGE_KEY);
+      else if (saved) localStorage.setItem(DRAFT_STORAGE_KEY,JSON.stringify(state.draft));
+    } catch (error) {
+      state.localError="Browser draft unavailable or invalid ("+error.message+
+        "). Use Reset local changes to discard it.";
+      state.draft=emptyDraft();
+    }
     // The personal catalogue remains usable if the optional learning index fails.
     try {
       const refs = await fetch("../data/reference-index.json",{cache:"no-cache"});
@@ -169,6 +242,7 @@ async function boot() {
     state.allRows = [...state.rows,...state.referenceRows];
     state.ready = true;
     for (const c of Object.values(controls)) c.disabled = false;
+    for (const c of Object.values(curationControls)) c.disabled = false;
     applyNavigationState();
   } catch(error) {
     $("count").textContent = "Catalogue unavailable";
