@@ -30,13 +30,16 @@ jobs:
         run: python -m unittest tests.test_r02_browser_cache -v
       - name: Recover exactly observed public R02 cache path, no tokens logged
         timeout-minutes: 5
-        run: python -m diamond_retrieval.r02_browser_cache --github-env "$GITHUB_ENV"
+        run: python -m diamond_retrieval.r02_browser_cache --cache-path "$RUNNER_TEMP/r02-pixorac-root"
       - name: Validate real original proxy JPEG bytes and exact-report retrieval without publishing
         timeout-minutes: 18
         run: |
           python - <<'PY'
           from diamond_retrieval import retrieve_reference_media
           result = retrieve_reference_media("ps285166-r02", lab="IGI", report_number="LG634479985")
+          print("R02 attempts (sanitized):", [
+              (x.reference_identifier, str(x.kind), x.status.value) for x in result.attempts
+          ])
           matches = [x for x in result.rotations
                      if x.metadata.get("source_transport") ==
                      "r02_exact_browser_sha_pinned_indexed_proxy_jpeg"]
