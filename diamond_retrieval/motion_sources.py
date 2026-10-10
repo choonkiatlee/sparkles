@@ -88,14 +88,15 @@ class _ProgressiveDownloader:
         except ValueError:
             return False
 
+    def _read_bootstrap(self, bootstrap_url: str):
+        return _response_json(
+            self.http_client, bootstrap_url,
+            timeout=self.timeout, source=self.source_name,
+        )
+
     def download(self, reference: EvidenceReference) -> RawEvidence:
         viewer, source_root, bootstrap_url = self._source(reference)
-        bootstrap, retained = _response_json(
-            self.http_client,
-            bootstrap_url,
-            timeout=self.timeout,
-            source=self.source_name,
-        )
+        bootstrap, retained = self._read_bootstrap(bootstrap_url)
         dimensions, scramble, version = _bootstrap_contract(
             bootstrap,
             source=self.source_name,
@@ -295,6 +296,21 @@ class RemoteV360RotationDownloader(_ProgressiveDownloader):
 
 class WorkshopRotationDownloader(_ProgressiveDownloader):
     source_name = "workshop"
+
+    def _read_bootstrap(self, bootstrap_url: str):
+        """A narrow compatibility fallback for the known Core360 0.json path.
+
+        Different supported Vision360 variants use either a trailing empty
+        version query or the bare 0.json. Only an actual 404 triggers this
+        same-item, same-host fallback. Never retry on 403, malformed JSON,
+        missing later batches, or a transport error.
+        """
+        try:
+            return super()._read_bootstrap(bootstrap_url)
+        except MissingEvidenceError:
+            if not bootstrap_url.endswith("/0.json?version="):
+                raise
+            return super()._read_bootstrap(bootstrap_url[:-len("?version=")])
 
     def _source(self, reference: EvidenceReference) -> tuple[str, str, str]:
         locator = reference.locator or ""
