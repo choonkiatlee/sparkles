@@ -19,7 +19,8 @@ jobs:
     if: >-
       github.repository == 'choonkiatlee/sparkles' &&
       github.event.issue.user.login == 'choonkiatlee' &&
-      github.event.issue.title == 'Enrich learning reference 360s'
+      (github.event.issue.title == 'Enrich learning reference 360s' ||
+       github.event.issue.title == 'Enrich labgrowns3 reference 360s')
     runs-on: ubuntu-latest
     timeout-minutes: 240
     permissions:
@@ -46,8 +47,13 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_REF: refs/heads/master
+          BATCH_TITLE: ${{ github.event.issue.title }}
         run: |
-          python -m diamond_catalogue.reference_batch > "$RUNNER_TEMP/reference-targets"
+          if [ "$BATCH_TITLE" = "Enrich labgrowns3 reference 360s" ]; then
+            python -m diamond_catalogue.reference_batch --supplier labgrowns3 > "$RUNNER_TEMP/reference-targets"
+          else
+            python -m diamond_catalogue.reference_batch > "$RUNNER_TEMP/reference-targets"
+          fi
           success=0
           failed=0
           while IFS= read -r reference_id; do
