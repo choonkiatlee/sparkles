@@ -247,5 +247,105 @@ class Loupe360ProxyContractTests(unittest.TestCase):
             processor.process(raw)
 
 
+class Gem360CertificateProxyTests(unittest.TestCase):
+    """R01 source contract: exact seller item is not an arbitrary Gem360 URL."""
+
+    GEM360_VIEWER = "https://videos.gem360.in/Vision360.html?d=566392177"
+    GEM360_PROXY_ROOT = (
+        "https://assets-images.pixorac.com/"
+        + base64.urlsafe_b64encode(GEM360_VIEWER.encode()).decode().rstrip("=")
+    )
+    GEM360_REPORT = "LG566392177"
+
+    def test_only_exact_secure_gem360_viewer_transport_is_supported(self):
+        from diamond_retrieval.resolvers import Loupe360CertificateResolver
+
+        supported = Loupe360CertificateResolver._is_supported_rotation_url
+        self.assertTrue(supported(self.GEM360_VIEWER))
+        for unsafe in (
+            "http://videos.gem360.in/Vision360.html?d=566392177",
+            "https://videos.gem360.in.evil.test/Vision360.html?d=566392177",
+            "https://127.0.0.1/Vision360.html?d=566392177",
+            "https://videos.gem360.in/other.html?d=566392177",
+            "https://videos.gem360.in/Vision360.html?d=566392177&ref=another",
+            "https://videos.gem360.in/Vision360.html?d=anything",
+            "https://videos.gem360.in/Vision360.html?d=566392177#frag",
+            "https://videos.gem360.in/Vision360.html?d=",
+            "https://videos.gem360.in:443/Vision360.html?d=566392177",
+        ):
+            with self.subTest(viewer=unsafe):
+                self.assertFalse(supported(unsafe))
+
+    def test_r01_source_passes_exact_certificate_proxy_contract(self):
+        from diamond_retrieval.loupe360_proxy import validated_proxy_root
+
+        root = self.GEM360_PROXY_ROOT
+        ref = EvidenceReference(
+            identifier="ps285166-r01:proxy",
+            kind=ROTATION, retrieval_key=root, locator=root,
+            provenance=(ProvenanceStep("loupe360_exact_certificate", ENDPOINT),),
+            metadata={
+                "loupe360_proxy_exact_certificate": True,
+                "lab": "IGI", "report_number": self.GEM360_REPORT,
+                "supplier_frame_count": 256, "supplier_top_index": "244",
+            },
+        )
+        self.assertEqual(validated_proxy_root(ref), root)
+
+    def test_r01_complete_proxy_retrieval_reuses_existing_256_frame_checks(self):
+        proxy = self.GEM360_PROXY_ROOT
+        report = self.GEM360_REPORT
+
+        class FakeGem360Http(FakeHttp):
+            def get(self, url, *, timeout, headers=None):
+                if url.startswith(proxy + "/") and url.endswith(".jpg"):
+                    self.calls.append(("GET", url))
+                    try:
+                        index = int(url[len(proxy) + 1:-4])
+                    except ValueError:
+                        index = -1
+                    if 0 <= index < 256:
+                        return HttpResponse(
+                            200, url, {"Content-Type": "image/jpeg"}, frame(index),
+                        )
+                return super().get(url, timeout=timeout, headers=headers)
+
+        http = FakeGem360Http(graphql=certificate(
+            report=report, proxy_root=proxy, top="244",
+        ))
+        result = retrieve_reference_media(
+            "ps285166-r01", lab="IGI", report_number=report, http_client=http,
+        )
+        self.assertEqual(len(result.rotations), 1)
+        rotation = result.rotations[0]
+        self.assertEqual(rotation.face_up_hint, 244)
+        self.assertEqual(len(rotation.frames), 256)
+        self.assertEqual(len({x.sha256 for x in rotation.frames}), 256)
+        self.assertEqual([x.source_index for x in rotation.frames], list(range(256)))
+        self.assertEqual(rotation.metadata["supplier"], "loupe360-pixorac-proxy")
+        self.assertFalse(rotation.metadata["supplier_original_bytes_verified"])
+        self.assertEqual(len([
+            x for x in http.calls if x[0] == "GET" and x[1].startswith(proxy + "/")
+        ]), 256)
+        self.assertTrue(any(
+            x.locator == proxy and x.status == EvidenceStatus.SUCCESS
+            for x in result.attempts
+        ))
+
+    def test_report_mismatch_never_fetches_proxy(self):
+        report = self.GEM360_REPORT
+        root = self.GEM360_PROXY_ROOT
+        http = FakeHttp(graphql=certificate(
+            report="LG000000001", proxy_root=root, top="244",
+        ))
+        result = retrieve_reference_media(
+            "ps285166-r01", lab="IGI", report_number=report, http_client=http,
+        )
+        self.assertFalse(result.rotations)
+        self.assertFalse(any(
+            x[0] == "GET" and x[1].startswith(root) for x in http.calls
+        ))
+
+
 if __name__ == "__main__":
     unittest.main()
