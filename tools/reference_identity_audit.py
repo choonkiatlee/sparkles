@@ -100,7 +100,7 @@ def main() -> int:
         identity = manifest["identity"]
         if (manifest["id"] != reference_id or
                 identity["lab"] != lab or
-                identity["report_number"] != report or
+                identity["report_number"] != "LG" + report or
                 identity["status"] != "reported"):
             raise SystemExit("Trusted reviewed identity changed; refuse stale diagnostic")
         for variant in (report, "LG" + report):
