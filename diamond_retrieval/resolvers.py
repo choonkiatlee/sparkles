@@ -296,17 +296,25 @@ class Loupe360CertificateResolver:
                     # structured unsupported attempt; never block a separately
                     # supported video asset from the same certificate record.
                     locator = wrapped
-                rotation_metadata = {
+                # Some exact-report Loupe records put a direct MP4 inside
+                # v360.url instead of a progressive-frame viewer. Treat the
+                # media according to the *URL's actual wire format*, never
+                # claim it is a 256-frame rotation.
+                is_video = self._is_direct_video_url(locator)
+                candidate_metadata = {
                     **metadata,
-                    "supplier_frame_count": v360.get("frame_count"),
-                    "supplier_top_index": v360.get("top_index"),
                     "loupe360_v360_id": v360.get("id"),
                     "loupe360_v360_url": wrapped,
                 }
+                if is_video:
+                    candidate_metadata["format"] = "video"
+                else:
+                    candidate_metadata["supplier_frame_count"] = v360.get("frame_count")
+                    candidate_metadata["supplier_top_index"] = v360.get("top_index")
                 references.append(
                     EvidenceReference(
-                        identifier=f"{reference.identifier}:supplier-rotation",
-                        kind=ROTATION,
+                        identifier=f"{reference.identifier}:supplier-{'video' if is_video else 'rotation'}",
+                        kind=VIDEO if is_video else ROTATION,
                         retrieval_key=locator,
                         locator=locator,
                         provenance=(
@@ -316,12 +324,11 @@ class Loupe360CertificateResolver:
                                 {
                                     "report_number": report,
                                     "certificate_id": record.get("id"),
-                                    "frame_count": v360.get("frame_count"),
-                                    "top_index": v360.get("top_index"),
+                                    "source_type": "direct_video" if is_video else "supplier_rotation",
                                 },
                             ),
                         ),
-                        metadata=rotation_metadata,
+                        metadata=candidate_metadata,
                     )
                 )
 
