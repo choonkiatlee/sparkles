@@ -53,7 +53,7 @@
       "clarity": null,
       "colour": null,
       "commentary_excerpt": "From the original three-way D360 comparison, the buyer found appealing central sparkle in 'Glittery' (#1). Karl_K instead noted unusually small windmills and considered the overall",
-      "has_motion": false,
+      "has_motion": true,
       "id": "ps281114-r17",
       "identity_status": "unverified",
       "lab": null,
@@ -64,7 +64,7 @@
       "selection_id": "ref-ps281114-r17",
       "shape": "Asscher",
       "source_url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/",
-      "thumbnail_url": null,
+      "thumbnail_url": "https://github.com/choonkiatlee/sparkles/releases/download/sparkles-reference-ps281114-r17/asset-0168b10051d7cdf52011c52ffbec20cfe8b2f26b2f3d91a9ac9480cb19c87a18.jpg",
       "topics": [
         "windmills",
         "face-up-pattern",
