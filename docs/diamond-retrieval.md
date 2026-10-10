@@ -91,3 +91,54 @@ The default HTTP client uses finite timeouts, rejects non-HTTP(S), credential-be
 ## Extension contract
 
 Providers, resolvers, policy, downloaders, processors, validator and assembler remain explicitly injected. Evidence kinds remain extensible string identifiers, registration is unambiguous, resolution is bounded and policy is reapplied to every resolved reference. Supplier-media downloaders register against these contracts without retailer/viewer branches in `DiamondRetriever`.
+
+## Listing-independent expert reference lookup (#196)
+
+Use this entry point when an external agent has already curated a reference, **not**
+a retailer detail page. It uses the same in-memory evidence classes, downloader,
+processor, SHA-256 metadata and per-source attempts as normal ingestion:
+
+```python
+from diamond_retrieval import retrieve_reference_media
+
+result = retrieve_reference_media(
+    "ps285166-r07",
+    media_sources=[{
+        "kind": "viewer", "provider": "v360.diamonds",
+        "status": "linked_unverified",
+        "url": "https://v360.diamonds/c/72c0cf42-7370-4210-92b0-c1bc7d27ef4b?a=625406458&m=i",
+    }],
+)
+# result.attempts contains an UNSUPPORTED viewer URL; nothing is fabricated.
+
+igi = retrieve_reference_media(
+    "ps285166-r02", lab="IGI", report_number="LG634479985",
+    media_sources=[], include_igi_pdf=False,
+)
+# Best-effort exact report -> Nivoda/Loupe360 candidate motion/video/still.
+```
+
+Inputs are the stable unprefixed reference ID, optional source-claimed lab and full
+report number, and zero or more curator-provided `viewer`, `still` and `video`
+links. Explicit URLs are attempted first. The default pipeline validates public
+HTTPS destinations and redirect hops; it does not fetch arbitrary listings or
+run any LLM. A Loupe UUID or numeric viewer ID is **not** interpreted as a
+certificate number. Only existing supported v360.in/Diajewel/Workshop/Core360/
+D360 patterns are decoded; `v360.diamonds` and unrecognized Loupe viewer pages
+remain explicit `unsupported` attempts with the original link intact.
+
+The returned `DiamondResult` uses a synthetic `reference:<id>` locator, never
+a fake certified listing. `result.evidence` holds validated original bytes and
+`result.attempts` holds successes, failures, duplicate links and unsupported
+sources. Exact-report lookup failures do not suppress unrelated direct media.
+The resolver opts into the Loupe record's image candidate on this path only;
+normal retailer ingestion keeps its original set of candidates. An extracted
+certificate identity conflict raises `IdentityConflictError`, preventing a
+result from being published until reviewed. No evidence is stored on disk here:
+publication/Actions are separate issue #197.
+
+Run the deterministic suite with:
+
+```sh
+python -m unittest tests.test_reference_media_lookup -v
+```

@@ -201,7 +201,7 @@ class StillImageProcessor:
                 kind=STILL,
                 provenance=provenance,
                 payload=raw.payload,
-                metadata={"sha256": sha256, "media_type": raw.media_type},
+                metadata={**raw.reference.metadata, "sha256": sha256, "media_type": raw.media_type},
                 source_responses=raw.source_responses,
                 dimensions=dimensions,
             ),

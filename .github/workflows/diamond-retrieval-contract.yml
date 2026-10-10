@@ -6,6 +6,7 @@ on:
       - "diamond_retrieval/**"
       - "diamond360/d360_source.py"
       - "tests/test_diamond_retrieval*.py"
+      - "tests/test_reference_media_lookup.py"
       - "tests/test_d360_source.py"
       - "tests/fixtures/diamond_retrieval/**"
       - "docs/diamond-retrieval.md"
@@ -35,6 +36,7 @@ jobs:
           python -m unittest tests.test_diamond_retrieval_proportions -v
           python -m unittest tests.test_diamond_retrieval_motion -v
           python -m unittest tests.test_diamond_retrieval_media -v
+          python -m unittest tests.test_reference_media_lookup -v
           python -m unittest tests.test_d360_source -v
 
       # Non-gating: upstream media availability is external, but logs prove

@@ -21,6 +21,7 @@ from .models import (
     EvidenceReference,
     EvidenceStatus,
     IdentityOutcome,
+    ListingRecord,
     RawEvidence,
 )
 from .protocols import (
@@ -70,6 +71,10 @@ class DiamondRetriever:
         except Exception as exc:
             raise RetrievalError(f"Listing retrieval failed for {url}: {exc}") from exc
 
+        return self.retrieve_record(listing)
+
+    def retrieve_record(self, listing: ListingRecord) -> DiamondResult:
+        """Process an already curated evidence listing, without a retailer provider."""
         queue: deque[tuple[EvidenceReference, int]] = deque()
         for reference in listing.references:
             queue.append((self._prepend_provenance(reference, listing.provenance), 0))
