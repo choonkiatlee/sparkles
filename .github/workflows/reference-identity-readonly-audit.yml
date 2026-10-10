@@ -33,3 +33,8 @@ jobs:
         timeout-minutes: 16
         continue-on-error: true
         run: python tools/reference_identity_audit.py --media
+
+      - name: Source-format probe (fixed hosts, no media publication)
+        timeout-minutes: 5
+        continue-on-error: true
+        run: python tools/reference_identity_audit.py --probe
