@@ -1,0 +1,86 @@
+name: R23 exact canonical source motion contract
+
+on:
+  pull_request:
+    paths:
+      - "diamond_retrieval/motion_sources.py"
+      - "diamond_retrieval/motion.py"
+      - "diamond_retrieval/composition.py"
+      - "tests/test_d360_legacy_canonical.py"
+      - ".github/workflows/r23-canonical-original-source-contract.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout reviewed source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Sparkles
+        run: python -m pip install -e .
+      - name: Network-free adversarial original-frame tests
+        run: python -m unittest tests.test_d360_legacy_canonical -v
+      - name: Validate exact R23 vendor originals and full identity-backed dry-run (no writes)
+        timeout-minutes: 14
+        run: |
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          from diamond_retrieval import (
+              EvidenceReference, ROTATION, ProgressiveRotationProcessor,
+              UrllibHttpClient, retrieve_reference_media,
+          )
+          from diamond_retrieval.models import IdentityOutcome
+          from diamond_retrieval.motion_sources import D360LegacyCanonicalRotationDownloader
+
+          record=json.loads(Path("data/references/ps281114-r23.json").read_text())
+          assert record["id"]=="ps281114-r23"
+          assert record["identity"]=={
+              "lab":"GIA","report_number":"13534682","status":"reported"
+          }
+          ref=EvidenceReference(identifier="r23:source-audit",kind=ROTATION,
+              retrieval_key=D360LegacyCanonicalRotationDownloader.VIEWER,
+              locator=D360LegacyCanonicalRotationDownloader.VIEWER,
+              metadata={"lab":"GIA","report_number":"13534682"})
+          http=UrllibHttpClient(max_bytes=25*1024*1024)
+          raw=D360LegacyCanonicalRotationDownloader(http,timeout=30).download(ref)
+          frames=ProgressiveRotationProcessor().process(raw)[0].frames
+          assert len(frames)==256
+          assert [f.source_index for f in frames]==list(range(256))
+          assert len({f.sha256 for f in frames})==256
+          assert frames[0].sha256==D360LegacyCanonicalRotationDownloader.PREVIEW_SHA256
+          assert len(raw.source_responses)==10
+          print("LIVE_R23_VERIFIED",json.dumps({
+              "original_frames":len(frames),"first_sha256":frames[0].sha256,
+              "last_sha256":frames[-1].sha256,
+              "source_response_count":len(raw.source_responses),
+              "ordering":"audited_vendor_default_canonical",
+          }),flush=True)
+
+          result=retrieve_reference_media(
+              "ps281114-r23",lab="GIA",report_number="13534682",
+              media_sources=record["media_sources"],include_igi_pdf=False,
+          )
+          conflicts=any(x.outcome==IdentityOutcome.CONFLICT
+                        for x in result.identity_comparisons)
+          assert not conflicts
+          assert len(result.rotations)==1
+          assert len(result.rotations[0].frames)==256
+          assert result.rotations[0].frames[0].sha256==frames[0].sha256
+          assert len(result.stills)>=1
+          print("LIVE_R23_IDENTITY_DRY_RUN",json.dumps({
+              "reference":record["id"],"identity_conflict":conflicts,
+              "rotations":len(result.rotations),
+              "original_frame_count":len(result.rotations[0].frames),
+              "original_stills":len(result.stills),
+          }),flush=True)
+          PY
