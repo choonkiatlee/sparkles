@@ -1,0 +1,36 @@
+name: R07 known-viewer Pixorac cache audit
+
+on:
+  pull_request:
+    paths:
+      - "tools/audit_r07_direct_pixorac.py"
+      - "tests/test_r07_direct_pixorac.py"
+      - ".github/workflows/r07-direct-pixorac-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  r07-direct-pixorac:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install existing retrieval dependencies
+        run: python -m pip install -e .
+      - name: Verify exact-source and frame-validation guards
+        run: python -m unittest tests.test_r07_direct_pixorac -v
+      - name: Probe two byte-equivalent buyer viewer URL serializations in Pixorac
+        run: python tools/audit_r07_direct_pixorac.py --out "$RUNNER_TEMP/r07-direct-pixorac.json"
+      - name: Save sanitized read-only findings only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r07-direct-pixorac-readonly-audit
+          path: ${{ runner.temp }}/r07-direct-pixorac.json
+          if-no-files-found: warn
+          retention-days: 14
