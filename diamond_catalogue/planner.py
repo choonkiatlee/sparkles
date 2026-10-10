@@ -42,13 +42,10 @@ def _asset_reference(asset: PlannedAsset) -> dict:
             "storage": None}
 
 
-def plan_publication(result: DiamondResult) -> PublicationPlan:
-    """Plan source-preserving publication without side effects or binary JSON."""
-    lab, report = normalize_identity(result.metadata.lab, result.metadata.report_number)
-    identifier = diamond_id(lab, report)
+def plan_evidence_assets(result: DiamondResult, identifier: str) -> tuple[list[dict], tuple[PlannedAsset, ...]]:
+    """Plan the same original evidence bytes for certified or reference manifests."""
     if any(c.outcome == IdentityOutcome.CONFLICT for c in result.identity_comparisons):
         raise CatalogueError("Identity comparison conflict: refusing publication")
-
     assets: dict[str, PlannedAsset] = {}
 
     def add_asset(payload: bytes, media_type: str) -> dict:
@@ -122,6 +119,18 @@ def plan_publication(result: DiamondResult) -> PublicationPlan:
         entry["record_key"] = hashlib.sha256(canonical_json(identity_material).encode()).hexdigest()
         manifest_evidence.append(entry)
 
+    return manifest_evidence, tuple(sorted(assets.values(), key=lambda a: a.asset_id))
+
+
+def plan_publication(result: DiamondResult) -> PublicationPlan:
+    """Plan source-preserving publication without side effects or binary JSON."""
+    lab, report = normalize_identity(result.metadata.lab, result.metadata.report_number)
+    identifier = diamond_id(lab, report)
+    if any(c.outcome == IdentityOutcome.CONFLICT for c in result.identity_comparisons):
+        raise CatalogueError("Identity comparison conflict: refusing publication")
+
+    manifest_evidence, assets = plan_evidence_assets(result, identifier)
+
     metadata = result.metadata
     fields = ("origin", "shape", "carat", "colour", "clarity", "dimensions", "reported_proportions")
     diamond_metadata = {field: json_value(getattr(metadata, field)) for field in fields}
@@ -165,7 +174,7 @@ def plan_publication(result: DiamondResult) -> PublicationPlan:
     }
     # Fail now if any arbitrary metadata accidentally attempts to include raw bytes.
     canonical_json(manifest)
-    return PublicationPlan(identifier, manifest, tuple(sorted(assets.values(), key=lambda a: a.asset_id)))
+    return PublicationPlan(identifier, manifest, assets)
 
 
 def _valid_url(url: str) -> bool:

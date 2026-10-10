@@ -1,0 +1,62 @@
+name: learning-reference-enrich
+
+on:
+  workflow_dispatch:
+    inputs:
+      reference_id:
+        description: "Accepted reference ID in data/references on master"
+        required: true
+        type: string
+      mode:
+        description: "metadata (no network); media (images/video); all (also IGI PDF)"
+        required: true
+        type: choice
+        default: metadata
+        options:
+          - metadata
+          - media
+          - all
+
+permissions: {}
+
+concurrency:
+  group: sparkles-diamond-catalogue-master-publisher
+  cancel-in-progress: false
+
+jobs:
+  enrich:
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout trusted publishing code on master
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Sparkles
+        run: python -m pip install -e .
+
+      - name: Enrich accepted reference (only opt-in media downloads)
+        env:
+          REFERENCE_ID: ${{ inputs.reference_id }}
+          REFERENCE_MODE: ${{ inputs.mode }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF: ${{ github.ref }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python -m diamond_catalogue.reference_publish
+
+  deploy-pages:
+    needs: enrich
+    uses: ./.github/workflows/catalogue-pages.yml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
