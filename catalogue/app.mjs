@@ -7,7 +7,7 @@ import { validateReferenceIndex } from "./reference.mjs";
 import { DRAFT_STORAGE_KEY, emptyDraft, validateCuration, validateDraft,
   flagsFor, setDraftFlag, reconcileDraft, draftCount, archivedCount,
   curationRows } from "./curation.mjs";
-import { openCurationIssueInNewTab } from "./curation-request.mjs";
+import { openCurationIssueInNewTab } from "./curation-request.mjs?v=curation-new-tab-1";
 
 const $ = id => document.getElementById(id);
 const controls = { search:$("search"), status:$("status-filter"), sort:$("sort") };
