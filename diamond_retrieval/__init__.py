@@ -69,6 +69,7 @@ from .protocols import (
 from .resolvers import IgiReportPdfResolver, Loupe360CertificateResolver
 from .retailers import DiyonaListingProvider, QualityDiamondsListingProvider
 from .retriever import DiamondRetriever
+from .reference_media import retrieve_reference_media, ReferenceMediaPolicy
 from .video import DirectVideoDownloader, DirectVideoProcessor
 
 
@@ -129,6 +130,7 @@ __all__ = [
     "RetrievalConfig",
     "RetrievalError",
     "RetrievalPolicy",
+    "ReferenceMediaPolicy",
     "RotationEvidence",
     "RotationFrame",
     "STILL",
@@ -146,6 +148,7 @@ __all__ = [
     "decode_vision360_scramble",
     "default_config",
     "retrieve_diamond",
+    "retrieve_reference_media",
     "validate_public_http_url",
     "WorkshopRotationDownloader",
 ]
