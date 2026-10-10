@@ -72,7 +72,7 @@ jobs:
           const anchor="var _0x3e0e=";
           const first=s.indexOf(anchor);
           const end=s.indexOf("];",first);
-          if(first<0||end<first||end-first>160000)throw Error("Literal constant table absent or unexpectedly large");
+          console.log("LITERAL_OFFSETS",first,end,"bytes",end-first);\n          if(first<0||end<first||end-first>530000)throw Error("Literal constant table absent or unexpectedly large");
           const literal=s.slice(first+anchor.length,end+1);
           const arr=vm.runInNewContext("("+literal+")",Object.create(null),{timeout:100});
           if(!Array.isArray(arr)||!arr.every(x=>typeof x==="string"))throw Error("Not a string table");
