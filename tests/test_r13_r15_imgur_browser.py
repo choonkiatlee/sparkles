@@ -6,7 +6,7 @@ import unittest
 
 from tools.audit_r13_r15_imgur_browser import (
     MEDIA_BLOCK_PATTERNS, classify_browser, safe_location,
-    sanitise_labels, summarize_performance,
+    sanitise_labels, summarize_performance, _metadata_items, inspect_observed_album_json,
 )
 from tools.audit_r13_r15_imgur import ALBUMS, check_manifest
 
@@ -87,6 +87,55 @@ class BrowserAuditTests(unittest.TestCase):
         self.assertTrue(out[0]["request_failed_or_blocked"])
         self.assertNotIn("secret", json.dumps(out))
         self.assertNotIn("abcde12", json.dumps(out))
+
+
+    def test_generic_imgur_homepage_is_not_album_media(self):
+        page = {
+            "title": "Imgur: The magic of the Internet",
+            "image_nodes": 15, "figure_nodes": 0, "video_nodes": [],
+            "labels": [{"role": "h3", "text": "NEWEST IN MOST VIRAL"}],
+        }
+        result = classify_browser(page, [], current_url="https://imgur.com/a/mKh7jTv",
+                                  expected_url="https://imgur.com/a/mKh7jTv")
+        self.assertEqual(result["status"], "generic_homepage_no_album_identity")
+        self.assertTrue(result["exact_album_path_preserved"])
+        self.assertEqual(
+            classify_browser(page, [], current_url="https://imgur.com/",
+                             expected_url="https://imgur.com/a/mKh7jTv")["status"],
+            "browser_navigated_away_from_reviewed_album",
+        )
+
+    def test_only_small_observed_same_album_api_json(self):
+        from unittest.mock import Mock
+        token = "mKh7jTv"
+        fake = Mock()
+        fake.execute_cdp_cmd.return_value = {
+            "body": json.dumps({"data": {"media": [
+                {"id": "a12345", "type": "video/mp4", "width": 500, "height": 400,
+                 "description": "First Asscher"},
+                {"id": "b12345", "type": "video/mp4", "width": 600, "height": 500,
+                 "description": "Second Asscher"},
+            ]}}),
+            "base64Encoded": False,
+        }
+        entry = lambda url, size="2000": {"message": json.dumps({"message": {
+            "method": "Network.responseReceived",
+            "params": {"requestId": url, "response": {
+                "url": url, "status": 200, "mimeType": "application/vnd.imgur.v1+json",
+                "headers": {"Content-Length": size},
+            }},
+        }})}
+        events = [
+            entry("https://api.imgur.com/post/v1/albums/other"),
+            entry("https://api.imgur.com/post/v1/albums/" + token, "300000"),
+            entry("https://api.imgur.com/post/v1/albums/" + token, "2000"),
+        ]
+        out = inspect_observed_album_json(fake, events, "https://imgur.com/a/" + token)
+        self.assertEqual(len(out), 1)
+        self.assertEqual(len(out[0]["media_item_hints"]), 2)
+        self.assertNotIn("a12345", json.dumps(out))
+        self.assertEqual(fake.execute_cdp_cmd.call_count, 1)
+        self.assertEqual(_metadata_items({"title": "Not media"}), [])
 
 
 if __name__ == "__main__":
