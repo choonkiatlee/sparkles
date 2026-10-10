@@ -94,12 +94,58 @@ def media_dry_run(report: str) -> None:
     print("R12_MEDIA_AUDIT " + json.dumps(report_out, sort_keys=True), flush=True)
 
 
+
+
+def probe_exact_loupe_viewer(client) -> list[dict]:
+    """Bounded probe of only the reviewed viewer and existing resolver fallback.
+
+    No external src extraction, script fetching, redirects to private networks,
+    guessed supplier IDs, downloaded media or persistence.
+    """
+    from urllib.parse import urlsplit
+    from diamond_retrieval.reference_media import _safe_source_url
+
+    results = []
+    for label, url in (
+        ("reviewed-viewer", SOURCE),
+        ("existing-resolver-fallback", SOURCE + "/video/500/500"),
+    ):
+        if urlsplit(_safe_source_url(url)).hostname != "loupe360.com":
+            raise RuntimeError("Unreviewed Loupe host")
+        item = {"source": label}
+        try:
+            response = client.get(url, timeout=12)
+            data = response.content
+            raw = data[:300_000].decode("utf-8", errors="replace").lower()
+            item.update({
+                "http_status": response.status_code,
+                "byte_count": len(data),
+                "sha256": hashlib.sha256(data).hexdigest(),
+                "wire_format": (
+                    "mp4" if len(data) > 8 and data[4:8] == b"ftyp"
+                    else "jpeg" if data[:3] == b"\\xff\\xd8\\xff"
+                    else "html" if "<html" in raw or "<!doctype" in raw
+                    else "other"
+                ),
+                "mentions_mp4": ".mp4" in raw,
+                "mentions_frame_json": "0.json" in raw,
+                "mentions_video_element": "<video" in raw,
+                "mentions_iframe": "<iframe" in raw,
+            })
+        except Exception:
+            item["status"] = "bounded_transport_failure_or_unavailable"
+        results.append(item)
+        print("R12_VIEWER_AUDIT " + json.dumps(item, sort_keys=True), flush=True)
+    return results
+
+
 def main(argv: list[str] | None = None) -> int:
     argv = sys.argv[1:] if argv is None else argv
     if argv not in ([], ["--media"]):
         raise SystemExit("Only --media is supported")
     check_curated_source()
     results = lookup(UrllibHttpClient(max_bytes=150_000))
+    probe_exact_loupe_viewer(UrllibHttpClient(max_bytes=300_000))
     if argv == ["--media"]:
         match = next((r for r in results if exact_igi_candidate(r)), None)
         if match is None:
