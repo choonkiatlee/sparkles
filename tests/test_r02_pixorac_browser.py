@@ -101,6 +101,23 @@ class BrowserAuditTests(unittest.TestCase):
         self.assertTrue(verdict["media_variant_present"])
         self.assertNotIn(token, json.dumps(verdict))
 
+    def test_browser_observed_opaque_variant_is_accepted_but_traversal_refused(self):
+        supplier = "https://mediassests.s3.amazonaws.com/V360/Vision360.html"
+        token = base64.urlsafe_b64encode(supplier.encode()).decode().rstrip("=")
+        lookup = {"cert_matches": True, "lab": "IGI",
+                  "v360": {"frame_count": 256, "top_index": "213"}}
+        def record(variant):
+            return [{"input_route": "landing", "relevant_requests": [
+                {"resource": {"host": "assets-images.pixorac.com",
+                              "path": f"/{token}/{variant}/213.webp"},
+                 "status": 200}
+            ]}]
+        root, _, result = browser_cache_candidate(record("QUJDREVGR0hJSg=="), lookup)
+        self.assertTrue(result["top_index_observed"])
+        self.assertEqual(root, f"https://assets-images.pixorac.com/{token}/QUJDREVGR0hJSg==")
+        denied, _, _ = browser_cache_candidate(record("..secret"), lookup)
+        self.assertIsNone(denied)
+
     def test_multiple_browser_pixorac_roots_refused(self):
         one = "https://mediassests.s3.amazonaws.com/V360/Vision360.html"
         two = one + "?d=source-ref-2"
