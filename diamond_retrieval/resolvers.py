@@ -342,6 +342,45 @@ class Loupe360CertificateResolver:
                     )
                 )
 
+                # Certificate-matched Loupe360 additionally serves JPEG frames
+                # from its own indexed Pixorac cache. This is a fallback, not
+                # evidence that the supplier's original transport still works.
+                # Preserve the exact encoded wrapper; never invent a proxy ID.
+                proxy_parts = urlsplit(wrapped)
+                top = v360.get("top_index")
+                if (
+                    not is_video
+                    and proxy_parts.scheme == "https"
+                    and proxy_parts.netloc == "assets-images.pixorac.com"
+                    and not proxy_parts.query and not proxy_parts.fragment
+                    and re.fullmatch(r"/[A-Za-z0-9_-]{20,1024}={0,2}", proxy_parts.path)
+                    and self._is_supported_rotation_url(locator)
+                    and v360.get("frame_count") == 256
+                    and not isinstance(v360.get("frame_count"), bool)
+                    and not isinstance(top, bool)
+                    and str(top).isdigit() and int(top) < 256
+                ):
+                    references.append(EvidenceReference(
+                        identifier=f"{reference.identifier}:proxy-rotation",
+                        kind=ROTATION,
+                        retrieval_key=wrapped,
+                        locator=wrapped,
+                        provenance=(ProvenanceStep(
+                            "loupe360_exact_certificate", self.endpoint,
+                            {
+                                "report_number": report,
+                                "certificate_id": record.get("id"),
+                                "source_type": "indexed_proxy_jpeg",
+                                "supplier_original_bytes_verified": False,
+                            },
+                        ),),
+                        metadata={
+                            **candidate_metadata,
+                            "loupe360_proxy_exact_certificate": True,
+                            "fallback_for_retrieval_key": locator,
+                        },
+                    ))
+
         video = record.get("video")
         if isinstance(video, str) and self._is_direct_video_url(video):
             video_metadata = {
