@@ -19,6 +19,7 @@ from diamond_retrieval.motion_sources import (
     Core360RotationDownloader,
     D360RotationDownloader,
     DiajewelRotationDownloader,
+    FilesOnSkyRotationDownloader,
     Labgrowns3RotationDownloader,
     RemoteV360RotationDownloader,
     WorkshopRotationDownloader,
@@ -403,6 +404,71 @@ class ProgressiveMotionContractTests(unittest.TestCase):
         ]
         self.assertEqual(len(supporting), 1)
         self.assertIsInstance(supporting[0], RemoteV360RotationDownloader)
+
+    def test_filesonsky_r05_original_vision360_transport(self):
+        from diamond_retrieval import default_config
+        from diamond_retrieval.resolvers import Loupe360CertificateResolver
+
+        viewer = "https://www.filesonsky.com/v360/Vision360.HTML?d=659844"
+        root = "https://www.filesonsky.com/v360/imaged/659844"
+        responses = _progressive_source_responses(AUDITS[0], root, version=1)
+        responses[root + "/0.json?version="] = responses.pop(root + "/0.json")
+        client = FakeHttpClient(responses)
+        reference = _reference("filesonsky", viewer)
+        downloader = FilesOnSkyRotationDownloader(client)
+        self.assertTrue(Loupe360CertificateResolver._is_supported_rotation_url(viewer))
+        self.assertTrue(downloader.supports(reference))
+        rotations = ProgressiveRotationProcessor().process(downloader.download(reference))
+        self.assertEqual(len(rotations), 1)
+        self.assertEqual(len(rotations[0].frames), 256)
+        self.assertEqual([f.source_index for f in rotations[0].frames], list(range(256)))
+        self.assertEqual(rotations[0].frames[0].payload, _jpeg(0))
+        self.assertEqual(rotations[0].metadata["supplier"], "filesonsky")
+        self.assertTrue(rotations[0].metadata["sequence_complete"])
+        self.assertEqual(
+            client.calls,
+            [root + "/0.json?version="] +
+            [f"{root}/{n}.json?version=1" for n in range(1, 8)],
+        )
+        registered = [
+            item for item in default_config(FakeHttpClient({})).downloaders
+            if item.supports(reference)
+        ]
+        self.assertEqual(len(registered), 1)
+        self.assertIsInstance(registered[0], FilesOnSkyRotationDownloader)
+
+    def test_filesonsky_rejects_unsafe_or_ambiguous_urls_without_network(self):
+        from diamond_retrieval.resolvers import Loupe360CertificateResolver
+        viewer = "https://www.filesonsky.com/v360/Vision360.HTML?d=659844"
+        client = FakeHttpClient({})
+        downloader = FilesOnSkyRotationDownloader(client)
+        for bad in (
+            viewer.replace("https://", "http://"),
+            viewer.replace("www.filesonsky.com", "www.filesonsky.com.evil.test"),
+            viewer.replace("www.filesonsky.com", "127.0.0.1"),
+            viewer.replace("659844", "..%2fother"),
+            viewer.replace("659844", ""),
+            viewer + "&d=OTHER",
+            viewer + "&surl=https://127.0.0.1",
+            viewer + "#fragment",
+            viewer.replace("Vision360.HTML", "other.html"),
+            viewer.replace("www.filesonsky.com/", "www.filesonsky.com:443/"),
+        ):
+            with self.subTest(url=bad):
+                self.assertFalse(downloader.supports(_reference("filesonsky", bad)))
+                self.assertFalse(Loupe360CertificateResolver._is_supported_rotation_url(bad))
+        self.assertEqual(client.calls, [])
+
+    def test_filesonsky_incomplete_original_frames_fail_closed(self):
+        viewer = "https://www.filesonsky.com/v360/Vision360.HTML?d=659844"
+        root = "https://www.filesonsky.com/v360/imaged/659844"
+        responses = _progressive_source_responses(AUDITS[0], root, version=1)
+        responses[root + "/0.json?version="] = responses.pop(root + "/0.json")
+        responses[root + "/5.json?version=1"] = (b"[]", "application/json")
+        with self.assertRaises(InvalidPayloadError):
+            FilesOnSkyRotationDownloader(
+                FakeHttpClient(responses)
+            ).download(_reference("filesonsky", viewer))
 
     def test_labgrowns3_s3_recovers_exact_complete_original_frames(self):
         # The public KVideo player for R06/R10 requests imaged/<id>/0.json
