@@ -65,7 +65,7 @@ h1{font:normal clamp(42px,6vw,72px)/1.06 Georgia,"Times New Roman",serif;letter-
 .compare-table tbody tr:nth-child(even) td{background:#fcfcf8}
 .compare-table .compare-head{padding:15px;min-width:255px}
 .compare-picture{height:190px;display:flex;justify-content:center;align-items:center;background:#eaede7;border-radius:8px;margin-bottom:12px;overflow:hidden}
-.compare-picture img{width:100%;height:100%;object-fit:contain}
+.compare-picture img, .compare-picture video{width:100%;height:100%;object-fit:contain}
 .compare-report{display:block;font:normal 19px/1.3 Georgia,serif;overflow-wrap:anywhere;margin-bottom:5px}
 .compare-source,.compare-caption{display:block;color:var(--muted);font-size:12px}
 .compare-caption{font-size:11px;margin-top:7px}
