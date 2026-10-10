@@ -161,6 +161,43 @@ class _ProgressiveDownloader:
         return f"{source_root}/{batch_number}.json?version={version}"
 
 
+class FilesOnSkyRotationDownloader(_ProgressiveDownloader):
+    """Original Vision360 frames from an exact HTTPS FilesOnSky viewer.
+
+    R05 / IGI LG644442866 source was independently audited on 2026-10-10:
+    /v360/Vision360.HTML?d=659844 bootstraps at
+    /v360/imaged/659844/0.json?version= (v1, 758x599).
+    No supplier HTML parsing or generalized URL rewriting is performed.
+    """
+
+    source_name = "filesonsky"
+    _HOST = "www.filesonsky.com"
+    _ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,90}$")
+
+    def _source(self, reference: EvidenceReference) -> tuple[str, str, str]:
+        locator = reference.locator or ""
+        parts = urlsplit(locator)
+        query = parse_qs(parts.query, keep_blank_values=True)
+        items = query.get("d", [])
+        if (
+            parts.scheme != "https"
+            or parts.netloc.lower() != self._HOST
+            or parts.path.lower() != "/v360/vision360.html"
+            or parts.fragment
+            or set(query) != {"d"}
+            or len(items) != 1
+            or not self._ID.fullmatch(items[0])
+        ):
+            raise ValueError("not an exact FilesOnSky Vision360 viewer URL")
+        item = items[0]
+        root = f"https://{self._HOST}/v360/imaged/{item}"
+        return (
+            f"https://{self._HOST}/v360/Vision360.HTML?d={item}",
+            root,
+            f"{root}/0.json?version=",
+        )
+
+
 class Labgrowns3RotationDownloader(_ProgressiveDownloader):
     """Original progressive frames from a publicly linked labgrowns3 S3 viewer.
 

@@ -127,5 +127,50 @@ def run() -> None:
             print("FILESONSKY_AUDIT " + json.dumps(result, sort_keys=True), flush=True)
 
 
+def full_original_audit() -> None:
+    """Validate all 256 source originals without writes or supplier HTML parsing."""
+    from diamond_retrieval.models import EvidenceReference, ROTATION
+    from diamond_retrieval.motion import ProgressiveRotationProcessor
+    from diamond_retrieval.motion_sources import FilesOnSkyRotationDownloader
+
+    valid_trusted_source()
+    ref = EvidenceReference(
+        identifier=REF + ":source-audit",
+        kind=ROTATION,
+        retrieval_key=VIEWER,
+        locator=VIEWER,
+        provenance=(),
+        metadata={"lab": "IGI", "report_number": REPORT},
+    )
+    try:
+        raw = FilesOnSkyRotationDownloader(UrllibHttpClient(), timeout=25).download(ref)
+        rotations = ProgressiveRotationProcessor().process(raw)
+        assert len(rotations) == 1, "not a single complete rotation"
+        frames = rotations[0].frames
+        assert len(frames) == 256
+        assert [frame.source_index for frame in frames] == list(range(256))
+        assert rotations[0].metadata.get("sequence_complete") is True
+        print("FILESONSKY_FULL " + json.dumps({
+            "status": "validated",
+            "reference": REF,
+            "frame_count": len(frames),
+            "dimensions": list(rotations[0].metadata["dimensions"]),
+            "first_source_sha256": hashlib.sha256(frames[0].payload).hexdigest(),
+            "last_source_sha256": hashlib.sha256(frames[-1].payload).hexdigest(),
+            "source_responses": len(raw.source_responses),
+        }, sort_keys=True), flush=True)
+    except Exception as exc:
+        print("FILESONSKY_FULL " + json.dumps({
+            "status": "not_validated", "reason_class": type(exc).__name__,
+        }, sort_keys=True), flush=True)
+        raise SystemExit(1) from None
+
+
 if __name__ == "__main__":
-    run()
+    import sys
+    if sys.argv[1:] == ["--full"]:
+        full_original_audit()
+    elif sys.argv[1:] == []:
+        run()
+    else:
+        raise SystemExit("Only --full is supported")
