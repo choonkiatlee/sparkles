@@ -1,0 +1,37 @@
+{
+  "schema": "sparkles-reference/1",
+  "id": "ps282648-r13",
+  "label": "3.42ct G VS1 — contrasting preferences, limited evidence",
+  "identity": {
+    "status": "unverified",
+    "lab": null,
+    "report_number": null
+  },
+  "linked_diamond_id": null,
+  "diamond_metadata": {
+    "shape": "Asscher",
+    "carat": "3.42",
+    "colour": "G",
+    "clarity": "VS1"
+  },
+  "commentary": "Compared with the 4.10ct H in the shared supplier-video album (#13), Inked personally preferred this G while stressing their non-expert perspective (#14). 0-0-0 provisionally preferred the H's material clarity (#16), and Karl_K thought the H a little more promising cut-wise on limited video while saying this G was far from bad (#17). The G is a comparison candidate, not a proven poor-cut control; the available inventory establishes neither a certificate number nor a standalone downloadable 360.",
+  "source_links": [
+    {
+      "kind": "discussion",
+      "url": "https://www.pricescope.com/community/threads/are-these-asschers-well-cut.282648/",
+      "note": "Forum comparison #13–#17."
+    },
+    {
+      "kind": "comparison_video",
+      "url": "https://imgur.com/a/GyYZOSZ",
+      "note": "Same comparison album as R12; the G is a separate physical stone."
+    }
+  ],
+  "media_sources": [],
+  "topics": [
+    "mixed-reactions",
+    "relative-preference",
+    "vendor-360-limitations"
+  ],
+  "evidence": []
+}
