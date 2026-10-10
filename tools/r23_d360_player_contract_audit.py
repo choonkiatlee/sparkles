@@ -126,6 +126,26 @@ def run() -> None:
                 "anchor":label, "offset":match,
                 "snippet":" ".join(snippet.split())[:2200]
             },sort_keys=True),flush=True)
+    if len(parser.inlines) >= 2:
+        code = parser.inlines[1]
+        # Static excerpts showing canonical progressive mapping, the optional
+        # encrypted scramble branch, and where sparse frames are indexed.
+        for label, needle, before, after in (
+            ("canonical_and_optional_scramble", "function _0x5c6851(", 0, 4200),
+            ("source_to_viewer_index_1", "_0x59514e[", 650, 1250),
+            ("source_to_viewer_index_2", "sparseIdx", 600, 900),
+            ("bootstrap_optional_scramble", "async function _0x3f06fc(", 0, 1650),
+        ):
+            offset = code.find(needle)
+            if offset < 0:
+                continue
+            snippet = code[max(0,offset-before):offset+after]
+            snippet = re.sub(r"https?://[^\s\"'<>]+", "<redacted-url>", snippet)
+            snippet = re.sub(r"[A-Za-z0-9+/]{120,}={0,2}", "<redacted-token>", snippet)
+            print("R23_ORDER_EVIDENCE "+json.dumps({
+                "section":label,"offset":offset,
+                "excerpt":" ".join(snippet.split())[:4200]
+            },sort_keys=True),flush=True)
     count=0
     for source in parser.externals:
         parsed=urlsplit(urljoin(VIEWER,source))
