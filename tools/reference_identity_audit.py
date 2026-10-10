@@ -91,7 +91,53 @@ def audit_one(client, *, reference_id: str, lab: str, report: str, requested: st
     }
 
 
+
+def audit_media_readonly() -> None:
+    """Use normal identity/source validators in-memory, without GitHub publication."""
+    from diamond_retrieval import retrieve_reference_media
+    from diamond_retrieval.models import IdentityOutcome
+
+    for reference_id, lab, numeric_report in CASES:
+        report = "LG" + numeric_report
+        record = json.loads(
+            (ROOT / "data" / "references" / (reference_id + ".json")).read_text("utf-8")
+        )
+        if (record["identity"]["lab"], record["identity"]["report_number"]) != (lab, report):
+            raise SystemExit("Trusted reference identity changed; refuse live dry-run")
+        try:
+            result = retrieve_reference_media(
+                reference_id, lab=lab, report_number=report,
+                media_sources=record.get("media_sources", ()),
+                include_igi_pdf=False,
+            )
+            conflicts = any(
+                value.outcome == IdentityOutcome.CONFLICT
+                for value in result.identity_comparisons
+            )
+            attempts = [
+                {"kind": str(a.kind), "status": a.status.value}
+                for a in result.attempts
+            ]
+            payload = {
+                "reference": reference_id, "conflicts": conflicts,
+                "rotation_frames": [len(r.frames) for r in result.rotations],
+                "video_count": len(result.videos),
+                "still_count": len(result.stills),
+                "attempts": attempts,
+            }
+        except Exception:
+            payload = {"reference": reference_id, "status": "unavailable_or_error"}
+        print("MEDIA_DRY_RUN " + json.dumps(payload, sort_keys=True), flush=True)
+
+
 def main() -> int:
+    import sys
+    media_mode = sys.argv[1:] == ["--media"]
+    if sys.argv[1:] not in ([], ["--media"]):
+        raise SystemExit("Only --media is supported")
+    if media_mode:
+        audit_media_readonly()
+        return 0
     client = UrllibHttpClient(max_bytes=150_000)
     for reference_id, lab, report in CASES:
         manifest = json.loads(
