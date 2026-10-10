@@ -6,7 +6,71 @@
     "colour": "E",
     "shape": "Asscher"
   },
-  "evidence": [],
+  "enrichment_attempts": [
+    {
+      "kind": "rotation",
+      "locator": "loupe360-report:2496852830",
+      "reference_identifier": "ps285166-r04:loupe-report",
+      "status": "resolved"
+    },
+    {
+      "kind": "rotation",
+      "locator": "http://183.87.180.252/ImageLive/659109.html",
+      "reference_identifier": "ps285166-r04:loupe-report:supplier-rotation",
+      "status": "unsupported"
+    },
+    {
+      "kind": "still",
+      "locator": "https://assets-images.pixorac.com/b794147f-e104-4dba-af44-7c3f12d386bf.jpg",
+      "reference_identifier": "ps285166-r04:loupe-report:supplier-still",
+      "status": "success"
+    }
+  ],
+  "evidence": [
+    {
+      "dimensions": [
+        960,
+        755
+      ],
+      "identifier": "ps285166-r04:loupe-report:supplier-still",
+      "identity_observations": [],
+      "kind": "still",
+      "metadata": {
+        "media_type": "image/jpeg",
+        "sha256": "57aa90e5119665fa499f28d4b14ba0de26d1615d4d3d2b1c3c93daa3168c395e"
+      },
+      "payload_asset": {
+        "byte_count": 77209,
+        "media_type": "image/jpeg",
+        "sha256": "57aa90e5119665fa499f28d4b14ba0de26d1615d4d3d2b1c3c93daa3168c395e",
+        "storage": {
+          "backend": "github_release",
+          "locator": "sparkles-reference-ps285166-r04/asset-57aa90e5119665fa499f28d4b14ba0de26d1615d4d3d2b1c3c93daa3168c395e.jpg",
+          "url": "https://github.com/choonkiatlee/sparkles/releases/download/sparkles-reference-ps285166-r04/asset-57aa90e5119665fa499f28d4b14ba0de26d1615d4d3d2b1c3c93daa3168c395e.jpg"
+        }
+      },
+      "provenance": [
+        {
+          "locator": "reference:ps285166-r04",
+          "source": "curated_reference"
+        },
+        {
+          "locator": null,
+          "source": "curated_report"
+        },
+        {
+          "locator": "https://g.nivoda.com/graphql-public-loupe360",
+          "source": "loupe360_exact_certificate"
+        },
+        {
+          "locator": "https://assets-images.pixorac.com/b794147f-e104-4dba-af44-7c3f12d386bf.jpg",
+          "source": "still_image"
+        }
+      ],
+      "record_key": "777b4932b9c7b0dc2f648385ab7a437ea49deda9f3bbf0247ff879330bad322a",
+      "status": "success"
+    }
+  ],
   "id": "ps285166-r04",
   "identity": {
     "lab": "GIA",
