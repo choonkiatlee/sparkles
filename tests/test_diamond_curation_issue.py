@@ -106,6 +106,12 @@ class CurationIssueTests(unittest.TestCase):
         expected = "python -m tools.apply_diamond_curation_issue --event"
         self.assertIn(expected, workflow)
         self.assertNotIn("python tools/apply_diamond_curation_issue.py", workflow)
+        # Unlike a plain standard-library script, importing GitHubAPI loads
+        # diamond_catalogue/__init__.py -> diamond_retrieval -> pypdf/Pillow.
+        # A clean hosted runner must install our declared package dependencies.
+        self.assertIn("python -m pip install -e .", workflow)
+        self.assertLess(workflow.index("python -m pip install -e ."), workflow.index(expected))
+        self.assertIn('python-version: "3.11"', workflow)
         # Running through -m makes the checkout root importable even without
         # 'pip install -e .' on the GitHub Actions runner.
         result = subprocess.run(
