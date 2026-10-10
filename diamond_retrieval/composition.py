@@ -10,6 +10,7 @@ from .motion import ProgressiveRotationProcessor
 from .motion_sources import (
     Core360RotationDownloader,
     D360RotationDownloader,
+    D360LegacyCanonicalRotationDownloader,
     DiajewelRotationDownloader,
     FilesOnSkyRotationDownloader,
     Labgrowns3RotationDownloader,
@@ -82,6 +83,7 @@ def default_config(http_client: HttpClient | None = None) -> RetrievalConfig:
             Loupe360ProxyRotationDownloader(client),
             Core360RotationDownloader(client),
             RemoteV360RotationDownloader(client),
+            D360LegacyCanonicalRotationDownloader(client),
             D360RotationDownloader(client),
             DirectVideoDownloader(client),
         ),
