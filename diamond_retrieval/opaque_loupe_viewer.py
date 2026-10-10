@@ -43,7 +43,7 @@ class PinnedOpaqueLoupeViewerResolver:
             and any(
                 step.source == "reference_media_source"
                 and step.locator == R03_VIEWER
-                and step.metadata.get("provider") == "loupe360"
+                and step.details.get("provider") == "loupe360"
                 for step in reference.provenance
             )
         )
