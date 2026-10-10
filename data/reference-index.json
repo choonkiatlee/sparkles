@@ -509,7 +509,7 @@
       "clarity": null,
       "colour": null,
       "commentary_excerpt": "0-0-0 commented that this candidate had potential (#23), without a more precise optical diagnosis recorded in the curated inventory. The numeric Loupe360 identifier 1498922544 is N",
-      "has_motion": false,
+      "has_motion": true,
       "id": "ps285166-r09",
       "identity_status": "unverified",
       "lab": null,
@@ -520,7 +520,7 @@
       "selection_id": "ref-ps285166-r09",
       "shape": "Asscher",
       "source_url": "https://www.pricescope.com/community/threads/asscher-evaluation-seeking-help.285166/",
-      "thumbnail_url": null,
+      "thumbnail_url": "https://github.com/choonkiatlee/sparkles/releases/download/sparkles-reference-ps285166-r09/asset-fdb786ddab7a89896650d6cd3bc91f63f731a9344780bdd167b7e5fc16c95734.jpg",
       "topics": [
         "potential-example",
         "identity-unresolved"
