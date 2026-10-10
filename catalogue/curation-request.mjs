@@ -21,13 +21,23 @@ export function curationChanges(published,draft,validIds) {
   if(changes.length>MAX_REQUEST_CHANGES) throw new Error("Save at most "+MAX_REQUEST_CHANGES+" changes per issue");
   return changes;
 }
-export function createCurationIssueUrl(published,draft,validIds) {
+// A snapshot digest prevents an old browser tab from silently overwriting
+// newer decisions, including an intervening true→false→true sequence.
+export async function curationDigest(published) {
+  const canonical=JSON.stringify(Object.keys(published.diamonds).sort().map(id=>[
+    id,published.diamonds[id].starred===true,published.diamonds[id].archived===true
+  ]));
+  const raw=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(canonical));
+  return [...new Uint8Array(raw)].map(n=>n.toString(16).padStart(2,"0")).join("");
+}
+export async function createCurationIssueUrl(published,draft,validIds) {
   if(draftCount(draft)===0) throw new Error("No unsaved changes");
   const changes=curationChanges(published,draft,validIds);
+  const baseline_sha256=await curationDigest(published);
   const issue=new URL("https://github.com/choonkiatlee/sparkles/issues/new");
   issue.searchParams.set("title",CURATION_REQUEST_TITLE);
   issue.searchParams.set("body",CURATION_REQUEST_MARKER+"\n"+JSON.stringify({
-    schema:CURATION_REQUEST_SCHEMA,changes
+    schema:CURATION_REQUEST_SCHEMA,baseline_sha256,changes
   })+"\n");
   return issue.href;
 }
