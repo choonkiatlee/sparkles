@@ -143,7 +143,12 @@ def _blob(api: GitHubAPI, sha: str):
     if blob.get("encoding") != "base64":
         raise InvalidCurationRequest("Unsupported stored blob encoding")
     try:
-        return json.loads(base64.b64decode(blob["content"], validate=True))
+        # GitHub Git Blob API line-wraps Base64 content (typically at 76 chars).
+        # Remove only transport line breaks, then keep strict alphabet checks.
+        encoded = blob["content"]
+        if not isinstance(encoded, str):
+            raise InvalidCurationRequest("Invalid stored blob content")
+        return json.loads(base64.b64decode("".join(encoded.splitlines()), validate=True))
     except (ValueError, TypeError, KeyError) as exc:
         raise InvalidCurationRequest("Invalid stored JSON") from exc
 
