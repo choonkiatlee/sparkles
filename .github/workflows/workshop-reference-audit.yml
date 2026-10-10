@@ -1,0 +1,43 @@
+name: Workshop reference source audit
+
+on:
+  pull_request:
+    paths:
+      - "diamond_retrieval/motion_sources.py"
+      - "tools/audit_workshop_references.py"
+      - "tests/test_workshop_reference_audit.py"
+      - ".github/workflows/workshop-reference-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bounded-workshop-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Sparkles
+        run: python -m pip install -e .
+      - name: Verify Workshop frame contract and fail-closed diagnostics
+        run: |
+          python -m unittest tests.test_workshop_reference_audit -v
+          python -m unittest tests.test_diamond_retrieval_motion -v
+          python -m unittest tests.test_reference_media_lookup -v
+          python -m diamond_catalogue.references --check
+      - name: Bounded read-only audit of the two exact archived source IDs
+        run: |
+          python tools/audit_workshop_references.py \
+            --report "$RUNNER_TEMP/workshop-221-source-audit.json"
+      - name: Preserve provenance-only audit summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: workshop-r08-r11-source-audit
+          path: ${{ runner.temp }}/workshop-221-source-audit.json
+          if-no-files-found: warn
+          retention-days: 30
