@@ -43,6 +43,33 @@ jobs:
           matches = [x for x in result.rotations
                      if x.metadata.get("source_transport") ==
                      "r02_exact_browser_sha_pinned_indexed_proxy_jpeg"]
+          if not matches:
+              # Diagnostic is solely shape and source identity, never tokenized URLs.
+              import json
+              from urllib.parse import urlsplit
+              from diamond_retrieval.http import UrllibHttpClient
+              from diamond_retrieval.resolvers import Loupe360CertificateResolver
+              resolver = Loupe360CertificateResolver()
+              req = json.dumps({"query": resolver._query,
+                                "variables": {"cert": "LG634479985"}}).encode()
+              response = UrllibHttpClient().post(
+                  resolver.endpoint, timeout=20, content=req,
+                  headers={"Accept": "application/json", "Content-Type": "application/json"})
+              record = (json.loads(response.content).get("data") or {}).get("certificate_by_cert_number") or {}
+              v = record.get("v360") or {}
+              wrapped = v.get("url") or ""
+              try:
+                  decoded = resolver._unwrap_v360(wrapped)
+              except ValueError:
+                  decoded = ""
+              p = urlsplit(wrapped)
+              print("R02 provider shape:", {
+                  "cert_matches": record.get("certNumber") == "LG634479985",
+                  "lab": record.get("lab"), "v360_host": p.hostname,
+                  "source_exact": decoded == "https://mediassests.s3.amazonaws.com/V360/Vision360.html",
+                  "count_type": type(v.get("frame_count")).__name__,
+                  "count": v.get("frame_count"), "top": v.get("top_index"),
+              })
           assert len(matches) == 1, "no unique pinned R02 rotation"
           rotation = matches[0]
           assert rotation.metadata.get("supplier") == "loupe360-pixorac-proxy"
