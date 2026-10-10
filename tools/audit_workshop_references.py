@@ -10,7 +10,10 @@ import json
 from urllib.parse import urlsplit
 
 from diamond_retrieval.http import UrllibHttpClient
-from diamond_retrieval.models import ROTATION, EvidenceReference
+from diamond_retrieval.models import (
+    ROTATION, DiamondMetadata, EvidenceReference, ListingRecord,
+)
+from diamond_retrieval.resolvers import Loupe360CertificateResolver
 from diamond_retrieval.motion_sources import (
     WorkshopRotationDownloader,
     _bootstrap_contract,
@@ -22,6 +25,7 @@ SOURCES = {
     "ps285166-r11": "https://workshop.360view.link/360viewer/360view.html?d=2905248-YDC-6456",
 }
 ALLOWED_MEDIA_HOST = "data1.360view.link"
+CERTIFICATES = {"ps285166-r08": "LG657468099", "ps285166-r11": "LG636432256"}
 HISTORICAL_CONTROL = "https://workshop.360view.link/view/2612250-YK-808"
 
 
@@ -72,6 +76,29 @@ def audit(client, reference_id, viewer):
     return rows
 
 
+
+def audit_exact_certificate(client, reference_id, report):
+    """Use only the existing exact-report resolver, without supplier HTML."""
+    listing = ListingRecord(
+        url="reference:" + reference_id,
+        metadata=DiamondMetadata(lab="IGI", report_number=report),
+    )
+    reference = EvidenceReference(
+        identifier=reference_id + ":loupe-report", kind=ROTATION,
+        retrieval_key="loupe360-report:" + report,
+        locator="loupe360-report:" + report,
+        metadata={"resolver": "loupe360_certificate", "lab": "IGI",
+                  "report_number": report},
+    )
+    candidates = Loupe360CertificateResolver(
+        client, include_image=False, timeout=14,
+    ).resolve(listing, reference)
+    return [
+        {"kind": str(r.kind), "host": urlsplit(r.locator or "").hostname,
+         "source": r.locator}
+        for r in candidates if r.locator and r.locator.startswith("https://")
+    ]
+
 def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("--validate-motion", action="store_true",
@@ -83,6 +110,12 @@ def main(argv=None):
         rows = audit(client, name, viewer)
         for row in rows:
             print("BOOTSTRAP", json.dumps(row, sort_keys=True), flush=True)
+        if name in CERTIFICATES:
+            try:
+                found = audit_exact_certificate(client, name, CERTIFICATES[name])
+                print("EXACT_REPORT", json.dumps({"reference": name, "sources": found}, sort_keys=True), flush=True)
+            except (OSError, RuntimeError, ValueError, TimeoutError) as exc:
+                print("EXACT_REPORT", json.dumps({"reference": name, "error": type(exc).__name__}, sort_keys=True), flush=True)
         if (args.validate_motion and rows and
             rows[0].get("valid_progressive_contract") is True):
             ref = EvidenceReference(
