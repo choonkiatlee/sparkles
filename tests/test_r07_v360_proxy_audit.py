@@ -3,7 +3,7 @@ import base64
 import json
 import unittest
 
-from diamond_retrieval.models import HttpResponse
+from diamond_retrieval.protocols import HttpResponse
 from tools.audit_r07_v360_proxy import REF, REPORT, VIEWER, probe, verify_manifest
 
 ENDPOINT = "https://g.nivoda.com/graphql-public-loupe360"
@@ -64,7 +64,7 @@ class R07ExactSourceTests(unittest.TestCase):
                 r = probe(http)
                 self.assertEqual(r["outcome"], expected)
                 self.assertEqual(len(http.calls), 1)
-                self.assertNotIn("proxy_root_sha256", r if expected == "different_viewer_not_authorized" else {})
+                self.assertNotIn("proxy_root_sha256", r)
 
     def test_exact_viewer_does_not_claim_motion_when_first_frame_missing(self):
         http = FakeHTTP()
