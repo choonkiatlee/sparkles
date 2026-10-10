@@ -52,3 +52,31 @@ An external agent needs only repository write/PR capability and this small contr
 - A reference may legitimately have no report, no price, no local still and no 360. Never imply that a remote Loupe360/V360 URL has been successfully downloaded, and don't infer cut quality scores from the discussion.
 
 See #194 for the original source inventory, #195 for this PR, #196/#197 for enrichment, #198 for the single global comparison basket and #199 for Learning Corner UI.
+
+## Enrich accepted references after curation (#197)
+
+The repository ships a separate **manual** GitHub Actions workflow,
+[`learning-reference-enrich`](../../.github/workflows/learning-reference-enrich.yml).
+Select a reference ID already committed on `master`; the workflow reads the
+accepted JSON from the trusted branch (never from an arbitrary PR or issue).
+Use `mode: metadata` to regenerate/check the static index without network
+media retrieval (default), `media` for an explicit opt-in to image/video and
+rotation retrieval, or `all` for the same media plus an optional IGI PDF.
+
+Standalone, fully validated evidence goes into a stable
+`sparkles-reference-<id>` GitHub Release; verified linked references reuse
+the existing certified stone's published evidence instead of duplicating assets.
+Every successful asset is checked for original bytes, SHA-256, size, and a public
+Release URL before an atomic update to `data/references/<id>.json` and
+`data/reference-index.json`. Repeated runs preserve commentary, stable IDs,
+original curator-provided external links and previously verified media.
+A failed or unsupported source is recorded in the optional
+`enrichment_attempts[]` with its status/locator, not falsely promoted to
+`evidence[]`. A partial retrieval never removes earlier successful media.
+The existing Pages workflow is explicitly invoked after publication because
+commits made using `GITHUB_TOKEN` do not reliably trigger the push workflow.
+
+The existing media/viewer support rules still apply: an external
+`v360.diamonds` page is not interchangeable with `v360.in`. Only complete,
+verified 256-frame progressive rotations can be persisted as playable motion.
+There is no automatic media crawling, supplier HTML parsing or LLM in Actions.
