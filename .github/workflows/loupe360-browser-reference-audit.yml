@@ -1,0 +1,35 @@
+name: Read-only Loupe360 reference browser audit
+
+on:
+  pull_request:
+    paths:
+      - "tools/audit_loupe360_browser_references.py"
+      - ".github/workflows/loupe360-browser-reference-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install read-only browser audit dependencies
+        run: python -m pip install -e . selenium
+      - name: Trace exact R08 and R11 public Loupe360 viewer requests
+        run: |
+          python tools/audit_loupe360_browser_references.py \
+            --out "$RUNNER_TEMP/loupe360-r08-r11-browser.json"
+      - name: Preserve sanitized browser and source contract findings
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: loupe360-r08-r11-browser-audit
+          path: ${{ runner.temp }}/loupe360-r08-r11-browser.json
+          if-no-files-found: warn
+          retention-days: 30
