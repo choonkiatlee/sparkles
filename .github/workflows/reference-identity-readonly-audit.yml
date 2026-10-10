@@ -38,3 +38,8 @@ jobs:
         timeout-minutes: 5
         continue-on-error: true
         run: python tools/reference_identity_audit.py --probe
+
+      - name: Check four public FilesOnSky bootstrap patterns (no frame download)
+        timeout-minutes: 5
+        continue-on-error: true
+        run: python tools/reference_identity_audit.py --bootstrap
