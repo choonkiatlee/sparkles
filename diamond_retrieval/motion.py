@@ -138,6 +138,18 @@ class ProgressiveRotationProcessor:
         scramble = bundle.get("scramble")
         if not isinstance(scramble, list):
             raise InvalidPayloadError("progressive rotation bundle is missing scramble levels")
+        ordering_mode = bundle.get("ordering_mode", "scrambled")
+        if ordering_mode == "vendor_canonical_no_scramble":
+            if (bundle.get("source") != "d360-legacy-canonical"
+                    or scramble != [list(range(n)) for n in PACK_COUNTS]):
+                raise InvalidPayloadError(
+                    "canonical no-scramble ordering requires exact audited source mapping"
+                )
+            ordering_label = "vendor default canonical progressive order (no scramble)"
+        elif ordering_mode == "scrambled":
+            ordering_label = "scramble inverse permutation + progressive odd-position interleave"
+        else:
+            raise InvalidPayloadError("unsupported progressive ordering mode")
         try:
             validate_scramble(scramble)
             targets = ordered_positions(scramble)
@@ -223,7 +235,7 @@ class ProgressiveRotationProcessor:
                 source,
                 viewer_url if isinstance(viewer_url, str) else raw.reference.locator,
                 {
-                    "ordering": "scramble inverse permutation + progressive odd-position interleave",
+                    "ordering": ordering_label,
                     "frame_count": FRAME_COUNT,
                 },
             ),
@@ -236,7 +248,7 @@ class ProgressiveRotationProcessor:
                 "dimensions": expected_dimensions or frames[0].dimensions,
                 "sequence_complete": True,
                 "physical_angle_calibrated": False,
-                "ordering": "scramble inverse permutation + progressive odd-position interleave",
+                "ordering": ordering_label,
             }
         )
         return (
