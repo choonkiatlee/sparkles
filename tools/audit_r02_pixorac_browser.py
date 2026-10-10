@@ -92,7 +92,7 @@ def summarize_browser(records: list[dict]) -> dict:
 
 
 
-_INDEXED = re.compile(r"^/([A-Za-z0-9_-]{20,1024}={0,2})(?:/([A-Za-z0-9_-]{1,24}))?/([0-9]{1,3})\.(jpg|webp)$")
+_INDEXED = re.compile(r"^/([A-Za-z0-9_-]{20,1024}={0,2})(?:/([A-Za-z0-9._~+=:-]{1,24}))?/([0-9]{1,3})\.(jpg|webp)$")
 
 
 def browser_cache_candidate(records: list[dict], lookup: dict) -> tuple[str | None, int | None, dict]:
