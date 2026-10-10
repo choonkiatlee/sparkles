@@ -372,7 +372,7 @@
       "clarity": null,
       "colour": "F",
       "commentary_excerpt": "0-0-0 presented this as a positive cut example (#14) and later contrasted it with the 2.52ct E candidate (#17). The apparent tint was considered potentially attributable to video l",
-      "has_motion": false,
+      "has_motion": true,
       "id": "ps285166-r03",
       "identity_status": "unverified",
       "lab": null,
@@ -383,7 +383,7 @@
       "selection_id": "ref-ps285166-r03",
       "shape": "Asscher",
       "source_url": "https://www.pricescope.com/community/threads/asscher-evaluation-seeking-help.285166/",
-      "thumbnail_url": null,
+      "thumbnail_url": "https://github.com/choonkiatlee/sparkles/releases/download/sparkles-reference-ps285166-r03/asset-07aa13b48d1374276e24822e5efac962de6d8ffdc572287d7f2a3c39f7fc527e.jpg",
       "topics": [
         "positive-example",
         "contrast",
