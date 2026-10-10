@@ -14,7 +14,7 @@ permissions:
 jobs:
   audit:
     runs-on: ubuntu-latest
-    timeout-minutes: 7
+    timeout-minutes: 13
     steps:
       - name: Checkout reviewed source (no persisted credentials)
         uses: actions/checkout@v4
@@ -32,6 +32,31 @@ jobs:
         run: |
           python -m tools.audit_reference_r01_source \
             --out "$RUNNER_TEMP/r01-source-audit.json"
+      - name: Validate 256 exact-report proxy source frames in-memory (no publishing)
+        timeout-minutes: 8
+        env:
+          PYTHONPATH: tools
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          from audit_loupe360_frame_cache import audit
+          result = audit("LG566392177")
+          report = {
+              "reference_id": "ps285166-r01",
+              "report_candidate": "LG566392177",
+              "source_identity_confirmed_for_r01": False,
+              "proxy_source_bytes_only": True,
+              "media_published": False,
+              **result,
+          }
+          output = Path(os.environ["RUNNER_TEMP"]) / "r01-frame-audit.json"
+          output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\\n")
+          # Log concise evidence, not hundreds of individual original image hashes.
+          print(json.dumps({k: v for k, v in report.items() if k not in {"format_samples"}},
+                           indent=2, sort_keys=True))
+          PY
       - name: Keep sanitized bounded findings (no source media)
         if: always()
         uses: actions/upload-artifact@v4
