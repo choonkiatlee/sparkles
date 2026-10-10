@@ -196,6 +196,58 @@ def audit_r23(http) -> list[dict]:
 
     preflight = classify_d360_preflight(replies)
     outputs.append({"reference": R23_ID, "source": "contract", **preflight})
+
+    # Read structural keys (never values) for the known D360 metadata and
+    # bootstrap; missing scramble may be an older/alternative source format.
+    for filename in ("metadata.json", "0.json"):
+        response = replies.get(filename)
+        if response is not None and response.status_code == 200:
+            try:
+                obj = json.loads(response.content)
+            except (ValueError, UnicodeDecodeError):
+                continue
+            outputs.append({
+                "reference": R23_ID,
+                "source": filename + ":structure",
+                "json_type": type(obj).__name__,
+                "keys": sorted(
+                    k for k in obj if isinstance(k, str)
+                    and len(k) <= 40 and k.isascii()
+                    and all(ch.isalnum() or ch in "_-" for ch in k)
+                )[:35] if isinstance(obj, dict) else [],
+                "field_types": {
+                    k: type(obj[k]).__name__
+                    for k in ("width", "height", "scramble", "image", "frames", "version")
+                    if isinstance(obj, dict) and k in obj
+                },
+            })
+    if preflight.get("preflight") == "missing_scramble":
+        # Probe the two established, same-item frame pack names only. This
+        # confirms whether the underlying source frames still exist, but does
+        # NOT assert a trustworthy ordered rotation without a scramble map.
+        for n in (1, 2):
+            path = f"{n}.json"
+            url = _safe_source_url(root + "/" + path)
+            assert urlsplit(url).hostname == "media.d360.us"
+            try:
+                response = http.get(url, timeout=15)
+                item = {"reference": R23_ID, "source": path,
+                        **response_shape(response)}
+                if response.status_code == 200:
+                    try:
+                        batch = json.loads(response.content)
+                        item["json_type"] = type(batch).__name__
+                        item["frame_strings"] = (
+                            len(batch) if isinstance(batch, list)
+                            and all(isinstance(x, str) for x in batch) else None
+                        )
+                    except (ValueError, UnicodeDecodeError):
+                        item["json_type"] = "invalid_json"
+                outputs.append(item)
+            except Exception as exc:
+                outputs.append({"reference": R23_ID, "source": path,
+                                "state": "transport_failure",
+                                "error_class": type(exc).__name__})
     if preflight.get("preflight") != "valid_original_bootstrap":
         return outputs
 
