@@ -8,6 +8,8 @@ on:
       - "tests/test_diamond_catalogue*.py"
       - "tests/test_reference_publication.py"
       - "tests/test_reference_batch.py"
+      - "tests/test_reference_archive_publish.py"
+      - ".github/workflows/publish-learning-archived-media.yml"
       - ".github/workflows/learning-reference-batch-request.yml"
       - "data/reference.schema.json"
       - "data/references/**"
@@ -49,5 +51,6 @@ jobs:
           python -m unittest tests.test_learning_references -v
           python -m unittest tests.test_reference_publication -v
           python -m unittest tests.test_reference_batch -v
+          python -m unittest tests.test_reference_archive_publish -v
           python -m unittest tests.test_catalogue_pages_site -v
           python -m diamond_catalogue.references --check
