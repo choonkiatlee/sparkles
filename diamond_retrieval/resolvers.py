@@ -10,6 +10,7 @@ from .protocols import HttpClient
 from .models import (
     CERTIFICATE,
     ROTATION,
+    STILL,
     VIDEO,
     EvidenceReference,
     ListingRecord,
@@ -95,9 +96,11 @@ class Loupe360CertificateResolver:
         http_client: HttpClient | None = None,
         *,
         timeout: float = 20.0,
+        include_image: bool = False,
     ) -> None:
         self.http_client = http_client
         self.timeout = timeout
+        self.include_image = include_image
 
     def supports(self, reference: EvidenceReference) -> bool:
         if reference.kind not in {ROTATION, VIDEO}:
@@ -337,6 +340,31 @@ class Loupe360CertificateResolver:
                     metadata=video_metadata,
                 )
             )
+
+        # Reference-only enrichment opts in to the returned still; regular
+        # retailer ingestion retains its existing candidate set by default.
+        image_url = record.get("image")
+        if self.include_image and isinstance(image_url, str):
+            image_parts = urlsplit(image_url)
+            if (image_parts.scheme == "https" and image_parts.hostname
+                    and image_parts.username is None and image_parts.password is None
+                    and image_parts.port in (None, 443)):
+                references.append(
+                    EvidenceReference(
+                        identifier=f"{reference.identifier}:supplier-still",
+                        kind=STILL,
+                        retrieval_key=image_url,
+                        locator=image_url,
+                        provenance=(
+                            ProvenanceStep(
+                                "loupe360_exact_certificate",
+                                self.endpoint,
+                                {"report_number": report, "certificate_id": record.get("id")},
+                            ),
+                        ),
+                        metadata={**metadata, "loupe360_image_url": image_url},
+                    )
+                )
 
         if references:
             return tuple(references)
