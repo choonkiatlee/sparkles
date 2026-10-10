@@ -9,9 +9,9 @@
   "evidence": [],
   "id": "ps285166-r01",
   "identity": {
-    "lab": null,
-    "report_number": null,
-    "status": "unverified"
+    "lab": "IGI",
+    "report_number": "LG566392177",
+    "status": "reported"
   },
   "label": "1.97ct D VS1 - selected positive example",
   "linked_diamond_id": null,
@@ -25,6 +25,7 @@
     },
     {
       "kind": "listing",
+      "note": "Identity assumption accepted by the owner on 2026-10-10 for media retrieval: DreamStone SKU 566392177 matches the Loupe/Nivoda IGI LG566392177 report lookup and Gem360 item d=566392177. The IGI PDF/4Cs were not independently verified; this is reported, not certified.",
       "url": "https://www.dreamstone.com/loose-diamonds/item/Asscher-shape-1.97-carat-D-color-VS1-clarity-DreamStone%2BIdeal-cut-566392177_4H566392177"
     },
     {
