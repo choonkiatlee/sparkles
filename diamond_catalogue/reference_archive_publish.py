@@ -116,7 +116,7 @@ def _rotation_evidence(reference_id: str, media: dict, source_url: str,
                 raise CatalogueError("Archived original frame dimensions mismatch")
             data = _validate_bytes(_checked_relative(out, row["path"]),
                                    row["sha256"], row["bytes"])
-            if not data.startswith(b"\\xff\\xd8\\xff"):
+            if not data.startswith(bytes.fromhex("ffd8ff")):
                 raise CatalogueError("Archived rotation frame is not original JPEG")
             frames.append(RotationFrame(
                 source_index=row["source_index"], payload=data,
