@@ -325,7 +325,7 @@
       "clarity": "VS1",
       "colour": "D",
       "commentary_excerpt": "DreamStone 566392177 / 4H566392177. 0-0-0 recommended it (#17); Ibrakeforpossums strongly favoured it (#40), and lovedogs endorsed it (#42). The buyer purchased it (#43), later des",
-      "has_motion": false,
+      "has_motion": true,
       "id": "ps285166-r01",
       "identity_status": "reported",
       "lab": "IGI",
@@ -336,7 +336,7 @@
       "selection_id": "ref-ps285166-r01",
       "shape": "Asscher",
       "source_url": "https://www.pricescope.com/community/threads/asscher-evaluation-seeking-help.285166/",
-      "thumbnail_url": null,
+      "thumbnail_url": "https://github.com/choonkiatlee/sparkles/releases/download/sparkles-reference-ps285166-r01/asset-043e8051aaa7567470008f9b2bbdaef78aabb2e1ef35cabbbec8e1bbcc790591.jpg",
       "topics": [
         "liveliness",
         "face-up-pattern",
