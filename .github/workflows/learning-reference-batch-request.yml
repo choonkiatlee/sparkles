@@ -1,0 +1,60 @@
+name: learning-reference-batch-request
+
+on:
+  issues:
+    types: [opened]
+
+permissions: {}
+
+jobs:
+  dispatch-reviewed-reference-media:
+    # Mirrors the existing owner-only diamond ingestion issue bridge.
+    # The issue is only a trigger: all IDs/URLs are read from master.
+    if: >-
+      github.repository == 'choonkiatlee/sparkles' &&
+      github.event.issue.user.login == 'choonkiatlee' &&
+      github.event.issue.title == 'Enrich learning reference 360s'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: write
+      issues: write
+    steps:
+      - name: Checkout reviewed reference inventory from master
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install source validator
+        run: python -m pip install -e .
+
+      - name: Dispatch per-reference opt-in media workflows
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python -m diamond_catalogue.reference_batch > "$RUNNER_TEMP/reference-targets"
+          count=0
+          while IFS= read -r reference_id; do
+            test -n "$reference_id" || continue
+            echo "Dispatching accepted reference: $reference_id"
+            gh workflow run learning-reference-enrich.yml \
+              --repo "$GITHUB_REPOSITORY" --ref master \
+              --field reference_id="$reference_id" --field mode=media
+            count=$((count+1))
+          done < "$RUNNER_TEMP/reference-targets"
+          echo "Dispatched $count accepted certificate/direct-360 reference lookups."
+
+      - name: Link to media enrichment runs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body \
+            "Requested opt-in 360 enrichment for the accepted, recoverable-candidate references on master. Review the [learning-reference-enrich runs](https://github.com/choonkiatlee/sparkles/actions/workflows/learning-reference-enrich.yml) for per-stone results. Unsupported opaque viewer links were not dispatched."
