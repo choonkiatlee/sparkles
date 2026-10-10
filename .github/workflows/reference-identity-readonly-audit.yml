@@ -1,0 +1,40 @@
+name: reference-identity-readonly-audit
+
+on:
+  pull_request:
+    paths:
+      - "tools/reference_identity_audit.py"
+      - "tests/test_reference_identity_audit.py"
+      - ".github/workflows/reference-identity-readonly-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout reviewed diagnostic
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install local Sparkles package
+        run: python -m pip install -e .
+      - name: Network-free source audit contract tests
+        run: python -m unittest tests.test_reference_identity_audit -v
+      - name: Audit only R05/R07 numeric and LG-prefixed source reports
+        run: python tools/reference_identity_audit.py
+      - name: Read-only media dry-run (no stored bytes, no publication)
+        timeout-minutes: 16
+        continue-on-error: true
+        run: python tools/reference_identity_audit.py --media
+
+      - name: Source-format probe (fixed hosts, no media publication)
+        timeout-minutes: 5
+        continue-on-error: true
+        run: python tools/reference_identity_audit.py --probe
