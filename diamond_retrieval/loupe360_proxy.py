@@ -18,6 +18,7 @@ import hashlib
 import json
 import re
 import os
+from pathlib import Path
 from urllib.parse import urlsplit
 
 from .errors import InvalidPayloadError, MissingEvidenceError
@@ -55,7 +56,15 @@ def validated_proxy_root(reference: EvidenceReference) -> str:
                     for step in reference.provenance)
         ):
             raise ValueError("R02 proxy source lacks the exact report/source provenance")
-        return validate_root(os.environ.get("R02_PIXORAC_ROOT"))
+        runner_temp = os.environ.get("RUNNER_TEMP")
+        if not runner_temp:
+            raise ValueError("R02 cache requires the trusted runner temporary directory")
+        cache_file = Path(runner_temp) / "r02-pixorac-root"
+        try:
+            root = cache_file.read_text(encoding="utf-8").strip()
+        except OSError as exc:
+            raise ValueError("R02 audited browser source file is unavailable") from exc
+        return validate_root(root)
 
     unverified_viewer = reference.metadata.get("loupe360_proxy_exact_viewer") is True
     pin = PINNED_VIEWERS.get(reference.metadata.get("reference_id")) if unverified_viewer else None
