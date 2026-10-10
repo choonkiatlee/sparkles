@@ -124,7 +124,7 @@ class R02PixoracAuditTests(unittest.TestCase):
     @patch("tools.audit_r02_pixorac.UrllibHttpClient")
     def test_verified_direct_video_requires_real_wire_magic(self, http):
         url = "https://media.example.org/real-video.mp4"
-        payload = b"\\x00\\x00\\x08\\x00ftyp" + b"x" * 1500
+        payload = b"\x00\x00\x08\x00ftyp" + b"x" * 1500
         http.return_value.get.return_value = SimpleNamespace(
             status_code=200, url=url, content=payload)
         result = probe_exact_video(url)
