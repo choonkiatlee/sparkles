@@ -14,7 +14,7 @@ permissions:
 jobs:
   audit:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 25
     steps:
       - name: Checkout reviewed diagnostic
         uses: actions/checkout@v4
@@ -29,3 +29,7 @@ jobs:
         run: python -m unittest tests.test_reference_identity_audit -v
       - name: Audit only R05/R07 numeric and LG-prefixed source reports
         run: python tools/reference_identity_audit.py
+      - name: Read-only media dry-run (no stored bytes, no publication)
+        timeout-minutes: 16
+        continue-on-error: true
+        run: python tools/reference_identity_audit.py --media
