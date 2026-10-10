@@ -26,6 +26,16 @@ class BrowserAuditTests(unittest.TestCase):
         self.assertNotIn(token, json.dumps(result))
         self.assertNotIn("path", result)
 
+    def test_standalone_pixorac_still_not_misidentified_as_rotation(self):
+        result = classify_resource({
+            "resource": {"host": "assets-images.pixorac.com",
+                         "path": "/dc303aa4-b7b1-4bb0-a22b-a009f4ccf875.jpg"},
+            "status": 200,
+        })
+        self.assertEqual(result["kind"], "standalone_image")
+        self.assertEqual(result["path_shape"]["depth"], 1)
+        self.assertFalse(result["path_shape"]["last_numeric_image"])
+
     def test_compacts_distinct_routes_without_leaking_request_paths(self):
         data = summarize_browser([
             {
