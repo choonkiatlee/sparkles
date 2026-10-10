@@ -104,3 +104,20 @@ test("reference manifest loader caches success and retries transient failures",a
   await assert.rejects(retry(row),/offline/);
   await assert.rejects(retry(row),/offline/);
 });
+
+test("archived Kashi originals remain playable independent MP4s, not 360 frames",()=>{
+  const row=ref("ps281114-r20");
+  const example=structuredClone(doc(row));
+  const original="https://github.com/choonkiatlee/sparkles/releases/download/sparkles-reference-ps281114-r20/original.mp4";
+  example.evidence=[{
+    kind:"video",status:"success",media_type:"video/mp4",
+    payload_asset:{media_type:"video/mp4",storage:{url:original}},
+  }];
+  const result=projectReferenceComparison(row,example);
+  assert.equal(result.rotation.status,"video_only");
+  assert.equal(result.video.url,original);
+  assert.equal(result.video.type,"video/mp4");
+  assert.match(result.values.motion,/Video available/);
+  example.evidence[0].status="missing";
+  assert.equal(projectReferenceComparison(row,example).video,null);
+});
