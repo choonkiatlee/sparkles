@@ -17,6 +17,7 @@ import base64
 import hashlib
 import json
 import re
+import os
 from urllib.parse import urlsplit
 
 from .errors import InvalidPayloadError, MissingEvidenceError
@@ -37,6 +38,25 @@ _TOKEN = re.compile(r"/[A-Za-z0-9_-]{20,1024}={0,2}\Z")
 def validated_proxy_root(reference: EvidenceReference) -> str:
     """Accept an exact certificate or one of two individually source-pinned viewers."""
     from .opaque_loupe_viewer import PINNED_VIEWERS
+    if reference.metadata.get("r02_browser_observed_cache") is True:
+        from .r02_browser_cache import CACHE_REF, REFERENCE_ID, REPORT, validate_root
+        if not (
+            reference.kind == ROTATION
+            and reference.identifier == "ps285166-r02:loupe-report:r02-browser-cache"
+            and reference.locator == CACHE_REF
+            and reference.retrieval_key == CACHE_REF
+            and reference.metadata.get("reference_id") == REFERENCE_ID
+            and reference.metadata.get("lab") == "IGI"
+            and reference.metadata.get("report_number") == REPORT
+            and reference.metadata.get("supplier_frame_count") == FRAME_COUNT
+            and reference.metadata.get("supplier_top_index") == 213
+            and any(step.source == "loupe360_exact_certificate"
+                    and step.locator == Loupe360CertificateResolver.endpoint
+                    for step in reference.provenance)
+        ):
+            raise ValueError("R02 proxy source lacks the exact report/source provenance")
+        return validate_root(os.environ.get("R02_PIXORAC_ROOT"))
+
     unverified_viewer = reference.metadata.get("loupe360_proxy_exact_viewer") is True
     pin = PINNED_VIEWERS.get(reference.metadata.get("reference_id")) if unverified_viewer else None
     if unverified_viewer:
@@ -120,6 +140,7 @@ class Loupe360ProxyRotationDownloader:
         count = reference.metadata["supplier_frame_count"]
         frames: list[str] = []
         hashes: set[str] = set()
+        hashes_by_index: list[str] = []
         dimensions: tuple[int, int] | None = None
         total = 0
         for index in range(count):
@@ -148,6 +169,7 @@ class Loupe360ProxyRotationDownloader:
                 raise InvalidPayloadError("Pixorac rotation frame dimensions changed")
             digest = hashlib.sha256(payload).hexdigest()
             hashes.add(digest)
+            hashes_by_index.append(digest)
             frames.append(base64.b64encode(payload).decode("ascii"))
 
         # Reject static placeholders masquerading as 256 images; do not assume
@@ -155,13 +177,31 @@ class Loupe360ProxyRotationDownloader:
         if len(hashes) < 240:
             raise InvalidPayloadError("Pixorac proxy frames do not show a complete varying rotation")
 
+        is_r02 = reference.metadata.get("r02_browser_observed_cache") is True
+        if is_r02:
+            # Original read-only R02 audit independently verified these 3
+            # ordered byte anchors, plus all 256 distinct 819x819 JPEGs.
+            anchors = {
+                0: "93bc22d267a879e68589a115fbebadf3bfa338503bf9b47ad4d8d5e86418ad1d",
+                213: "33b0d2848058db1c360fe212536a09e3dafd68b3857d150264b02b1f99455185",
+                255: "b2eb1257e78889824338e9ffd0ac164e001723b9ae1b0366d062303500b2673c",
+            }
+            if (len(hashes) != FRAME_COUNT or dimensions != (819, 819)
+                    or any(hashes_by_index[i] != digest for i, digest in anchors.items())):
+                raise InvalidPayloadError("R02 proxy JPEG source failed audited hash anchors")
+
+        # Do not persist the opaque browser-observed cache path in the public
+        # reference manifest, evidence payload, or Actions logs.
+        safe_root = reference.locator if is_r02 else root
         metadata = {
             **reference.metadata,
             "supplier": "loupe360-pixorac-proxy",
             "frame_count": count,
             "dimensions": dimensions,
-            "source_root": root,
-            "source_transport": ("pinned_unverified_viewer_indexed_proxy_jpeg"
+            "source_root": safe_root,
+            "source_transport": ("r02_exact_browser_sha_pinned_indexed_proxy_jpeg"
+                                 if is_r02 else
+                                 "pinned_unverified_viewer_indexed_proxy_jpeg"
                                  if reference.metadata.get("loupe360_proxy_exact_viewer") is True
                                  else "certificate_matched_indexed_proxy_jpeg"),
             "supplier_original_bytes_verified": False,
@@ -170,7 +210,7 @@ class Loupe360ProxyRotationDownloader:
         bundle = {
             "schema_version": "sparkles-indexed-proxy-rotation/1",
             "source": "loupe360-pixorac-proxy",
-            "source_root": root,
+            "source_root": safe_root,
             "frame_count": count,
             "dimensions": list(dimensions),
             "face_up_hint": (int(reference.metadata["supplier_top_index"])
