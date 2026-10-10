@@ -111,12 +111,13 @@ def discover_root() -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--github-env", type=Path, required=True)
+    parser.add_argument("--cache-path", type=Path, required=True)
     args = parser.parse_args()
     root = discover_root()
-    # GitHub env file belongs to this run; no URL or tokenized root in stdout.
-    with args.github_env.open("a", encoding="utf-8") as output:
-        output.write("R02_PIXORAC_ROOT=" + root + "\n")
+    # Only a local ephemeral file. GitHub Actions prints job environment
+    # variables in logs; never export this opaque path via GITHUB_ENV.
+    args.cache_path.write_text(root + "\n", encoding="utf-8")
+    args.cache_path.chmod(0o600)
     print("R02 exact public browser cache: verified SHA-256 " + EXPECTED_ROOT_SHA256)
     return 0
 
