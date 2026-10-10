@@ -345,10 +345,16 @@ class Loupe360CertificateResolver:
         # retailer ingestion retains its existing candidate set by default.
         image_url = record.get("image")
         if self.include_image and isinstance(image_url, str):
-            image_parts = urlsplit(image_url)
-            if (image_parts.scheme == "https" and image_parts.hostname
+            try:
+                image_parts = urlsplit(image_url)
+                image_valid = (
+                    image_parts.scheme == "https" and bool(image_parts.hostname)
                     and image_parts.username is None and image_parts.password is None
-                    and image_parts.port in (None, 443)):
+                    and image_parts.port in (None, 443)
+                )
+            except ValueError:
+                image_valid = False
+            if image_valid:
                 references.append(
                     EvidenceReference(
                         identifier=f"{reference.identifier}:supplier-still",
