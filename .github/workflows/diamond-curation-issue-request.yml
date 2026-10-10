@@ -33,7 +33,7 @@ jobs:
         id: apply
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: python tools/apply_diamond_curation_issue.py --event "$GITHUB_EVENT_PATH" --github-output "$GITHUB_OUTPUT"
+        run: python -m tools.apply_diamond_curation_issue --event "$GITHUB_EVENT_PATH" --github-output "$GITHUB_OUTPUT"
       - name: Confirm committed Git state on issue
         if: success()
         env:
