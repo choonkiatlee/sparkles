@@ -21,7 +21,7 @@ ALLOWED_HOSTS = frozenset({"imgur.com", "www.imgur.com", "i.imgur.com"})
 # Chrome CDP blocked patterns: media body GETs are denied before network fetch.
 # Include thumbnails/stills too so this audit cannot become a media downloader.
 BLOCKED_MEDIA_PATTERNS = (
-    "*.mp4*", "*.webm*", "*.m4v*", "*.mov*", "*.m3u8*", "*.mpd*",
+    "*://i.imgur.com/*", "*.mp4*", "*.webm*", "*.m4v*", "*.mov*", "*.m3u8*", "*.mpd*",
     "*.gif*", "*.jpg*", "*.jpeg*", "*.png*", "*.webp*", "*.avif*",
 )
 MEDIA_SUFFIX = re.compile(r"\.(mp4|webm|m4v|mov|m3u8|mpd|gif|jpg|jpeg|png|webp|avif)$", re.I)
