@@ -41,6 +41,8 @@ def classify_resource(item: dict) -> dict:
     path_shape = {
         "depth": len(pieces),
         "first_component_length": len(pieces[0]) if pieces else 0,
+        "middle_component_length": len(pieces[1]) if len(pieces) > 2 else 0,
+        "middle_component_numeric": bool(len(pieces) > 2 and pieces[1].isdigit()),
         "has_query": bool(raw.get("has_query")),
         "last_numeric_image": bool(re.fullmatch(r"[0-9]{1,3}\.(?:jpg|webp)", last)),
         "suffix": "webp" if last.endswith(".webp") else "jpg" if last.endswith(".jpg") else "other",
@@ -84,7 +86,7 @@ def summarize_browser(records: list[dict]) -> dict:
 
 
 
-_INDEXED = re.compile(r"^/([A-Za-z0-9_-]{20,1024}={0,2})/([0-9]{1,3})\.(jpg|webp)$")
+_INDEXED = re.compile(r"^/([A-Za-z0-9_-]{20,1024}={0,2})(?:/([A-Za-z0-9_-]{1,24}))?/([0-9]{1,3})\.(jpg|webp)$")
 
 
 def browser_cache_candidate(records: list[dict], lookup: dict) -> tuple[str | None, int | None, dict]:
@@ -105,7 +107,7 @@ def browser_cache_candidate(records: list[dict], lookup: dict) -> tuple[str | No
     if top < 0 or top >= 256:
         return None, None, {"outcome": "invalid_top_index"}
 
-    roots: dict[str, set[int]] = {}
+    roots: dict[tuple[str, str | None], set[int]] = {}
     pixorac_total = 0
     for record in records:
         if record.get("input_route") not in ("landing", "/video/500/500"):
@@ -120,26 +122,33 @@ def browser_cache_candidate(records: list[dict], lookup: dict) -> tuple[str | No
             match = _INDEXED.fullmatch(source.get("path") or "")
             if not match:
                 continue
-            index = int(match.group(2))
+            index = int(match.group(3))
             if index >= 256:
                 continue
-            root = "https://assets-images.pixorac.com/" + match.group(1)
-            roots.setdefault(root, set()).add(index)
+            # Both the token and optional media-size segment were observed
+            # verbatim in the trusted exact report's browser request. Neither
+            # is derived from a guessed stone ID or an inventory search.
+            key = (match.group(1), match.group(2))
+            roots.setdefault(key, set()).add(index)
     output = {"indexed_requests_observed": pixorac_total,
               "distinct_indexed_roots": len(roots)}
     if len(roots) != 1:
         return None, None, {**output, "outcome": "ambiguous_or_absent_observed_roots"}
-    root, indices = next(iter(roots.items()))
+    (token, media_variant), indices = next(iter(roots.items()))
+    base_root = "https://assets-images.pixorac.com/" + token
+    exact_root = base_root + ("/" + media_variant if media_variant else "")
     try:
         _, _, viewer_kind = proxy_source({
-            "url": root, "frame_count": 256, "top_index": top,
+            "url": base_root, "frame_count": 256, "top_index": top,
         })
     except (ValueError, TypeError):
         return None, None, {**output, "outcome": "observed_root_does_not_wrap_known_r02_source"}
-    return root, top, {
+    return exact_root, top, {
         **output, "outcome": "one_exact_browser_observed_source",
-        "proxy_root_sha256": hashlib.sha256(root.encode()).hexdigest(),
+        "proxy_root_sha256": hashlib.sha256(exact_root.encode()).hexdigest(),
         "observed_distinct_indices": len(indices),
+        "media_variant_present": media_variant is not None,
+        "top_index_observed": top in indices,
         "supplier_viewer_kind": viewer_kind,
         "top_index": top,
     }
