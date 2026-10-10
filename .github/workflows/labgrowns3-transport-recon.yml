@@ -71,11 +71,23 @@ jobs:
           const s=fs.readFileSync("/tmp/kv-lab.js","utf8");
           const anchor="var _0x3e0e=";
           const first=s.indexOf(anchor);
-          const end=s.indexOf("];",first);
+          if(first<0)throw Error("Static player array missing");
+          let end=-1,depth=0,quote="",escaped=false;
+          const begin=first+anchor.length;
+          for(let i=begin;i<s.length;i++){
+            const ch=s[i];
+            if(escaped){escaped=false;continue}
+            if(quote){if(ch==="\\\\")escaped=true;else if(ch===quote)quote="";continue}
+            if(ch==='"'||ch==="'"){quote=ch;continue}
+            if(ch==="[")depth++;
+            if(ch==="]"){depth--;if(depth===0){end=i;break}}
+          }
           console.log("LITERAL_OFFSETS",first,end,"bytes",end-first);
-          if(first<0||end<first||end-first>530000)throw Error("Literal constant table absent or unexpectedly large");
-          const literal=s.slice(first+anchor.length,end+1);
-          const arr=vm.runInNewContext("("+literal+")",Object.create(null),{timeout:100});
+          if(end<first||end-first>530000)throw Error("Literal array unclosed or unexpectedly large");
+          const literal=s.slice(begin,end+1);
+          let arr;
+          try {arr=vm.runInNewContext("("+literal+")",Object.create(null),{timeout:300})}
+          catch(err){console.log("ARRAY_ERROR",err.name,err.message);process.exit(1)}
           if(!Array.isArray(arr)||!arr.every(x=>typeof x==="string"))throw Error("Not a string table");
           console.log("CONST_TABLE_LENGTH",arr.length);
           for(const [from,to] of [[0,30],[135,155],[370,415]]){
