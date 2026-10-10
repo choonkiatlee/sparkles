@@ -67,7 +67,8 @@
       "items": {
         "type": "object"
       },
-      "type": "array"
+      "type": "array",
+      "description": "Only checked and published original-byte assets; success requires a valid GitHub Release storage locator and complete ordered motion."
     },
     "id": {
       "maxLength": 96,
@@ -192,6 +193,59 @@
       },
       "type": "array",
       "uniqueItems": true
+    },
+    "enrichment_attempts": {
+      "type": "array",
+      "default": [],
+      "maxItems": 3000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "reference_identifier": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 180
+          },
+          "kind": {
+            "enum": [
+              "certificate",
+              "still",
+              "rotation",
+              "video"
+            ]
+          },
+          "status": {
+            "enum": [
+              "success",
+              "unsupported",
+              "missing",
+              "download_failed",
+              "processing_failed",
+              "extraction_failed",
+              "invalid_payload",
+              "resolution_failed",
+              "resolution_limit",
+              "resolved",
+              "duplicate",
+              "not_requested"
+            ]
+          },
+          "locator": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 2048
+          }
+        },
+        "required": [
+          "reference_identifier",
+          "kind",
+          "status",
+          "locator"
+        ]
+      }
     }
   },
   "required": [
