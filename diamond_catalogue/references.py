@@ -197,10 +197,24 @@ def validate_reference(value: dict, *, expected_id: str | None = None,
         asset = record.get("payload_asset")
         frames = record.get("frames", [])
         if record["kind"] == "rotation":
-            if record["status"] != "success" or not isinstance(frames, list) or len(frames) != 256:
-                raise CatalogueError("Reference rotation must have a verified complete 256-frame sequence")
+            data = record.get("metadata") or {}
+            # Only R09's audited, source-declared 255-position Pixorac transport
+            # may differ from the established 256-frame catalogue contract.
+            native_r09_255 = (
+                identifier == "ps285166-r09"
+                and identity["status"] == "unverified"
+                and isinstance(data, dict)
+                and data.get("supplier") == "loupe360-pixorac-proxy"
+                and data.get("frame_count") == 255
+                and data.get("sequence_complete") is True
+                and data.get("ordering") == "proxy indexed source positions 0..254"
+            )
+            expected_count = 255 if native_r09_255 else 256
+            if (record["status"] != "success" or not isinstance(frames, list)
+                    or len(frames) != expected_count):
+                raise CatalogueError("Reference rotation has incomplete source-declared frame count")
             indices = [frame.get("source_index") for frame in frames if isinstance(frame, dict)]
-            if sorted(indices) != list(range(256)):
+            if sorted(indices) != list(range(expected_count)):
                 raise CatalogueError("Reference rotation has incomplete or unordered source frames")
             if asset is not None:
                 raise CatalogueError("Reference rotations may not pretend a bundle is playable motion")
