@@ -9,7 +9,7 @@ import shutil
 from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
-STATIC_PATHS = ("index.html", ".nojekyll", "catalogue", "data/catalog.json", "data/diamonds", "data/reference-index.json", "data/references", "evaluations", "resources")
+STATIC_PATHS = ("index.html", ".nojekyll", "catalogue", "learning", "data/catalog.json", "data/diamonds", "data/reference-index.json", "data/references", "evaluations", "resources")
 ID_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 
 class Links(HTMLParser):
@@ -57,7 +57,7 @@ def validate_site(directory: Path) -> None:
             raise ValueError("Reference index/manifest mismatch")
         if row["selection_id"] in seen:
             raise ValueError("Shared basket selection ID collision")
-    for rel in ("index.html", "catalogue/index.html"):
+    for rel in ("index.html", "catalogue/index.html", "learning/index.html"):
         doc = directory / rel
         parser = Links()
         parser.feed(doc.read_text(encoding="utf-8"))

@@ -1,0 +1,34 @@
+/* Dedicated learning browse page; shared basket and comparison inherit catalogue/styles.css. */
+.learning-intro{padding-bottom:18px}
+.lesson-note{display:grid;grid-template-columns:200px 1fr;gap:12px 20px;align-items:start;
+  background:var(--pale);border:1px solid var(--line);padding:16px 20px;border-radius:12px;margin-bottom:18px}
+.lesson-note strong{font-size:13px}.lesson-note p{margin:0;color:var(--muted);font-size:13px}
+.reference-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:18px 0 34px}
+.reference-card{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:20px;
+  display:flex;flex-direction:column;gap:12px;min-width:0}
+.reference-card.is-selected{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.reference-card .case-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:800;color:var(--accent)}
+.reference-card h3{font:normal 24px/1.2 Georgia,serif;letter-spacing:-.025em;margin:0}
+.reference-card .identity-note{font-size:12px;color:var(--muted);margin:0}
+.reference-illustration{min-height:115px;border-radius:9px;background:#edf0e9;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;color:var(--muted)}
+.reference-illustration .placeholder-gem{font-size:32px;line-height:1}
+.reference-illustration img{display:block;width:100%;max-height:220px;object-fit:contain}
+.reference-illustration small{font-size:11px}
+.reference-commentary{font-size:13px;line-height:1.6;margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.reference-card .topics{display:flex;gap:6px;flex-wrap:wrap}
+.topic-tag{display:inline-block;font-size:11px;background:var(--pale);color:var(--accent);padding:4px 9px;border-radius:16px}
+.reference-card .source-links{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:12px}
+.reference-card .media-state{font-size:11px;color:var(--muted);margin:0}
+.reference-card .card-actions{margin-top:auto;padding-top:10px;border-top:1px solid var(--line)}
+.reference-card .card-actions button{width:100%;font-size:13px;padding:9px 12px}
+.reference-card .card-actions button.is-active{background:var(--pale);color:var(--accent)}
+.reference-card .card-actions button.is-active:hover{background:#dce7db}
+.reference-card .load-error{font-size:12px;color:#8f3925;margin:0}
+.selection .subtle{margin-top:9px}
+.reference-grid .reference-card a{overflow-wrap:anywhere}
+@media(max-width:760px){
+  .reference-grid{grid-template-columns:1fr;gap:12px}
+  .lesson-note{grid-template-columns:1fr;padding:14px}
+  .reference-card{padding:16px}.reference-card h3{font-size:22px}
+}

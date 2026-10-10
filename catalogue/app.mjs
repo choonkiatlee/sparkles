@@ -3,10 +3,11 @@ import { MAX_SELECTION, MIN_COMPARISON, validateIndex, visibleRows,
   selectionSearch, toggleSelection } from "./core.mjs";
 
 import { createComparisonView } from "./comparison-view.mjs";
+import { validateReferenceIndex } from "./reference.mjs";
 
 const $ = id => document.getElementById(id);
 const controls = { search:$("search"), status:$("status-filter"), sort:$("sort") };
-const state = { rows:[], selected:[], comparing:false, ready:false };
+const state = { rows:[], referenceRows:[], allRows:[], selected:[], comparing:false, ready:false };
 const comparisonView = createComparisonView({container:$("comparison"),grid:$("comparison-grid"),fetcher:(...args)=>fetch(...args)});
 const node = (tag, className="", text=null) => {
   const n = document.createElement(tag);
@@ -121,15 +122,21 @@ function render() {
   $("selected-count").textContent = quantity === 0 ? "Select two to five diamonds." :
     quantity < MIN_COMPARISON ? "1 selected · choose at least one more." :
     quantity+" selected · ready to compare"+(quantity===MAX_SELECTION?" (maximum).":".");
-  $("selected-chips").replaceChildren(...state.selected.map(id => node("span","chip",id)));
+  $("selected-chips").replaceChildren(...state.selected.map(id => {
+    const row=state.allRows.find(row=>row.id===id);
+    return node("span","chip",row?.kind==="reference" ? row.label : id);
+  }));
   $("clear-selection").disabled = quantity===0;
   const compare = $("compare-button");
   compare.disabled = quantity < MIN_COMPARISON;
   compare.textContent = state.comparing ? "Hide overview" : "Compare "+quantity+" selected";
-  comparisonView.update(state.rows,state.selected,state.comparing);
+  const query=selectionSearch("",state.selected,state.comparing);
+  const learningLink=$("learning-link");
+  if (learningLink) learningLink.href="../learning/" + (query ? "?"+query : "");
+  comparisonView.update(state.allRows,state.selected,state.comparing);
 }
 function applyNavigationState() {
-  const parsed = selectionFromSearch(location.search,new Set(state.rows.map(r=>r.id)));
+  const parsed = selectionFromSearch(location.search,new Set(state.allRows.map(r=>r.id)));
   state.selected = parsed.selected; state.comparing = parsed.comparing;
   render();
 }
@@ -150,6 +157,16 @@ async function boot() {
     const response = await fetch("../data/catalog.json",{cache:"no-cache"});
     if (!response.ok) throw new Error("HTTP "+response.status);
     state.rows = validateIndex(await response.json());
+    // The personal catalogue remains usable if the optional learning index fails.
+    try {
+      const refs = await fetch("../data/reference-index.json",{cache:"no-cache"});
+      if (!refs.ok) throw new Error("HTTP "+refs.status);
+      state.referenceRows = validateReferenceIndex(await refs.json());
+    } catch(error) {
+      console.warn("Learning references unavailable", error);
+      state.referenceRows = [];
+    }
+    state.allRows = [...state.rows,...state.referenceRows];
     state.ready = true;
     for (const c of Object.values(controls)) c.disabled = false;
     applyNavigationState();

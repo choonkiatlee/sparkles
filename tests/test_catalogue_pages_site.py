@@ -12,6 +12,8 @@ class PagesCatalogueTests(unittest.TestCase):
             build(out)
             for path in (
                 "index.html", ".nojekyll", "catalogue/index.html",
+                "learning/index.html", "learning/app.mjs", "learning/styles.css",
+                "catalogue/reference.mjs",
                 "catalogue/core.mjs", "catalogue/app.mjs", "catalogue/styles.css",
                 "catalogue/compare.mjs", "catalogue/comparison-view.mjs",
                 "catalogue/rotation.mjs", "catalogue/rotation-canvas.mjs",
@@ -23,6 +25,7 @@ class PagesCatalogueTests(unittest.TestCase):
                 self.assertTrue((out / path).is_file(), path)
             home = (out / "index.html").read_text(encoding="utf-8")
             self.assertIn('href="catalogue/"', home)
+            self.assertIn('href="learning/"', home)
             self.assertIn('href="#diamonds"', home)
             index = json.loads((out / "data/catalog.json").read_text(encoding="utf-8"))
             by_id = {r["id"]: r for r in index["diamonds"]}
@@ -46,9 +49,28 @@ class PagesCatalogueTests(unittest.TestCase):
             r07 = json.loads((out / "data/references/ps285166-r07.json").read_text(encoding="utf-8"))
             self.assertIn("under-table steps", r07["commentary"])
 
+    def test_learning_corner_is_separate_but_reuses_basket_and_player(self):
+        with tempfile.TemporaryDirectory() as temp:
+            out = Path(temp) / "public"
+            build(out)
+            html = (out / "learning/index.html").read_text(encoding="utf-8")
+            app = (out / "learning/app.mjs").read_text(encoding="utf-8")
+            shared = (out / "catalogue/comparison-view.mjs").read_text(encoding="utf-8")
+            self.assertIn('href="../catalogue/styles.css"', html)
+            self.assertIn('id="references"', html)
+            self.assertIn('id="comparison-grid"', html)
+            self.assertIn("createComparisonView", app)
+            self.assertIn("selectionFromSearch", app)
+            self.assertIn("selectionSearch", app)
+            self.assertIn("toggleSelection", app)
+            self.assertIn("createRotationPlayer", shared)
+            self.assertIn("projectReferenceComparison", shared)
+            self.assertIn('id="learning-link"', (out / "catalogue/index.html").read_text(encoding="utf-8"))
+
     def test_frontend_uses_static_index_and_no_github_rest_discovery(self):
         app = (ROOT / "catalogue/app.mjs").read_text(encoding="utf-8")
         self.assertIn('fetch("../data/catalog.json"', app)
+        self.assertIn('fetch("../data/reference-index.json"', app)
         self.assertNotIn("api.github.com", app)
         self.assertNotIn("releases/latest", app)
         comparison = (ROOT / "catalogue/compare.mjs").read_text(encoding="utf-8")

@@ -3,6 +3,7 @@ import { comparisonRows, createManifestLoader, projectComparison,
   publicUrl, dateText } from "./compare.mjs";
 import { displayValue, priceText } from "./core.mjs";
 import { createRotationPlayer } from "./rotation-player.mjs";
+import {createReferenceManifestLoader,projectReferenceComparison} from "./reference.mjs";
 
 const el = (tag, className="", text=null) => {
   const element = document.createElement(tag);
@@ -33,6 +34,7 @@ const bullet = (parent, content) => {
 };
 
 function fillColumn(column, projected) {
+  const reference = projected.kind === "reference";
   const head = column.head;
   head.replaceChildren();
   const picture = el("div","compare-picture");
@@ -46,8 +48,8 @@ function fillColumn(column, projected) {
       el("span","photo-empty","Published image unavailable")));
     picture.append(img);
   } else picture.append(el("span","photo-empty","No published still or validated rotation"));
-  head.append(picture, el("strong","compare-report",projected.lab + " " + projected.report));
-  head.append(el("span","compare-source",displayValue(projected.currentListing.retailer)));
+  head.append(picture, el("strong","compare-report", reference ? projected.label : projected.lab + " " + projected.report));
+  head.append(el("span","compare-source", reference ? "Expert learning reference · " + projected.identityStatus + " identity" : displayValue(projected.currentListing.retailer)));
   head.append(el("small","compare-caption",
     projected.representative ? projected.representative.label+" · viewpoint uncalibrated" :
       "Evidence missing or video-only"));
@@ -56,10 +58,12 @@ function fillColumn(column, projected) {
 
   const certificateCell = column.cells.get("certificate");
   certificateCell.replaceChildren();
-  if (projected.certificate) {
+  if (reference) {
+    certificateCell.append(el("span","missing",projected.report === "Unknown" ? "Certificate not established" : projected.lab + " " + projected.report + " (source reported; not independently verified here)"));
+  } else if (projected.certificate) {
     appendLink(certificateCell,"Published original PDF ↗",projected.certificate.url);
   } else certificateCell.append(el("span","missing","Certificate PDF not recovered"));
-  if (projected.verification) {
+  if (!reference && projected.verification) {
     if (projected.certificate) certificateCell.append(el("span","link-separator"," · "));
     appendLink(certificateCell,
       projected.certificate ? "Original certificate link ↗" : "Verification link only ↗",
@@ -67,14 +71,39 @@ function fillColumn(column, projected) {
   }
   const sourceCell = column.cells.get("source");
   sourceCell.replaceChildren();
-  const latest = projected.currentListing;
-  if (!appendLink(sourceCell,"Latest listing ↗", latest.url))
-    sourceCell.append(el("span","missing","No usable listing link"));
-  if (projected.listings.length > 1)
-    sourceCell.append(el("span","subtle"," · "+projected.listings.length+" saved observations"));
+  if (reference) {
+    const sourceList = [...projected.sourceLinks, ...projected.mediaSources];
+    if (!sourceList.length) sourceCell.append(el("span","missing","No source links"));
+    sourceList.forEach((source,i) => {
+      if (i) sourceCell.append(el("span","link-separator"," · "));
+      appendLink(sourceCell,source.kind === "viewer" ? "Open original viewer ↗" :
+        source.kind === "discussion" ? "Expert discussion ↗" : "Original source ↗",source.url);
+    });
+  } else {
+    const latest = projected.currentListing;
+    if (!appendLink(sourceCell,"Latest listing ↗", latest.url))
+      sourceCell.append(el("span","missing","No usable listing link"));
+    if (projected.listings.length > 1)
+      sourceCell.append(el("span","subtle"," · "+projected.listings.length+" saved observations"));
+  }
 
   const provenanceCell = column.cells.get("provenance");
   provenanceCell.replaceChildren();
+  if (reference) {
+    // Commentary is primary evidence context, not a simulated retrieval history.
+    const detail = el("details","provenance");
+    detail.open = true;
+    detail.append(el("summary","","Expert commentary & provenance"));
+    const body = el("div","provenance-body");
+    body.append(el("p","reference-commentary",projected.commentary));
+    if (projected.topics.length)
+      body.append(el("p","subtle","Topics: " + projected.topics.join(" · ")));
+    body.append(el("p","subtle",projected.evidence.length ?
+      "Saved evidence: " + projected.values.motion : "Original media is linked, not locally ingested."));
+    detail.append(body);
+    provenanceCell.append(detail);
+    return;
+  }
   const detail = el("details","provenance");
   detail.append(el("summary","", "View sources & evidence"));
   const contents = el("div","provenance-body");
@@ -130,7 +159,7 @@ function fillColumn(column, projected) {
 }
 
 function failColumn(column,reason,onRetry) {
-  column.head.replaceChildren(el("strong","compare-report",column.row.lab+" "+column.row.report_number));
+  column.head.replaceChildren(el("strong","compare-report",column.row.kind === "reference" ? column.row.label : column.row.lab+" "+column.row.report_number));
   column.head.append(el("span","error-small","Could not load published manifest"));
   const button=el("button","retry-manifest","Retry");
   button.type="button";
@@ -142,6 +171,7 @@ function failColumn(column,reason,onRetry) {
 
 export function createComparisonView({container, grid, fetcher}) {
   const load = createManifestLoader(fetcher);
+  const loadReference = createReferenceManifestLoader(fetcher);
   let signature = "";
   let generation=0;
   let player=null;
@@ -172,7 +202,7 @@ export function createComparisonView({container, grid, fetcher}) {
     const columns=matching.map(row=>{
       const th=el("th","compare-head");
       th.scope="col";
-      th.append(el("strong","compare-report",row.lab+" "+row.report_number));
+      th.append(el("strong","compare-report",row.kind === "reference" ? row.label : row.lab+" "+row.report_number));
       th.append(el("span","subtle","Loading saved evidence…"));
       first.append(th);
       return {row,head:th,cells:new Map()};
@@ -204,10 +234,12 @@ export function createComparisonView({container, grid, fetcher}) {
     async function loadColumn(column) {
       column.head.append(el("span","sr-only","Loading manifest"));
       try {
-        const data = projectComparison(column.row,await load(column.row));
+        const data = column.row.kind === "reference" ?
+          projectReferenceComparison(column.row,await loadReference(column.row)) :
+          projectComparison(column.row,await load(column.row));
         if (generation !== currentGeneration) return;
         fillColumn(column,data);
-        player?.setStone(column.row.id,data.rotation,data.representative);
+        player?.setStone(column.row.id,data.rotation,data.representative,data.label || data.report);
       } catch(error) {
         if (generation !== currentGeneration) return;
         player?.failStone(column.row.id);
