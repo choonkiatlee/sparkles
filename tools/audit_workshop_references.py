@@ -22,6 +22,7 @@ SOURCES = {
     "ps285166-r11": "https://workshop.360view.link/360viewer/360view.html?d=2905248-YDC-6456",
 }
 ALLOWED_MEDIA_HOST = "data1.360view.link"
+HISTORICAL_CONTROL = "https://workshop.360view.link/view/2612250-YK-808"
 
 
 def audit(client, reference_id, viewer):
@@ -77,7 +78,7 @@ def main(argv=None):
                         help="Only when the exact original bootstrap is valid")
     args = parser.parse_args(argv)
     client = UrllibHttpClient(max_bytes=1024 * 1024)
-    for name, viewer in SOURCES.items():
+    for name, viewer in [*SOURCES.items(), ("historical-control-2026", HISTORICAL_CONTROL)]:
         print("REFERENCE", name, flush=True)
         rows = audit(client, name, viewer)
         for row in rows:
