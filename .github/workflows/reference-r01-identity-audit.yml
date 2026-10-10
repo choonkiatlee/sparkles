@@ -1,0 +1,42 @@
+name: R01 read-only supplier identity candidate audit
+
+on:
+  pull_request:
+    paths:
+      - "tools/audit_reference_r01_source.py"
+      - "tests/test_reference_r01_source_audit.py"
+      - ".github/workflows/reference-r01-identity-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - name: Checkout reviewed source (no persisted credentials)
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install audit dependencies
+        run: python -m pip install -e .
+      - name: Check read-only audit invariants without network
+        run: python -m unittest tests.test_reference_r01_source_audit -v
+      - name: Query only R01's two fixed SKU-derived report hypotheses
+        timeout-minutes: 3
+        run: |
+          python -m tools.audit_reference_r01_source \
+            --out "$RUNNER_TEMP/r01-source-audit.json"
+      - name: Keep sanitized bounded findings (no source media)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r01-read-only-source-audit
+          path: ${{ runner.temp }}/r01-source-audit.json
+          if-no-files-found: warn
+          retention-days: 30
