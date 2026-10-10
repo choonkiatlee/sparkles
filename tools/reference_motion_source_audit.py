@@ -113,11 +113,16 @@ def classify_d360_preflight(responses: dict) -> dict:
         return {"preflight": "invalid_bootstrap_json"}
     if not isinstance(bootstrap, dict):
         return {"preflight": "invalid_bootstrap_shape"}
-    dims = [bootstrap.get("width"), bootstrap.get("height")]
-    if (not all(type(x) is int and 0 < x <= 8000 for x in dims)):
-        return {"preflight": "invalid_dimensions", "bootstrap_keys": sorted(
-            k for k in bootstrap if k in {"width", "height", "quality", "image", "scramble", "version"}
-        )}
+    # Match the production D360 downloader: numeric-string dimensions are
+    # accepted through int(), rather than requiring JSON integer types.
+    try:
+        dims = [int(bootstrap["width"]), int(bootstrap["height"])]
+    except (KeyError, TypeError, ValueError):
+        return {"preflight": "invalid_dimensions", "dimension_types": [
+            type(bootstrap.get(k)).__name__ for k in ("width", "height")
+        ]}
+    if not all(0 < x <= 8000 for x in dims):
+        return {"preflight": "invalid_dimensions_range"}
     if not isinstance(bootstrap.get("scramble"), str):
         return {"preflight": "missing_scramble", "dimensions": dims}
     try:
