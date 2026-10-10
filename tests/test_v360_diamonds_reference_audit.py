@@ -1,0 +1,47 @@
+"""Conservative, read-only LG715575610 v360.diamonds audit contracts."""
+import unittest
+
+from tools.audit_v360_diamonds_reference import (
+    VIEWER, assert_source_pinned, categorize, sanitized_url,
+)
+
+
+class V360ExactAuditTests(unittest.TestCase):
+    def test_pinned_reference_is_unchanged(self):
+        assert_source_pinned()
+        self.assertEqual(
+            VIEWER,
+            "https://v360.diamonds/c/22971515-3849-41bb-ae0a-3bb31e3a7ae9?m=i&a=FA-121",
+        )
+
+    def test_no_query_parameters_or_opaque_path_values_in_logs(self):
+        info = sanitized_url(VIEWER)
+        self.assertEqual(info["host"], "v360.diamonds")
+        self.assertEqual(info["query_keys"], ["a", "m"])
+        self.assertNotIn("FA-121", str(info))
+        self.assertNotIn("22971515-", str(info))
+        self.assertNotIn("secret", str(sanitized_url(
+            "https://cdn.example.test/opaque/private-token.jpg?token=secret"
+        )))
+
+    def test_html_is_not_360_and_access_block_is_explicit(self):
+        for status in (401, 402, 403, 429):
+            self.assertEqual(categorize(status, "text/html", b"error"), "access_blocked")
+        self.assertEqual(
+            categorize(200, "text/html", b"<!doctype html><html></html>"),
+            "html_not_motion",
+        )
+        self.assertEqual(categorize(200, "video/mp4", b"<html>fake"), "html_not_motion")
+        self.assertEqual(categorize(404, "video/mp4", b""), "not_available")
+        self.assertEqual(categorize(200, "video/mp4", b"fake"), "unknown_not_proven_motion")
+
+    def test_valid_media_magic_is_not_confused_with_html(self):
+        self.assertEqual(categorize(200, "image/jpeg", b"\xff\xd8\xffjpeg"), "jpeg")
+        self.assertEqual(
+            categorize(200, "video/mp4", b"\x00\x00\x00\x18ftypisom"),
+            "mp4",
+        )
+
+
+if __name__ == "__main__":
+    unittest.main()
