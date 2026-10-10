@@ -73,6 +73,12 @@ def probe(client):
         output["outcome"] = "lab_or_report_conflict"
         return output
     output["exact_report_matched"] = True
+    video = record.get("video")
+    output["provider_video_field_present"] = isinstance(video, str) and bool(video)
+    output["provider_direct_video_candidate"] = (
+        isinstance(video, str)
+        and Loupe360CertificateResolver._is_direct_video_url(video)
+    )
     v360 = record.get("v360")
     if not isinstance(v360, dict) or not isinstance(v360.get("url"), str):
         output["outcome"] = "no_provider_rotation_url"
