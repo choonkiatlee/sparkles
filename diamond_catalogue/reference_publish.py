@@ -199,7 +199,7 @@ def plan_reference_media(result, reference_id: str) -> PublicationPlan:
             entry.status.value != "success" or
             entry.metadata.get("sequence_complete") is not True or
             len(entry.frames) != 256 or
-            [frame.source_index for frame in entry.frames] != list(range(256))
+            sorted(frame.source_index for frame in entry.frames) != list(range(256))
         ):
             raise CatalogueError("Refusing to publish incomplete reference rotation")
     evidence, assets = plan_evidence_assets(result, reference_id)
