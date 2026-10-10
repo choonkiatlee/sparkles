@@ -56,8 +56,16 @@ function fillColumn(column, projected) {
       el("span","photo-empty","Published image unavailable")));
     picture.append(img);
   } else picture.append(el("span","photo-empty","No published still or validated rotation"));
-  head.append(picture, el("strong","compare-report", reference ? projected.label : projected.lab + " " + projected.report));
+  head.append(el("strong","compare-report", reference ? projected.label : projected.lab + " " + projected.report));
   head.append(el("span","compare-source", reference ? "Expert learning reference · " + projected.identityStatus + " identity" : displayValue(projected.currentListing.retailer)));
+  if (reference) {
+    const note=el("div","compare-expert-note");
+    note.append(el("strong","compare-note-label",
+      column.note ? "Why this example matters · "+column.note.label : "Expert observation"));
+    note.append(el("p","",column.note?.comment || projected.commentary));
+    head.append(note);
+  }
+  head.append(picture);
   head.append(el("small","compare-caption",
     projected.rotation?.status === "video_only" && projected.video?.url ?
       "Published original MP4 · independent playback (not synchronized 360 frames)" :
@@ -100,12 +108,10 @@ function fillColumn(column, projected) {
   const provenanceCell = column.cells.get("provenance");
   provenanceCell.replaceChildren();
   if (reference) {
-    // Commentary is primary evidence context, not a simulated retrieval history.
+    // Expert notes are visible up front. Evidence details remain supplemental.
     const detail = el("details","provenance");
-    detail.open = true;
-    detail.append(el("summary","","Expert commentary & provenance"));
+    detail.append(el("summary","","Evidence details"));
     const body = el("div","provenance-body");
-    body.append(el("p","reference-commentary",projected.commentary));
     if (projected.topics.length)
       body.append(el("p","subtle","Topics: " + projected.topics.join(" · ")));
     body.append(el("p","subtle",projected.evidence.length ?
@@ -185,10 +191,10 @@ export function createComparisonView({container, grid, fetcher}) {
   let signature = "";
   let generation=0;
   let player=null;
-  function update(rows,selected,comparing) {
+  function update(rows,selected,comparing,{notesById=new Map(),contextKey=""}={}) {
     const show = comparing && selected.length >= 2;
     container.hidden=!show;
-    const nextSignature = show ? selected.join(",") : "";
+    const nextSignature = show ? selected.join(",")+"|"+contextKey : "";
     if (signature===nextSignature) return;
     signature=nextSignature;
     player?.destroy();
@@ -215,7 +221,7 @@ export function createComparisonView({container, grid, fetcher}) {
       th.append(el("strong","compare-report",row.kind === "reference" ? row.label : row.lab+" "+row.report_number));
       th.append(el("span","subtle","Loading saved evidence…"));
       first.append(th);
-      return {row,head:th,cells:new Map()};
+      return {row,head:th,cells:new Map(),note:notesById.get(row.id)};
     });
     thead.append(first); table.append(thead);
     const tbody=el("tbody");
