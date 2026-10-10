@@ -1,34 +1,57 @@
 {
-  "schema": "sparkles-reference/1",
-  "id": "ps281114-r22",
-  "label": "Nice dance — attractive motion with possible compromises",
-  "identity": {
-    "status": "unverified",
-    "lab": null,
-    "report_number": null
-  },
-  "linked_diamond_id": null,
+  "commentary": "The buyer called this Kashi video a nice table dance with pleasing bright/dark contrast (#22), while noting possible too-dark central steps, small windmills, a large reported table and crown questions. Ibrakeforpossums cautiously liked the stone provided that transparency or windowing was not a problem (#23). This is a source-qualified positive/mixed example, not an unconditional endorsement. The original MP4 exists in the #64 research archive but is not yet registered as playable Learning Corner evidence.",
   "diamond_metadata": {
     "shape": "Asscher"
   },
-  "commentary": "The buyer called this Kashi video a nice table dance with pleasing bright/dark contrast (#22), while noting possible too-dark central steps, small windmills, a large reported table and crown questions. Ibrakeforpossums cautiously liked the stone provided that transparency or windowing was not a problem (#23). This is a source-qualified positive/mixed example, not an unconditional endorsement. The original MP4 exists in the #64 research archive but is not yet registered as playable Learning Corner evidence.",
-  "source_links": [
+  "enrichment_attempts": [
     {
-      "kind": "discussion",
-      "url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/page-2",
-      "note": "Buyer observation #22 and conditional reaction #23."
-    },
-    {
-      "kind": "research_catalogue",
-      "url": "https://github.com/choonkiatlee/sparkles/blob/master/docs/360/external-benchmark/pricescope/source-catalog.json",
-      "note": "Archived benchmark sample: asscher-eval-nice-dance. Provenance pointer only; not a certified catalogue identity."
-    },
-    {
-      "kind": "research_media_archive",
-      "url": "https://github.com/choonkiatlee/sparkles/releases/download/pricescope-research-2026-10-06-v1/pricescope-media-recovery-2026-10-06-v3.zip",
-      "note": "Existing #64 research zip includes the original Kashi MP4; no duplicate download required."
+      "kind": "video",
+      "locator": "https://www.kashiimports.com/video/27196.mp4",
+      "reference_identifier": "ps281114-r22:pricescope-archive-v3",
+      "status": "success"
     }
   ],
+  "evidence": [
+    {
+      "identifier": "ps281114-r22:archive-video",
+      "identity_observations": [],
+      "kind": "video",
+      "media_type": "video/mp4",
+      "metadata": {
+        "sha256": "f69e6e8e429665246becc6121621fe4d92955383cb7e2163cd6b91aa010a5b27"
+      },
+      "payload_asset": {
+        "byte_count": 4840046,
+        "media_type": "video/mp4",
+        "sha256": "f69e6e8e429665246becc6121621fe4d92955383cb7e2163cd6b91aa010a5b27",
+        "storage": {
+          "backend": "github_release",
+          "locator": "sparkles-reference-ps281114-r22/asset-f69e6e8e429665246becc6121621fe4d92955383cb7e2163cd6b91aa010a5b27.mp4",
+          "url": "https://github.com/choonkiatlee/sparkles/releases/download/sparkles-reference-ps281114-r22/asset-f69e6e8e429665246becc6121621fe4d92955383cb7e2163cd6b91aa010a5b27.mp4"
+        }
+      },
+      "provenance": [
+        {
+          "locator": "https://www.kashiimports.com/video/27196.mp4",
+          "source": "pricescope_archived_original"
+        },
+        {
+          "locator": "https://www.kashiimports.com/video/27196.mp4",
+          "source": "direct_video_validation"
+        }
+      ],
+      "record_key": "622e1c47b70fd12a970556e2f3949c60abe40e835328adfdcf558c1ef87e40c1",
+      "status": "success"
+    }
+  ],
+  "id": "ps281114-r22",
+  "identity": {
+    "lab": null,
+    "report_number": null,
+    "status": "unverified"
+  },
+  "label": "Nice dance — attractive motion with possible compromises",
+  "linked_diamond_id": null,
   "media_sources": [
     {
       "kind": "video",
@@ -37,12 +60,29 @@
       "url": "https://www.kashiimports.com/video/27196.mp4"
     }
   ],
+  "schema": "sparkles-reference/1",
+  "source_links": [
+    {
+      "kind": "discussion",
+      "note": "Buyer observation #22 and conditional reaction #23.",
+      "url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/page-2"
+    },
+    {
+      "kind": "research_catalogue",
+      "note": "Archived benchmark sample: asscher-eval-nice-dance. Provenance pointer only; not a certified catalogue identity.",
+      "url": "https://github.com/choonkiatlee/sparkles/blob/master/docs/360/external-benchmark/pricescope/source-catalog.json"
+    },
+    {
+      "kind": "research_media_archive",
+      "note": "Existing #64 research zip includes the original Kashi MP4; no duplicate download required.",
+      "url": "https://github.com/choonkiatlee/sparkles/releases/download/pricescope-research-2026-10-06-v1/pricescope-media-recovery-2026-10-06-v3.zip"
+    }
+  ],
   "topics": [
     "liveliness",
     "contrast",
     "windmills",
     "mixed-reactions",
     "research-archive"
-  ],
-  "evidence": []
+  ]
 }
