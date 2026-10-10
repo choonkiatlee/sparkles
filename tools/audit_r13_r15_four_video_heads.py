@@ -18,7 +18,7 @@ from urllib.parse import urlsplit
 from urllib.request import HTTPSHandler, HTTPRedirectHandler, Request, build_opener
 
 from tools.audit_r13_r15_imgur import ALBUMS, check_manifest, validate_album
-from tools.audit_r13_r15_imgur_browser import MEDIA_BLOCK_PATTERNS
+from tools.audit_r13_r15_imgur_browser import MEDIA_BLOCK_PATTERNS, _metadata_items
 
 _ID = re.compile(r"[A-Za-z0-9]{5,16}\Z")
 _MP4_PATH = re.compile(r"/([A-Za-z0-9]{5,16})\.mp4\Z")
@@ -59,10 +59,9 @@ def ordered_media_items(tree: object) -> list[dict]:
         if depth > 7 or len(items) >= 30:
             return
         if isinstance(node, dict):
-            ident = node.get("id") or node.get("hash")
-            media_type = node.get("type") or node.get("mime_type")
-            if (isinstance(ident, str) and _ID.fullmatch(ident)
-                    and isinstance(media_type, str)
+            ident = str(node.get("id") or node.get("hash") or "")
+            media_type = str(node.get("mime_type") or node.get("type") or "")
+            if (_ID.fullmatch(ident)
                     and media_type.lower().split(";", 1)[0] in {"video/mp4", "image/jpeg"}
                     and ident not in seen):
                 seen.add(ident)
@@ -90,6 +89,7 @@ def observed_album_json(browser, events: list[dict], album: str,
     stats = diagnostic if diagnostic is not None else {}
     stats.update({"same_album_api_responses": 0, "json_candidates": 0,
                   "response_body_attempts": 0, "media_entries_parsed": 0,
+                  "prior_parser_media_hints": 0,
                   "body_error_classes": []})
     for row in events:
         try:
@@ -117,7 +117,10 @@ def observed_album_json(browser, events: list[dict], album: str,
             content = raw.get("body", "")
             if raw.get("base64Encoded") or len(content) > MAX_PUBLIC_JSON:
                 continue
-            matches = ordered_media_items(json.loads(content))
+            parsed = json.loads(content)
+            stats["prior_parser_media_hints"] = max(
+                stats["prior_parser_media_hints"], len(_metadata_items(parsed)))
+            matches = ordered_media_items(parsed)
             stats["media_entries_parsed"] = max(stats["media_entries_parsed"], len(matches))
             if matches:
                 return matches
@@ -235,8 +238,15 @@ def run_browser() -> list[dict]:
                     "clip_attribution": "unverified", "video_bytes_downloaded": False,
                     "republication_rights": "not_established"}
             try:
-                browser.get(album)
-                time.sleep(5)
+                try:
+                    browser.get(album)
+                except Exception as exc:
+                    if type(exc).__name__ != "TimeoutException":
+                        raise
+                    # Public Imgur can keep loading ads indefinitely; inspect
+                    # only already-fetched same-album metadata, never retry URLs.
+                    case["navigation_timeout"] = True
+                time.sleep(4)
                 events = browser.get_log("performance")
                 stats = {}
                 items = observed_album_json(browser, events, album, diagnostic=stats)
