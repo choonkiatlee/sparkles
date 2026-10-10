@@ -52,7 +52,7 @@ jobs:
               **result,
           }
           output = Path(os.environ["RUNNER_TEMP"]) / "r01-frame-audit.json"
-          output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\\n")
+          output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
           # Log concise evidence, not hundreds of individual original image hashes.
           print(json.dumps({k: v for k, v in report.items() if k not in {"format_samples"}},
                            indent=2, sort_keys=True))
@@ -62,6 +62,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: r01-read-only-source-audit
-          path: ${{ runner.temp }}/r01-source-audit.json
+          path: |
+            ${{ runner.temp }}/r01-source-audit.json
+            ${{ runner.temp }}/r01-frame-audit.json
           if-no-files-found: warn
           retention-days: 30
