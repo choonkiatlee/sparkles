@@ -156,6 +156,16 @@ class Loupe360CertificateResolver:
             and bool(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,90}", query["d"][0]))
         ):
             return True
+        if (
+            host == "www.filesonsky.com"
+            and parts.scheme == "https"
+            and parts.path.lower() == "/v360/vision360.html"
+            and not parts.fragment
+            and set(query) == {"d"}
+            and len(query["d"]) == 1
+            and bool(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,90}", query["d"][0]))
+        ):
+            return True
         if host == "workshop.360view.link":
             if parts.path.startswith("/view/") and len(parts.path.rstrip("/").split("/")) >= 3:
                 return True
