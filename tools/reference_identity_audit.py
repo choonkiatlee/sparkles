@@ -219,7 +219,7 @@ def probe_source_pages_readonly() -> None:
                 "script_tags": text.count("<script"),
                 "linked_script_hosts": sorted(set(
                     urlsplit(u).hostname or urlsplit(url).hostname
-                    for u in re.findall(r'<script[^>]*src=[\\"\\\']([^\\"\\\']+)', text)
+                    for u in re.findall(r"<script[^>]*src=['\"]([^'\"]+)", text)
                 )),
                 "url_mentions": len(re.findall(r'https?://', text)),
                 "source_markers": sorted(term for term in (
