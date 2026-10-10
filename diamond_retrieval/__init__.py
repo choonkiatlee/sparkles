@@ -18,6 +18,7 @@ from .errors import (
 from .http import UrllibHttpClient, validate_public_http_url
 from .identity import DiamondIdentityValidator, StrictIdentityValidator
 from .motion import ProgressiveRotationProcessor, decode_vision360_scramble
+from .loupe360_proxy import Loupe360ProxyRotationDownloader, IndexedProxyRotationProcessor
 from .motion_sources import (
     Core360RotationDownloader,
     D360RotationDownloader,
@@ -115,11 +116,13 @@ __all__ = [
     "IdentityOutcome",
     "IdentityValidator",
     "IgiReportPdfResolver",
+    "IndexedProxyRotationProcessor",
     "InvalidPayloadError",
     "LinkedEvidenceDownloader",
     "ListingProvider",
     "ListingRecord",
     "Loupe360CertificateResolver",
+    "Loupe360ProxyRotationDownloader",
     "MissingEvidenceError",
     "PdfCertificateProcessor",
     "ProgressiveRotationProcessor",
