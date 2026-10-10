@@ -1,5 +1,6 @@
 // Pure, dependency-free catalogue view logic. No GitHub API or network calls.
-export const MAX_SELECTION = 5;
+// Allow every example in the largest curated learning segments to share one basket.
+export const MAX_SELECTION = 10;
 export const MIN_COMPARISON = 2;
 const string = value => value == null ? "" : String(value).trim();
 const numeric = value => value == null || string(value) === "" ? null : Number(value);
