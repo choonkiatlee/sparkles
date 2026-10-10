@@ -9,6 +9,7 @@ on:
       - "catalogue/**"
       - "learning/**"
       - "data/catalog.json"
+      - "data/diamond-curation.json"
       - "data/diamonds/**"
       - "data/reference-index.json"
       - "data/learning-guide.json"

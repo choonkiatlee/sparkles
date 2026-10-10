@@ -9,7 +9,7 @@ import shutil
 from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
-STATIC_PATHS = ("index.html", ".nojekyll", "catalogue", "learning", "data/catalog.json", "data/diamonds", "data/reference-index.json", "data/learning-guide.json", "data/references", "evaluations", "resources")
+STATIC_PATHS = ("index.html", ".nojekyll", "catalogue", "learning", "data/catalog.json", "data/diamond-curation.json", "data/diamonds", "data/reference-index.json", "data/learning-guide.json", "data/references", "evaluations", "resources")
 ID_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 
 class Links(HTMLParser):
@@ -39,6 +39,8 @@ def validate_site(directory: Path) -> None:
         manifest = json.loads((directory / path).read_text(encoding="utf-8"))
         if manifest.get("id") != identifier:
             raise ValueError("Index and manifest identity mismatch")
+    curation = json.loads((directory / "data/diamond-curation.json").read_text(encoding="utf-8"))
+    validate_curation(curation, seen)
     references = json.loads((directory / "data/reference-index.json").read_text(encoding="utf-8"))
     if references.get("schema") != "sparkles-reference-index/1" or not isinstance(references.get("references"), list):
         raise ValueError("Invalid static reference index")
@@ -71,6 +73,21 @@ def validate_site(directory: Path) -> None:
             resolved = (doc.parent / unquote(parsed.path)).resolve()
             if not resolved.is_relative_to(directory.resolve()) or not resolved.exists():
                 raise ValueError(f"Broken or unsafe local link from {rel}: {href[:160]}")
+
+def validate_curation(document: dict, personal_ids: set[str]) -> None:
+    """Owner decisions are separate from immutable per-diamond evidence."""
+    if (not isinstance(document, dict) or set(document) != {"schema", "diamonds"}
+            or document["schema"] != "sparkles-diamond-curation/1"
+            or not isinstance(document["diamonds"], dict)):
+        raise ValueError("Invalid published diamond curation schema")
+    for identifier, fields in document["diamonds"].items():
+        if identifier not in personal_ids or not isinstance(fields, dict) or not fields:
+            raise ValueError("Curation refers to unknown personal diamond")
+        if not set(fields).issubset({"starred", "archived"}):
+            raise ValueError("Invalid curation field")
+        if any(type(value) is not bool for value in fields.values()):
+            raise ValueError("Curation fields must be booleans")
+
 
 def validate_learning_guide(directory: Path, reference_ids: set[str]) -> None:
     """Curated lessons remain valid as references/categories grow; no fixed seed counts."""

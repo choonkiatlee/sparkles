@@ -177,3 +177,31 @@ compact catalogue thumbnails or changes original C2 still/provenance rows.
 Regression tests cover the exact archived frame arrays, mixed counts, R2 URLs,
 full-preload priority/concurrency, LRU bounds, failures/retries, and stale
 seek completion. Review on actual desktop/mobile browsers remains useful.
+
+## Personal curation — PR A (#289, parent #288)
+
+The catalogue now loads `../data/diamond-curation.json` alongside
+`../data/catalog.json`. The compact Git-native
+`sparkles-diamond-curation/1` document stores independent optional boolean
+`starred` and `archived` flags keyed by *personal* certified diamond ID.
+Absent IDs/flags are false. No source evidence, retrieval record, generated
+catalogue index, or curated Learning Corner reference is modified.
+
+The contact sheet exposes a star toggle and archive/restore button, a
+**Shortlist only** filter and an opt-in **Show archived** toggle. Archived
+diamonds disappear from default browsing, but explicit URL selections and
+shared comparison remain valid: the underlying `allRows` includes them.
+
+PR A intentionally **does not commit browser edits to GitHub**. It keeps sparse
+overrides in `localStorage` under `sparkles-diamond-curation-draft-v1`,
+and labels them **unsynced**. Reset discards only these browser overrides,
+never published flags. The browser validates published curation against the
+current personal index; an unavailable/invalid published curation document
+blocks default catalogue rendering instead of revealing archived stones.
+Storage failures are surfaced and editing is disabled until reset.
+
+PR B (#290) will add the authenticated GitHub Issues + Actions save path,
+commit the same published JSON contract, and reconcile drafts against Git
+after confirmation. A confirmed, equal published flag drops its local override;
+other pending edits are retained. Avoid treating local drafts as cross-device
+persistence.
