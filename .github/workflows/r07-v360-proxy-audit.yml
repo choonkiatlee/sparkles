@@ -1,0 +1,36 @@
+name: R07 exact-certificate V360 proxy source audit
+
+on:
+  pull_request:
+    paths:
+      - "tools/audit_r07_v360_proxy.py"
+      - "tests/test_r07_v360_proxy_audit.py"
+      - ".github/workflows/r07-v360-proxy-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  r07-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install existing retrieval package
+        run: python -m pip install -e .
+      - name: Assert exact source, identity and negative-fixture guards
+        run: python -m unittest tests.test_r07_v360_proxy_audit -v
+      - name: Test exact R07 IGI-linked proxy using the production retrieval path
+        run: python tools/audit_r07_v360_proxy.py --out "$RUNNER_TEMP/r07-exact-v360.json"
+      - name: Retain sanitized read-only outcome (no media bytes or opaque root)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r07-exact-v360-public-proxy-audit
+          path: ${{ runner.temp }}/r07-exact-v360.json
+          if-no-files-found: warn
+          retention-days: 14
