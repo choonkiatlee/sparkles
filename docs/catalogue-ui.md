@@ -205,3 +205,31 @@ commit the same published JSON contract, and reconcile drafts against Git
 after confirmation. A confirmed, equal published flag drops its local override;
 other pending edits are retained. Avoid treating local drafts as cross-device
 persistence.
+
+## GitHub-backed shortlist/archive persistence — PR B (#290)
+
+On My diamonds, toggle stars and archives, then click **Save changes on
+GitHub**. This opens a prefilled GitHub Issue; you must sign in as the
+repository owner and submit it. The `diamond-curation-issue-request` workflow
+checks the trusted author, the exact issue title/body schema, the existence of
+every certified personal diamond ID, and each sparse boolean `from → to`
+transition against committed Git state. A successful run commits **only**
+`data/diamond-curation.json` and comments with the commit ID. Its workflow
+explicitly invokes the existing Pages deployment so an Action-authored
+`GITHUB_TOKEN` commit does not depend on push-trigger behaviour.
+
+The browser does **not** clear draft state when generating/submitting a GitHub
+issue. It only drops field overrides after **Refresh saved state** retrieves
+published curation with the desired flags. Failed/issues awaiting publication
+keep their drafts intact; reset explicitly discards only the browser draft.
+Multiple independently submitted stale transitions are idempotent when the
+desired state already holds. Requests apply in the same publication concurrency
+group as ingestion, using a compare-and-swap Git ref and retry.
+
+**Important:** GitHub Issues and GitHub Pages are public if the repository is
+public. Avoid putting secret annotations or personal information into curation
+issue bodies; they contain only stable certified diamond IDs and boolean
+status changes. Pages must be enabled with **GitHub Actions** as its source.
+If a Pages deployment fails, Git may have been committed successfully but the
+site can still show old state; inspect the issue comment/commit and retry Pages
+rather than assuming the browser shows a new version.
