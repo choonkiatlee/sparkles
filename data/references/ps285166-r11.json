@@ -1,0 +1,35 @@
+{
+  "commentary": "Among the original alternatives, Karl_K dismissed option 3 (#2) and lovedogs strongly disliked it (#3). The discussion inventory does not establish a specific optical mechanism for this negative preference: do not manufacture a leakage or obstruction diagnosis. A retailer video was mentioned but no verified direct Loupe360/V360 link is known.",
+  "diamond_metadata": {
+    "carat": "4.03",
+    "clarity": "VVS2",
+    "colour": "F",
+    "shape": "Asscher"
+  },
+  "evidence": [],
+  "id": "ps285166-r11",
+  "identity": {
+    "lab": "IGI",
+    "report_number": "LG636432256",
+    "status": "reported"
+  },
+  "label": "4.03ct F VVS2 - negative preference, unspecified cause",
+  "linked_diamond_id": null,
+  "media_sources": [],
+  "schema": "sparkles-reference/1",
+  "source_links": [
+    {
+      "kind": "discussion",
+      "note": "PriceScope Asscher evaluation thread; post numbers cited in commentary.",
+      "url": "https://www.pricescope.com/community/threads/asscher-evaluation-seeking-help.285166/"
+    },
+    {
+      "kind": "listing",
+      "url": "https://www.ritani.com/products/4-03-carat-asscher-diamond-very-good-cut-f-color-vvs2-clarity-igi-lg636432256-sku-d-36vlytjg5c"
+    }
+  ],
+  "topics": [
+    "negative-preference",
+    "diagnosis-unknown"
+  ]
+}

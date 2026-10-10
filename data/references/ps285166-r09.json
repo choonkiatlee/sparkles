@@ -1,0 +1,35 @@
+{
+  "commentary": "0-0-0 commented that this candidate had potential (#23), without a more precise optical diagnosis recorded in the curated inventory. The numeric Loupe360 identifier 1498922544 is NOT a verified diamond certificate number; leave the stone's identity unresolved.",
+  "diamond_metadata": {
+    "shape": "Asscher"
+  },
+  "evidence": [],
+  "id": "ps285166-r09",
+  "identity": {
+    "lab": null,
+    "report_number": null,
+    "status": "unverified"
+  },
+  "label": "Unknown stone - potential cut example",
+  "linked_diamond_id": null,
+  "media_sources": [
+    {
+      "kind": "viewer",
+      "provider": "loupe360",
+      "status": "linked_unverified",
+      "url": "https://loupe360.com/diamond/1498922544"
+    }
+  ],
+  "schema": "sparkles-reference/1",
+  "source_links": [
+    {
+      "kind": "discussion",
+      "note": "PriceScope Asscher evaluation thread; post numbers cited in commentary.",
+      "url": "https://www.pricescope.com/community/threads/asscher-evaluation-seeking-help.285166/"
+    }
+  ],
+  "topics": [
+    "potential-example",
+    "identity-unresolved"
+  ]
+}

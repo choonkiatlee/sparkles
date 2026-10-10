@@ -1,0 +1,43 @@
+{
+  "commentary": "Brilliance SKU LG27268296. The buyer included this stone in the video shortlist (#20). Relative to the preferred 2.54ct E example, 0-0-0 said the other candidates were quiet or leaky under the table (#21). That comment was about a GROUP of alternatives: do not present it as a precise, independently confirmed leakage diagnosis for this specific stone.",
+  "diamond_metadata": {
+    "carat": "2.60",
+    "clarity": "VS1",
+    "colour": "E",
+    "shape": "Asscher"
+  },
+  "evidence": [],
+  "id": "ps285166-r06",
+  "identity": {
+    "lab": "IGI",
+    "report_number": "LG659462667",
+    "status": "reported"
+  },
+  "label": "2.60ct E VS1 - shortlist comparison",
+  "linked_diamond_id": null,
+  "media_sources": [
+    {
+      "kind": "viewer",
+      "provider": "loupe360",
+      "status": "linked_unverified",
+      "url": "https://loupe360.com/diamond/83ff6cc6-7c4d-545c-a164-bb92e9a5260b/video/500/500/autoplay"
+    }
+  ],
+  "schema": "sparkles-reference/1",
+  "source_links": [
+    {
+      "kind": "discussion",
+      "note": "PriceScope Asscher evaluation thread; post numbers cited in commentary.",
+      "url": "https://www.pricescope.com/community/threads/asscher-evaluation-seeking-help.285166/"
+    },
+    {
+      "kind": "listing",
+      "url": "https://www.brilliance.com/lab-grown-diamonds/asscher/2-60-carat-e-color-super-ideal-make-vs1-clarity-igi-certified-SKU-LG27268296"
+    }
+  ],
+  "topics": [
+    "under-table-leakage",
+    "quiet-middle",
+    "attribution-uncertain"
+  ]
+}

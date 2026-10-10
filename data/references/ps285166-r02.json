@@ -1,0 +1,36 @@
+{
+  "commentary": "The buyer noticed extensive simultaneous darkening during rotation (#13); 0-0-0 advised avoiding the stone because stronger candidates remain lively throughout rotation (#14). Ibrakeforpossums had initially preferred it to another option (#10). Preserve that chronology: it illustrates how a static first impression can differ from an assessment of movement.",
+  "diamond_metadata": {
+    "carat": "3.33",
+    "clarity": "VS1",
+    "colour": "E",
+    "shape": "Asscher"
+  },
+  "evidence": [],
+  "id": "ps285166-r02",
+  "identity": {
+    "lab": "IGI",
+    "report_number": "LG634479985",
+    "status": "reported"
+  },
+  "label": "3.33ct E VS1 - broad simultaneous darkness",
+  "linked_diamond_id": null,
+  "media_sources": [],
+  "schema": "sparkles-reference/1",
+  "source_links": [
+    {
+      "kind": "discussion",
+      "note": "PriceScope Asscher evaluation thread; post numbers cited in commentary.",
+      "url": "https://www.pricescope.com/community/threads/asscher-evaluation-seeking-help.285166/"
+    },
+    {
+      "kind": "listing",
+      "url": "https://www.brilliance.com/lab-grown-diamonds/asscher/3-33-carat-e-color-super-ideal-make-vs1-clarity-igi-certified-SKU-LG24948002"
+    }
+  ],
+  "topics": [
+    "simultaneous-darkness",
+    "liveliness",
+    "mixed-reactions"
+  ]
+}

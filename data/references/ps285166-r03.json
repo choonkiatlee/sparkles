@@ -1,0 +1,38 @@
+{
+  "commentary": "0-0-0 presented this as a positive cut example (#14) and later contrasted it with the 2.52ct E candidate (#17). The apparent tint was considered potentially attributable to video lighting rather than body colour. Loupe identifier 636493231 is a viewer identifier, NOT an independently established certificate number.",
+  "diamond_metadata": {
+    "carat": "3.06",
+    "colour": "F",
+    "shape": "Asscher"
+  },
+  "evidence": [],
+  "id": "ps285166-r03",
+  "identity": {
+    "lab": null,
+    "report_number": null,
+    "status": "unverified"
+  },
+  "label": "3.06ct F - positive Loupe360 cut example",
+  "linked_diamond_id": null,
+  "media_sources": [
+    {
+      "kind": "viewer",
+      "provider": "loupe360",
+      "status": "linked_unverified",
+      "url": "https://loupe360.com/diamond/636493231"
+    }
+  ],
+  "schema": "sparkles-reference/1",
+  "source_links": [
+    {
+      "kind": "discussion",
+      "note": "PriceScope Asscher evaluation thread; post numbers cited in commentary.",
+      "url": "https://www.pricescope.com/community/threads/asscher-evaluation-seeking-help.285166/"
+    }
+  ],
+  "topics": [
+    "positive-example",
+    "contrast",
+    "environment-lighting"
+  ]
+}

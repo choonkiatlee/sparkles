@@ -1,0 +1,36 @@
+{
+  "commentary": "0-0-0 found more face-up obstruction than preferred while acknowledging that some viewers like stronger contrast (#17). The same comment discussed possible apparent graining; this is an observation of the available imagery, not an established clarity diagnosis. The original Adiamor listing may have moved or become unavailable.",
+  "diamond_metadata": {
+    "carat": "2.52",
+    "clarity": "VS1",
+    "colour": "E",
+    "shape": "Asscher"
+  },
+  "evidence": [],
+  "id": "ps285166-r04",
+  "identity": {
+    "lab": "GIA",
+    "report_number": "2496852830",
+    "status": "reported"
+  },
+  "label": "2.52ct E VS1 - face-up obstruction",
+  "linked_diamond_id": null,
+  "media_sources": [],
+  "schema": "sparkles-reference/1",
+  "source_links": [
+    {
+      "kind": "discussion",
+      "note": "PriceScope Asscher evaluation thread; post numbers cited in commentary.",
+      "url": "https://www.pricescope.com/community/threads/asscher-evaluation-seeking-help.285166/"
+    },
+    {
+      "kind": "listing",
+      "url": "https://www.adiamor.com/Lab-Diamonds/2.52-ct-E-VS1-Excellent-Cut-Asscher-Diamond/D61532298"
+    }
+  ],
+  "topics": [
+    "obstruction",
+    "contrast",
+    "face-up-pattern"
+  ]
+}

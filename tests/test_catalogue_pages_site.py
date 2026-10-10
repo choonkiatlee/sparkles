@@ -16,7 +16,8 @@ class PagesCatalogueTests(unittest.TestCase):
                 "catalogue/compare.mjs", "catalogue/comparison-view.mjs",
                 "catalogue/rotation.mjs", "catalogue/rotation-canvas.mjs",
                 "catalogue/rotation-player.mjs",
-                "data/catalog.json", "data/diamonds/igi-lg756520111.json",
+                "data/catalog.json", "data/reference-index.json",
+                "data/references/ps285166-r07.json", "data/diamonds/igi-lg756520111.json",
                 "data/diamonds/igi-lg816611062.json",
             ):
                 self.assertTrue((out / path).is_file(), path)
@@ -32,6 +33,18 @@ class PagesCatalogueTests(unittest.TestCase):
             self.assertTrue(by_id["igi-lg816611062"]["has_motion"])
             self.assertFalse((out / ".github").exists())
             self.assertFalse((out / "diamond_retrieval").exists())
+
+    def test_reference_index_is_statically_published_with_11_references(self):
+        with tempfile.TemporaryDirectory() as temp:
+            out = Path(temp) / "public"
+            build(out)
+            index = json.loads((out / "data/reference-index.json").read_text(encoding="utf-8"))
+            self.assertEqual(index["schema"], "sparkles-reference-index/1")
+            self.assertEqual(len(index["references"]), 11)
+            self.assertEqual(sum(bool(row["has_motion"]) for row in index["references"]), 0)
+            self.assertTrue(all((out / row["manifest_path"]).is_file() for row in index["references"]))
+            r07 = json.loads((out / "data/references/ps285166-r07.json").read_text(encoding="utf-8"))
+            self.assertIn("under-table steps", r07["commentary"])
 
     def test_frontend_uses_static_index_and_no_github_rest_discovery(self):
         app = (ROOT / "catalogue/app.mjs").read_text(encoding="utf-8")
