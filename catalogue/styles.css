@@ -69,6 +69,9 @@ h1{font:normal clamp(42px,6vw,72px)/1.06 Georgia,"Times New Roman",serif;letter-
 .compare-report{display:block;font:normal 19px/1.3 Georgia,serif;overflow-wrap:anywhere;margin-bottom:5px}
 .compare-source,.compare-caption{display:block;color:var(--muted);font-size:12px}
 .compare-caption{font-size:11px;margin-top:7px}
+.compare-expert-note{background:var(--pale);border-left:3px solid var(--accent);border-radius:5px;padding:9px 11px;margin:12px 0;color:var(--ink);font-weight:400}
+.compare-note-label{display:block;font-size:11px;line-height:1.4;color:var(--accent);margin-bottom:4px}
+.compare-expert-note p{font-size:12px;line-height:1.5;margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
 .compare-value{min-width:255px}
 .compare-value a{font-weight:650}
 .compare-value .link-separator{color:var(--muted)}
