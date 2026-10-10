@@ -197,7 +197,7 @@ class CurationIssueTests(unittest.TestCase):
     def test_real_github_blob_line_wrapping_is_present_in_fixture(self):
         api = FakeGit()
         blob = api.get_json(api.prefix + "/git/blobs/blob-data/catalog.json")
-        self.assertIn("\\n", blob["content"])
+        self.assertIn("\n", blob["content"])
         self.assertGreater(len(blob["content"]), 77)
         # Tests below exercise save_changes end-to-end against wrapped blobs.
 
