@@ -1,4 +1,5 @@
 """Conservative, read-only LG715575610 v360.diamonds audit contracts."""
+import base64
 import json
 import unittest
 
@@ -6,7 +7,7 @@ from diamond_retrieval.protocols import HttpResponse
 
 from tools.audit_v360_diamonds_reference import (
     VIEWER, assert_source_pinned, categorize, sanitized_url,
-    audit_exact_certificate_lookup,
+    audit_exact_certificate_lookup, audit_indexed_proxy,
 )
 
 
@@ -61,6 +62,33 @@ class V360ExactAuditTests(unittest.TestCase):
         other = audit_exact_certificate_lookup(FakeClient(record("LG000000000")))
         self.assertEqual(other["outcome"], "identity_conflict")
         self.assertNotIn("v360", other)
+
+    def test_indexed_proxy_requires_exact_igi_and_actual_frames(self):
+        root = ("https://assets-images.pixorac.com/"
+                + base64.urlsafe_b64encode(VIEWER.encode()).decode().rstrip("="))
+        class FakeClient:
+            def __init__(self, report="LG715575610", source=root):
+                self.report, self.source, self.get_calls = report, source, []
+            def post(self, url, *, timeout, content, headers):
+                obj = {"data": {"certificate_by_cert_number": {
+                    "certNumber": self.report, "lab": "IGI",
+                    "v360": {"url": self.source, "frame_count": 256, "top_index": "212"}
+                }}}
+                return HttpResponse(200, url, {}, json.dumps(obj).encode())
+            def get(self, url, *, timeout, headers=None):
+                self.get_calls.append(url)
+                return HttpResponse(404, url, {}, b"not found")
+        wrong_report = FakeClient(report="LG000000000")
+        self.assertEqual(audit_indexed_proxy(wrong_report)["outcome"], "identity_conflict")
+        self.assertEqual(wrong_report.get_calls, [])
+        wrong_viewer = FakeClient(source="https://assets-images.pixorac.com/"
+            + base64.urlsafe_b64encode(b"https://v360.diamonds/c/other?m=i&a=FA-121").decode().rstrip("="))
+        self.assertEqual(audit_indexed_proxy(wrong_viewer)["outcome"], "proxy_source_mismatch")
+        self.assertEqual(wrong_viewer.get_calls, [])
+        missing = FakeClient()
+        result = audit_indexed_proxy(missing)
+        self.assertEqual((result["outcome"], result["failed_index"]), ("frame_unavailable", 0))
+        self.assertEqual(missing.get_calls, [root + "/0.jpg"])
 
     def test_valid_media_magic_is_not_confused_with_html(self):
         self.assertEqual(categorize(200, "image/jpeg", b"\xff\xd8\xffjpeg"), "jpeg")
