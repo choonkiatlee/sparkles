@@ -54,7 +54,7 @@
       "clarity": null,
       "colour": null,
       "commentary_excerpt": "Karl_K identified face-up P3 leakage in the top and bottom central V regions between the windmills of 'Crispest', judging it the worst of the initial three (#9), and called the cro",
-      "has_motion": false,
+      "has_motion": true,
       "id": "ps281114-r18",
       "identity_status": "unverified",
       "lab": null,
@@ -65,7 +65,7 @@
       "selection_id": "ref-ps281114-r18",
       "shape": "Asscher",
       "source_url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/",
-      "thumbnail_url": null,
+      "thumbnail_url": "https://github.com/choonkiatlee/sparkles/releases/download/sparkles-reference-ps281114-r18/asset-f8fa831797275f7cb647f5f7baaf9ef2c30bc631ab38d0634fe75c76c8d01574.jpg",
       "topics": [
         "p3-leakage",
         "under-table-leakage",
