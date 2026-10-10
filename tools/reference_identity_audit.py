@@ -158,11 +158,80 @@ def audit_media_readonly() -> None:
         print("MEDIA_DRY_RUN " + json.dumps(payload, sort_keys=True), flush=True)
 
 
+
+def probe_source_pages_readonly() -> None:
+    """Inspect only identity-matched exact source URLs (no link crawling)."""
+    from diamond_retrieval.reference_media import _safe_source_url
+
+    client = UrllibHttpClient(max_bytes=1_000_000)
+    result = []
+    ref = "ps285166-r05"
+    report = "LG644442866"
+    body = json.dumps({
+        "query": Loupe360CertificateResolver._query,
+        "variables": {"cert": report},
+    }).encode()
+    try:
+        response = client.post(
+            Loupe360CertificateResolver.endpoint, timeout=12, content=body,
+            headers={"Content-Type": "application/json", "Accept": "application/json"},
+        )
+        record = json.loads(response.content)["data"]["certificate_by_cert_number"]
+        if (record.get("certNumber"), record.get("lab")) != (report, "IGI"):
+            raise ValueError("identity mismatch in live probe")
+        v360 = record.get("v360") or {}
+        raw_viewer = Loupe360CertificateResolver._unwrap_v360(v360.get("url") or "")
+        playback = record.get("video")
+        sources = (("r05-viewer", raw_viewer, "www.filesonsky.com"),
+                   ("r05-playback", playback, "loupe360.com"))
+    except Exception:
+        sources = ()
+
+    r07 = json.loads((ROOT / "data/references/ps285166-r07.json").read_text("utf-8"))
+    if r07["identity"]["report_number"] != "LG625406458":
+        raise SystemExit("R07 trust anchor changed")
+    exact = next((m["url"] for m in r07["media_sources"]
+                  if m["provider"] == "v360.diamonds"), None)
+    sources += (("r07-viewer", exact, "v360.diamonds"),)
+    for name, raw, expected_host in sources:
+        item = {"source": name}
+        try:
+            url = _safe_source_url(raw)
+            if urlsplit(url).hostname != expected_host:
+                raise ValueError("non-allowlisted source host")
+            # Read source viewer text and/or playback endpoint only, no second-hop URLs.
+            # A 1 MB response budget also prevents accidentally ingesting large media.
+            received = client.get(url, timeout=10)
+            payload = received.content
+            text = payload[:1_000_000].decode("utf-8", "replace").lower()
+            # These are boolean contract signals, not extracted URLs or media.
+            item.update({
+                "status": "response", "http": received.status_code,
+                "bytes_read": len(payload), "sha256": hashlib.sha256(payload).hexdigest(),
+                "type": "video_magic" if len(payload)>8 and payload[4:8]==b"ftyp"
+                        else "html" if ("<html" in text or "<!doctype" in text) else "other",
+                "contains_mp4_reference": ".mp4" in text,
+                "contains_frame_json_reference": "0.json" in text or "1.json" in text,
+                "contains_video_tag": "<video" in text,
+                "contains_iframe": "<iframe" in text,
+                "contains_images": "<img" in text,
+                "contains_js_script": "<script" in text,
+            })
+        except Exception:
+            item["status"] = "blocked_or_unavailable"
+        result.append(item)
+    for item in result:
+        print("VIEWER_PROBE " + json.dumps(item, sort_keys=True), flush=True)
+
 def main() -> int:
     import sys
     media_mode = sys.argv[1:] == ["--media"]
-    if sys.argv[1:] not in ([], ["--media"]):
-        raise SystemExit("Only --media is supported")
+    probe_mode = sys.argv[1:] == ["--probe"]
+    if sys.argv[1:] not in ([], ["--media"], ["--probe"]):
+        raise SystemExit("Only --media or --probe is supported")
+    if probe_mode:
+        probe_source_pages_readonly()
+        return 0
     if media_mode:
         audit_media_readonly()
         return 0
