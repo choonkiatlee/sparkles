@@ -52,10 +52,13 @@
       <div class="curation-toolbar" role="group" aria-label="Personal diamond curation">
         <label><input id="shortlist-only" type="checkbox" disabled> Shortlist only</label>
         <label><input id="show-archived" type="checkbox" disabled> Show archived (<span id="archived-count">0</span>)</label>
+        <button id="save-curation" type="button" disabled>Save changes on GitHub ↗</button>
+        <button id="refresh-curation" type="button" class="outline">Refresh saved state</button>
         <button id="reset-curation" type="button" class="outline" disabled>Reset local changes</button>
       </div>
       <p id="curation-pending" class="curation-pending" role="status" aria-live="polite">Loading shortlist and archive status…</p>
       <p id="curation-local-error" class="curation-warning" role="alert" hidden></p>
+      <p id="refresh-curation-error" class="curation-warning" role="alert" hidden></p>
       <div id="error" class="error" role="alert" hidden></div>
       <section class="selection" aria-label="Selected diamonds">
         <div class="selection-line">

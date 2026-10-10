@@ -194,3 +194,8 @@ h1{font:normal clamp(42px,6vw,72px)/1.06 Georgia,"Times New Roman",serif;letter-
   .curation-toolbar{gap:8px 14px}
   .curation-toolbar button{margin-left:0}
 }
+
+/* GitHub-confirmed save remains a separate conscious action, not a silent browser write. */
+.curation-toolbar #save-curation{margin-left:auto}
+.curation-toolbar #refresh-curation,.curation-toolbar #reset-curation{margin-left:0}
+@media(max-width:700px){.curation-toolbar #save-curation{margin-left:0}}
