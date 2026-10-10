@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import hashlib
 import json
 import os
 from dataclasses import dataclass
@@ -46,7 +47,16 @@ def _keys(value, expected):
     return isinstance(value, dict) and set(value) == set(expected)
 
 
-def parse_request(event: dict) -> tuple[Change, ...]:
+def curation_digest(data: dict) -> str:
+    canonical = [
+        [id, flags.get("starred") is True, flags.get("archived") is True]
+        for id, flags in sorted(data["diamonds"].items())
+    ]
+    payload = json.dumps(canonical, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def parse_request(event: dict) -> tuple[str, tuple[Change, ...]]:
     if not isinstance(event, dict) or event.get("action") != "opened":
         raise InvalidCurationRequest("Only newly opened issues are accepted")
     if (event.get("repository") or {}).get("full_name") != REPOSITORY:
@@ -64,8 +74,12 @@ def parse_request(event: dict) -> tuple[Change, ...]:
         data = json.loads(lines[1])
     except (ValueError, TypeError) as exc:
         raise InvalidCurationRequest("Invalid JSON") from exc
-    if not _keys(data, {"schema", "changes"}) or data["schema"] != REQUEST_SCHEMA:
+    if not _keys(data, {"schema", "baseline_sha256", "changes"}) or data["schema"] != REQUEST_SCHEMA:
         raise InvalidCurationRequest("Unsupported curation request schema")
+    baseline_sha256 = data["baseline_sha256"]
+    if (not isinstance(baseline_sha256, str) or len(baseline_sha256) != 64
+            or any(char not in "0123456789abcdef" for char in baseline_sha256)):
+        raise InvalidCurationRequest("Invalid curation baseline")
     raw = data["changes"]
     if not isinstance(raw, list) or not 0 < len(raw) <= MAX_CHANGES:
         raise InvalidCurationRequest("Invalid change count")
@@ -83,7 +97,7 @@ def parse_request(event: dict) -> tuple[Change, ...]:
             raise InvalidCurationRequest("Invalid curation value")
         seen.add((identifier, field))
         result.append(Change(identifier, field, change["from"], change["to"]))
-    return tuple(result)
+    return baseline_sha256, tuple(result)
 
 
 def validate_published(data: dict, valid_ids: set[str]) -> None:
@@ -95,7 +109,8 @@ def validate_published(data: dict, valid_ids: set[str]) -> None:
             raise InvalidCurationRequest("Invalid stored curation entry")
 
 
-def apply_changes(data: dict, changes: tuple[Change, ...], valid_ids: set[str]) -> tuple[dict, bool]:
+def apply_changes(data: dict, changes: tuple[Change, ...], valid_ids: set[str],
+                  baseline_sha256: str | None = None) -> tuple[dict, bool]:
     validate_published(data, valid_ids)
     # All checks must pass before making even one change.
     for change in changes:
@@ -104,7 +119,13 @@ def apply_changes(data: dict, changes: tuple[Change, ...], valid_ids: set[str]) 
         current = data["diamonds"].get(change.id, {}).get(change.field, False)
         if current != change.before and current != change.after:
             raise CurationConflict("Saved status has changed; refresh before submitting again")
-    # Boolean from/to means any stale transition is already at the desired state.
+    if (baseline_sha256 is not None and curation_digest(data) != baseline_sha256):
+        # Retries of an already applied request may have a changed baseline:
+        # treat those as idempotent but never reapply a genuinely stale update.
+        if all(data["diamonds"].get(change.id, {}).get(change.field, False) == change.after
+               for change in changes):
+            return json.loads(json.dumps(data)), False
+        raise CurationConflict("Saved curation changed since this browser snapshot")
     revised = json.loads(json.dumps(data))
     for change in changes:
         flags = revised["diamonds"].setdefault(change.id, {})
@@ -127,7 +148,8 @@ def _blob(api: GitHubAPI, sha: str):
         raise InvalidCurationRequest("Invalid stored JSON") from exc
 
 
-def save_changes(api: GitHubAPI, changes: tuple[Change, ...]) -> tuple[str, bool]:
+def save_changes(api: GitHubAPI, changes: tuple[Change, ...],
+                 baseline_sha256: str | None = None) -> tuple[str, bool]:
     if api.repo != REPOSITORY:
         raise InvalidCurationRequest("Unexpected target repository")
     for attempt in range(3):
@@ -148,7 +170,7 @@ def save_changes(api: GitHubAPI, changes: tuple[Change, ...]) -> tuple[str, bool
         if len(ids) != len(catalogue["diamonds"]):
             raise InvalidCurationRequest("Duplicate personal diamond ID")
         published = _blob(api, entries[CURATION_PATH])
-        revised, changed = apply_changes(published, changes, ids)
+        revised, changed = apply_changes(published, changes, ids, baseline_sha256)
         if not changed:
             return head, False
         updated_tree = api.post_json(f"{api.prefix}/git/trees", {
@@ -179,9 +201,9 @@ def main() -> int:
     args = parser.parse_args()
     try:
         event = json.loads(args.event.read_text(encoding="utf-8"))
-        changes = parse_request(event)
+        baseline, changes = parse_request(event)
         api = GitHubAPI(os.environ.get("GITHUB_TOKEN", ""), os.environ.get("GITHUB_REPOSITORY", ""))
-        sha, changed = save_changes(api, changes)
+        sha, changed = save_changes(api, changes, baseline)
         with args.github_output.open("a", encoding="utf-8") as output:
             output.write("commit_sha=" + sha + "\n")
             output.write("changed=" + ("true" if changed else "false") + "\n")
