@@ -10,12 +10,14 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import re
 import json
 import re
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 
 from diamond_retrieval.http import UrllibHttpClient
+from diamond_retrieval.motion import validate_jpeg_bytes
 from diamond_retrieval.reference_media import _safe_source_url
 from diamond_retrieval.resolvers import Loupe360CertificateResolver
 
@@ -128,6 +130,112 @@ def audit_exact_certificate_lookup(client=None):
                 isinstance(url, str) and urlsplit(url).hostname == "assets-images.pixorac.com"
             ),
         }
+    return output
+
+
+
+def audit_indexed_proxy(client=None):
+    """Read-only, in-memory 256-JPEG proof from exact certificate-linked proxy.
+
+    The public provider supplies the encoded proxy root. No token, frame bytes,
+    source URL, guessed vendor path, or video file is saved to artifacts.
+    """
+    client = client or UrllibHttpClient(max_bytes=1024 * 1024)
+    resolver = Loupe360CertificateResolver
+    query = json.dumps({
+        "query": resolver._query, "variables": {"cert": REPORT},
+    }, separators=(",", ":")).encode()
+    response = client.post(
+        resolver.endpoint, timeout=18, content=query,
+        headers={"Accept": "application/json", "Content-Type": "application/json"},
+    )
+    output = {"lookup_http": response.status_code, "outcome": "unavailable"}
+    if response.status_code != 200:
+        return output
+    try:
+        record = (json.loads(response.content).get("data") or {})["certificate_by_cert_number"]
+    except (ValueError, AttributeError, KeyError, TypeError):
+        output["outcome"] = "invalid_lookup"
+        return output
+    if (not isinstance(record, dict)
+        or str(record.get("certNumber") or "").upper() != REPORT
+        or str(record.get("lab") or "").upper() != "IGI"):
+        output["outcome"] = "identity_conflict"
+        return output
+    v360 = record.get("v360")
+    if not isinstance(v360, dict):
+        output["outcome"] = "no_v360"
+        return output
+    root = v360.get("url")
+    if not isinstance(root, str):
+        output["outcome"] = "no_proxy_url"
+        return output
+    parts = urlsplit(root)
+    if (parts.scheme != "https" or parts.netloc != "assets-images.pixorac.com"
+        or parts.query or parts.fragment
+        or not re.fullmatch(r"/[A-Za-z0-9_-]{20,1024}={0,2}", parts.path)):
+        output["outcome"] = "not_exact_pixorac_root"
+        return output
+    try:
+        decoded = resolver._unwrap_v360(root)
+        source = urlsplit(decoded)
+        pinned = urlsplit(VIEWER)
+    except ValueError:
+        output["outcome"] = "invalid_encoded_viewer"
+        return output
+    if (source.scheme != "https" or source.netloc != pinned.netloc
+        or source.path != pinned.path or source.fragment or
+        parse_qs(source.query) != parse_qs(pinned.query)):
+        output["outcome"] = "proxy_source_mismatch"
+        return output
+    if (v360.get("frame_count") != 256
+        or isinstance(v360.get("frame_count"), bool)
+        or str(v360.get("top_index")) != "212"
+        or isinstance(v360.get("top_index"), bool)):
+        output["outcome"] = "source_metadata_changed"
+        return output
+    output["proxy_root_sha256"] = hashlib.sha256(root.encode()).hexdigest()
+    output["source_matched"] = True
+    dimensions = None
+    total = 0
+    hashes = []
+    for index in range(256):
+        url = f"{root}/{index}.jpg"
+        try:
+            item = client.get(url, timeout=15)
+        except Exception as exc:
+            output.update(outcome="frame_read_error", failed_index=index,
+                          error_type=type(exc).__name__)
+            return output
+        if item.status_code != 200 or item.url != url:
+            output.update(outcome="frame_unavailable", failed_index=index,
+                          frame_http=item.status_code, redirected=item.url != url)
+            return output
+        jpeg = item.content
+        if len(jpeg) > 1024 * 1024 or total + len(jpeg) > 25 * 1024 * 1024:
+            output.update(outcome="frame_oversized", failed_index=index)
+            return output
+        try:
+            current = validate_jpeg_bytes(jpeg)
+        except Exception:
+            output.update(outcome="invalid_jpeg", failed_index=index)
+            return output
+        if dimensions is None:
+            dimensions = current
+        if dimensions != current:
+            output.update(outcome="dimension_drift", failed_index=index)
+            return output
+        total += len(jpeg)
+        hashes.append(hashlib.sha256(jpeg).hexdigest())
+    output.update(
+        outcome=("complete_distinct_rotation" if len(set(hashes)) == 256
+                 else "insufficient_distinct_frames"),
+        frame_count=len(hashes), distinct_hashes=len(set(hashes)),
+        dimensions=dimensions, total_bytes=total,
+        first_sha256=hashes[0], faceup_sha256=hashes[212],
+        last_sha256=hashes[-1],
+        ordered_hash_chain=hashlib.sha256("".join(hashes).encode()).hexdigest(),
+    )
     return output
 
 
@@ -262,6 +370,10 @@ def main():
         output["http"] = audit_exact_http()
     except Exception as exc:
         output["http_error_type"] = type(exc).__name__
+    try:
+        output["proxy_frames"] = audit_indexed_proxy()
+    except Exception as exc:
+        output["proxy_frames_error_type"] = type(exc).__name__
     try:
         output["browser"] = audit_exact_browser()
     except Exception as exc:
