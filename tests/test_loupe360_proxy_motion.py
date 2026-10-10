@@ -351,3 +351,104 @@ class Gem360CertificateProxyTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class V360DiamondsCertificateProxyTests(unittest.TestCase):
+    """Reusable certificate-bound v360.diamonds indexed JPEG bridge.
+
+    No direct V360 browser access, undocumented API, or guessed report alias:
+    only a verified exact-provider wrapper with all actual 256 images.
+    """
+
+    REPORT = "LG715575610"
+    VIEWER = (
+        "https://v360.diamonds/c/22971515-3849-41bb-ae0a-3bb31e3a7ae9"
+        "?m=i&a=FA-121"
+    )
+    ROOT = (
+        "https://assets-images.pixorac.com/"
+        + base64.urlsafe_b64encode(VIEWER.encode()).decode().rstrip("=")
+    )
+
+    def _http(self, *, missing=None, report=REPORT, lab="IGI"):
+        root = self.ROOT
+
+        class Client(FakeHttp):
+            def get(self, url, *, timeout, headers=None):
+                if url.startswith(root + "/") and url.endswith(".jpg"):
+                    self.calls.append(("GET", url))
+                    suffix = url[len(root) + 1:-4]
+                    if suffix.isdigit():
+                        index = int(suffix)
+                        if 0 <= index < 256 and index != missing:
+                            return HttpResponse(
+                                200, url, {"Content-Type": "image/jpeg"}, self.frames[index]
+                            )
+                    return HttpResponse(404, url, {}, b"missing")
+                return super().get(url, timeout=timeout, headers=headers)
+
+        return Client(graphql=certificate(
+            report=report, lab=lab, proxy_root=root, count=256, top="212"
+        ))
+
+    def test_only_exact_v360_public_viewer_pattern_is_eligible(self):
+        from diamond_retrieval.resolvers import Loupe360CertificateResolver as Resolver
+
+        self.assertTrue(Resolver._is_supported_rotation_url(self.VIEWER))
+        for url in (
+            self.VIEWER.replace("https://", "http://"),
+            self.VIEWER.replace("v360.diamonds/", "v360.diamonds.evil.test/"),
+            self.VIEWER.replace("/c/", "/u/"),
+            self.VIEWER.replace("m=i", "m=d"),
+            self.VIEWER + "&url=http://127.0.0.1",
+            self.VIEWER + "#other",
+            self.VIEWER.replace("a=FA-121", "a="),
+            self.VIEWER.replace("a=FA-121", "a=FA-121&a=other"),
+        ):
+            with self.subTest(url=url):
+                self.assertFalse(Resolver._is_supported_rotation_url(url))
+
+    def test_complete_exact_report_proxy_rotation_uses_existing_pipeline(self):
+        http = self._http()
+        result = retrieve_reference_media(
+            "owner-igi-lg715575610", lab="IGI",
+            report_number=self.REPORT, http_client=http,
+        )
+        self.assertEqual(len(result.rotations), 1)
+        rotation = result.rotations[0]
+        self.assertEqual(len(rotation.frames), 256)
+        self.assertEqual(len({f.sha256 for f in rotation.frames}), 256)
+        self.assertEqual(rotation.face_up_hint, 212)
+        self.assertEqual(rotation.metadata["supplier"], "loupe360-pixorac-proxy")
+        self.assertFalse(rotation.metadata["supplier_original_bytes_verified"])
+        self.assertEqual([f.source_index for f in rotation.frames], list(range(256)))
+        self.assertTrue(any(
+            a.locator == self.VIEWER and a.status == EvidenceStatus.UNSUPPORTED
+            for a in result.attempts
+        ))
+        self.assertTrue(any(
+            a.locator == self.ROOT and a.status == EvidenceStatus.SUCCESS
+            for a in result.attempts
+        ))
+
+    def test_missing_frame_and_identity_conflict_fail_closed(self):
+        missing = self._http(missing=88)
+        result = retrieve_reference_media(
+            "owner-igi-lg715575610", lab="IGI",
+            report_number=self.REPORT, http_client=missing,
+        )
+        self.assertFalse(result.rotations)
+        self.assertTrue(any(
+            a.locator == self.ROOT and a.status == EvidenceStatus.MISSING
+            for a in result.attempts
+        ))
+        for bad in (self._http(report="LG000000000"), self._http(lab="GIA")):
+            with self.subTest():
+                result = retrieve_reference_media(
+                    "owner-igi-lg715575610", lab="IGI",
+                    report_number=self.REPORT, http_client=bad,
+                )
+                self.assertFalse(result.rotations)
+                self.assertFalse(any(
+                    key.startswith(self.ROOT + "/") for _, key in bad.calls
+                ))

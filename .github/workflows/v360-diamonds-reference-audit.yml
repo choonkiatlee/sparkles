@@ -1,0 +1,36 @@
+name: LG715575610 V360 exact public viewer research
+
+on:
+  pull_request:
+    paths:
+      - "tools/audit_v360_diamonds_reference.py"
+      - "tests/test_v360_diamonds_reference_audit.py"
+      - ".github/workflows/v360-diamonds-reference-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exact-v360-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install retrieval and isolated browser dependencies
+        run: python -m pip install -e . selenium
+      - name: Validate bounded diagnostic and safety guard fixtures
+        run: python -m unittest tests.test_v360_diamonds_reference_audit -v
+      - name: Probe exact owner-reviewed V360 link without saving media
+        run: python tools/audit_v360_diamonds_reference.py --out "$RUNNER_TEMP/v360-lg715575610-source.json"
+      - name: Retain sanitized metadata only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v360-lg715575610-source-audit
+          path: ${{ runner.temp }}/v360-lg715575610-source.json
+          if-no-files-found: warn
+          retention-days: 14

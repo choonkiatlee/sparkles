@@ -223,3 +223,48 @@ is linked only to the curated exact R06/R10 viewer/media source provenance.
 Regression tests are in `tests.test_diamond_retrieval_motion` and
 `tests.test_reference_media_lookup`. Reference publication still requires
 an explicit opt-in `mode=media` run through the trusted workflow (#197).
+
+
+### Public v360.diamonds player through exact-certificate Pixorac proxy (#212)
+
+The public `v360.diamonds/c/<uuid>?m=i&a=<item-id>` viewer is **not**
+itself a downloadable supplier-frame transport. For owner reference IGI
+`LG715575610`, the exact page returned **HTTP 402** in the
+[read-only audit](https://github.com/choonkiatlee/sparkles/actions/runs/38083300750)
+(and the headless browser saw no frames or video). Do not interpret a
+successful HTML document load as playable media or try to circumvent the
+viewer access control.
+
+However, the same **exact IGI LG715575610** Nivoda public report record
+exposes its independently hosted Pixorac encoded viewer root with
+`frame_count=256` and `top_index=212`. A separate
+[bounded live 256-frame audit](https://github.com/choonkiatlee/sparkles/actions/runs/38083444462)
+verified the exact wrapped viewer identity, **256/256 distinct original
+proxy-returned JPEGs at 600×600**, 5,940,029 bytes in total, and the
+source hashes below, without writing media or publishing anything:
+
+- Index 0: `6ca305dc44a8e626770d38ccdc17f1960d588dcef54dd0463dec15878ff2af27`
+- Index 212 (source face-up hint): `5f49f81e722c9b8f9d291a1a867161e93bff951ff4978ed455c89b3ce9e3e062`
+- Index 255: `5d8782660afc73919d6e15db325352b56f0c762d7078e90f57d4761c73a30363`
+- Aggregate ordered SHA chain: `536412a549d7d77b693f9b6e99d90aa3b5a500c3c5ec5457613465a1bc1d7c9e`
+
+**Reusable ingestion contract:** the existing `Loupe360CertificateResolver`
+recognizes only exact HTTPS `v360.diamonds/c/<UUID>` viewers with one
+`m=i` and one bounded `a` identifier, as returned from a lab-and-report
+matched public Nivoda record. It does not request arbitrary viewer HTML,
+guess supplier frame roots from item IDs, or accept direct client-supplied
+proxy URLs. The established `Loupe360ProxyRotationDownloader` uses *only*
+the provider-supplied encoded Pixorac root and checks **all 256 indexed
+JPEGs** for complete ordered indices, consistent image dimensions, byte
+budget, sufficient distinct hashes, and unchanged exact root/redirect
+provenance. Original viewer attempts can remain `unsupported` without
+blocking separately proven fallback frames.
+
+The pipeline retains `supplier=loupe360-pixorac-proxy` and
+`supplier_original_bytes_verified=False`: public proxy JPEGs are real
+source-associated frames, **not proven byte-for-byte identical** to the
+inaccessible original V360 Diamonds supplier capture. The owner-provided
+IGI lab/report identity remains `reported` without a retrieved IGI PDF.
+Reference publishing remains the existing separate owner-authorized workflow,
+and requires verified Release/index/Pages success before `has_motion=true`.
+
