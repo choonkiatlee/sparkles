@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - "catalogue/**"
+      - "learning/**"
+      - "tests/catalogue-reference.test.mjs"
       - "data/references/**"
       - "data/reference-index.json"
       - "data/reference.schema.json"
@@ -53,8 +55,10 @@ jobs:
           node --check catalogue/rotation.mjs
           node --check catalogue/rotation-canvas.mjs
           node --check catalogue/rotation-player.mjs
+          node --check catalogue/reference.mjs
+          node --check learning/app.mjs
       - name: Test catalogue selection and view logic
-        run: node --test tests/catalogue-ingest-request.test.mjs tests/catalogue-core.test.mjs tests/catalogue-compare.test.mjs tests/catalogue-rotation.test.mjs tests/catalogue-player.test.mjs tests/catalogue-canvas.test.mjs tests/catalogue-canvas-player.test.mjs
+        run: node --test tests/catalogue-ingest-request.test.mjs tests/catalogue-core.test.mjs tests/catalogue-compare.test.mjs tests/catalogue-rotation.test.mjs tests/catalogue-player.test.mjs tests/catalogue-canvas.test.mjs tests/catalogue-canvas-player.test.mjs tests/catalogue-reference.test.mjs
       - name: Validate published site artifact and source links
         run: |
           python -m diamond_catalogue.references --check
