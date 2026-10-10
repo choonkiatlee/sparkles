@@ -189,6 +189,29 @@ class ReferenceMediaLookupTests(unittest.TestCase):
         self.assertEqual(result.attempts[0].status, EvidenceStatus.SUCCESS)
         self.assertEqual(result.rotations[0].frames[0].source_index, 0)
 
+    def test_labgrowns3_curated_reference_with_report_retains_256_frames(self):
+        host = "https://labgrowns3.s3.ap-southeast-1.amazonaws.com"
+        item = "1210811_B2C"
+        root = f"{host}/imaged/{item}"
+        viewer = f"{host}/stoneimages360.html?d={item}"
+        responses = _progressive_source_responses(AUDITS[0], root, version=2)
+        responses[root + "/0.json?version="] = responses.pop(root + "/0.json")
+        http = FakeHttp(responses)
+        result = retrieve_reference_media(
+            "ps285166-r06", lab="IGI", report_number="LG659462667",
+            media_sources=[{
+                "kind": "viewer", "provider": "labgrowns3",
+                "url": viewer, "status": "linked_unverified",
+            }],
+            http_client=http,
+        )
+        self.assertEqual(len(result.rotations), 1)
+        self.assertEqual(len(result.rotations[0].frames), 256)
+        self.assertEqual(result.metadata.report_number, "LG659462667")
+        self.assertEqual(result.rotations[0].metadata["supplier"], "labgrowns3")
+        self.assertEqual(result.attempts[0].status, EvidenceStatus.SUCCESS)
+        self.assertEqual(http.calls[0], ("GET", root + "/0.json?version="))
+
     def test_incomplete_rotation_does_not_become_successful_motion(self):
         responses = _progressive_source_responses(AUDITS[0], ROOT, version=1)
         responses[f"{ROOT}/4.json?version=1"] = (b"[]", "application/json")
