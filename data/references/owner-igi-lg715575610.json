@@ -1,6 +1,7 @@
 {
   "commentary": "The owner personally viewed this diamond in person and liked its appearance. This is a positive first-hand preference, not a claim of expert cut quality or any specific optical behaviour. The IGI report number LG715575610 was provided by the owner; the grading report, diamond specifications and supplier 360° media have not yet been independently verified. Keep this stone as a real-world positive reference for later side-by-side comparisons with seller footage and other saved diamonds, if identity-matched media becomes available.",
   "diamond_metadata": {},
+  "evidence": [],
   "id": "owner-igi-lg715575610",
   "identity": {
     "lab": "IGI",
@@ -8,6 +9,7 @@
     "status": "reported"
   },
   "label": "IGI LG715575610 — liked in person",
+  "linked_diamond_id": null,
   "media_sources": [],
   "schema": "sparkles-reference/1",
   "source_links": [
