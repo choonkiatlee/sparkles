@@ -1,0 +1,28 @@
+name: learning-reference-workshop-diagnostic
+
+on:
+  pull_request:
+    paths:
+      - "tools/audit_workshop_references.py"
+      - "tests/test_workshop_source_audit.py"
+      - ".github/workflows/learning-reference-workshop-diagnostic.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install package
+        run: python -m pip install -e .
+      - name: Check fixed source allowlist and fail-closed diagnostics
+        run: python -m unittest tests.test_workshop_source_audit -v
+      - name: Read-only exact metadata probe (no supplier HTML or publication)
+        run: python -m tools.audit_workshop_references --validate-motion
