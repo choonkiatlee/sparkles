@@ -41,7 +41,7 @@ class WorkshopAuditTests(unittest.TestCase):
         reference = EvidenceReference(reference_id, ROTATION, viewer, viewer)
         root = WorkshopRotationDownloader(None)._source(reference)[1]
         responses = _progressive_source_responses(AUDITS[1], root, version=2)
-        responses[root + "/0.json?version="] = responses.pop(root + "/0.json")
+        self.assertIn(root + "/0.json?version=", responses)
         client = FakeHttpClient(responses)
         rows = audit(client, reference_id, viewer)
         self.assertEqual(len(rows), 1)
