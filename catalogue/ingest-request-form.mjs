@@ -22,7 +22,7 @@ if (form && urlInput && error) {
   form.addEventListener("submit", event => {
     event.preventDefault();
     try {
-      window.location.assign(createIngestionIssueUrl(urlInput.value));
+      window.open(createIngestionIssueUrl(urlInput.value), "_blank", "noopener,noreferrer");
     } catch (exception) {
       error.textContent = exception.message;
       error.hidden = false;
