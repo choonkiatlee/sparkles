@@ -10,6 +10,7 @@ on:
       - "tests/test_reference_media_lookup.py"
       - "tests/test_loupe360_proxy_motion.py"
       - "tests/test_r03_pinned_loupe_proxy.py"
+      - "tests/test_r09_native_255_proxy.py"
       - "tests/test_d360_source.py"
       - "tests/fixtures/diamond_retrieval/**"
       - "docs/diamond-retrieval.md"
@@ -43,6 +44,7 @@ jobs:
           python -m unittest tests.test_reference_media_lookup -v
           python -m unittest tests.test_loupe360_proxy_motion -v
           python -m unittest tests.test_r03_pinned_loupe_proxy -v
+          python -m unittest tests.test_r09_native_255_proxy -v
           python -m unittest tests.test_d360_source -v
 
       # Non-gating: upstream media availability is external, but logs prove
