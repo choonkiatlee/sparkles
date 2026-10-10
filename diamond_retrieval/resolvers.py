@@ -156,6 +156,20 @@ class Loupe360CertificateResolver:
             and bool(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,90}", query["d"][0]))
         ):
             return True
+        # Exact IGI/Loupe metadata sometimes points to Gem360's HTTPS
+        # Vision360 player. A matched certificate plus this narrow supplier
+        # contract permits the separately validated Pixorac indexed fallback;
+        # it does not authorize arbitrary Gem360 URLs or infer an item key.
+        if (
+            host == "videos.gem360.in"
+            and parts.scheme == "https"
+            and parts.path.lower() == "/vision360.html"
+            and not parts.fragment
+            and set(query) == {"d"}
+            and len(query["d"]) == 1
+            and bool(re.fullmatch(r"[0-9]{9}", query["d"][0]))
+        ):
+            return True
         if (
             host == "www.filesonsky.com"
             and parts.scheme == "https"
