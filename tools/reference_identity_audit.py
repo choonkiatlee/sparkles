@@ -216,6 +216,17 @@ def probe_source_pages_readonly() -> None:
                 "contains_iframe": "<iframe" in text,
                 "contains_images": "<img" in text,
                 "contains_js_script": "<script" in text,
+                "script_tags": text.count("<script"),
+                "linked_script_hosts": sorted(set(
+                    urlsplit(u).hostname or urlsplit(url).hostname
+                    for u in re.findall(r'<script[^>]*src=[\\"\\\']([^\\"\\\']+)', text)
+                )),
+                "url_mentions": len(re.findall(r'https?://', text)),
+                "source_markers": sorted(term for term in (
+                    "initviewer", "diamond", "video", "movie", "jpg",
+                    "frames", "scramble", "json", "image", "webgl", "gif",
+                    "cloudfront", "s3.amazonaws", "source", "rotation",
+                ) if term in text),
             })
         except Exception:
             item["status"] = "blocked_or_unavailable"
