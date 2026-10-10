@@ -6,6 +6,7 @@ on:
       - "diamond_retrieval/**"
       - "diamond360/d360_source.py"
       - "tests/test_diamond_retrieval*.py"
+      - "tests/test_d360_legacy_canonical.py"
       - "tests/test_reference_media_lookup.py"
       - "tests/test_loupe360_proxy_motion.py"
       - "tests/test_d360_source.py"
@@ -36,6 +37,7 @@ jobs:
           python -m unittest tests.test_diamond_retrieval_retailers -v
           python -m unittest tests.test_diamond_retrieval_proportions -v
           python -m unittest tests.test_diamond_retrieval_motion -v
+          python -m unittest tests.test_d360_legacy_canonical -v
           python -m unittest tests.test_diamond_retrieval_media -v
           python -m unittest tests.test_reference_media_lookup -v
           python -m unittest tests.test_loupe360_proxy_motion -v
