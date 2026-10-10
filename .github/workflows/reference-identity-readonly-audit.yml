@@ -45,3 +45,7 @@ jobs:
         timeout-minutes: 5
         continue-on-error: true
         run: python tools/filesonsky_r05_audit.py
+
+      - name: Verify exact R05 FilesOnSky all 256 original frames (read-only)
+        timeout-minutes: 15
+        run: python tools/filesonsky_r05_audit.py --full
