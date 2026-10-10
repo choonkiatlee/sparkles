@@ -5,6 +5,8 @@ on:
     paths:
       - "tools/audit_reference_r01_source.py"
       - "tests/test_reference_r01_source_audit.py"
+      - "tools/audit_reference_r01_igi_pdf.py"
+      - "tests/test_reference_r01_igi_pdf.py"
       - ".github/workflows/reference-r01-identity-audit.yml"
   workflow_dispatch:
 
@@ -14,7 +16,7 @@ permissions:
 jobs:
   audit:
     runs-on: ubuntu-latest
-    timeout-minutes: 13
+    timeout-minutes: 16
     steps:
       - name: Checkout reviewed source (no persisted credentials)
         uses: actions/checkout@v4
@@ -26,12 +28,17 @@ jobs:
       - name: Install audit dependencies
         run: python -m pip install -e .
       - name: Check read-only audit invariants without network
-        run: python -m unittest tests.test_reference_r01_source_audit -v
+        run: python -m unittest tests.test_reference_r01_source_audit tests.test_reference_r01_igi_pdf -v
       - name: Query only R01's two fixed SKU-derived report hypotheses
         timeout-minutes: 3
         run: |
           python -m tools.audit_reference_r01_source \
             --out "$RUNNER_TEMP/r01-source-audit.json"
+      - name: Check fixed IGI public PDF for matching report and 4Cs (no stored PDF)
+        timeout-minutes: 2
+        run: |
+          python -m tools.audit_reference_r01_igi_pdf \
+            --out "$RUNNER_TEMP/r01-igi-audit.json"
       - name: Validate 256 exact-report proxy source frames in-memory (no publishing)
         timeout-minutes: 8
         env:
@@ -64,6 +71,7 @@ jobs:
           name: r01-read-only-source-audit
           path: |
             ${{ runner.temp }}/r01-source-audit.json
+            ${{ runner.temp }}/r01-igi-audit.json
             ${{ runner.temp }}/r01-frame-audit.json
           if-no-files-found: warn
           retention-days: 30
