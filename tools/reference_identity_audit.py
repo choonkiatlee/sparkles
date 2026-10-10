@@ -234,12 +234,53 @@ def probe_source_pages_readonly() -> None:
     for item in result:
         print("VIEWER_PROBE " + json.dumps(item, sort_keys=True), flush=True)
 
+
+def probe_filesonsky_bootstrap_readonly() -> None:
+    """Check four exact known Vision360 bootstrap layouts; no frame downloads."""
+    from diamond_retrieval.motion_sources import _bootstrap_contract
+
+    # R05's source is https://www.filesonsky.com/v360/Vision360.HTML?d=659844.
+    # These are bounded diagnostic hypotheses, not publication locators.
+    prefixes = ("https://www.filesonsky.com/v360/imaged/659844",
+                "https://www.filesonsky.com/imaged/659844")
+    client = UrllibHttpClient(max_bytes=300_000)
+    for root in prefixes:
+        for suffix in ("/0.json", "/0.json?version="):
+            url = root + suffix
+            output = {"root": "nested_v360" if "/v360/imaged/" in root else "site_root",
+                      "version_query": suffix.endswith("version=")}
+            try:
+                response = client.get(url, timeout=10)
+                output["http"] = response.status_code
+                output["bytes"] = len(response.content)
+                output["sha256"] = hashlib.sha256(response.content).hexdigest()
+                if response.status_code == 200:
+                    try:
+                        data = json.loads(response.content)
+                        dimensions, scramble, version = _bootstrap_contract(
+                            data, source="filesonsky-diagnostic"
+                        )
+                        output["contract"] = "valid_progressive"
+                        output["dimensions"] = list(dimensions)
+                        output["version"] = version
+                        output["scramble_count"] = len(scramble)
+                    except (ValueError, TypeError):
+                        output["contract"] = "not_a_supported_bootstrap"
+            except Exception:
+                output["status"] = "unavailable"
+            print("BOOTSTRAP_PROBE " + json.dumps(output, sort_keys=True), flush=True)
+
+
 def main() -> int:
     import sys
     media_mode = sys.argv[1:] == ["--media"]
     probe_mode = sys.argv[1:] == ["--probe"]
-    if sys.argv[1:] not in ([], ["--media"], ["--probe"]):
+    bootstrap_mode = sys.argv[1:] == ["--bootstrap"]
+    if sys.argv[1:] not in ([], ["--media"], ["--probe"], ["--bootstrap"]):
         raise SystemExit("Only --media or --probe is supported")
+    if bootstrap_mode:
+        probe_filesonsky_bootstrap_readonly()
+        return 0
     if probe_mode:
         probe_source_pages_readonly()
         return 0
