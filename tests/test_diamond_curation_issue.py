@@ -9,7 +9,7 @@ from diamond_catalogue.github_api import GitHubError
 from tools.apply_diamond_curation_issue import (
     MARKER, REQUEST_SCHEMA, CURATION_SCHEMA, REPOSITORY,
     Change, CurationConflict, InvalidCurationRequest,
-    parse_request, apply_changes, save_changes,
+    parse_request, apply_changes, save_changes, curation_digest,
 )
 
 ONE = "igi-lg756520111"
@@ -22,7 +22,7 @@ def event(changes=None, *, author="choonkiatlee", repo=REPOSITORY,
         changes = [{"id": ONE, "field": "starred", "from": False, "to": True}]
     if body is None:
         body = MARKER + "\n" + json.dumps({
-            "schema": REQUEST_SCHEMA, "changes": changes,
+            "schema": REQUEST_SCHEMA, "baseline_sha256": curation_digest(published()), "changes": changes,
         }, separators=(",", ":")) + "\n"
     return {"action": action, "repository": {"full_name": repo},
             "issue": {"user": {"login": author}, "title": title, "body": body}}
@@ -101,7 +101,8 @@ class CurationIssueTests(unittest.TestCase):
             {"id": ONE, "field": "starred", "from": False, "to": True},
             {"id": TWO, "field": "archived", "from": False, "to": True},
         ]
-        parsed = parse_request(event(changes))
+        baseline, parsed = parse_request(event(changes))
+        self.assertEqual(baseline, curation_digest(published()))
         self.assertEqual(parsed, (Change(ONE, "starred", False, True),
                                   Change(TWO, "archived", False, True)))
 
@@ -138,13 +139,33 @@ class CurationIssueTests(unittest.TestCase):
         for body in (
             MARKER + "\n{}\n", MARKER + "\n{}\nextra",
             "Hi\n" + json.dumps(valid),
-            MARKER + "\n" + json.dumps({"schema": REQUEST_SCHEMA,
+            MARKER + "\n" + json.dumps({"schema": REQUEST_SCHEMA, "baseline_sha256": curation_digest(published()),
                                            "changes": [valid], "extra": True}),
             "x" * 5000,
         ):
             with self.subTest(body=body[:30]):
                 with self.assertRaises(InvalidCurationRequest):
                     parse_request(event(body=body))
+
+
+    def test_stale_snapshot_rejected_even_if_boolean_old_value_is_repeated(self):
+        original = published()
+        baseline = curation_digest(original)
+        new = published(**{TWO: {"starred": True}})
+        with self.assertRaises(CurationConflict):
+            apply_changes(new, (Change(ONE, "archived", False, True),), {ONE, TWO}, baseline)
+        applied, changed = apply_changes(
+            new, (Change(TWO, "starred", False, True),), {ONE, TWO}, baseline
+        )
+        self.assertFalse(changed)
+        self.assertEqual(applied, new)
+
+    def test_invalid_baseline_never_dispatches(self):
+        wrong = event()
+        wrong["issue"]["body"] = wrong["issue"]["body"].replace(
+            curation_digest(published()), "f" * 63 + "z")
+        with self.assertRaises(InvalidCurationRequest):
+            parse_request(wrong)
 
     def test_unknown_id_causes_no_partial_update(self):
         data = published()
