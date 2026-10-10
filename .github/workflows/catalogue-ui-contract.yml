@@ -8,6 +8,7 @@ on:
       - "tests/catalogue-reference.test.mjs"
       - "tests/learning-guide.test.mjs"
       - "data/references/**"
+      - "data/diamond-curation.json"
       - "data/reference-index.json"
       - "data/learning-guide.json"
       - "data/reference.schema.json"
@@ -49,6 +50,7 @@ jobs:
       - name: Check browser modules
         run: |
           node --check catalogue/core.mjs
+          node --check catalogue/curation.mjs
           node --check catalogue/app.mjs
           node --check catalogue/ingest-request.mjs
           node --check catalogue/ingest-request-form.mjs
@@ -61,7 +63,7 @@ jobs:
           node --check learning/app.mjs
           node --check learning/guide.mjs
       - name: Test catalogue selection and view logic
-        run: node --test tests/catalogue-ingest-request.test.mjs tests/catalogue-core.test.mjs tests/catalogue-compare.test.mjs tests/catalogue-rotation.test.mjs tests/catalogue-player.test.mjs tests/catalogue-canvas.test.mjs tests/catalogue-canvas-player.test.mjs tests/catalogue-reference.test.mjs tests/learning-guide.test.mjs
+        run: node --test tests/catalogue-ingest-request.test.mjs tests/catalogue-curation.test.mjs tests/catalogue-core.test.mjs tests/catalogue-compare.test.mjs tests/catalogue-rotation.test.mjs tests/catalogue-player.test.mjs tests/catalogue-canvas.test.mjs tests/catalogue-canvas-player.test.mjs tests/catalogue-reference.test.mjs tests/learning-guide.test.mjs
       - name: Validate published site artifact and source links
         run: |
           python -m diamond_catalogue.references --check
