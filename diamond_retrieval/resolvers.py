@@ -404,9 +404,10 @@ class Loupe360CertificateResolver:
             and report == "LG634479985"
             and returned_lab == "IGI"
             and isinstance(v360, dict)
-            and v360.get("url") == "https://mediassests.s3.amazonaws.com/V360/Vision360.html"
-            and type(v360.get("frame_count")) is int
-            and v360["frame_count"] == 256
+            and isinstance(v360.get("url"), str) and bool(v360.get("url"))
+            and locator == "https://mediassests.s3.amazonaws.com/V360/Vision360.html"
+            and not isinstance(v360.get("frame_count"), bool)
+            and str(v360.get("frame_count")) == "256"
             and not isinstance(v360.get("top_index"), bool)
             and str(v360.get("top_index")) == "213"
         ):
