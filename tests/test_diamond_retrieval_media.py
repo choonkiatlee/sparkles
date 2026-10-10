@@ -108,7 +108,10 @@ class LoupeResolutionTests(unittest.TestCase):
         resolver = Loupe360CertificateResolver(http)
         children = resolver.resolve(_listing(), _loupe_reference())
 
-        self.assertEqual(len(children), 1)
+        self.assertEqual(len(children), 2)
+        self.assertEqual(children[1].locator, PIXORAC_V360)
+        self.assertTrue(children[1].metadata["loupe360_proxy_exact_certificate"])
+        self.assertEqual(children[1].metadata["fallback_for_retrieval_key"], DIAJEWEL_VIEWER)
         child = children[0]
         self.assertEqual(child.kind, ROTATION)
         self.assertEqual(child.locator, DIAJEWEL_VIEWER)
@@ -169,16 +172,16 @@ class LoupeResolutionTests(unittest.TestCase):
         children = Loupe360CertificateResolver(http).resolve(
             _listing(), _loupe_reference()
         )
-        self.assertEqual([item.kind for item in children], [ROTATION, VIDEO])
+        self.assertEqual([item.kind for item in children], [ROTATION, ROTATION, VIDEO])
         self.assertEqual(
             [item.locator for item in children],
-            [DIAJEWEL_VIEWER, direct],
+            [DIAJEWEL_VIEWER, PIXORAC_V360, direct],
         )
         self.assertEqual(len([call for call in http.calls if call[0] == "POST"]), 1)
         for child in children:
             self.assertEqual(child.metadata["report_number"], REPORT)
             self.assertEqual(child.provenance[0].source, "loupe360_exact_certificate")
-        self.assertEqual(children[1].metadata["format"], "video")
+        self.assertEqual(children[2].metadata["format"], "video")
         self.assertNotIn("format", children[0].metadata)
 
     def test_unknown_supplier_viewer_is_explicit_but_does_not_hide_video(self):

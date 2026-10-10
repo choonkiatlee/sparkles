@@ -91,6 +91,18 @@ class DiamondRetriever:
                 attempts.append(self._attempt(reference, EvidenceStatus.NOT_REQUESTED))
                 continue
 
+            # A certificate-matched proxy is a strictly lower-priority copy
+            # of the real supplier rotation, not an extra independent motion.
+            # Attempt it only if the preferred exact supplier source failed.
+            if reference.metadata.get("loupe360_proxy_exact_certificate") is True:
+                preferred = reference.metadata.get("fallback_for_retrieval_key")
+                if isinstance(preferred, str) and preferred in evidence_by_key:
+                    attempts.append(self._attempt(
+                        reference, EvidenceStatus.NOT_REQUESTED,
+                        "preferred supplier original already recovered",
+                    ))
+                    continue
+
             resolver = select_unique(self.resolvers, reference, role="evidence resolver")
             if resolver is not None:
                 if reference.retrieval_key in resolved_keys:
