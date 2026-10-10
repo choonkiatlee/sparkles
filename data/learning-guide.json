@@ -24,10 +24,6 @@
           "label": "Broad turn-off, wearer still preferred it"
         }
       ],
-      "featured_pair": [
-        "ps285166-r01",
-        "ps285166-r02"
-      ],
       "id": "movement",
       "prompt": "Compare how much of the diamond changes at once. Do the centre and outer steps keep taking turns?",
       "source_url": "https://www.pricescope.com/community/threads/asscher-evaluation-seeking-help.285166/",
@@ -63,10 +59,6 @@
           "label": "Promising, but dark when static"
         }
       ],
-      "featured_pair": [
-        "ps285166-r01",
-        "ps285166-r10"
-      ],
       "id": "centre",
       "prompt": "Watch the central steps during rotation. Is there changing light return or an area that rarely participates?",
       "source_url": "https://www.pricescope.com/community/threads/asscher-evaluation-seeking-help.285166/page-2",
@@ -95,10 +87,6 @@
           "id": "ps281114-r18",
           "label": "Specific P3 leakage concern"
         }
-      ],
-      "featured_pair": [
-        "ps285166-r07",
-        "ps285166-r01"
       ],
       "id": "tilt",
       "prompt": "Can the weak-looking steps flash on and off as you move? Does stronger tilt reveal a view through the stone?",
@@ -140,10 +128,6 @@
           "label": "Positive small-table example"
         }
       ],
-      "featured_pair": [
-        "ps285166-r04",
-        "ps285166-r05"
-      ],
       "id": "contrast",
       "prompt": "Compare the face-up pattern, then rotate. Does contrast alternate into bright flashes—or linger across too much of the stone?",
       "source_url": "https://www.pricescope.com/community/threads/asscher-evaluation-seeking-help.285166/",
@@ -173,10 +157,6 @@
           "label": "Limited comparison is not a verdict"
         }
       ],
-      "featured_pair": [
-        "ps282648-r12",
-        "ps281114-r16"
-      ],
       "id": "evidence-reassessment",
       "prompt": "Which evidence did each reviewer see, and which questions remained unresolved?",
       "source_url": "https://www.pricescope.com/community/threads/are-these-asschers-well-cut.282648/",
@@ -196,10 +176,6 @@
           "id": "ps285166-r07",
           "label": "Under-table steps that fail to flash"
         }
-      ],
-      "featured_pair": [
-        "ps281114-r18",
-        "ps285166-r07"
       ],
       "id": "p3-specific-leakage",
       "prompt": "Compare the V-shaped steps between the windmills and how those steps change as the stone moves.",
@@ -224,10 +200,6 @@
           "id": "ps282648-r15",
           "label": "Second: preferred motion"
         }
-      ],
-      "featured_pair": [
-        "ps282648-r14",
-        "ps282648-r15"
       ],
       "id": "same-spec-comparison",
       "prompt": "Watch the first and second 2.00ct E VVS2 stones side by side. Which centre changes more often? Neither proportions nor price alone settle the question.",
@@ -257,10 +229,6 @@
           "id": "ps281114-r16",
           "label": "Home comparison: different preferred cut"
         }
-      ],
-      "featured_pair": [
-        "ps281114-r16",
-        "ps281114-r23"
       ],
       "id": "performance-vs-preference",
       "prompt": "Contrast expert criticism with the buyer's later side-by-side videos and eventual choice. Which trade-offs matter to you?",
