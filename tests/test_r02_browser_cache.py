@@ -6,6 +6,8 @@ import hashlib
 import json
 import os
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -129,15 +131,17 @@ class R02CacheContractTests(unittest.TestCase):
     def test_downloader_fails_closed_without_browser_or_valid_certificate(self):
         with patch.dict(os.environ, {}, clear=True):
             self.assertFalse(Loupe360ProxyRotationDownloader(object()).supports(reference()))
-        with patch.dict(os.environ, {"R02_PIXORAC_ROOT": ROOT}):
-            with patch.object(cache, "EXPECTED_ROOT_SHA256", MOCK_HASH):
-                dl = Loupe360ProxyRotationDownloader(object())
-                self.assertTrue(dl.supports(reference()))
-                self.assertFalse(dl.supports(reference(lab="GIA")))
-                self.assertFalse(dl.supports(reference(supplier_frame_count=255)))
-                self.assertFalse(dl.supports(reference(r02_browser_observed_cache=False)))
-        with patch.dict(os.environ, {"R02_PIXORAC_ROOT": ROOT.replace("/500", "/501")}):
-            self.assertFalse(Loupe360ProxyRotationDownloader(object()).supports(reference()))
+        with TemporaryDirectory() as tmp:
+            (Path(tmp) / "r02-pixorac-root").write_text(ROOT, encoding="utf-8")
+            with patch.dict(os.environ, {"RUNNER_TEMP": tmp}):
+                with patch.object(cache, "EXPECTED_ROOT_SHA256", MOCK_HASH):
+                    dl = Loupe360ProxyRotationDownloader(object())
+                    self.assertTrue(dl.supports(reference()))
+                    self.assertFalse(dl.supports(reference(lab="GIA")))
+                    self.assertFalse(dl.supports(reference(supplier_frame_count=255)))
+                    self.assertFalse(dl.supports(reference(r02_browser_observed_cache=False)))
+                (Path(tmp) / "r02-pixorac-root").write_text(ROOT.replace("/500", "/501"), encoding="utf-8")
+                self.assertFalse(Loupe360ProxyRotationDownloader(object()).supports(reference()))
 
 
 if __name__ == "__main__":
