@@ -393,6 +393,43 @@ class Loupe360CertificateResolver:
                         },
                     ))
 
+
+        # R02's certificate record advertises only a generic mediassests player.
+        # The exact Loupe browser independently exposes an opaque indexed cache
+        # under the SHA-pinned source audited by Actions #38078719770. Never
+        # derive its missing cache component from the report or vendor URL.
+        if (
+            reference.identifier == "ps285166-r02:loupe-report"
+            and listing.url == "reference:ps285166-r02"
+            and report == "LG634479985"
+            and returned_lab == "IGI"
+            and isinstance(v360, dict)
+            and isinstance(v360.get("url"), str) and bool(v360.get("url"))
+            and locator == "https://mediassests.s3.amazonaws.com/V360/Vision360.html"
+            and not isinstance(v360.get("frame_count"), bool)
+            and str(v360.get("frame_count")) == "256"
+            and not isinstance(v360.get("top_index"), bool)
+            and str(v360.get("top_index")) == "213"
+        ):
+            from .r02_browser_cache import CACHE_REF
+            references.append(EvidenceReference(
+                identifier=f"{reference.identifier}:r02-browser-cache",
+                kind=ROTATION, retrieval_key=CACHE_REF, locator=CACHE_REF,
+                provenance=(ProvenanceStep(
+                    "loupe360_exact_certificate", self.endpoint,
+                    {"report_number": report, "certificate_id": record.get("id"),
+                     "source_type": "r02_browser_observed_indexed_proxy_jpeg",
+                     "source_audit": "https://github.com/choonkiatlee/sparkles/actions/runs/38078719770",
+                     "supplier_original_bytes_verified": False},
+                ),),
+                metadata={
+                    **metadata, "reference_id": "ps285166-r02",
+                    "r02_browser_observed_cache": True,
+                    "supplier_frame_count": 256,
+                    "supplier_top_index": 213,
+                },
+            ))
+
         video = record.get("video")
         if isinstance(video, str) and self._is_direct_video_url(video):
             video_metadata = {

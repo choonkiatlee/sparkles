@@ -44,6 +44,12 @@ jobs:
       - name: Install Sparkles
         run: python -m pip install -e .
 
+      - name: Discover exact R02 Pixorac cache (read-only, SHA-pinned)
+        if: inputs.reference_id == 'ps285166-r02'
+        run: |
+          python -m pip install selenium
+          python -m diamond_retrieval.r02_browser_cache --cache-path "$RUNNER_TEMP/r02-pixorac-root"
+
       - name: Enrich accepted reference (only opt-in media downloads)
         env:
           REFERENCE_ID: ${{ inputs.reference_id }}

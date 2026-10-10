@@ -1,0 +1,89 @@
+name: R02 exact browser-cache production gate
+
+on:
+  pull_request:
+    paths:
+      - "diamond_retrieval/r02_browser_cache.py"
+      - "diamond_retrieval/loupe360_proxy.py"
+      - "diamond_retrieval/resolvers.py"
+      - "tests/test_r02_browser_cache.py"
+      - ".github/workflows/r02-production-source-gate.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exact-r02-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install tested production dependencies
+        run: python -m pip install -e . selenium
+      - name: Network-free R02 identity and exact-cache source guards
+        run: python -m unittest tests.test_r02_browser_cache -v
+      - name: Recover exactly observed public R02 cache path, no tokens logged
+        timeout-minutes: 5
+        run: python -m diamond_retrieval.r02_browser_cache --cache-path "$RUNNER_TEMP/r02-pixorac-root"
+      - name: Validate real original proxy JPEG bytes and exact-report retrieval without publishing
+        timeout-minutes: 18
+        run: |
+          python - <<'PY'
+          from diamond_retrieval import retrieve_reference_media
+          result = retrieve_reference_media("ps285166-r02", lab="IGI", report_number="LG634479985")
+          print("R02 attempts (sanitized):", [
+              (x.reference_identifier, str(x.kind), x.status.value) for x in result.attempts
+          ])
+          matches = [x for x in result.rotations
+                     if x.metadata.get("source_transport") ==
+                     "r02_exact_browser_sha_pinned_indexed_proxy_jpeg"]
+          if not matches:
+              # Diagnostic is solely shape and source identity, never tokenized URLs.
+              import json
+              from urllib.parse import urlsplit
+              from diamond_retrieval.http import UrllibHttpClient
+              from diamond_retrieval.resolvers import Loupe360CertificateResolver
+              resolver = Loupe360CertificateResolver()
+              req = json.dumps({"query": resolver._query,
+                                "variables": {"cert": "LG634479985"}}).encode()
+              response = UrllibHttpClient().post(
+                  resolver.endpoint, timeout=20, content=req,
+                  headers={"Accept": "application/json", "Content-Type": "application/json"})
+              record = (json.loads(response.content).get("data") or {}).get("certificate_by_cert_number") or {}
+              v = record.get("v360") or {}
+              wrapped = v.get("url") or ""
+              try:
+                  decoded = resolver._unwrap_v360(wrapped)
+              except ValueError:
+                  decoded = ""
+              p = urlsplit(wrapped)
+              print("R02 provider shape:", {
+                  "cert_matches": record.get("certNumber") == "LG634479985",
+                  "lab": record.get("lab"), "v360_host": p.hostname,
+                  "source_exact": decoded == "https://mediassests.s3.amazonaws.com/V360/Vision360.html",
+                  "count_type": type(v.get("frame_count")).__name__,
+                  "count": v.get("frame_count"), "top": v.get("top_index"),
+              })
+          assert len(matches) == 1, "no unique pinned R02 rotation"
+          rotation = matches[0]
+          assert rotation.metadata.get("supplier") == "loupe360-pixorac-proxy"
+          assert rotation.metadata.get("supplier_original_bytes_verified") is False
+          assert len(rotation.frames) == 256
+          assert [x.source_index for x in rotation.frames] == list(range(256))
+          assert len({x.sha256 for x in rotation.frames}) == 256
+          assert all(x.dimensions == (819, 819) for x in rotation.frames)
+          assert rotation.face_up_hint == 213
+          assert rotation.frames[0].sha256 == "93bc22d267a879e68589a115fbebadf3bfa338503bf9b47ad4d8d5e86418ad1d"
+          assert rotation.frames[213].sha256 == "33b0d2848058db1c360fe212536a09e3dafd68b3857d150264b02b1f99455185"
+          assert rotation.frames[255].sha256 == "b2eb1257e78889824338e9ffd0ac164e001723b9ae1b0366d062303500b2673c"
+          assert result.stills, "R02 supplier still missing"
+          assert not any(x.outcome.value == "conflict" for x in result.identity_comparisons)
+          assert "assets-images.pixorac.com/" not in str(rotation.metadata), "opaque cache URL leaked to metadata"
+          print("R02 live source contract passed: 256 distinct 819x819 ordered proxy JPEGs; top=213")
+          PY
