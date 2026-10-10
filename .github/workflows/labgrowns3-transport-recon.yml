@@ -4,45 +4,44 @@ on:
   pull_request:
     paths:
       - ".github/workflows/labgrowns3-transport-recon.yml"
+      - "diamond_retrieval/motion_sources.py"
+      - "diamond_retrieval/composition.py"
+      - "tests/test_diamond_retrieval_motion.py"
 
 permissions: {}
 
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - run: python -m pip install -e .
-      - name: Probe bounded exact original motion endpoints
+      - name: Full 256-frame original rotation audit for both accepted reference stones
         run: |
           python - <<'PY'
-          import json
-          from diamond_retrieval.http import UrllibHttpClient
-          from diamond_retrieval.motion_sources import _bootstrap_contract
-          http=UrllibHttpClient(max_bytes=12*1024*1024)
-          ROOT="https://labgrowns3.s3.ap-southeast-1.amazonaws.com/imaged/"
-          for item in ("1210811_B2C","1165252_B2C"):
-              print("==== PROBE",item,"====",flush=True)
-              url=ROOT+item+"/0.json?version="
-              try:
-                  response=http.get(url,timeout=15)
-                  print("BOOTSTRAP",response.status_code,len(response.content),response.headers.get("Content-Type"),flush=True)
-                  if response.status_code!=200:continue
-                  data=json.loads(response.content)
-                  print("FIELDS",list(data)[:15],flush=True)
-                  dims,scramble,version=_bootstrap_contract(data,source="labgrowns3")
-                  print("AUDITED",dims,"version",version,"scramble levels",len(scramble),flush=True)
-                  for number in (1,7):
-                      u=ROOT+item+f"/{number}.json?version={version}"
-                      r=http.get(u,timeout=15)
-                      print("BATCH",number,"status",r.status_code,"bytes",len(r.content),flush=True)
-                      if r.status_code==200:
-                          b=json.loads(r.content)
-                          print("BATCH SHAPE",type(b).__name__,len(b),type(b[0]).__name__ if b else "-",flush=True)
-              except Exception as exc:
-                  print("PROBE_ERROR",type(exc).__name__,str(exc)[:150],flush=True)
+          from diamond_retrieval import (
+              ROTATION, EvidenceReference, Labgrowns3RotationDownloader,
+              ProgressiveRotationProcessor, UrllibHttpClient,
+          )
+          downloader=Labgrowns3RotationDownloader(UrllibHttpClient(max_bytes=16*1024*1024),timeout=20)
+          processor=ProgressiveRotationProcessor()
+          root="https://labgrowns3.s3.ap-southeast-1.amazonaws.com/stoneimages360.html?d="
+          for ref_id,item in (
+              ("ps285166-r06","1210811_B2C"),
+              ("ps285166-r10","1165252_B2C"),
+          ):
+              url=root+item
+              ref=EvidenceReference(identifier=ref_id,kind=ROTATION,retrieval_key=url,locator=url)
+              raw=downloader.download(ref)
+              evidence=processor.process(raw)[0]
+              frames=evidence.frames
+              print("REFERENCE",ref_id,"frame count",len(frames),"dimensions",evidence.metadata.get("dimensions"),"source version",raw.metadata.get("source_version"),"first_sha256",frames[0].sha256,flush=True)
+              assert len(frames)==256
+              assert [f.source_index for f in frames]==list(range(256))
+              assert evidence.metadata["sequence_complete"]
+              assert len({f.sha256 for f in frames})>=200
           PY
