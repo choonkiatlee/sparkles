@@ -1,18 +1,9 @@
 {
-  "schema": "sparkles-reference/1",
-  "id": "ps281114-r23",
-  "label": "3.19ct I IF — dark face-up, preferred by wearer",
-  "identity": {
-    "status": "reported",
-    "lab": "GIA",
-    "report_number": "13534682"
-  },
-  "linked_diamond_id": null,
+  "commentary": "lovedogs disliked the broad simultaneous turn-off, substantial face-up darkness and flat-looking larger table (#55). Ibrakeforpossums observed that a preference for stronger contrast can legitimately differ (#56). The buyer later obtained ASET, purchased this stone and directly compared it with the 3.03ct target-centre candidate in hand (#59/#63/#66). In those home comparisons lovedogs and Ibrakeforpossums preferred the 3.03ct (#67/#69), while Dreamer_D liked the larger corner cuts, apparent face-up size and windmill appearance of this 3.19ct (#68). The eventual wearer preferred this stone, and the buyer reported satisfaction after setting it (#71/#72). Neither a blanket 'bad' judgement nor a blanket technical endorsement fits the full chronology. The Whiteflash listing calls GIA13534682 an EMERALD, despite the forum discussing it among Asscher/square step-cuts: retain the shape classification conflict.",
   "diamond_metadata": {
-    "shape": "Emerald (retailer category; square step cut discussed as Asscher)",
     "carat": "3.19",
-    "colour": "I",
     "clarity": "IF",
+    "colour": "I",
     "dimensions": [
       8.64,
       8.48,
@@ -20,32 +11,106 @@
     ],
     "reported_proportions": {
       "table_percent": 63
-    }
+    },
+    "shape": "Emerald (retailer category; square step cut discussed as Asscher)"
   },
-  "commentary": "lovedogs disliked the broad simultaneous turn-off, substantial face-up darkness and flat-looking larger table (#55). Ibrakeforpossums observed that a preference for stronger contrast can legitimately differ (#56). The buyer later obtained ASET, purchased this stone and directly compared it with the 3.03ct target-centre candidate in hand (#59/#63/#66). In those home comparisons lovedogs and Ibrakeforpossums preferred the 3.03ct (#67/#69), while Dreamer_D liked the larger corner cuts, apparent face-up size and windmill appearance of this 3.19ct (#68). The eventual wearer preferred this stone, and the buyer reported satisfaction after setting it (#71/#72). Neither a blanket 'bad' judgement nor a blanket technical endorsement fits the full chronology. The Whiteflash listing calls GIA13534682 an EMERALD, despite the forum discussing it among Asscher/square step-cuts: retain the shape classification conflict.",
+  "enrichment_attempts": [
+    {
+      "kind": "rotation",
+      "locator": "loupe360-report:13534682",
+      "reference_identifier": "ps281114-r23:loupe-report",
+      "status": "resolved"
+    },
+    {
+      "kind": "rotation",
+      "locator": "https://d360.tech/view.html?d=89-AY-8102",
+      "reference_identifier": "ps281114-r23:loupe-report:supplier-rotation",
+      "status": "invalid_payload"
+    },
+    {
+      "kind": "still",
+      "locator": "https://assets-images.pixorac.com/a4b8ab08-cc52-488b-a28e-8a0f467591ea.jpg",
+      "reference_identifier": "ps281114-r23:loupe-report:supplier-still",
+      "status": "success"
+    }
+  ],
+  "evidence": [
+    {
+      "dimensions": [
+        778,
+        778
+      ],
+      "identifier": "ps281114-r23:loupe-report:supplier-still",
+      "identity_observations": [],
+      "kind": "still",
+      "metadata": {
+        "media_type": "image/jpeg",
+        "sha256": "dd5219b6e74a487a66bb0ffd5d1e78b04002f5dd11092fcf4f9154ec521b1a60"
+      },
+      "payload_asset": {
+        "byte_count": 72137,
+        "media_type": "image/jpeg",
+        "sha256": "dd5219b6e74a487a66bb0ffd5d1e78b04002f5dd11092fcf4f9154ec521b1a60",
+        "storage": {
+          "backend": "github_release",
+          "locator": "sparkles-reference-ps281114-r23/asset-dd5219b6e74a487a66bb0ffd5d1e78b04002f5dd11092fcf4f9154ec521b1a60.jpg",
+          "url": "https://github.com/choonkiatlee/sparkles/releases/download/sparkles-reference-ps281114-r23/asset-dd5219b6e74a487a66bb0ffd5d1e78b04002f5dd11092fcf4f9154ec521b1a60.jpg"
+        }
+      },
+      "provenance": [
+        {
+          "locator": "reference:ps281114-r23",
+          "source": "curated_reference"
+        },
+        {
+          "locator": null,
+          "source": "curated_report"
+        },
+        {
+          "locator": "https://g.nivoda.com/graphql-public-loupe360",
+          "source": "loupe360_exact_certificate"
+        },
+        {
+          "locator": "https://assets-images.pixorac.com/a4b8ab08-cc52-488b-a28e-8a0f467591ea.jpg",
+          "source": "still_image"
+        }
+      ],
+      "record_key": "f70599f53695b35b817ea8167a9f42a0f57c8e5ac68781d81d2f474a2869bf4e",
+      "status": "success"
+    }
+  ],
+  "id": "ps281114-r23",
+  "identity": {
+    "lab": "GIA",
+    "report_number": "13534682",
+    "status": "reported"
+  },
+  "label": "3.19ct I IF — dark face-up, preferred by wearer",
+  "linked_diamond_id": null,
+  "media_sources": [],
+  "schema": "sparkles-reference/1",
   "source_links": [
     {
       "kind": "discussion",
-      "url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/page-2",
-      "note": "Initial broad darkness objections #55/#56 and later ASET/selection context."
+      "note": "Initial broad darkness objections #55/#56 and later ASET/selection context.",
+      "url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/page-2"
     },
     {
       "kind": "real_world_comparison",
-      "url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/page-3",
-      "note": "In-hand comparison R16 vs R23 #66–#69; preference and final ring follow-up #71/#72."
+      "note": "In-hand comparison R16 vs R23 #66–#69; preference and final ring follow-up #71/#72.",
+      "url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/page-3"
     },
     {
       "kind": "listing",
-      "url": "https://www.whiteflash.com/loose-diamonds/3.19-carat-i-color-if-clarity-emerald-sku-4646906",
-      "note": "Retailer describes stone as Emerald; preserve category caveat and source-reported GIA13534682."
+      "note": "Retailer describes stone as Emerald; preserve category caveat and source-reported GIA13534682.",
+      "url": "https://www.whiteflash.com/loose-diamonds/3.19-carat-i-color-if-clarity-emerald-sku-4646906"
     },
     {
       "kind": "research_catalogue",
-      "url": "https://github.com/choonkiatlee/sparkles/blob/master/docs/360/external-benchmark/pricescope/source-catalog.json",
-      "note": "Archived benchmark sample: asscher-eval-large-dark. Provenance pointer only; not a certified catalogue identity."
+      "note": "Archived benchmark sample: asscher-eval-large-dark. Provenance pointer only; not a certified catalogue identity.",
+      "url": "https://github.com/choonkiatlee/sparkles/blob/master/docs/360/external-benchmark/pricescope/source-catalog.json"
     }
   ],
-  "media_sources": [],
   "topics": [
     "simultaneous-darkness",
     "contrast",
@@ -53,6 +118,5 @@
     "buyer-choice",
     "real-world-reassessment",
     "shape-discrepancy"
-  ],
-  "evidence": []
+  ]
 }
