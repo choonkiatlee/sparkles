@@ -6,7 +6,77 @@
     "colour": "E",
     "shape": "Asscher"
   },
-  "evidence": [],
+  "enrichment_attempts": [
+    {
+      "kind": "rotation",
+      "locator": "loupe360-report:LG644442866",
+      "reference_identifier": "ps285166-r05:loupe-report",
+      "status": "resolved"
+    },
+    {
+      "kind": "rotation",
+      "locator": "https://www.filesonsky.com/v360/Vision360.HTML?d=659844",
+      "reference_identifier": "ps285166-r05:loupe-report:supplier-rotation",
+      "status": "unsupported"
+    },
+    {
+      "kind": "still",
+      "locator": "https://assets-images.pixorac.com/aHR0cHM6Ly93d3cuZmlsZXNvbnNreS5jb20vdjM2MC9WaXNpb24zNjAuSFRNTD9kPTY1OTg0NA==/4.jpg",
+      "reference_identifier": "ps285166-r05:loupe-report:supplier-still",
+      "status": "success"
+    },
+    {
+      "kind": "rotation",
+      "locator": "https://loupe360.com/diamond/a8a02d88-2480-5194-b9ce-4d805c7abaa6/video/500/500/autoplay",
+      "reference_identifier": "ps285166-r05:source-0",
+      "status": "unsupported"
+    }
+  ],
+  "evidence": [
+    {
+      "dimensions": [
+        758,
+        599
+      ],
+      "identifier": "ps285166-r05:loupe-report:supplier-still",
+      "identity_observations": [],
+      "kind": "still",
+      "metadata": {
+        "media_type": "image/jpeg",
+        "sha256": "3c9cde81d6e0da3d5316a713fab598e2d31b50bbab9ab586efe5ca7b06577164"
+      },
+      "payload_asset": {
+        "byte_count": 35868,
+        "media_type": "image/jpeg",
+        "sha256": "3c9cde81d6e0da3d5316a713fab598e2d31b50bbab9ab586efe5ca7b06577164",
+        "storage": {
+          "backend": "github_release",
+          "locator": "sparkles-reference-ps285166-r05/asset-3c9cde81d6e0da3d5316a713fab598e2d31b50bbab9ab586efe5ca7b06577164.jpg",
+          "url": "https://github.com/choonkiatlee/sparkles/releases/download/sparkles-reference-ps285166-r05/asset-3c9cde81d6e0da3d5316a713fab598e2d31b50bbab9ab586efe5ca7b06577164.jpg"
+        }
+      },
+      "provenance": [
+        {
+          "locator": "reference:ps285166-r05",
+          "source": "curated_reference"
+        },
+        {
+          "locator": null,
+          "source": "curated_report"
+        },
+        {
+          "locator": "https://g.nivoda.com/graphql-public-loupe360",
+          "source": "loupe360_exact_certificate"
+        },
+        {
+          "locator": "https://assets-images.pixorac.com/aHR0cHM6Ly93d3cuZmlsZXNvbnNreS5jb20vdjM2MC9WaXNpb24zNjAuSFRNTD9kPTY1OTg0NA==/4.jpg",
+          "source": "still_image"
+        }
+      ],
+      "record_key": "d8b624fdb0247d37e0ee72be9b5fd931c6c6d3d2dd3bda6da6da67b30eb205d1",
+      "status": "success"
+    }
+  ],
   "id": "ps285166-r05",
   "identity": {
     "lab": "IGI",
