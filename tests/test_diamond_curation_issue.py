@@ -3,7 +3,10 @@ from __future__ import annotations
 import base64
 import copy
 import json
+import subprocess
+import sys
 import unittest
+from pathlib import Path
 
 from diamond_catalogue.github_api import GitHubError
 from tools.apply_diamond_curation_issue import (
@@ -96,6 +99,21 @@ class FakeGit:
 
 
 class CurationIssueTests(unittest.TestCase):
+    def test_workflow_uses_importable_repo_module_in_clean_runner(self):
+        root = Path(__file__).resolve().parents[1]
+        workflow = (root / ".github/workflows/diamond-curation-issue-request.yml").read_text(encoding="utf-8")
+        expected = "python -m tools.apply_diamond_curation_issue --event"
+        self.assertIn(expected, workflow)
+        self.assertNotIn("python tools/apply_diamond_curation_issue.py", workflow)
+        # Running through -m makes the checkout root importable even without
+        # 'pip install -e .' on the GitHub Actions runner.
+        result = subprocess.run(
+            [sys.executable, "-m", "tools.apply_diamond_curation_issue", "--help"],
+            cwd=root, capture_output=True, text=True, check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("--github-output", result.stdout)
+
     def test_accept_exact_owner_request_and_independent_transitions(self):
         changes = [
             {"id": ONE, "field": "starred", "from": False, "to": True},
