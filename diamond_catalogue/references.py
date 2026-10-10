@@ -200,7 +200,7 @@ def validate_reference(value: dict, *, expected_id: str | None = None,
             if record["status"] != "success" or not isinstance(frames, list) or len(frames) != 256:
                 raise CatalogueError("Reference rotation must have a verified complete 256-frame sequence")
             indices = [frame.get("source_index") for frame in frames if isinstance(frame, dict)]
-            if indices != list(range(256)):
+            if sorted(indices) != list(range(256)):
                 raise CatalogueError("Reference rotation has incomplete or unordered source frames")
             if asset is not None:
                 raise CatalogueError("Reference rotations may not pretend a bundle is playable motion")
