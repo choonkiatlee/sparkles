@@ -63,3 +63,15 @@ test("strict curation schemas reject forged IDs, references, unknown fields and 
   assert.throws(()=>setDraftFlag(emptyCuration(),emptyDraft(),"igi-lg111","archived","true",ids));
   assert.throws(()=>validateDraft({schema:DRAFT_SCHEMA,diamonds:{"igi-lg222":{archived:null}}},ids));
 });
+
+test("archiving does not remove IDs from selection or shared deep links", async()=>{
+  const {selectionFromSearch} = await import("../catalogue/core.mjs");
+  const baseline=emptyCuration();
+  const draft=setDraftFlag(baseline,emptyDraft(),"igi-lg111","archived",true,ids);
+  const visible=curationRows(rows,{},baseline,draft);
+  assert.equal(visible.some(row=>row.id==="igi-lg111"),false);
+  assert.equal(rows.length,3); // The shared allRows reference is not mutated.
+  const selected=selectionFromSearch("?selected=igi-lg111,igi-lg222&compare=1",ids);
+  assert.deepEqual(selected.selected,["igi-lg111","igi-lg222"]);
+  assert.equal(selected.comparing,true);
+});
