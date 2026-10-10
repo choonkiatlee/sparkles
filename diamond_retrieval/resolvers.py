@@ -146,7 +146,17 @@ class Loupe360CertificateResolver:
             and bool(query.get("d", [""])[0])
         ):
             return True
-        if (\n            host == "labgrowns3.s3.ap-southeast-1.amazonaws.com"\n            and parts.scheme == "https"\n            and parts.path.lower() == "/stoneimages360.html"\n            and not parts.fragment\n            and set(query) == {"d"}\n            and len(query["d"]) == 1\n            and bool(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,90}", query["d"][0]))\n        ):\n            return True\n        if host == "workshop.360view.link":
+        if (
+            host == "labgrowns3.s3.ap-southeast-1.amazonaws.com"
+            and parts.scheme == "https"
+            and parts.path.lower() == "/stoneimages360.html"
+            and not parts.fragment
+            and set(query) == {"d"}
+            and len(query["d"]) == 1
+            and bool(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,90}", query["d"][0]))
+        ):
+            return True
+        if host == "workshop.360view.link":
             if parts.path.startswith("/view/") and len(parts.path.rstrip("/").split("/")) >= 3:
                 return True
             return (
