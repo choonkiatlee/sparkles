@@ -241,6 +241,19 @@ def probe_filesonsky_bootstrap_readonly() -> None:
 
     # R05's source is https://www.filesonsky.com/v360/Vision360.HTML?d=659844.
     # These are bounded diagnostic hypotheses, not publication locators.
+    reference = json.loads(
+        (ROOT / "data/references/ps285166-r05.json").read_text("utf-8")
+    )
+    expected_viewer = "https://www.filesonsky.com/v360/Vision360.HTML?d=659844"
+    if (
+        reference["identity"]["report_number"] != "LG644442866"
+        or not any(
+            attempt.get("locator") == expected_viewer
+            and attempt.get("kind") == "rotation"
+            for attempt in reference.get("enrichment_attempts", [])
+        )
+    ):
+        raise SystemExit("R05 trusted resolved-viewer source changed; skip bootstrap probe")
     prefixes = ("https://www.filesonsky.com/v360/imaged/659844",
                 "https://www.filesonsky.com/imaged/659844")
     client = UrllibHttpClient(max_bytes=300_000)
