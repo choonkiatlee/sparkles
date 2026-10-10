@@ -1,4 +1,44 @@
 {
-  "schema": "sparkles-diamond-curation/1",
-  "diamonds": {}
+  "diamonds": {
+    "igi-lg728537967": {
+      "archived": true
+    },
+    "igi-lg756520111": {
+      "archived": true
+    },
+    "igi-lg756580087": {
+      "archived": true
+    },
+    "igi-lg770608271": {
+      "archived": true
+    },
+    "igi-lg781646632": {
+      "archived": true
+    },
+    "igi-lg798610068": {
+      "archived": true
+    },
+    "igi-lg811638512": {
+      "starred": true
+    },
+    "igi-lg815698273": {
+      "archived": true
+    },
+    "igi-lg816611062": {
+      "archived": true
+    },
+    "igi-lg818659722": {
+      "archived": true
+    },
+    "igi-lg825659883": {
+      "starred": true
+    },
+    "igi-lg833634461": {
+      "starred": true
+    },
+    "igi-lg836619414": {
+      "archived": true
+    }
+  },
+  "schema": "sparkles-diamond-curation/1"
 }
