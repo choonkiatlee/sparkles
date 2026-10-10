@@ -6,10 +6,6 @@ on:
 
 permissions: {}
 
-concurrency:
-  group: sparkles-diamond-catalogue-master-publisher
-  cancel-in-progress: false
-
 jobs:
   enrich:
     # Only the repository owner's exact-title requests may select an accepted
@@ -19,6 +15,11 @@ jobs:
       github.event.issue.user.login == 'choonkiatlee' &&
       github.event.issue.title == 'Enrich learning reference'
     runs-on: ubuntu-latest
+    # Apply publisher serialization only after this issue's owner/title gate passes.
+    # Non-matching issue handlers must not occupy or evict the pending run.
+    concurrency:
+      group: sparkles-diamond-catalogue-master-publisher
+      cancel-in-progress: false
     timeout-minutes: 40
     permissions:
       contents: write

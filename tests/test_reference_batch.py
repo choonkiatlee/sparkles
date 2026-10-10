@@ -86,5 +86,29 @@ class ReferenceBatchTests(unittest.TestCase):
             self.assertEqual(batch_targets(root), ("supported",))
 
 
+    def test_unrelated_owner_issue_workflows_do_not_cancel_reference_publisher(self):
+        # On GitHub, concurrency at the *workflow* level applies before job.if
+        # and unrelated issue-open events can evict a valid pending publisher.
+        root = Path(__file__).resolve().parents[1] / ".github" / "workflows"
+        for filename in (
+            "learning-reference-issue-request.yml",
+            "learning-reference-batch-request.yml",
+            "publish-learning-archived-media.yml",
+        ):
+            with self.subTest(workflow=filename):
+                body = (root / filename).read_text(encoding="utf-8")
+                self.assertNotIn("\nconcurrency:\n", body)
+                self.assertIn(
+                    "\n    concurrency:\n"
+                    "      group: sparkles-diamond-catalogue-master-publisher\n"
+                    "      cancel-in-progress: false\n",
+                    body,
+                )
+                self.assertLess(body.index("    if: >-"), body.index("    concurrency:"))
+                self.assertIn(
+                    "github.event.issue.user.login == 'choonkiatlee'", body
+                )
+
+
 if __name__ == "__main__":
     unittest.main()

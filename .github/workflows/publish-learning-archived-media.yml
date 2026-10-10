@@ -6,10 +6,6 @@ on:
 
 permissions: {}
 
-concurrency:
-  group: sparkles-diamond-catalogue-master-publisher
-  cancel-in-progress: false
-
 jobs:
   publish:
     # The issue title is solely a fixed owner-authenticated signal; none of
@@ -19,6 +15,11 @@ jobs:
       github.event.issue.user.login == 'choonkiatlee' &&
       github.event.issue.title == 'Publish archived PriceScope learning motion'
     runs-on: ubuntu-latest
+    # Apply publisher serialization only after this issue's owner/title gate passes.
+    # Non-matching issue handlers must not occupy or evict the pending run.
+    concurrency:
+      group: sparkles-diamond-catalogue-master-publisher
+      cancel-in-progress: false
     timeout-minutes: 180
     permissions:
       contents: write
