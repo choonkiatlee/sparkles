@@ -43,7 +43,7 @@ jobs:
               event = json.load(f)
           body = (event["issue"].get("body") or "").strip()
           match = re.fullmatch(
-              r"reference_id: ([a-z0-9]+(?:-[a-z0-9]+)*)\\nmode: (media|all)", body
+              r"reference_id: ([a-z0-9]+(?:-[a-z0-9]+)*)\nmode: (media|all)", body
           )
           if not match:
               raise SystemExit("Expected two lines: reference_id: <id> and mode: media|all")
@@ -55,7 +55,7 @@ jobs:
           if record.get("id") != reference_id:
               raise SystemExit("Reference filename/ID mismatch")
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
-              f.write(f"reference_id={reference_id}\\nmode={mode}\\n")
+              f.write(f"reference_id={reference_id}\nmode={mode}\n")
           PY
 
       - uses: actions/setup-python@v5
