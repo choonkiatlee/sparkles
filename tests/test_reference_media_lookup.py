@@ -177,8 +177,22 @@ class ReferenceMediaLookupTests(unittest.TestCase):
             }], http_client=http,
         )
         self.assertIsNone(result.metadata.report_number)
-        self.assertEqual(result.attempts[0].status, EvidenceStatus.UNSUPPORTED)
-        self.assertFalse(http.calls)
+        self.assertIsNone(result.metadata.lab)
+        # This exact URL is now independently source-pinned for native R09.
+        # The fixture has no matching proxy response, so it fails closed after
+        # one source lookup and never treats viewer digits as a certificate.
+        self.assertEqual(result.attempts[0].status, EvidenceStatus.RESOLUTION_FAILED)
+        self.assertEqual(http.calls[0], ("POST", GRAPHQL))
+        self.assertFalse(any(call[0] == "GET" for call in http.calls))
+        unrelated = FakeHttp()
+        other = retrieve_reference_media(
+            "ps285166-r09", media_sources=[{
+                "kind": "viewer", "provider": "loupe360",
+                "url": "https://loupe360.com/diamond/999999999",
+            }], http_client=unrelated,
+        )
+        self.assertEqual(other.attempts[0].status, EvidenceStatus.UNSUPPORTED)
+        self.assertFalse(unrelated.calls)
 
     def test_missing_match_and_conflicting_report_or_lab_never_attach_evidence(self):
         for payload in (
