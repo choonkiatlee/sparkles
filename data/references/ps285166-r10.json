@@ -6,7 +6,71 @@
     "colour": "E",
     "shape": "Asscher"
   },
-  "evidence": [],
+  "enrichment_attempts": [
+    {
+      "kind": "rotation",
+      "locator": "loupe360-report:LG644473759",
+      "reference_identifier": "ps285166-r10:loupe-report",
+      "status": "resolved"
+    },
+    {
+      "kind": "rotation",
+      "locator": "https://labgrowns3.s3.ap-southeast-1.amazonaws.com/stoneimages360.html?d=1165252_B2C",
+      "reference_identifier": "ps285166-r10:loupe-report:supplier-rotation",
+      "status": "unsupported"
+    },
+    {
+      "kind": "still",
+      "locator": "https://assets-images.pixorac.com/110c7601-4f81-434a-9032-85c70befddce.jpg",
+      "reference_identifier": "ps285166-r10:loupe-report:supplier-still",
+      "status": "success"
+    }
+  ],
+  "evidence": [
+    {
+      "dimensions": [
+        634,
+        634
+      ],
+      "identifier": "ps285166-r10:loupe-report:supplier-still",
+      "identity_observations": [],
+      "kind": "still",
+      "metadata": {
+        "media_type": "image/jpeg",
+        "sha256": "68d35e29ac5add666891acd27dd1a713a226b5345a9d5e9272e9522a4645fa54"
+      },
+      "payload_asset": {
+        "byte_count": 38024,
+        "media_type": "image/jpeg",
+        "sha256": "68d35e29ac5add666891acd27dd1a713a226b5345a9d5e9272e9522a4645fa54",
+        "storage": {
+          "backend": "github_release",
+          "locator": "sparkles-reference-ps285166-r10/asset-68d35e29ac5add666891acd27dd1a713a226b5345a9d5e9272e9522a4645fa54.jpg",
+          "url": "https://github.com/choonkiatlee/sparkles/releases/download/sparkles-reference-ps285166-r10/asset-68d35e29ac5add666891acd27dd1a713a226b5345a9d5e9272e9522a4645fa54.jpg"
+        }
+      },
+      "provenance": [
+        {
+          "locator": "reference:ps285166-r10",
+          "source": "curated_reference"
+        },
+        {
+          "locator": null,
+          "source": "curated_report"
+        },
+        {
+          "locator": "https://g.nivoda.com/graphql-public-loupe360",
+          "source": "loupe360_exact_certificate"
+        },
+        {
+          "locator": "https://assets-images.pixorac.com/110c7601-4f81-434a-9032-85c70befddce.jpg",
+          "source": "still_image"
+        }
+      ],
+      "record_key": "41570140d34ca92dec785b845c494b6a8fd1b96edf252b910fd876b2e91a62bf",
+      "status": "success"
+    }
+  ],
   "id": "ps285166-r10",
   "identity": {
     "lab": "IGI",
