@@ -1,0 +1,29 @@
+name: R23 original viewer order research
+
+on:
+  pull_request:
+    paths:
+      - "tools/r23_d360_player_contract_audit.py"
+      - ".github/workflows/r23-legacy-d360-player-research.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout reviewed audit
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Sparkles
+        run: python -m pip install -e .
+      - name: Audit exact original viewer code (read only)
+        timeout-minutes: 5
+        run: python tools/r23_d360_player_contract_audit.py
