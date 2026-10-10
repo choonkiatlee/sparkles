@@ -58,7 +58,7 @@ test("all three educational threads have independent, source-backed reference en
   assert.match(r23.commentary,/EMERALD/);
 });
 
-test("mixed selection URLs round trip, respect five entries, and do not merge identities",()=>{
+test("mixed selection URLs round trip, grow past five, respect the cap and keep identities",()=>{
   const ids=new Set([...certified.map(row=>row.id),...refs.map(row=>row.id)]);
   const one=certified[0].id, two=certified[1].id;
   const r05=ref("ps285166-r05").id,r10=ref("ps285166-r10").id;
@@ -66,7 +66,14 @@ test("mixed selection URLs round trip, respect five entries, and do not merge id
   assert.equal(new Set(selected).size,5);
   const query=selectionSearch("?campaign=study",selected,true);
   assert.deepEqual(selectionFromSearch("?"+query,ids),{selected,comparing:true});
-  assert.equal(toggleSelection(selected,ref("ps285166-r09").id).length,MAX_SELECTION);
+  const six=toggleSelection(selected,ref("ps285166-r09").id);
+  assert.equal(six.length,6);
+  const more=refs.map(row=>row.id).filter(id=>!six.includes(id)).slice(0,MAX_SELECTION-six.length);
+  const full=[...six,...more];
+  assert.equal(full.length,MAX_SELECTION);
+  assert.deepEqual(selectionFromSearch("?"+selectionSearch("",full,true),ids),
+    {selected:full,comparing:true});
+  assert.deepEqual(toggleSelection(full,ref("ps285166-r11").id),full);
   assert.notEqual(r05,r10);
   assert.notEqual(doc(ref("ps285166-r05")).identity.report_number,
     doc(ref("ps285166-r10")).identity.report_number);
