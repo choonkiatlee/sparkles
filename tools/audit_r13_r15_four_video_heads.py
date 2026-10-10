@@ -83,9 +83,14 @@ def ordered_media_items(tree: object) -> list[dict]:
     return items
 
 
-def observed_album_json(browser, events: list[dict], album: str) -> list[dict]:
+def observed_album_json(browser, events: list[dict], album: str,
+                        diagnostic: dict | None = None) -> list[dict]:
     """Use only already-delivered same-album JSON; no new API calls."""
     token = urlsplit(validate_album(album)).path.rsplit("/", 1)[-1]
+    stats = diagnostic if diagnostic is not None else {}
+    stats.update({"same_album_api_responses": 0, "json_candidates": 0,
+                  "response_body_attempts": 0, "media_entries_parsed": 0,
+                  "body_error_classes": []})
     for row in events:
         try:
             event = json.loads(row["message"])["message"]
@@ -95,13 +100,17 @@ def observed_album_json(browser, events: list[dict], album: str) -> list[dict]:
             response = params["response"]
             parts = urlsplit(response["url"])
             if (parts.scheme != "https" or parts.hostname != "api.imgur.com"
-                    or token not in parts.path or response.get("status") != 200
-                    or "json" not in str(response.get("mimeType", "")).lower()):
+                    or token not in parts.path):
                 continue
+            stats["same_album_api_responses"] += 1
+            if response.get("status") != 200 or "json" not in str(response.get("mimeType", "")).lower():
+                continue
+            stats["json_candidates"] += 1
             headers = {k.lower(): v for k, v in response.get("headers", {}).items()}
             length = headers.get("content-length", "")
             if not str(length).isdigit() or int(length) > MAX_PUBLIC_JSON:
                 continue
+            stats["response_body_attempts"] += 1
             raw = browser.execute_cdp_cmd("Network.getResponseBody", {
                 "requestId": params["requestId"],
             })
@@ -109,9 +118,16 @@ def observed_album_json(browser, events: list[dict], album: str) -> list[dict]:
             if raw.get("base64Encoded") or len(content) > MAX_PUBLIC_JSON:
                 continue
             matches = ordered_media_items(json.loads(content))
+            stats["media_entries_parsed"] = max(stats["media_entries_parsed"], len(matches))
             if matches:
                 return matches
-        except (KeyError, TypeError, ValueError, AttributeError):
+        except (KeyError, TypeError, ValueError, AttributeError) as exc:
+            if type(exc).__name__ not in stats["body_error_classes"]:
+                stats["body_error_classes"].append(type(exc).__name__)
+            continue
+        except Exception as exc:
+            if type(exc).__name__ not in stats["body_error_classes"]:
+                stats["body_error_classes"].append(type(exc).__name__)
             continue
     return []
 
@@ -222,7 +238,9 @@ def run_browser() -> list[dict]:
                 browser.get(album)
                 time.sleep(5)
                 events = browser.get_log("performance")
-                items = observed_album_json(browser, events, album)
+                stats = {}
+                items = observed_album_json(browser, events, album, diagnostic=stats)
+                case["album_api_diagnostic"] = stats
                 observed = observed_mp4_requests(events)
                 case["source"] = "same_album_first_party_public_json_and_observed_blocked_CDN_requests"
                 case["album_metadata_count"] = len(items)
