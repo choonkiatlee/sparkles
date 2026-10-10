@@ -65,7 +65,7 @@ class R03R09PixoracTests(unittest.TestCase):
             "https://assets-images.pixorac.com/different-item"
         )
         client.post.return_value.content = json.dumps(response).encode()
-        self.assertEqual(query_metadata(client, name, root)["status"], "not_confirmed_256_proxy")
+        self.assertEqual(query_metadata(client, name, root)["status"], "not_confirmed_indexed_proxy")
 
     def test_complete_256_requires_distinct_same_size_frames(self):
         def frame(idx):
@@ -76,6 +76,9 @@ class R03R09PixoracTests(unittest.TestCase):
             valid = validate_full(client, "https://assets-images.pixorac.com/pin", "jpg", {})
             self.assertEqual(valid["status"], "complete_256_proxy_frames")
             self.assertEqual(valid["distinct_hashes"], 256)
+            count255 = validate_full(client, "https://assets-images.pixorac.com/pin", "jpg", {}, count=255)
+            self.assertEqual(count255["status"], "complete_255_proxy_frames")
+            self.assertEqual(count255["frame_count"], 255)
         with patch("tools.audit_r03_r09_pixorac.request_one",
                    side_effect=lambda _c, _r, idx, _fmt:
                         {"valid": True, "sha256": "same", "dimensions": [600, 600]}):
