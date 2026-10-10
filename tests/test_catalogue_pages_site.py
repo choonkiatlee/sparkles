@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
-from tools.build_catalogue_pages import ROOT, build, validate_learning_guide
+from tools.build_catalogue_pages import ROOT, build, validate_learning_guide, validate_curation
 
 class PagesCatalogueTests(unittest.TestCase):
     def test_build_preserves_existing_archive_and_real_published_manifests(self):
@@ -14,12 +14,12 @@ class PagesCatalogueTests(unittest.TestCase):
                 "index.html", ".nojekyll", "catalogue/index.html",
                 "learning/index.html", "learning/app.mjs", "learning/styles.css",
                 "learning/guide.mjs", "learning/where-to-look.svg",
-                "catalogue/reference.mjs",
+                "catalogue/reference.mjs", "catalogue/curation.mjs",
                 "catalogue/core.mjs", "catalogue/app.mjs", "catalogue/styles.css",
                 "catalogue/compare.mjs", "catalogue/comparison-view.mjs",
                 "catalogue/rotation.mjs", "catalogue/rotation-canvas.mjs",
                 "catalogue/rotation-player.mjs",
-                "data/catalog.json", "data/reference-index.json", "data/learning-guide.json",
+                "data/catalog.json", "data/diamond-curation.json", "data/reference-index.json", "data/learning-guide.json",
                 "data/references/ps285166-r07.json", "data/diamonds/igi-lg756520111.json",
                 "data/diamonds/igi-lg816611062.json",
             ):
@@ -37,6 +37,26 @@ class PagesCatalogueTests(unittest.TestCase):
             self.assertTrue(by_id["igi-lg816611062"]["has_motion"])
             self.assertFalse((out / ".github").exists())
             self.assertFalse((out / "diamond_retrieval").exists())
+
+    def test_curation_is_published_without_changing_certified_manifest_or_index(self):
+        with tempfile.TemporaryDirectory() as temp:
+            out = Path(temp) / "public"
+            build(out)
+            curation = json.loads((out / "data/diamond-curation.json").read_text(encoding="utf-8"))
+            index = json.loads((out / "data/catalog.json").read_text(encoding="utf-8"))
+            ids = {row["id"] for row in index["diamonds"]}
+            validate_curation(curation, ids)
+            self.assertEqual(curation["schema"], "sparkles-diamond-curation/1")
+            self.assertEqual(curation["diamonds"], {})
+            for bad in (
+                {"schema":"bad","diamonds":{}},
+                {"schema":"sparkles-diamond-curation/1","diamonds":{"ref-r07":{"starred":True}}},
+                {"schema":"sparkles-diamond-curation/1","diamonds":{"igi-nonexistent":{"archived":True}}},
+                {"schema":"sparkles-diamond-curation/1","diamonds":{next(iter(ids)):{"archived":"true"}}},
+                {"schema":"sparkles-diamond-curation/1","diamonds":{next(iter(ids)):{"score":1}}},
+            ):
+                with self.assertRaises(ValueError):
+                    validate_curation(bad, ids)
 
     def test_reference_index_is_statically_published_with_curated_references(self):
         with tempfile.TemporaryDirectory() as temp:
