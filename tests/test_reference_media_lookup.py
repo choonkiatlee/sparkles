@@ -24,7 +24,7 @@ STILL_URL = "https://assets-images.pixorac.com/stone.jpg"
 SUPPLIER = "https://unknown.example.test/not-a-supported-v360"
 SUPPORTED = "https://vision.diajewel360.com/Vision360.html?d=VL-NEW123"
 ROOT = "https://vision.diajewel360.com/imaged/VL-NEW123"
-VIDEO_BYTES = b"\\x00\\x00\\x00\\x18ftypisom\\x00\\x00\\x02\\x00isommp41fixture"
+VIDEO_BYTES = bytes.fromhex("000000186674797069736f6d0000020069736f6d6d703431") + b"fixture"
 
 
 def _jpeg():
@@ -176,6 +176,18 @@ class ReferenceMediaLookupTests(unittest.TestCase):
         self.assertEqual([a.status for a in result.attempts], [
             EvidenceStatus.SUCCESS, EvidenceStatus.MISSING, EvidenceStatus.INVALID_PAYLOAD,
         ])
+
+    def test_direct_supported_viewer_recovers_complete_rotation_without_a_report(self):
+        responses = _progressive_source_responses(AUDITS[0], ROOT, version=1)
+        http = FakeHttp(responses)
+        result = retrieve_reference_media("direct-spin", media_sources=[
+            {"kind": "viewer", "url": SUPPORTED, "provider": "diajewel"},
+        ], http_client=http)
+        self.assertIsNone(result.metadata.report_number)
+        self.assertEqual(len(result.rotations), 1)
+        self.assertEqual(len(result.rotations[0].frames), 256)
+        self.assertEqual(result.attempts[0].status, EvidenceStatus.SUCCESS)
+        self.assertEqual(result.rotations[0].frames[0].source_index, 0)
 
     def test_incomplete_rotation_does_not_become_successful_motion(self):
         responses = _progressive_source_responses(AUDITS[0], ROOT, version=1)
