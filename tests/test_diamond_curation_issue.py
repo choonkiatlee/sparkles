@@ -67,7 +67,8 @@ class FakeGit:
         if "/git/blobs/" in path:
             name = path.split("blob-", 1)[1]
             payload = json.dumps(self.state[name]).encode()
-            return {"encoding": "base64", "content": base64.b64encode(payload).decode()}
+            # GitHub sends line-wrapped Base64 rather than a single unbroken line.
+            return {"encoding": "base64", "content": base64.encodebytes(payload).decode()}
         raise AssertionError(path)
 
     def post_json(self, path, data):
@@ -192,6 +193,13 @@ class CurationIssueTests(unittest.TestCase):
         with self.assertRaises(InvalidCurationRequest):
             apply_changes(data, changes, {ONE, TWO})
         self.assertEqual(data, published())
+
+    def test_real_github_blob_line_wrapping_is_present_in_fixture(self):
+        api = FakeGit()
+        blob = api.get_json(api.prefix + "/git/blobs/blob-data/catalog.json")
+        self.assertIn("\\n", blob["content"])
+        self.assertGreater(len(blob["content"]), 77)
+        # Tests below exercise save_changes end-to-end against wrapped blobs.
 
     def test_commit_updates_only_curation_and_is_idempotent(self):
         api = FakeGit()
