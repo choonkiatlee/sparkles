@@ -120,8 +120,15 @@ def check_manifest(group: str) -> None:
         record = json.loads(path.read_text(encoding="utf-8"))
         if record.get("id") != ref or record.get("identity") != {
             "status": "unverified", "lab": None, "report_number": None
-        } or record.get("media_sources") != []:
+        }:
             raise ValueError("Reference identity or reviewed media scope changed")
+        expected_media = ([{
+            "kind": "viewer", "provider": "loupe360",
+            "status": "linked_unverified",
+            "url": "https://loupe360.com/diamond/LG524247250",
+        }] if ref == "ps282648-r12" else [])
+        if record.get("media_sources") != expected_media:
+            raise ValueError("Reference existing viewer/source scope changed")
         if not any(link.get("kind") == "comparison_video" and link.get("url") == url
                    for link in record.get("source_links", [])):
             raise ValueError("Exact curated album link changed")
