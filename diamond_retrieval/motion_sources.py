@@ -198,6 +198,43 @@ class Labgrowns3RotationDownloader(_ProgressiveDownloader):
         )
 
 
+
+class FilesOnSkyRotationDownloader(_ProgressiveDownloader):
+    """Original Vision360 progressive media from the exact public FilesOnSky viewer.
+
+    Verified against the identity-matched R05 source's 0.json bootstrap
+    (2026-10-10). The adapter never accepts an arbitrary surl or retailer
+    HTML; source paths are fixed to the same-origin /v360/imaged directory.
+    Complete batch, scramble and original JPEG validation are inherited.
+    """
+
+    source_name = "filesonsky"
+    _HOST = "www.filesonsky.com"
+    _ID = re.compile(r"^[0-9]{1,10}$")
+
+    def _source(self, reference: EvidenceReference) -> tuple[str, str, str]:
+        locator = reference.locator or ""
+        parts = urlsplit(locator)
+        query = parse_qs(parts.query, keep_blank_values=True)
+        ids = query.get("d", [])
+        if (
+            parts.scheme != "https"
+            or parts.netloc.lower() != self._HOST
+            or parts.path.lower() != "/v360/vision360.html"
+            or parts.fragment
+            or set(query) != {"d"}
+            or len(ids) != 1
+            or not self._ID.fullmatch(ids[0])
+        ):
+            raise ValueError("not an exact public FilesOnSky Vision360 URL")
+        item_id = ids[0]
+        viewer = f"https://{self._HOST}/v360/Vision360.HTML?d={item_id}"
+        root = f"https://{self._HOST}/v360/imaged/{item_id}"
+        return viewer, root, f"{root}/0.json?version="
+
+
+
+
 class DiajewelRotationDownloader(_ProgressiveDownloader):
     source_name = "diajewel"
 
