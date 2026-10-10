@@ -7,12 +7,13 @@ import { validateReferenceIndex } from "./reference.mjs";
 import { DRAFT_STORAGE_KEY, emptyDraft, validateCuration, validateDraft,
   flagsFor, setDraftFlag, reconcileDraft, draftCount, archivedCount,
   curationRows } from "./curation.mjs";
+import { createCurationIssueUrl } from "./curation-request.mjs";
 
 const $ = id => document.getElementById(id);
 const controls = { search:$("search"), status:$("status-filter"), sort:$("sort") };
 const curationControls = { archived:$("show-archived"), shortlist:$("shortlist-only") };
 const state = { rows:[], referenceRows:[], allRows:[], selected:[], comparing:false, ready:false,
-  published:null, draft:emptyDraft(), localError:"" };
+  published:null, draft:emptyDraft(), localError:"", refreshError:"" };
 const comparisonView = createComparisonView({container:$("comparison"),grid:$("comparison-grid"),fetcher:(...args)=>fetch(...args)});
 const node = (tag, className="", text=null) => {
   const n = document.createElement(tag);
@@ -140,6 +141,39 @@ function changeCuration(id,field,value) {
     render();
   }
 }
+function saveOnGitHub() {
+  if(state.localError) return;
+  try {
+    const ids=new Set(state.rows.map(row=>row.id));
+    // GitHub will require the signed-in owner to confirm this prefilled issue.
+    // Do not clear the browser draft until new published JSON confirms the save.
+    location.assign(createCurationIssueUrl(state.published,state.draft,ids));
+  } catch(error) {
+    state.refreshError="Could not prepare GitHub save ("+error.message+").";
+    render();
+  }
+}
+async function refreshCuration() {
+  $("refresh-curation").disabled=true;
+  try {
+    const response=await fetch("../data/diamond-curation.json",{cache:"no-store"});
+    if(!response.ok) throw new Error("HTTP "+response.status);
+    const ids=new Set(state.rows.map(row=>row.id));
+    const published=validateCuration(await response.json(),ids);
+    const reconciled=reconcileDraft(published,state.draft,ids);
+    if(draftCount(reconciled)) localStorage.setItem(DRAFT_STORAGE_KEY,JSON.stringify(reconciled));
+    else localStorage.removeItem(DRAFT_STORAGE_KEY);
+    state.published=published;
+    state.draft=reconciled;
+    state.refreshError="";
+  } catch(error) {
+    state.refreshError="Could not verify GitHub curation state ("+error.message+
+      "). Your browser draft is unchanged.";
+  } finally {
+    $("refresh-curation").disabled=false;
+    render();
+  }
+}
 function resetDraft() {
   try {
     localStorage.removeItem(DRAFT_STORAGE_KEY);
@@ -164,8 +198,11 @@ function render() {
   $("archived-count").textContent = String(archived);
   const pending=draftCount(state.draft);
   $("curation-pending").textContent = pending ?
-    pending+" unsynced change"+(pending===1?"":"s")+" · saved only in this browser, NOT in GitHub. GitHub saving follows in #290." :
-    "Star/archive changes are local to this browser until GitHub saving ships in #290.";
+    pending+" pending change"+(pending===1?"":"s")+" in this browser. Confirm Save on GitHub, then Refresh saved state to verify publication." :
+    "No unsaved changes. Stars and archives shown here are backed by published Git state.";
+  $("save-curation").disabled=!pending || !!state.localError;
+  $("refresh-curation-error").textContent=state.refreshError;
+  $("refresh-curation-error").hidden=!state.refreshError;
   $("curation-local-error").textContent=state.localError;
   $("curation-local-error").hidden=!state.localError;
   $("reset-curation").disabled=!pending && !state.localError;
@@ -200,6 +237,8 @@ async function boot() {
   }
   for (const c of Object.values(curationControls)) c.addEventListener("change",render);
   $("reset-curation").addEventListener("click",resetDraft);
+  $("save-curation").addEventListener("click",saveOnGitHub);
+  $("refresh-curation").addEventListener("click",refreshCuration);
   $("compare-button").addEventListener("click",()=>{
     if (state.selected.length < MIN_COMPARISON) return;
     state.comparing = !state.comparing; syncURL(); render();
