@@ -49,6 +49,13 @@
         <label>Status <select id="status-filter" disabled><option value="all">All retrieval statuses</option><option value="complete">Complete</option><option value="partial">Partial</option></select></label>
         <label>Sort <select id="sort" disabled><option value="report">Report number</option><option value="carat">Carat (ascending)</option><option value="colour">Colour (D to Z)</option><option value="clarity">Clarity (FL to I3)</option><option value="price">Price (grouped by currency)</option></select></label>
       </div>
+      <div class="curation-toolbar" role="group" aria-label="Personal diamond curation">
+        <label><input id="shortlist-only" type="checkbox" disabled> Shortlist only</label>
+        <label><input id="show-archived" type="checkbox" disabled> Show archived (<span id="archived-count">0</span>)</label>
+        <button id="reset-curation" type="button" class="outline" disabled>Reset local changes</button>
+      </div>
+      <p id="curation-pending" class="curation-pending" role="status" aria-live="polite">Loading shortlist and archive status…</p>
+      <p id="curation-local-error" class="curation-warning" role="alert" hidden></p>
       <div id="error" class="error" role="alert" hidden></div>
       <section class="selection" aria-label="Selected diamonds">
         <div class="selection-line">
@@ -69,6 +76,7 @@
               <th scope="col">Price</th>
               <th scope="col">Retrieval</th>
               <th scope="col">Diamond score <span class="future-tag">(future)</span></th>
+              <th scope="col">Shortlist / archive</th>
             </tr>
           </thead>
           <tbody id="cards"></tbody>
