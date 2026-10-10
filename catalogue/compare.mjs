@@ -57,6 +57,18 @@ export const dateText = raw => {
 export const proportionText = (value, suffix="") =>
   value === null || value === undefined || value === "" ? "Unknown" : field(value) + suffix;
 
+// Original videos are motion but cannot be treated as 256-frame 360s.
+export function originalVideo(evidence) {
+  for (const record of Array.isArray(evidence) ? evidence : []) {
+    if (record?.kind !== "video" || record.status !== "success") continue;
+    const url = assetUrl(record.payload_asset);
+    const type = record.payload_asset?.media_type || record.media_type;
+    if (url && ["video/mp4", "video/webm"].includes(type))
+      return {url, type};
+  }
+  return null;
+}
+
 export function describeMotion(evidence) {
   const rotations = evidence.filter(e => e?.kind === "rotation");
   const valid = rotations.filter(e => e.status === "success" && Array.isArray(e.frames) &&

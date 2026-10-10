@@ -38,7 +38,15 @@ function fillColumn(column, projected) {
   const head = column.head;
   head.replaceChildren();
   const picture = el("div","compare-picture");
-  if (projected.representative) {
+  if (projected.rotation?.status === "video_only" && projected.video?.url) {
+    const video = el("video");
+    video.src = projected.video.url;
+    video.controls = true;
+    video.preload = "metadata";
+    video.playsInline = true;
+    video.setAttribute("aria-label","Published original vendor video; independent playback");
+    picture.append(video);
+  } else if (projected.representative) {
     const img = el("img");
     img.src = projected.representative.url;
     img.alt = projected.representative.label + " for " + projected.report + "; angle not calibrated";
@@ -51,8 +59,10 @@ function fillColumn(column, projected) {
   head.append(picture, el("strong","compare-report", reference ? projected.label : projected.lab + " " + projected.report));
   head.append(el("span","compare-source", reference ? "Expert learning reference · " + projected.identityStatus + " identity" : displayValue(projected.currentListing.retailer)));
   head.append(el("small","compare-caption",
-    projected.representative ? projected.representative.label+" · viewpoint uncalibrated" :
-      "Evidence missing or video-only"));
+    projected.rotation?.status === "video_only" && projected.video?.url ?
+      "Published original MP4 · independent playback (not synchronized 360 frames)" :
+      projected.representative ? projected.representative.label+" · viewpoint uncalibrated" :
+      "Evidence missing"));
   for (const [key] of comparisonRows)
     column.cells.get(key).textContent = projected.values[key];
 

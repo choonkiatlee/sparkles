@@ -1,6 +1,6 @@
 // Read-only reference adapter. Curated opinions never masquerade as certified manifests.
 import { dimensionsText, displayValue } from "./core.mjs";
-import { describeMotion, representativeAsset, publicUrl, proportionText } from "./compare.mjs";
+import { describeMotion, representativeAsset, originalVideo, publicUrl, proportionText } from "./compare.mjs";
 import { extractRotation } from "./rotation.mjs";
 
 const ID = /^[a-z0-9][a-z0-9-]*$/;
@@ -70,6 +70,7 @@ export function projectReferenceComparison(row, candidate) {
     identityStatus:doc.identity.status, commentary:doc.commentary,
     topics:doc.topics || [], sourceLinks:sources, mediaSources:externalViewers,
     representative:representativeAsset(evidence), rotation:extractRotation(evidence),
+    video:originalVideo(evidence),
     evidence,
     values:{
       carat:meta.carat == null ? "Unknown" : meta.carat + " ct",
