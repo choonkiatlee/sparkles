@@ -1,0 +1,52 @@
+name: R03 R09 opaque Loupe viewer source audit
+
+on:
+  pull_request:
+    paths:
+      - "tools/audit_r03_r09_loupe.py"
+      - "tools/audit_r03_r09_pixorac.py"
+      - "tests/test_r03_r09_loupe_audit.py"
+      - "tests/test_r03_r09_pixorac.py"
+      - ".github/workflows/r03-r09-loupe-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout reviewed source only
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install retrieval and read-only browser support
+        run: python -m pip install -e . selenium
+      - name: Test exact reviewed anchors and opaque-ID guards
+        run: python -m unittest tests.test_r03_r09_loupe_audit tests.test_r03_r09_pixorac -v
+      - name: Audit existing public Loupe pages and browser media requests
+        timeout-minutes: 5
+        run: |
+          python -m tools.audit_r03_r09_loupe \
+            --out "./r03-r09-opaque-loupe-audit.json"
+      - name: Check exact browser-linked indexed source and 256-frame availability
+        timeout-minutes: 7
+        run: |
+          python -m tools.audit_r03_r09_pixorac \
+            --browser-audit "./r03-r09-opaque-loupe-audit.json" \
+            --out "./r03-r09-indexed-proxy-audit.json"
+      - name: Preserve sanitized findings only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r03-r09-opaque-loupe-audit
+          path: |
+            ./r03-r09-opaque-loupe-audit.json
+            ./r03-r09-indexed-proxy-audit.json
+          retention-days: 30
+          if-no-files-found: warn
