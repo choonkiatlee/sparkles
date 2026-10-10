@@ -1,0 +1,47 @@
+{
+  "schema": "sparkles-reference/1",
+  "id": "ps281114-r17",
+  "label": "Glittery — tiny windmills, cut feels off",
+  "identity": {
+    "status": "unverified",
+    "lab": null,
+    "report_number": null
+  },
+  "linked_diamond_id": null,
+  "diamond_metadata": {
+    "shape": "Asscher"
+  },
+  "commentary": "From the original three-way D360 comparison, the buyer found appealing central sparkle in 'Glittery' (#1). Karl_K instead noted unusually small windmills and considered the overall cut not terrible but somewhat off (#9). The 256 original frames exist in the separate #64 research archive, but they have not been attached as verified, playable media to this Learning Corner reference. Viewer-specific IDs are not lab certificates.",
+  "source_links": [
+    {
+      "kind": "discussion",
+      "url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/",
+      "note": "Buyer #1 and Karl_K assessment #9."
+    },
+    {
+      "kind": "research_catalogue",
+      "url": "https://github.com/choonkiatlee/sparkles/blob/master/docs/360/external-benchmark/pricescope/source-catalog.json",
+      "note": "Archived benchmark ID: asscher-eval-glittery. Source identity/provenance, not a verified catalogue-media attachment."
+    },
+    {
+      "kind": "research_media_archive",
+      "url": "https://github.com/choonkiatlee/sparkles/releases/download/pricescope-research-2026-10-06-v1/pricescope-media-recovery-2026-10-06-v3.zip",
+      "note": "Existing #64 archive contains original D360 256-frame sequence; do not redownload or claim reference playback."
+    }
+  ],
+  "media_sources": [
+    {
+      "kind": "viewer",
+      "provider": "d360.tech",
+      "status": "linked_unverified",
+      "url": "https://d360.tech/view.html?d=79-BB-5159600"
+    }
+  ],
+  "topics": [
+    "windmills",
+    "face-up-pattern",
+    "mixed-reactions",
+    "research-archive"
+  ],
+  "evidence": []
+}
