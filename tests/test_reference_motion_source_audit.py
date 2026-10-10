@@ -74,9 +74,11 @@ class ReferenceOriginalAuditTests(unittest.TestCase):
             R23_ROOT + "/still.jpg": (200, b"\xff\xd8\xff", "image/jpeg"),
         })
         out = audit_r23(http)
-        self.assertEqual(out[-1]["preflight"], "invalid_scramble")
-        self.assertEqual(len(http.calls), 3)
-        self.assertEqual(len(out), 4)
+        self.assertEqual(next(row["preflight"] for row in out if row["source"] == "contract"), "invalid_scramble")
+        self.assertEqual(http.calls, [R23_ROOT + "/" + p for p in (
+            "metadata.json", "0.json", "still.jpg", "1.json", "2.json",
+        )])
+        self.assertEqual(len(out), 8)
 
 
 if __name__ == "__main__":
