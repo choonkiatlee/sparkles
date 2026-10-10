@@ -19,6 +19,7 @@ from diamond_retrieval.motion_sources import (
     Core360RotationDownloader,
     D360RotationDownloader,
     DiajewelRotationDownloader,
+    Labgrowns3RotationDownloader,
     RemoteV360RotationDownloader,
     WorkshopRotationDownloader,
 )
@@ -402,6 +403,83 @@ class ProgressiveMotionContractTests(unittest.TestCase):
         ]
         self.assertEqual(len(supporting), 1)
         self.assertIsInstance(supporting[0], RemoteV360RotationDownloader)
+
+    def test_labgrowns3_s3_recovers_exact_complete_original_frames(self):
+        # The public KVideo player for R06/R10 requests imaged/<id>/0.json
+        # and 1..7.json; the actual audited bootstraps use v2 / v1.
+        for item, version in (
+            ("1210811_B2C", 2),
+            ("1165252_B2C", 1),
+        ):
+            with self.subTest(item=item):
+                host = "https://labgrowns3.s3.ap-southeast-1.amazonaws.com"
+                viewer = f"{host}/stoneimages360.html?d={item}"
+                root = f"{host}/imaged/{item}"
+                responses = _progressive_source_responses(
+                    AUDITS[0], root, version=version,
+                )
+                responses[root + "/0.json?version="] = responses.pop(root + "/0.json")
+                client = FakeHttpClient(responses)
+                downloader = Labgrowns3RotationDownloader(client)
+                self.assertTrue(downloader.supports(_reference("labgrowns3", viewer)))
+                raw = downloader.download(_reference("labgrowns3", viewer))
+                rotations = ProgressiveRotationProcessor().process(raw)
+                self.assertEqual(len(rotations), 1)
+                motion = rotations[0]
+                self.assertEqual(len(motion.frames), 256)
+                self.assertEqual(
+                    [frame.source_index for frame in motion.frames],
+                    list(range(256)),
+                )
+                self.assertEqual(motion.frames[0].payload, _jpeg(0))
+                self.assertEqual(motion.metadata["supplier"], "labgrowns3")
+                self.assertTrue(motion.metadata["sequence_complete"])
+                self.assertEqual(
+                    client.calls,
+                    [root + "/0.json?version="] +
+                    [f"{root}/{n}.json?version={version}" for n in range(1, 8)],
+                )
+                from diamond_retrieval import default_config
+                config = default_config(FakeHttpClient({}))
+                self.assertEqual(
+                    sum(d.supports(_reference("labgrowns3", viewer))
+                        for d in config.downloaders), 1,
+                )
+
+    def test_labgrowns3_rejects_lookalikes_and_invalid_ids_without_network(self):
+        host = "https://labgrowns3.s3.ap-southeast-1.amazonaws.com"
+        good = f"{host}/stoneimages360.html?d=1210811_B2C"
+        http = FakeHttpClient({})
+        downloader = Labgrowns3RotationDownloader(http)
+        self.assertTrue(downloader.supports(_reference("labgrowns3", good)))
+        for bad in (
+            good.replace("https://", "http://"),
+            good.replace(host, "https://evil.test"),
+            good.replace(host, host + ".evil.test"),
+            good.replace("1210811_B2C", "../1210811_B2C"),
+            good.replace("1210811_B2C", "%2Fetc"),
+            good + "&surl=https://127.0.0.1",
+            good + "&d=1165252_B2C",
+            good + "#other",
+            good.replace("stoneimages360.html", "other.html"),
+            good.replace("1210811_B2C", ""),
+        ):
+            with self.subTest(url=bad):
+                self.assertFalse(downloader.supports(_reference("labgrowns3", bad)))
+        self.assertEqual(http.calls, [])
+
+    def test_labgrowns3_missing_or_invalid_frame_batch_is_not_motion(self):
+        host = "https://labgrowns3.s3.ap-southeast-1.amazonaws.com"
+        item = "1210811_B2C"
+        root = f"{host}/imaged/{item}"
+        viewer = f"{host}/stoneimages360.html?d={item}"
+        responses = _progressive_source_responses(AUDITS[0], root, version=2)
+        responses[root + "/0.json?version="] = responses.pop(root + "/0.json")
+        responses[f"{root}/5.json?version=2"] = (b"[]", "application/json")
+        with self.assertRaises(InvalidPayloadError):
+            Labgrowns3RotationDownloader(
+                FakeHttpClient(responses)
+            ).download(_reference("labgrowns3", viewer))
 
     def test_remote_v360_requires_exact_public_media_root(self):
         valid = (

@@ -142,3 +142,26 @@ Run the deterministic suite with:
 ```sh
 python -m unittest tests.test_reference_media_lookup -v
 ```
+
+### Audited labgrowns3 original rotations (R06 / R10)
+
+The public `labgrowns3.s3.ap-southeast-1.amazonaws.com/stoneimages360.html?d=<id>`
+viewer uses the same Vision360 encrypted-scramble progressive transport already
+validated by Sparkles. On 2026-10-10, the public `imaged/<id>/0.json?version=`
+bootstrap for `1210811_B2C` (reference R06) returned 600 × 600 pixels and
+version 2, while `1165252_B2C` (R10) returned 599 × 600 pixels and version 1.
+Their frame batches follow the audited 4/4/8/16/32/64/128 pattern.
+
+The exact-host `Labgrowns3RotationDownloader` constructs only the published
+same-origin `imaged/<id>/{0..7}.json` routes; no supplier listing HTML, S3
+bucket enumeration, guessed cross-diamond identifiers or arbitrary `surl`
+parameters. The existing decrypting progressive processor must validate all
+256 original JPEGs and their complete frame order before any rotation appears
+as playable. A missing/invalid batch leaves an explicit failed attempt and
+never publishes a partial 360. This adapter can recover the original rotation
+but **does not independently verify a claimed laboratory certificate**; it
+is linked only to the curated exact R06/R10 viewer/media source provenance.
+
+Regression tests are in `tests.test_diamond_retrieval_motion` and
+`tests.test_reference_media_lookup`. Reference publication still requires
+an explicit opt-in `mode=media` run through the trusted workflow (#197).

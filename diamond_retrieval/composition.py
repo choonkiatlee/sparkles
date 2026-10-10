@@ -11,6 +11,7 @@ from .motion_sources import (
     Core360RotationDownloader,
     D360RotationDownloader,
     DiajewelRotationDownloader,
+    Labgrowns3RotationDownloader,
     RemoteV360RotationDownloader,
     WorkshopRotationDownloader,
 )
@@ -73,6 +74,7 @@ def default_config(http_client: HttpClient | None = None) -> RetrievalConfig:
         downloaders=(
             LinkedEvidenceDownloader(client),
             DiajewelRotationDownloader(client),
+            Labgrowns3RotationDownloader(client),
             WorkshopRotationDownloader(client),
             Core360RotationDownloader(client),
             RemoteV360RotationDownloader(client),

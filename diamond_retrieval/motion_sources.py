@@ -160,6 +160,43 @@ class _ProgressiveDownloader:
         return f"{source_root}/{batch_number}.json?version={version}"
 
 
+class Labgrowns3RotationDownloader(_ProgressiveDownloader):
+    """Original progressive frames from a publicly linked labgrowns3 S3 viewer.
+
+    Audited against actual 2026-10-10 source JSON for the R06/R10 reference
+    diamonds (versions 2 and 1 respectively). Uses the same verified
+    256-frame progressive decoder as other Vision360 variants, not HTML
+    scraping or a separately inferred frame sequence.
+    """
+
+    source_name = "labgrowns3"
+    _HOST = "labgrowns3.s3.ap-southeast-1.amazonaws.com"
+    _ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,90}$")
+
+    def _source(self, reference: EvidenceReference) -> tuple[str, str, str]:
+        locator = reference.locator or ""
+        parts = urlsplit(locator)
+        query = parse_qs(parts.query, keep_blank_values=True)
+        items = query.get("d", [])
+        if (
+            parts.scheme != "https"
+            or parts.netloc.lower() != self._HOST
+            or parts.path.lower() != "/stoneimages360.html"
+            or parts.fragment
+            or set(query) != {"d"}
+            or len(items) != 1
+            or not self._ID.fullmatch(items[0])
+        ):
+            raise ValueError("not an exact public labgrowns3 viewer URL")
+        item = items[0]
+        root = f"https://{self._HOST}/imaged/{item}"
+        return (
+            f"https://{self._HOST}/stoneimages360.html?d={item}",
+            root,
+            f"{root}/0.json?version=",
+        )
+
+
 class DiajewelRotationDownloader(_ProgressiveDownloader):
     source_name = "diajewel"
 
