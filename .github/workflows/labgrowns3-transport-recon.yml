@@ -101,3 +101,30 @@ jobs:
             }
           }
           JS
+          python - <<'PY'
+          import json
+          from diamond_retrieval.http import UrllibHttpClient
+          from diamond_retrieval.motion_sources import _bootstrap_contract
+          http=UrllibHttpClient(max_bytes=12*1024*1024)
+          ROOT="https://labgrowns3.s3.ap-southeast-1.amazonaws.com/imaged/"
+          for id in ("1210811_B2C","1165252_B2C"):
+              print("==== PROBE",id,"====",flush=True)
+              url=ROOT+id+"/0.json?version="
+              try:
+                  response=http.get(url,timeout=15)
+                  print("BOOTSTRAP",response.status_code,len(response.content),response.headers.get("Content-Type"),flush=True)
+                  if response.status_code!=200:continue
+                  data=json.loads(response.content)
+                  print("FIELDS",list(data)[:15],flush=True)
+                  dims,scramble,version=_bootstrap_contract(data,source="labgrowns3")
+                  print("AUDITED",dims,"version",version,"scramble levels",len(scramble),flush=True)
+                  for number in (1,7):
+                      u=ROOT+id+f"/{number}.json?version={version}"
+                      r=http.get(u,timeout=15)
+                      print("BATCH",number,"status",r.status_code,"bytes",len(r.content),flush=True)
+                      if r.status_code==200:
+                          b=json.loads(r.content)
+                          print("BATCH SHAPE",type(b).__name__,len(b),type(b[0]).__name__ if b else "-",flush=True)
+              except Exception as exc:
+                  print("PROBE_ERROR",type(exc).__name__,str(exc)[:150],flush=True)
+          PY
