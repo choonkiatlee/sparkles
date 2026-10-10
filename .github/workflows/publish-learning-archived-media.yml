@@ -1,0 +1,107 @@
+name: publish-learning-archived-media
+
+on:
+  issues:
+    types: [opened]
+
+permissions: {}
+
+concurrency:
+  group: sparkles-diamond-catalogue-master-publisher
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    # The issue title is solely a fixed owner-authenticated signal; none of
+    # its body, URLs, reference IDs or attachments are accepted as inputs.
+    if: >-
+      github.repository == 'choonkiatlee/sparkles' &&
+      github.event.issue.user.login == 'choonkiatlee' &&
+      github.event.issue.title == 'Publish archived PriceScope learning motion'
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    permissions:
+      contents: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: master
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Sparkles and tests
+        run: python -m pip install -e . pytest
+
+      - name: Validate importer regression tests
+        run: python -m pytest -q tests/test_reference_archive_publish.py tests/test_reference_publication.py
+
+      - name: Fetch exact previously archived release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download pricescope-research-2026-10-06-v1 \
+            --repo choonkiatlee/sparkles \
+            --pattern pricescope-media-recovery-2026-10-06-v3.zip \
+            --dir "$RUNNER_TEMP"
+          cd "$RUNNER_TEMP"
+          echo '379f411098e4d96df78d7c00fea5bb9fd18d5f37d890b873928c4003ba126da5  pricescope-media-recovery-2026-10-06-v3.zip' | sha256sum --check
+          test "$(wc -c < pricescope-media-recovery-2026-10-06-v3.zip)" = 36567890
+          mkdir -p pricescope-archive
+          unzip -q pricescope-media-recovery-2026-10-06-v3.zip -d pricescope-archive
+          python - <<'PY' >> "$GITHUB_ENV"
+          import pathlib, os
+          base = pathlib.Path(os.environ['RUNNER_TEMP']) / 'pricescope-archive'
+          candidates = [base] + [p for p in base.iterdir() if p.is_dir()]
+          matched = [p for p in candidates if (p/'media').is_dir() and (p/'d360').is_dir()]
+          if len(matched) != 1:
+              raise SystemExit("Pinned archive has unexpected layout")
+          print("ARCHIVE_ROOT=" + str(matched[0].resolve()))
+          PY
+
+      - name: Publish archived originals through existing reference publisher
+        id: importer
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF: refs/heads/master
+        run: |
+          successful=0
+          failed=0
+          for id in ps281114-r17 ps281114-r18 ps281114-r20 ps281114-r22; do
+            echo "::group::Original PriceScope media for $id"
+            if python -m diamond_catalogue.reference_archive_publish \
+              --archive-root "$ARCHIVE_ROOT" --reference-id "$id"; then
+              successful=$((successful+1))
+            else
+              failed=$((failed+1))
+            fi
+            echo "::endgroup::"
+          done
+          echo "successful=$successful" >> "$GITHUB_OUTPUT"
+          echo "failed=$failed" >> "$GITHUB_OUTPUT"
+          echo "Archived reference publication: $successful succeeded, $failed failed."
+          test "$failed" -eq 0
+
+      - name: Record outcome on owner request
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          DONE: ${{ steps.importer.outputs.successful }}
+          FAILED: ${{ steps.importer.outputs.failed }}
+        run: |
+          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body \
+            "Pinned #64 PriceScope media publication: ${DONE:-unknown} successful, ${FAILED:-unknown} failed. Verify index + source hashes and [this workflow](https://github.com/choonkiatlee/sparkles/actions/workflows/publish-learning-archived-media.yml)."
+
+  deploy-pages:
+    if: always() && needs.publish.result != 'skipped'
+    needs: publish
+    uses: ./.github/workflows/catalogue-pages.yml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
