@@ -16,6 +16,7 @@ from .motion_sources import (
     RemoteV360RotationDownloader,
     WorkshopRotationDownloader,
 )
+from .loupe360_proxy import Loupe360ProxyRotationDownloader, IndexedProxyRotationProcessor
 from .identity import DiamondIdentityValidator
 from .policy import StandardRetrievalPolicy
 from .processors import PdfCertificateProcessor, StillImageProcessor
@@ -78,6 +79,7 @@ def default_config(http_client: HttpClient | None = None) -> RetrievalConfig:
             Labgrowns3RotationDownloader(client),
             FilesOnSkyRotationDownloader(client),
             WorkshopRotationDownloader(client),
+            Loupe360ProxyRotationDownloader(client),
             Core360RotationDownloader(client),
             RemoteV360RotationDownloader(client),
             D360RotationDownloader(client),
@@ -87,6 +89,7 @@ def default_config(http_client: HttpClient | None = None) -> RetrievalConfig:
             PdfCertificateProcessor(),
             StillImageProcessor(),
             ProgressiveRotationProcessor(),
+            IndexedProxyRotationProcessor(),
             DirectVideoProcessor(),
         ),
         identity_validator=DiamondIdentityValidator(),
