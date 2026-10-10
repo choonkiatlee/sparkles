@@ -161,6 +161,48 @@ def verify_frames(client: UrllibHttpClient, root: str, top: int) -> dict:
     return {"outcome": "no_valid_indexed_jpeg_or_webp_samples"}
 
 
+
+def probe_exact_video(url: object) -> dict:
+    """Validate wire bytes only for a provider-returned public HTTPS direct video.
+
+    Bare player pages, guessing MP4 suffixes and redirected sources are not
+    considered video evidence. No content is saved or returned.
+    """
+    if not isinstance(url, str) or not url or len(url) > 1800:
+        return {"outcome": "absent"}
+    try:
+        parts = urlsplit(url)
+        host = parts.hostname or ""
+        if (parts.scheme != "https" or not host or parts.username or parts.password
+                or parts.port not in (None, 443) or parts.fragment):
+            return {"outcome": "unsupported_video_url"}
+        direct = Loupe360CertificateResolver._is_direct_video_url(url)
+        shape = {"source_host": host, "direct_video_suffix": direct}
+        if not direct:
+            return {**shape, "outcome": "video_field_is_not_direct_media"}
+        # Fixed finite read budget and existing public-DNS/private-network
+        # protection apply before and after every redirect.
+        response = UrllibHttpClient(max_bytes=MAX_TOTAL_BYTES).get(url, timeout=25)
+        if response.status_code != 200 or response.url != url:
+            return {**shape, "outcome": "video_missing_or_redirected",
+                    "http_status": response.status_code}
+        payload = response.content
+        suffix = parts.path.lower().rsplit(".", 1)[-1]
+        valid = (payload[4:8] == b"ftyp" if suffix != "webm"
+                 else payload[:4] == bytes.fromhex("1a45dfa3"))
+        if not valid or len(payload) < 1024:
+            return {**shape, "outcome": "invalid_video_wire_bytes",
+                    "byte_count": len(payload)}
+        return {**shape, "outcome": "validated_exact_direct_video",
+                "byte_count": len(payload),
+                "sha256": hashlib.sha256(payload).hexdigest(),
+                "supplier_original_bytes_verified": False,
+                "independent_stone_identity_verified": False}
+    except Exception as exc:
+        return {"outcome": "video_source_unavailable",
+                "reason_class": type(exc).__name__}
+
+
 def audit(client: UrllibHttpClient) -> dict:
     trust_anchor()
     result = {"reference": REFERENCE, "reported_lab": LAB, "reported_report": REPORT,
@@ -186,6 +228,8 @@ def audit(client: UrllibHttpClient) -> dict:
     result["exact_report_match"] = True
     result["still_present"] = isinstance(record.get("image"), str) and bool(record["image"])
     result["direct_video_present"] = isinstance(record.get("video"), str) and bool(record["video"])
+    if result["direct_video_present"]:
+        result["direct_video_probe"] = probe_exact_video(record["video"])
     v360 = record.get("v360")
     result["v360_present"] = isinstance(v360, dict) and bool(v360.get("url"))
     try:
