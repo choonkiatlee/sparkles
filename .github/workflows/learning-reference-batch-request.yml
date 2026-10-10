@@ -6,12 +6,6 @@ on:
 
 permissions: {}
 
-concurrency:
-  # Serialize the whole batch against personal diamond/reference publishers.
-  # Dispatching many runs into this one group cancels all but one pending run.
-  group: sparkles-diamond-catalogue-master-publisher
-  cancel-in-progress: false
-
 jobs:
   enrich:
     # Owner and exact issue title are the only event inputs used. Contents,
@@ -22,6 +16,11 @@ jobs:
       (github.event.issue.title == 'Enrich learning reference 360s' ||
        github.event.issue.title == 'Enrich labgrowns3 reference 360s')
     runs-on: ubuntu-latest
+    # Apply publisher serialization only after this issue's owner/title gate passes.
+    # Non-matching issue handlers must not occupy or evict the pending run.
+    concurrency:
+      group: sparkles-diamond-catalogue-master-publisher
+      cancel-in-progress: false
     timeout-minutes: 240
     permissions:
       contents: write
