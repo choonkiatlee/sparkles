@@ -1,0 +1,41 @@
+name: R02 exact Pixorac source audit
+
+on:
+  pull_request:
+    paths:
+      - "tools/audit_r02_pixorac.py"
+      - "tests/test_r02_pixorac_audit.py"
+      - ".github/workflows/r02-pixorac-source-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install local source validators
+        run: python -m pip install -e .
+      - name: Run network-free exact identity and URL guards
+        run: python -m unittest tests.test_r02_pixorac_audit -v
+      - name: Audit exact R02 Pixorac metadata and any indexed original proxy bytes (read only)
+        timeout-minutes: 14
+        run: |
+          python -m tools.audit_r02_pixorac \
+            --out "$RUNNER_TEMP/r02-pixorac-source-audit.json"
+      - name: Preserve sanitized outcome without media bytes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r02-pixorac-readonly-audit
+          path: ${{ runner.temp }}/r02-pixorac-source-audit.json
+          if-no-files-found: warn
+          retention-days: 30
