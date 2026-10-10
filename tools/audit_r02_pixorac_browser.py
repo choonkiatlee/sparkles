@@ -8,11 +8,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import hashlib
+import re
 from collections import Counter
 from pathlib import Path
 
 from tools.audit_loupe360_browser_references import inspect_browser, query_public_record
-from tools.audit_r02_pixorac import REPORT, trust_anchor
+from tools.audit_r02_pixorac import REPORT, MAX_FRAME_BYTES, proxy_source, trust_anchor, verify_frames
+from diamond_retrieval.http import UrllibHttpClient
 
 
 def classify_resource(item: dict) -> dict:
@@ -66,6 +69,68 @@ def summarize_browser(records: list[dict]) -> dict:
     return {"routes": summary, "pixorac_request_total": sum(x["pixorac_requests"] for x in summary)}
 
 
+
+_INDEXED = re.compile(r"^/([A-Za-z0-9_-]{20,1024}={0,2})/([0-9]{1,3})\\.(jpg|webp)$")
+
+
+def browser_cache_candidate(records: list[dict], lookup: dict) -> tuple[str | None, int | None, dict]:
+    """Recover *observed* Pixorac roots, only for an exact IGI Loupe browser.
+
+    A URL is never generated from a certificate or supplier inventory ID.
+    Exactly one root must be seen on the exact viewer's successful requests.
+    """
+    if (lookup.get("cert_matches") is not True or lookup.get("lab") != "IGI"):
+        return None, None, {"outcome": "certificate_identity_not_matched"}
+    v360 = lookup.get("v360")
+    if not isinstance(v360, dict) or str(v360.get("frame_count")) != "256":
+        return None, None, {"outcome": "missing_256_frame_metadata"}
+    top_value = v360.get("top_index")
+    if isinstance(top_value, bool) or not str(top_value).isdigit():
+        return None, None, {"outcome": "missing_top_index"}
+    top = int(top_value)
+    if top < 0 or top >= 256:
+        return None, None, {"outcome": "invalid_top_index"}
+
+    roots: dict[str, set[int]] = {}
+    pixorac_total = 0
+    for record in records:
+        if record.get("input_route") not in ("landing", "/video/500/500"):
+            continue
+        for item in record.get("relevant_requests", ()):
+            source = item.get("resource") or {}
+            if source.get("host") != "assets-images.pixorac.com":
+                continue
+            pixorac_total += 1
+            if item.get("status") != 200 or source.get("has_query"):
+                continue
+            match = _INDEXED.fullmatch(source.get("path") or "")
+            if not match:
+                continue
+            index = int(match.group(2))
+            if index >= 256:
+                continue
+            root = "https://assets-images.pixorac.com/" + match.group(1)
+            roots.setdefault(root, set()).add(index)
+    output = {"indexed_requests_observed": pixorac_total,
+              "distinct_indexed_roots": len(roots)}
+    if len(roots) != 1:
+        return None, None, {**output, "outcome": "ambiguous_or_absent_observed_roots"}
+    root, indices = next(iter(roots.items()))
+    try:
+        _, _, viewer_kind = proxy_source({
+            "url": root, "frame_count": 256, "top_index": top,
+        })
+    except (ValueError, TypeError):
+        return None, None, {**output, "outcome": "observed_root_does_not_wrap_known_r02_source"}
+    return root, top, {
+        **output, "outcome": "one_exact_browser_observed_source",
+        "proxy_root_sha256": hashlib.sha256(root.encode()).hexdigest(),
+        "observed_distinct_indices": len(indices),
+        "supplier_viewer_kind": viewer_kind,
+        "top_index": top,
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--out", type=Path, required=True)
@@ -97,7 +162,17 @@ def main(argv: list[str] | None = None) -> int:
     except Exception as exc:
         output["lookup_error_type"] = type(exc).__name__
     try:
-        output["browser"] = summarize_browser(inspect_browser(REPORT, seconds=6))
+        browser_records = inspect_browser(REPORT, seconds=6)
+        output["browser"] = summarize_browser(browser_records)
+        if "current" in locals():
+            root, top, source = browser_cache_candidate(browser_records, current)
+            output["browser_cache"] = source
+            if root is not None and top is not None:
+                # Read only source bytes in memory; never attach frames to a
+                # manifest merely because a few Chrome requests succeeded.
+                output["browser_cache"]["frame_audit"] = verify_frames(
+                    UrllibHttpClient(max_bytes=MAX_FRAME_BYTES), root, top,
+                )
     except Exception as exc:
         output["browser_error_type"] = type(exc).__name__
     data = json.dumps(output, indent=2, sort_keys=True)
