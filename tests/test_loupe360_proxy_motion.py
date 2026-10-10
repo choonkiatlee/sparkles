@@ -268,6 +268,8 @@ class Gem360CertificateProxyTests(unittest.TestCase):
             "https://127.0.0.1/Vision360.html?d=566392177",
             "https://videos.gem360.in/other.html?d=566392177",
             "https://videos.gem360.in/Vision360.html?d=566392177&ref=another",
+            "https://videos.gem360.in/Vision360.html?d=566392177&ref=",
+            "https://videos.gem360.in/Vision360.html?d=%35%36%36%33%39%32%31%37%37",
             "https://videos.gem360.in/Vision360.html?d=anything",
             "https://videos.gem360.in/Vision360.html?d=566392177#frag",
             "https://videos.gem360.in/Vision360.html?d=",
