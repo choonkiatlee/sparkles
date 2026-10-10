@@ -20,6 +20,7 @@ from diamond_retrieval.motion_sources import (
     D360RotationDownloader,
     DiajewelRotationDownloader,
     FilesOnSkyRotationDownloader,
+    Gem360RotationDownloader,
     Labgrowns3RotationDownloader,
     RemoteV360RotationDownloader,
     WorkshopRotationDownloader,
@@ -404,6 +405,74 @@ class ProgressiveMotionContractTests(unittest.TestCase):
         ]
         self.assertEqual(len(supporting), 1)
         self.assertIsInstance(supporting[0], RemoteV360RotationDownloader)
+
+    def test_gem360_lg833634461_original_progressive_transport(self):
+        from diamond_retrieval import default_config
+        from diamond_retrieval.resolvers import Loupe360CertificateResolver
+
+        item = "2208261115-MV25-13A"
+        viewer = f"https://view.gem360.in/gem360.html?d={item}"
+        root = f"https://videos.gem360.in/imaged/{item}"
+        responses = _progressive_source_responses(AUDITS[0], root, version=1)
+        responses[root + "/0.json?version="] = responses.pop(root + "/0.json")
+        client = FakeHttpClient(responses)
+        reference = _reference("gem360", viewer)
+        downloader = Gem360RotationDownloader(client)
+
+        self.assertTrue(Loupe360CertificateResolver._is_supported_rotation_url(viewer))
+        self.assertTrue(downloader.supports(reference))
+        raw = downloader.download(reference)
+        rotations = ProgressiveRotationProcessor().process(raw)
+        self.assertEqual(len(rotations), 1)
+        self.assertEqual(len(rotations[0].frames), 256)
+        self.assertEqual([f.source_index for f in rotations[0].frames], list(range(256)))
+        self.assertEqual(rotations[0].metadata["supplier"], "gem360")
+        self.assertTrue(rotations[0].metadata["sequence_complete"])
+        self.assertEqual(
+            client.calls,
+            [root + "/0.json?version="] +
+            [f"{root}/{n}.json?version=1" for n in range(1, 8)],
+        )
+        registered = [
+            item for item in default_config(FakeHttpClient({})).downloaders
+            if item.supports(reference)
+        ]
+        self.assertEqual(len(registered), 1)
+        self.assertIsInstance(registered[0], Gem360RotationDownloader)
+
+    def test_gem360_accepts_legacy_exact_path_and_benign_display_flags(self):
+        item = "2302241224-VR-536"
+        downloader = Gem360RotationDownloader(FakeHttpClient({}))
+        for viewer in (
+            f"https://view.gem360.in/gem360/{item}/gem360-{item}.html",
+            f"https://view.gem360.in/gem360.html?controls=0&d={item}",
+            f"https://view.gem360.in/gem360.html?btn=0&controls=0&d={item}&sv=0&v=0",
+        ):
+            with self.subTest(viewer=viewer):
+                self.assertTrue(downloader.supports(_reference("gem360", viewer)))
+
+    def test_gem360_rejects_lookalikes_and_unsafe_or_ambiguous_urls(self):
+        item = "2208261115-MV25-13A"
+        good = f"https://view.gem360.in/gem360.html?d={item}"
+        client = FakeHttpClient({})
+        downloader = Gem360RotationDownloader(client)
+        for bad in (
+            good.replace("https://", "http://"),
+            good.replace("view.gem360.in", "view.gem360.in.evil.test"),
+            good.replace("view.gem360.in", "127.0.0.1"),
+            good.replace(item, "../other"),
+            good.replace(item, "%2Fetc"),
+            good + "&d=OTHER",
+            good + "&surl=https://127.0.0.1",
+            good + "#fragment",
+            good.replace("gem360.html", "other.html"),
+            good.replace("view.gem360.in/", "view.gem360.in:443/"),
+            good + "&controls=2",
+        ):
+            with self.subTest(url=bad):
+                self.assertFalse(downloader.supports(_reference("gem360", bad)))
+        self.assertEqual(client.calls, [])
+
 
     def test_filesonsky_r05_original_vision360_transport(self):
         from diamond_retrieval import default_config

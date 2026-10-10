@@ -147,6 +147,17 @@ class Loupe360CertificateResolver:
         ):
             return True
         if (
+            host == "view.gem360.in"
+            and parts.scheme == "https"
+            and parts.path.lower() == "/gem360.html"
+            and not parts.fragment
+            and set(query) == {"d"}
+            and len(query["d"]) == 1
+            and bool(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,120}", query["d"][0]))
+            and ".." not in query["d"][0]
+        ):
+            return True
+        if (
             host == "labgrowns3.s3.ap-southeast-1.amazonaws.com"
             and parts.scheme == "https"
             and parts.path.lower() == "/stoneimages360.html"

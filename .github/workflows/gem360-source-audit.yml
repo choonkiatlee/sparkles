@@ -1,0 +1,47 @@
+name: Gem360 exact source audit
+
+on:
+  pull_request:
+    paths:
+      - "diamond_retrieval/motion_sources.py"
+      - "diamond_retrieval/composition.py"
+      - "diamond_retrieval/resolvers.py"
+      - "tests/test_diamond_retrieval_motion.py"
+      - "tools/audit_gem360_source.py"
+      - ".github/workflows/gem360-source-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout reviewed source only
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Sparkles
+        run: python -m pip install -e .
+
+      - name: Run network-free Gem360 contract tests
+        run: python -m unittest tests.test_diamond_retrieval_motion -v
+
+      - name: Audit LG833634461 exact public Gem360 source
+        run: python tools/audit_gem360_source.py --out "$RUNNER_TEMP/gem360-lg833634461.json"
+
+      - name: Preserve sanitized source contract
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gem360-lg833634461-source-audit
+          path: ${{ runner.temp }}/gem360-lg833634461.json
+          if-no-files-found: warn
+          retention-days: 30
