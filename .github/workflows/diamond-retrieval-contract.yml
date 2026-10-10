@@ -6,6 +6,7 @@ on:
       - "diamond_retrieval/**"
       - "diamond360/d360_source.py"
       - "tests/test_diamond_retrieval*.py"
+      - "tests/test_filesonsky_motion.py"
       - "tests/test_reference_media_lookup.py"
       - "tests/test_d360_source.py"
       - "tests/fixtures/diamond_retrieval/**"
@@ -37,6 +38,7 @@ jobs:
           python -m unittest tests.test_diamond_retrieval_motion -v
           python -m unittest tests.test_diamond_retrieval_media -v
           python -m unittest tests.test_reference_media_lookup -v
+          python -m unittest tests.test_filesonsky_motion -v
           python -m unittest tests.test_d360_source -v
 
       # Non-gating: upstream media availability is external, but logs prove
@@ -65,6 +67,34 @@ jobs:
           print("Source:", rotation.metadata.get("source_root"))
           print("First SHA256:", rotation.frames[0].sha256)
           assert len(rotation.frames) == 256
+          PY
+
+      # R05 is an already accepted, identity-verified educational reference.
+      # This read-only smoke checks the actual original bytes in memory, never
+      # publishes assets or changes reports on PR code.
+      - name: Bounded R05 FilesOnSky original-source smoke
+        continue-on-error: true
+        timeout-minutes: 10
+        run: |
+          python - <<'PY'
+          import hashlib
+          from diamond_retrieval import (
+              EvidenceReference, FilesOnSkyRotationDownloader,
+              ProgressiveRotationProcessor, ROTATION, UrllibHttpClient,
+          )
+          viewer = "https://www.filesonsky.com/v360/Vision360.HTML?d=659844"
+          ref = EvidenceReference(
+              identifier="ps285166-r05:filesonsky-rotation",
+              kind=ROTATION, retrieval_key=viewer, locator=viewer,
+          )
+          adapter = FilesOnSkyRotationDownloader(UrllibHttpClient(), timeout=12)
+          raw = adapter.download(ref)
+          rotation = ProgressiveRotationProcessor().process(raw)[0]
+          assert len(rotation.frames) == 256
+          assert [f.source_index for f in rotation.frames] == list(range(256))
+          print("R05 original Vision360 frame count:", len(rotation.frames))
+          print("R05 original first-frame SHA256:", hashlib.sha256(rotation.frames[0].payload).hexdigest())
+          print("R05 original source:", rotation.metadata["supplier"])
           PY
 
       - name: Record full-suite status
