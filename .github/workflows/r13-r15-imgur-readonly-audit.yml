@@ -1,0 +1,38 @@
+name: R13–R15 paired Imgur source read-only audit
+
+on:
+  pull_request:
+    paths:
+      - "tools/audit_r13_r15_imgur.py"
+      - "tests/test_r13_r15_imgur.py"
+      - ".github/workflows/r13-r15-imgur-readonly-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  read-only-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout without persistent credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Test source and clip-attribution abstention guards
+        run: python -m unittest tests.test_r13_r15_imgur -v
+      - name: Inspect exactly two public album HTML pages and HEAD-only video metadata
+        timeout-minutes: 3
+        run: python -m tools.audit_r13_r15_imgur --out "$RUNNER_TEMP/r13-r15-album-audit.json"
+      - name: Retain sanitized metadata only, no videos or HTML bodies
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r13-r15-exact-imgur-readonly-audit
+          path: ${{ runner.temp }}/r13-r15-album-audit.json
+          retention-days: 30
+          if-no-files-found: warn
