@@ -14,8 +14,9 @@ import argparse
 import base64
 import hashlib
 import json
+from html.parser import HTMLParser
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, urljoin
 
 from diamond_retrieval.http import UrllibHttpClient
 from diamond_retrieval.models import EvidenceReference, ROTATION
@@ -155,6 +156,72 @@ def classify_d360_preflight(responses: dict) -> dict:
     }
 
 
+class _ScriptSources(HTMLParser):
+    """Collect ordinary script-src references, never execute vendor code."""
+    def __init__(self):
+        super().__init__()
+        self.sources = []
+    def handle_starttag(self, tag, attrs):
+        if tag.lower() != "script":
+            return
+        url = dict(attrs).get("src")
+        if isinstance(url, str):
+            self.sources.append(url)
+
+
+def audit_r23_viewer_scripts(http) -> list[dict]:
+    """Inspect only exact D360 viewer and a few same-origin static JS assets."""
+    outputs = []
+    viewer = _safe_source_url(R23_VIEWER)
+    try:
+        response = http.get(viewer, timeout=15)
+        outputs.append({
+            "reference": R23_ID, "source": "exact_viewer",
+            **response_shape(response),
+        })
+        if response.status_code != 200 or len(response.content) > 500_000:
+            return outputs
+        scripts = _ScriptSources()
+        scripts.feed(response.content.decode("utf-8", "replace"))
+        count = 0
+        for source in scripts.sources:
+            parsed = urlsplit(urljoin(viewer, source))
+            if (parsed.scheme != "https" or parsed.hostname != "d360.tech"
+                or parsed.port not in (None, 443) or parsed.username is not None
+                or parsed.password is not None or parsed.query or parsed.fragment
+                or not parsed.path.endswith(".js") or ".." in parsed.path
+                or len(parsed.path) > 180):
+                continue
+            if count == 4:
+                break
+            count += 1
+            url = _safe_source_url(parsed.geturl())
+            try:
+                js = http.get(url, timeout=15)
+                plain = js.content.decode("utf-8", "replace").lower()
+                outputs.append({
+                    "reference": R23_ID, "source": "script-" + str(count),
+                    "path_basename": Path(parsed.path).name[:65],
+                    **response_shape(js),
+                    "contains_scramble": "scramble" in plain,
+                    "contains_0json": "0.json" in plain,
+                    "contains_version": "version" in plain,
+                    "contains_imaged": "imaged" in plain,
+                    "contains_shuffle": "shuffle" in plain,
+                })
+            except Exception as exc:
+                outputs.append({
+                    "reference": R23_ID, "source": "script-" + str(count),
+                    "state": "transport_failure", "error_class": type(exc).__name__,
+                })
+    except Exception as exc:
+        outputs.append({
+            "reference": R23_ID, "source": "exact_viewer",
+            "state": "transport_failure", "error_class": type(exc).__name__,
+        })
+    return outputs
+
+
 def audit_r07(http) -> list[dict]:
     verified_record(R07_ID)
     url = _safe_source_url(R07_VIEWER)
@@ -286,6 +353,8 @@ def audit_r23(http) -> list[dict]:
                 outputs.append({"reference": R23_ID, "source": path,
                                 "state": "transport_failure",
                                 "error_class": type(exc).__name__})
+    if preflight.get("preflight") == "missing_scramble":
+        outputs.extend(audit_r23_viewer_scripts(http))
     if preflight.get("preflight") != "valid_original_bootstrap":
         return outputs
 
