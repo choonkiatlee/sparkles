@@ -8,6 +8,7 @@ frame-order semantics to inform source-specific contract investigation.
 from __future__ import annotations
 
 from html.parser import HTMLParser
+import base64
 import hashlib
 import json
 import re
@@ -146,6 +147,27 @@ def run() -> None:
                 "section":label,"offset":offset,
                 "excerpt":" ".join(snippet.split())[:4200]
             },sort_keys=True),flush=True)
+    # Independent same-stone source->preview agreement: the vendor assigns
+    # 0.json["image"] to sparse slot zero, and 1.json[0] to canonical slot zero.
+    try:
+        root = "https://media.d360.us/imaged/89-AY-8102"
+        boot = client.get(_safe_source_url(root + "/0.json"), timeout=15)
+        pack1 = client.get(_safe_source_url(root + "/1.json"), timeout=15)
+        if boot.status_code == 200 and pack1.status_code == 200:
+            obj=json.loads(boot.content)
+            packed=json.loads(pack1.content)
+            preview=base64.b64decode("".join(obj["image"].split()),validate=True)
+            frame0=base64.b64decode("".join(packed[0].split()),validate=True)
+            print("R23_ORIGINAL_SLOT0 "+json.dumps({
+                "preview_sha256":hashlib.sha256(preview).hexdigest(),
+                "pack1_serial1_sha256":hashlib.sha256(frame0).hexdigest(),
+                "byte_match":preview==frame0,
+                "preview_bytes":len(preview),"frame_bytes":len(frame0),
+            },sort_keys=True),flush=True)
+    except Exception as exc:
+        print("R23_ORIGINAL_SLOT0 "+json.dumps({
+            "status":"not_validated","error_class":type(exc).__name__,
+        },sort_keys=True),flush=True)
     count=0
     for source in parser.externals:
         parsed=urlsplit(urljoin(VIEWER,source))
