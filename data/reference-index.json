@@ -487,7 +487,7 @@
       "clarity": null,
       "colour": null,
       "commentary_excerpt": "The buyer re-linked an earlier 3.10ct option (#26); 0-0-0 described it as leaky when tilted (#29). The IGI identifier LG657468099 comes from the curated discussion inventory and sh",
-      "has_motion": false,
+      "has_motion": true,
       "id": "ps285166-r08",
       "identity_status": "reported",
       "lab": "IGI",
