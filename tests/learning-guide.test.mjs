@@ -34,6 +34,18 @@ test("editable guide references real curated diamonds and trustworthy sources",(
   assert.match(annotated.url,/page-2/);
 });
 
+test("all new references are taught in the expanded guide",()=>{
+  assert.ok(lessons.length>=8);
+  const idsInGuide=new Set(lessons.flatMap(x=>x.examples.map(y=>y.id)));
+  for(let i=12;i<=15;i++)assert.ok(idsInGuide.has("ps282648-r"+i));
+  for(let i=16;i<=23;i++)assert.ok(idsInGuide.has("ps281114-r"+i));
+  for(const slug of ["evidence-reassessment","p3-specific-leakage","same-spec-comparison","performance-vs-preference"]){
+    const lesson=lessons.find(x=>x.id===slug);
+    assert.ok(lesson);
+    assert.equal(comparisonPair(lesson,ids).length,2);
+  }
+});
+
 test("featured comparison remains stable when later agents append examples",()=>{
   for(const lesson of lessons.filter(x=>x.featured_pair)){
     const selected=comparisonPair(lesson,ids);
