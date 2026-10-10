@@ -32,7 +32,7 @@ _CARAT = re.compile(r"(?:0|[1-9][0-9]*)(?:\.[0-9]+)?\Z")
 _FIELDS = {
     "schema", "id", "label", "identity", "linked_diamond_id",
     "diamond_metadata", "commentary", "source_links", "media_sources",
-    "topics", "evidence",
+    "topics", "evidence", "enrichment_attempts",
 }
 _METADATA_FIELDS = {
     "shape", "carat", "colour", "clarity", "origin", "dimensions",
@@ -185,8 +185,64 @@ def validate_reference(value: dict, *, expected_id: str | None = None,
     evidence = ref.get("evidence", [])
     if not isinstance(evidence, list) or not all(isinstance(e, dict) for e in evidence):
         raise CatalogueError("evidence must be a list of records")
-    # Full stored evidence verification belongs to the later media-publishing PR.
+    for record in evidence:
+        if record.get("kind") not in {"certificate", "still", "rotation", "video"} or (
+            record.get("status") not in {"success", "extraction_failed"}
+        ):
+            raise CatalogueError("Invalid published reference evidence kind or status")
+        if not isinstance(record.get("record_key"), str) or not re.fullmatch(
+            r"[a-f0-9]{64}", record["record_key"]
+        ):
+            raise CatalogueError("Invalid published evidence record key")
+        asset = record.get("payload_asset")
+        frames = record.get("frames", [])
+        if record["kind"] == "rotation":
+            if record["status"] != "success" or not isinstance(frames, list) or len(frames) != 256:
+                raise CatalogueError("Reference rotation must have a verified complete 256-frame sequence")
+            indices = [frame.get("source_index") for frame in frames if isinstance(frame, dict)]
+            if indices != list(range(256)):
+                raise CatalogueError("Reference rotation has incomplete or unordered source frames")
+            if asset is not None:
+                raise CatalogueError("Reference rotations may not pretend a bundle is playable motion")
+            for frame in frames:
+                _stored_asset(frame.get("asset"))
+        elif asset is None:
+            raise CatalogueError("Published reference still/video/PDF lacks stored asset")
+        else:
+            _stored_asset(asset)
+    attempts = ref.get("enrichment_attempts", [])
+    if not isinstance(attempts, list) or len(attempts) > 3000:
+        raise CatalogueError("Invalid reference enrichment attempt list")
+    for attempt in attempts:
+        obj = _object(attempt, "enrichment attempt")
+        if set(obj) != {"reference_identifier", "kind", "status", "locator"}:
+            raise CatalogueError("Invalid enrichment attempt fields")
+        _text(obj["reference_identifier"], "enrichment.reference_identifier", max_length=180)
+        if obj["kind"] not in {"certificate", "still", "rotation", "video"}:
+            raise CatalogueError("Invalid enrichment attempt kind")
+        if obj["status"] not in {
+            "success", "unsupported", "missing", "download_failed",
+            "processing_failed", "extraction_failed", "invalid_payload",
+            "resolution_failed", "resolution_limit", "resolved", "duplicate",
+            "not_requested",
+        }:
+            raise CatalogueError("Invalid enrichment attempt status")
+        if obj["locator"] is not None:
+            _text(obj["locator"], "enrichment.locator", max_length=2048)
     return ref
+
+
+def _stored_asset(value: object) -> None:
+    asset = _object(value, "stored asset")
+    if (not isinstance(asset.get("sha256"), str) or
+            not re.fullmatch(r"[a-f0-9]{64}", asset["sha256"]) or
+            not isinstance(asset.get("byte_count"), int) or
+            isinstance(asset["byte_count"], bool) or asset["byte_count"] <= 0):
+        raise CatalogueError("Invalid published reference source hash/size")
+    storage = _object(asset.get("storage"), "published storage")
+    _url(storage.get("url"), "published reference asset URL")
+    if not storage.get("backend") or not storage.get("locator"):
+        raise CatalogueError("Published reference asset needs a storage locator")
 
 
 def index_row(manifest: dict) -> dict:
