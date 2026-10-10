@@ -27,9 +27,55 @@
       "locator": "https://assets-images.pixorac.com/aHR0cHM6Ly9pZGVhbGJyaWxsaWFudC5zMy5hbWF6b25hd3MuY29tL2ltYWdlZC9QOTcwLTMvdmlkZW8ubXA0/1.jpg",
       "reference_identifier": "ps281114-r21:loupe-report:supplier-still",
       "status": "success"
+    },
+    {
+      "kind": "video",
+      "locator": "https://idealbrilliant.s3.amazonaws.com/imaged/P970-3/video.mp4",
+      "reference_identifier": "ps281114-r21:loupe-report:supplier-video",
+      "status": "success"
     }
   ],
   "evidence": [
+    {
+      "identifier": "ps281114-r21:loupe-report:supplier-video",
+      "identity_observations": [],
+      "kind": "video",
+      "media_type": "video/mp4",
+      "metadata": {
+        "format": "video",
+        "sha256": "e66c7fff30243a1e41ecc9ce85516f92b4ab8315bee98cb6dce490985e59d0cd"
+      },
+      "payload_asset": {
+        "byte_count": 12864214,
+        "media_type": "video/mp4",
+        "sha256": "e66c7fff30243a1e41ecc9ce85516f92b4ab8315bee98cb6dce490985e59d0cd",
+        "storage": {
+          "backend": "github_release",
+          "locator": "sparkles-reference-ps281114-r21/asset-e66c7fff30243a1e41ecc9ce85516f92b4ab8315bee98cb6dce490985e59d0cd.mp4",
+          "url": "https://github.com/choonkiatlee/sparkles/releases/download/sparkles-reference-ps281114-r21/asset-e66c7fff30243a1e41ecc9ce85516f92b4ab8315bee98cb6dce490985e59d0cd.mp4"
+        }
+      },
+      "provenance": [
+        {
+          "locator": "reference:ps281114-r21",
+          "source": "curated_reference"
+        },
+        {
+          "locator": null,
+          "source": "curated_report"
+        },
+        {
+          "locator": "https://g.nivoda.com/graphql-public-loupe360",
+          "source": "loupe360_exact_certificate"
+        },
+        {
+          "locator": "https://idealbrilliant.s3.amazonaws.com/imaged/P970-3/video.mp4",
+          "source": "direct_video_validation"
+        }
+      ],
+      "record_key": "90aabc1eb635b1f593b25d2c1e8f31d9acb14b12862765beb18c794bfeca36bb",
+      "status": "success"
+    },
     {
       "dimensions": [
         558,
