@@ -31,6 +31,7 @@ from .protocols import HttpClient
 from .resolvers import Loupe360CertificateResolver
 
 FRAME_COUNT = 256
+CERTIFICATE_FRAME_COUNTS = frozenset({128, 256})
 FRAME_LIMIT_BYTES = 1024 * 1024
 TOTAL_LIMIT_BYTES = 25 * 1024 * 1024
 _TOKEN = re.compile(r"/[A-Za-z0-9_-]{20,1024}={0,2}\Z")
@@ -115,9 +116,18 @@ def validated_proxy_root(reference: EvidenceReference) -> str:
         raise ValueError("Pixorac wrapper does not name the exact trusted supplier viewer")
     frame_count = reference.metadata.get("supplier_frame_count")
     top_index = reference.metadata.get("supplier_top_index")
-    expected_count = pin["frame_count"] if unverified_viewer else FRAME_COUNT
-    if frame_count != expected_count or isinstance(frame_count, bool):
-        raise ValueError("Pixorac frame count does not match source-specific contract")
+    if unverified_viewer:
+        expected_count = pin["frame_count"]
+        if frame_count != expected_count or isinstance(frame_count, bool):
+            raise ValueError("Pixorac frame count does not match source-specific contract")
+    else:
+        if (
+            isinstance(frame_count, bool)
+            or not isinstance(frame_count, int)
+            or frame_count not in CERTIFICATE_FRAME_COUNTS
+        ):
+            raise ValueError("Pixorac frame count does not match certificate contract")
+        expected_count = frame_count
     if unverified_viewer and top_index is None:
         # No known face-up hint: keep it absent rather than fabricating zero.
         return locator
@@ -181,9 +191,10 @@ class Loupe360ProxyRotationDownloader:
             hashes_by_index.append(digest)
             frames.append(base64.b64encode(payload).decode("ascii"))
 
-        # Reject static placeholders masquerading as 256 images; do not assume
+        # Reject static placeholders masquerading as a complete indexed rotation; do not assume
         # any one frame is an entire rotation.
-        if len(hashes) < 240:
+        minimum_distinct = (count * 15 + 15) // 16
+        if len(hashes) < minimum_distinct:
             raise InvalidPayloadError("Pixorac proxy frames do not show a complete varying rotation")
 
         is_r02 = reference.metadata.get("r02_browser_observed_cache") is True
@@ -251,8 +262,13 @@ class IndexedProxyRotationProcessor:
         frames_encoded = bundle.get("frames")
         declared_dimensions = bundle.get("dimensions")
         count = bundle.get("frame_count", FRAME_COUNT)
-        if isinstance(count, bool) or count not in (255, 256):
+        if isinstance(count, bool) or count not in (128, 255, 256):
             raise InvalidPayloadError("Unexpected indexed proxy frame count")
+        if count in CERTIFICATE_FRAME_COUNTS:
+            try:
+                validated_proxy_root(raw.reference)
+            except ValueError as exc:
+                raise InvalidPayloadError("Indexed proxy certificate provenance invalid") from exc
         if count == 255:
             # The ONLY accepted 255-image contract is native R09: actual 0..254
             # verified; original viewer advertised 255 and index 255 was 404.
@@ -302,7 +318,8 @@ class IndexedProxyRotationProcessor:
                 stored_position=index,
                 source_batch="indexed-proxy",
             ))
-        if len(hashes) < 240:
+        minimum_distinct = (count * 15 + 15) // 16
+        if len(hashes) < minimum_distinct:
             raise InvalidPayloadError("Indexed proxy rotation is effectively static")
         hint = bundle.get("face_up_hint")
         if hint is None and raw.reference.metadata.get("loupe360_proxy_exact_viewer") is True:

@@ -188,6 +188,14 @@ class Loupe360CertificateResolver:
         ):
             return True
         if (
+            host == "video.diamondasset.in"
+            and parts.scheme == "https"
+            and parts.path == "/photo/appVideo.jsp"
+            and not parts.fragment
+            and bool(re.fullmatch(r"idv=[0-9]{5,18}", parts.query))
+        ):
+            return True
+        if (
             host == "videos.gem360.in"
             and parts.scheme == "https"
             and parts.path.lower() == "/vision360.html"
@@ -387,6 +395,7 @@ class Loupe360CertificateResolver:
                 # Preserve the exact encoded wrapper; never invent a proxy ID.
                 proxy_parts = urlsplit(wrapped)
                 top = v360.get("top_index")
+                count = v360.get("frame_count")
                 if (
                     not is_video
                     and proxy_parts.scheme == "https"
@@ -394,10 +403,10 @@ class Loupe360CertificateResolver:
                     and not proxy_parts.query and not proxy_parts.fragment
                     and re.fullmatch(r"/[A-Za-z0-9_-]{20,1024}={0,2}", proxy_parts.path)
                     and self._is_supported_rotation_url(locator)
-                    and v360.get("frame_count") == 256
-                    and not isinstance(v360.get("frame_count"), bool)
+                    and count in {128, 256}
+                    and not isinstance(count, bool)
                     and not isinstance(top, bool)
-                    and str(top).isdigit() and int(top) < 256
+                    and str(top).isdigit() and int(top) < count
                 ):
                     references.append(EvidenceReference(
                         identifier=f"{reference.identifier}:proxy-rotation",
