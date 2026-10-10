@@ -19,8 +19,8 @@ CASES = (
     ("ps285166-r05", "IGI", "644442866"),
     ("ps285166-r07", "IGI", "625406458"),
 )
-_SAFE_REPORT = re.compile(r"(?:LG)?[0-9]{6,14}\\Z")
-_SAFE_LAB = re.compile(r"[A-Z][A-Z0-9 -]{0,30}\\Z")
+_SAFE_REPORT = re.compile(r"(?:LG)?[0-9]{6,14}")
+_SAFE_LAB = re.compile(r"[A-Z][A-Z0-9 -]{0,30}")
 
 
 def _safe(value: object, *, kind: str) -> str:
