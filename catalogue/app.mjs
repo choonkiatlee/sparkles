@@ -119,7 +119,7 @@ function render() {
   cards.replaceChildren(...rows.map(makeRow));
   $("empty").hidden = rows.length > 0;
   const quantity = state.selected.length;
-  $("selected-count").textContent = quantity === 0 ? "Select two to five diamonds." :
+  $("selected-count").textContent = quantity === 0 ? "Select two to "+MAX_SELECTION+" diamonds." :
     quantity < MIN_COMPARISON ? "1 selected · choose at least one more." :
     quantity+" selected · ready to compare"+(quantity===MAX_SELECTION?" (maximum).":".");
   $("selected-chips").replaceChildren(...state.selected.map(id => {
