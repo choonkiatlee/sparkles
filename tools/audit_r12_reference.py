@@ -123,7 +123,7 @@ def probe_exact_loupe_viewer(client) -> list[dict]:
                 "sha256": hashlib.sha256(data).hexdigest(),
                 "wire_format": (
                     "mp4" if len(data) > 8 and data[4:8] == b"ftyp"
-                    else "jpeg" if data[:3] == b"\\xff\\xd8\\xff"
+                    else "jpeg" if data[:3] == bytes.fromhex("ffd8ff")
                     else "html" if "<html" in raw or "<!doctype" in raw
                     else "other"
                 ),
