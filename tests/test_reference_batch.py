@@ -8,12 +8,34 @@ from diamond_catalogue.reference_batch import batch_targets
 
 
 class ReferenceBatchTests(unittest.TestCase):
-    def test_current_reviewed_inventory_only_selects_full_reports(self):
-        self.assertEqual(batch_targets(), (
-            "ps285166-r02", "ps285166-r04", "ps285166-r05",
-            "ps285166-r06", "ps285166-r08", "ps285166-r10",
-            "ps285166-r11",
-        ))
+    def test_batch_tracks_current_eligible_refs_as_new_lessons_are_added(self):
+        from diamond_catalogue.references import REFERENCE_DIR
+        from diamond_retrieval.resolvers import Loupe360CertificateResolver
+        selected = batch_targets()
+        self.assertEqual(selected, tuple(sorted(set(selected))))
+        records = {
+            path.stem: json.loads(path.read_text(encoding="utf-8"))
+            for path in REFERENCE_DIR.glob("*.json")
+        }
+        self.assertGreaterEqual(len(records), 23)
+        self.assertTrue(set(selected) <= set(records))
+        for ref_id, record in records.items():
+            identity = record["identity"]
+            full_report = identity["status"] in {"reported", "linked"} and bool(
+                identity["lab"] and identity["report_number"]
+            )
+            supported_viewer = any(
+                media["kind"] == "viewer"
+                and Loupe360CertificateResolver._is_supported_rotation_url(media["url"])
+                for media in record.get("media_sources", [])
+            )
+            complete_motion = any(
+                evidence.get("kind") == "rotation"
+                and evidence.get("status") == "success"
+                and len(evidence.get("frames", [])) == 256
+                for evidence in record.get("evidence", [])
+            )
+            self.assertEqual(ref_id in selected, (full_report or supported_viewer) and not complete_motion)
 
     def test_unsupported_opaque_loupe_or_v360_viewer_not_dispatched(self):
         from diamond_catalogue.references import SCHEMA
