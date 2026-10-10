@@ -5,7 +5,7 @@ import unittest
 from diamond_retrieval.protocols import HttpResponse
 from tools.reference_motion_source_audit import (
     R07_VIEWER, R23_ROOT, audit_r07, audit_r23,
-    classify_d360_preflight, response_shape,
+    classify_d360_preflight, response_shape, audit_r23_original_pack_set,
 )
 
 
@@ -63,6 +63,23 @@ class ReferenceOriginalAuditTests(unittest.TestCase):
             "width": 778, "height": 778, "image": "aGVsbG8="
         }).encode())
         self.assertEqual(classify_d360_preflight(refs)["preflight"], "missing_scramble")
+
+    def test_unordered_originals_audit_rejects_missing_pack(self):
+        http = FakeHttp({})
+        summary = audit_r23_original_pack_set(http, R23_ROOT, (600, 600))
+        self.assertEqual(summary["status"], "missing_batch")
+        self.assertEqual(summary["batch"], 1)
+        self.assertEqual(http.calls, [R23_ROOT + "/1.json"])
+
+    def test_unordered_originals_audit_rejects_tiny_pack(self):
+        http = FakeHttp({R23_ROOT + "/1.json": (
+            200, b'[]', "application/json",
+        )})
+        summary = audit_r23_original_pack_set(http, R23_ROOT, (600, 600))
+        self.assertEqual(summary["status"], "invalid_batch_count")
+        self.assertEqual(summary["expected"], 4)
+        self.assertEqual(summary["actual"], 0)
+        self.assertEqual(http.calls, [R23_ROOT + "/1.json"])
 
     def test_r23_invalid_scramble_never_fetches_batches(self):
         http = FakeHttp({
