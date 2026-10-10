@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Explore expert-annotated Asscher diamonds and compare them with your saved stones.">
+  <title>Sparkles · Learning Corner</title>
+  <link rel="stylesheet" href="../catalogue/styles.css">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./app.mjs"></script>
+</head>
+<body>
+  <a class="skip" href="#references">Skip to learning references</a>
+  <header class="topbar shell">
+    <a class="wordmark" href="../">◇ <span>Sparkles</span></a>
+    <nav aria-label="Main navigation">
+      <a href="../">Research archive</a>
+      <a id="catalogue-link" href="../catalogue/">My diamonds</a>
+      <a aria-current="page" href="./">Learning Corner</a>
+    </nav>
+  </header>
+  <main class="shell">
+    <section class="intro learning-intro">
+      <p class="eyebrow">Asscher cut · Learn by comparison</p>
+      <h1>Learning Corner</h1>
+      <p>Real stones, expert observations and the original sources behind them. Explore lively patterns, quiet centres and light leakage—then compare with your own diamonds.</p>
+    </section>
+    <section class="lesson-note" aria-label="About the examples">
+      <strong>What am I looking at?</strong>
+      <p>These are curated opinions from diamond discussions, not ground-truth cut scores. Some reviewers disagree or revise their view when new evidence arrives. A linked supplier viewer is not a locally saved 360.</p>
+    </section>
+    <section class="selection" aria-label="Shared comparison selection">
+      <div class="selection-line">
+        <div><h2>Comparison basket</h2><p id="selected-count" aria-live="polite">Select two to five stones across both pages.</p></div>
+        <div class="selection-buttons">
+          <button type="button" class="outline" id="clear-selection">Clear</button>
+          <button type="button" id="compare-button" disabled>Compare selected</button>
+        </div>
+      </div>
+      <div id="selected-chips" class="selected-chips"></div>
+      <p class="subtle">Want to mix in your own stone? <a id="browse-catalogue" href="../catalogue/">Browse my diamonds →</a></p>
+    </section>
+    <section id="references" aria-labelledby="references-title">
+      <div class="section-heading">
+        <div><h2 id="references-title">Explore examples</h2><p id="count" aria-live="polite">Loading curated references…</p></div>
+        <span class="source-note">Expert comments · No automated cut scores</span>
+      </div>
+      <div class="tools">
+        <label class="search-field">Search examples
+          <input id="search" type="search" placeholder="Leakage, centre, Karl_K, report…" autocomplete="off" disabled>
+        </label>
+        <label>Learn about
+          <select id="topic" disabled><option value="all">All topics</option></select>
+        </label>
+      </div>
+      <div id="error" class="error" role="alert" hidden></div>
+      <div id="cards" class="reference-grid"></div>
+      <p id="empty" class="empty" hidden>No references match these filters.</p>
+    </section>
+    <section class="compare-section" aria-label="Detailed diamond comparison">
+      <div id="comparison" hidden>
+        <h2>Compare selected diamonds</h2>
+        <p class="subtle">One shared comparison viewer for personal stones and expert references. Playback follows relative frame order, never calibrated viewing angles. References without stored motion retain commentary and original viewer links.</p>
+        <div id="comparison-grid"></div>
+      </div>
+    </section>
+  </main>
+  <footer class="shell foot"><span>Sparkles · Learn from original evidence</span><a href="https://github.com/choonkiatlee/sparkles/issues/194">Reference sources ↗</a></footer>
+</body>
+</html>
