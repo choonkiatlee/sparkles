@@ -115,7 +115,13 @@ class ReferenceContractTests(unittest.TestCase):
         for stem, record in records.items():
             self.assertEqual(validate_reference(record, expected_id=stem), record)
             self.assertTrue(record["commentary"].strip())
-            self.assertEqual(record["evidence"], [])
+            # Initial curated manifests start empty, but successful enrichment
+            # may subsequently attach validated, original-byte Release media.
+            # validate_reference above verifies media hashes/storage and motion.
+            self.assertTrue(all(
+                entry["status"] in {"success", "extraction_failed"}
+                for entry in record.get("evidence", [])
+            ))
             self.assertEqual(record["linked_diamond_id"], None)
             self.assertIn("pricescope.com", record["source_links"][0]["url"])
         self.assertEqual(sum(len(r["media_sources"]) for r in records.values()), 6)

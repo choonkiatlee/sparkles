@@ -6,22 +6,27 @@ on:
 
 permissions: {}
 
+concurrency:
+  # Serialize the whole batch against personal diamond/reference publishers.
+  # Dispatching many runs into this one group cancels all but one pending run.
+  group: sparkles-diamond-catalogue-master-publisher
+  cancel-in-progress: false
+
 jobs:
-  dispatch-reviewed-reference-media:
-    # Mirrors the existing owner-only diamond ingestion issue bridge.
-    # The issue is only a trigger: all IDs/URLs are read from master.
+  enrich:
+    # Owner and exact issue title are the only event inputs used. Contents,
+    # certificates and URLs are exclusively read from trusted master.
     if: >-
       github.repository == 'choonkiatlee/sparkles' &&
       github.event.issue.user.login == 'choonkiatlee' &&
       github.event.issue.title == 'Enrich learning reference 360s'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 240
     permissions:
-      contents: read
-      actions: write
+      contents: write
       issues: write
     steps:
-      - name: Checkout reviewed reference inventory from master
+      - name: Checkout trusted publisher and reviewed references from master
         uses: actions/checkout@v4
         with:
           ref: master
@@ -32,29 +37,56 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install source validator
+      - name: Install Sparkles
         run: python -m pip install -e .
 
-      - name: Dispatch per-reference opt-in media workflows
+      - name: Enrich 360 candidates serially (retain partial success)
+        id: batch
         env:
-          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF: refs/heads/master
         run: |
           python -m diamond_catalogue.reference_batch > "$RUNNER_TEMP/reference-targets"
-          count=0
+          success=0
+          failed=0
           while IFS= read -r reference_id; do
             test -n "$reference_id" || continue
-            echo "Dispatching accepted reference: $reference_id"
-            gh workflow run learning-reference-enrich.yml \
-              --repo "$GITHUB_REPOSITORY" --ref master \
-              --field reference_id="$reference_id" --field mode=media
-            count=$((count+1))
+            echo "::group::Enrich $reference_id"
+            if REFERENCE_ID="$reference_id" REFERENCE_MODE=media \
+              python -m diamond_catalogue.reference_publish; then
+              success=$((success+1))
+            else
+              failed=$((failed+1))
+              echo "::warning title=Reference enrichment failed::See diagnostics for $reference_id"
+            fi
+            echo "::endgroup::"
           done < "$RUNNER_TEMP/reference-targets"
-          echo "Dispatched $count accepted certificate/direct-360 reference lookups."
+          echo "success=$success" >> "$GITHUB_OUTPUT"
+          echo "failed=$failed" >> "$GITHUB_OUTPUT"
+          echo "Reference enrichment completed: $success successful, $failed failed."
+          if [ "$failed" -gt 0 ]; then
+            echo "::error title=Reference batch partially failed::$failed reference(s) failed. Successful earlier publications were retained."
+            exit 1
+          fi
 
-      - name: Link to media enrichment runs
+      - name: Link issue to enrichment outcome
+        if: always()
         env:
           GH_TOKEN: ${{ github.token }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
+          SUCCEEDED: ${{ steps.batch.outputs.success }}
+          FAILED: ${{ steps.batch.outputs.failed }}
         run: |
           gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body \
-            "Requested opt-in 360 enrichment for the accepted, recoverable-candidate references on master. Review the [learning-reference-enrich runs](https://github.com/choonkiatlee/sparkles/actions/workflows/learning-reference-enrich.yml) for per-stone results. Unsupported opaque viewer links were not dispatched."
+            "Reference 360 batch attempted. Successful runs: ${SUCCEEDED:-unknown}; failures: ${FAILED:-unknown}. Check the [batch run](https://github.com/choonkiatlee/sparkles/actions/workflows/learning-reference-batch-request.yml) and the updated static reference index for exact media availability."
+
+  deploy-pages:
+    # Even if one reference fails, successfully published others should appear.
+    if: always() && needs.enrich.result != 'skipped'
+    needs: enrich
+    uses: ./.github/workflows/catalogue-pages.yml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
