@@ -17,6 +17,7 @@ from urllib.parse import urlsplit
 
 from diamond_retrieval.http import UrllibHttpClient
 from diamond_retrieval.reference_media import _safe_source_url
+from diamond_retrieval.resolvers import Loupe360CertificateResolver
 
 ROOT = Path(__file__).resolve().parents[1]
 REFERENCE_ID = "owner-igi-lg715575610"
@@ -80,6 +81,54 @@ def categorize(status, mime, body=b""):
     if mime in ("text/html", "application/xhtml+xml"):
         return "html_not_motion"
     return "unknown_not_proven_motion"
+
+
+def audit_exact_certificate_lookup(client=None):
+    """Inspect only exact IGI lab/report Nivoda media metadata, without media bytes."""
+    client = client or UrllibHttpClient(max_bytes=512_000)
+    endpoint = Loupe360CertificateResolver.endpoint
+    request = json.dumps({
+        "query": Loupe360CertificateResolver._query,
+        "variables": {"cert": REPORT},
+    }, separators=(",", ":")).encode()
+    response = client.post(
+        endpoint, timeout=18, content=request,
+        headers={"Accept": "application/json", "Content-Type": "application/json"},
+    )
+    output = {"http_status": response.status_code, "bytes": len(response.content)}
+    if response.status_code != 200:
+        output["outcome"] = "lookup_unavailable"
+        return output
+    try:
+        payload = json.loads(response.content)
+        record = (payload.get("data") or {}).get("certificate_by_cert_number")
+    except (ValueError, TypeError, AttributeError):
+        output["outcome"] = "invalid_json"
+        return output
+    if not isinstance(record, dict) or payload.get("errors"):
+        output["outcome"] = "no_exact_record"
+        return output
+    if str(record.get("certNumber") or "").upper() != REPORT or str(record.get("lab") or "").upper() != "IGI":
+        output["outcome"] = "identity_conflict"
+        return output
+    output["outcome"] = "exact_provider_report"
+    output["image"] = sanitized_url(record.get("image"))
+    output["video"] = sanitized_url(record.get("video"))
+    v360 = record.get("v360")
+    if isinstance(v360, dict):
+        url = v360.get("url")
+        output["v360"] = {
+            "url": sanitized_url(url),
+            "frame_count": v360.get("frame_count"),
+            "top_index": v360.get("top_index"),
+            "direct_video_url": (
+                isinstance(url, str) and Loupe360CertificateResolver._is_direct_video_url(url)
+            ),
+            "proxy_wrapper": bool(
+                isinstance(url, str) and urlsplit(url).hostname == "assets-images.pixorac.com"
+            ),
+        }
+    return output
 
 
 def audit_exact_http(client=None):
@@ -187,7 +236,7 @@ def audit_exact_browser(seconds=9):
         browser["media_responses"] = sum(
             v.get("http_status") == 200 and
             (v["url"]["extension"] in (".mp4", ".webm", ".jpg", ".jpeg", ".webp")
-             or v.get("mime", "").startswith(("video/", "image/")))
+             or v.get("mime", "") in ("image/jpeg", "image/png", "image/webp", "video/mp4", "video/webm"))
             for v in relevant
         )
         return browser
@@ -205,6 +254,10 @@ def main():
         "reference_id": REFERENCE_ID,
         "scope": "read-only exact public viewer; no source guessing, media download or publication",
     }
+    try:
+        output["certificate_lookup"] = audit_exact_certificate_lookup()
+    except Exception as exc:
+        output["certificate_lookup_error_type"] = type(exc).__name__
     try:
         output["http"] = audit_exact_http()
     except Exception as exc:
