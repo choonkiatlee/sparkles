@@ -1,0 +1,52 @@
+{
+  "schema": "sparkles-reference/1",
+  "id": "ps281114-r16",
+  "label": "3.03ct I VVS2 — attractive motion, dark centre",
+  "identity": {
+    "status": "unverified",
+    "lab": null,
+    "report_number": null
+  },
+  "linked_diamond_id": null,
+  "diamond_metadata": {
+    "shape": "Asscher",
+    "carat": "3.03",
+    "colour": "I",
+    "clarity": "VVS2",
+    "reported_proportions": {
+      "table_percent": 61
+    }
+  },
+  "commentary": "Karl_K considered this original 'Target in the centre' candidate close to promising but a little too dark centrally in the vendor spin; he wanted ASET to decide whether it mattered in real viewing (#9) and praised the crown height (#10). lovedogs preferred it among the first three while noting the static centre darkness (#11). The purchaser later inspected and filmed the stone (#57/#59), finding static face-up darkness less attractive but flashes on tilt appealing, then compared it in hand with a larger 3.19ct stone (#66). The later context is part of this same candidate, not a second stone; no certified report or locally playable 360 has been established for this learning reference.",
+  "source_links": [
+    {
+      "kind": "discussion",
+      "url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/",
+      "note": "PriceScope evaluation posts #9–#11 and later buyer follow-up #57/#59."
+    },
+    {
+      "kind": "real_world_comparison",
+      "url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/page-3",
+      "note": "Home ASET, handheld video and R16/R23 side-by-side discussion #66–#72."
+    },
+    {
+      "kind": "listing",
+      "url": "https://www.adiamor.com/Diamonds/3.03-ct-I-VVS2-Affinity-Cut-Asscher-Diamond/D55569816",
+      "note": "Original listing; legacy supplier 360 used non-HTTPS and is not eligible as an ingestion source."
+    },
+    {
+      "kind": "research_catalogue",
+      "url": "https://github.com/choonkiatlee/sparkles/blob/master/docs/360/external-benchmark/pricescope/source-catalog.json",
+      "note": "Archived benchmark ID: asscher-eval-target-centre. Source identity/provenance, not a verified catalogue-media attachment."
+    }
+  ],
+  "media_sources": [],
+  "topics": [
+    "quiet-middle",
+    "crown-height",
+    "vendor-360-limitations",
+    "real-world-reassessment",
+    "mixed-reactions"
+  ],
+  "evidence": []
+}

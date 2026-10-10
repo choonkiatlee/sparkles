@@ -12,7 +12,7 @@ const ref=id=>refs.find(row=>row.reference_id===id);
 const doc=row=>readJSON(row.manifest_path);
 
 test("all curated examples validate independently of certificates or local media",()=>{
-  assert.ok(refs.length>=11);
+  assert.ok(refs.length>=23);
   for(const row of refs){
     assert.equal(row.id,"ref-"+row.reference_id);
     assert.equal(referenceManifestURL(row),"../"+row.manifest_path);
@@ -29,6 +29,26 @@ test("all curated examples validate independently of certificates or local media
   assert.equal(r07.mediaSources[0].kind,"viewer");
   assert.match(r07.mediaSources[0].url,/v360\.diamonds/);
   assert.equal(r07.identityStatus,"unverified");
+});
+
+test("all three educational threads have independent, source-backed reference entries",()=>{
+  for(let i=12;i<=15;i++)assert.ok(ref("ps282648-r"+i));
+  for(let i=16;i<=23;i++)assert.ok(ref("ps281114-r"+i));
+  const r12=projectReferenceComparison(ref("ps282648-r12"),doc(ref("ps282648-r12")));
+  assert.equal(r12.identityStatus,"unverified");
+  assert.match(r12.commentary,/Karl_K/);
+  assert.equal(r12.rotation.status,"unavailable");
+  assert.equal(r12.mediaSources[0].kind,"viewer");
+  const r14=doc(ref("ps282648-r14")),r15=doc(ref("ps282648-r15"));
+  assert.notDeepEqual(r14.diamond_metadata.dimensions,r15.diamond_metadata.dimensions);
+  assert.equal(r14.source_links[1].url,r15.source_links[1].url);
+  const r18=projectReferenceComparison(ref("ps281114-r18"),doc(ref("ps281114-r18")));
+  assert.equal(r18.rotation.status,"unavailable");
+  assert.ok(r18.sourceLinks.some(s=>s.kind==="research_media_archive"));
+  const r21=doc(ref("ps281114-r21")),r23=doc(ref("ps281114-r23"));
+  assert.equal(r21.identity.report_number,"2135242286");
+  assert.match(r21.commentary,/D VS2/);
+  assert.match(r23.commentary,/EMERALD/);
 });
 
 test("mixed selection URLs round trip, respect five entries, and do not merge identities",()=>{

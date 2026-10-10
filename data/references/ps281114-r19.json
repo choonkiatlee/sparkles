@@ -1,0 +1,36 @@
+{
+  "schema": "sparkles-reference/1",
+  "id": "ps281114-r19",
+  "label": "Royal-Asscher-like facet design, disappointing light return",
+  "identity": {
+    "status": "unverified",
+    "lab": null,
+    "report_number": null
+  },
+  "linked_diamond_id": null,
+  "diamond_metadata": {
+    "shape": "Asscher"
+  },
+  "commentary": "An early James Allen example that the buyer called a 'Royal Asscher clone?' (#1) because of its apparent facet arrangement and a grey/quiet centre. Karl_K agreed the facet architecture resembled a Royal Asscher but considered its light performance substantially below better examples (#12); lovedogs also had concerns about its centre (#13). An appealing facet blueprint is not sufficient evidence of good optical performance. This early sample is NOT presumed identical to the later RA-like candidate called 'clone #2' in post #22; its original viewer was already unavailable in the source research.",
+  "source_links": [
+    {
+      "kind": "discussion",
+      "url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/#post-5298635",
+      "note": "Original buyer sample and discussion #1/#12/#13."
+    },
+    {
+      "kind": "research_catalogue",
+      "url": "https://github.com/choonkiatlee/sparkles/blob/master/docs/360/external-benchmark/pricescope/source-catalog.json",
+      "note": "Archived benchmark ID: asscher-eval-royal-asscher-clone. Source identity/provenance, not a verified catalogue-media attachment."
+    }
+  ],
+  "media_sources": [],
+  "topics": [
+    "facet-architecture",
+    "quiet-middle",
+    "contrast",
+    "negative-example",
+    "research-archive"
+  ],
+  "evidence": []
+}

@@ -1,0 +1,48 @@
+{
+  "schema": "sparkles-reference/1",
+  "id": "ps282648-r15",
+  "label": "2.00ct E VVS2 — second comparison, relatively lively",
+  "identity": {
+    "status": "unverified",
+    "lab": null,
+    "report_number": null
+  },
+  "linked_diamond_id": null,
+  "diamond_metadata": {
+    "shape": "Asscher",
+    "carat": "2.00",
+    "colour": "E",
+    "clarity": "VVS2",
+    "dimensions": [
+      7.23,
+      7.01
+    ],
+    "reported_proportions": {
+      "depth_percent": 65.3,
+      "table_percent": 60,
+      "crown_height_percent": 14.5,
+      "crown_angle_degrees": 31.5
+    }
+  },
+  "commentary": "Second stone in the same 2.00ct E VVS2 video pair (#1), measuring 7.23 × 7.01 mm with reported depth 65.3%, table 60% and crown 14.5% / 31.5°. Ibrakeforpossums preferred its livelier relative movement over the first (#2), and the buyer independently chose it as the favourite (#3), before reporting it sold (#5). This is not a stand-alone declaration of ideal optical performance or a causal claim about its proportions. The two stones have no established certificates.",
+  "source_links": [
+    {
+      "kind": "discussion",
+      "url": "https://www.pricescope.com/community/threads/are-these-asschers-well-cut.282648/",
+      "note": "Comparative evaluations #1–#3 and later sale #5."
+    },
+    {
+      "kind": "comparison_video",
+      "url": "https://imgur.com/a/mKh7jTv",
+      "note": "Shared original comparison video; R15 is the SECOND stone."
+    }
+  ],
+  "media_sources": [],
+  "topics": [
+    "liveliness",
+    "paired-comparison",
+    "relative-preference",
+    "positive-example"
+  ],
+  "evidence": []
+}

@@ -1,0 +1,53 @@
+{
+  "schema": "sparkles-reference/1",
+  "id": "ps281114-r21",
+  "label": "2.05ct D VS1 — lively smaller contender, disputed grades",
+  "identity": {
+    "status": "reported",
+    "lab": "GIA",
+    "report_number": "2135242286"
+  },
+  "linked_diamond_id": null,
+  "diamond_metadata": {
+    "shape": "Asscher",
+    "carat": "2.05",
+    "colour": "D",
+    "clarity": "VS1",
+    "reported_proportions": {
+      "table_percent": 58
+    }
+  },
+  "commentary": "The smaller Whiteflash contender attracted positive community comparisons with the larger candidate (#30–#45), particularly for its small table, octagonal outline, noticeable windmills and contrast framing the table without an overly dark centre. lovedogs, Dreamer_D and Ibrakeforpossums generally favoured the appearance; Ibrakeforpossums described liveliness as frequent flashes with little static time (#45). IMPORTANT source conflict: the Whiteflash listing identifies GIA 2135242286 as 2.05ct D VS1, while the original forum table calls it E VS1 (#43) and later posts D VS2 (#57/#61). The listed grading is source-reported rather than independently verified here; retain this discrepancy and do not establish a certified cross-catalogue link from it.",
+  "source_links": [
+    {
+      "kind": "discussion",
+      "url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/page-2",
+      "note": "Community assessments #30–#45; later conflicting grade labels #57/#61."
+    },
+    {
+      "kind": "listing",
+      "url": "https://www.whiteflash.com/loose-diamonds/2.05-carat-d-color-vs1-clarity-asscher-sku-4256451",
+      "note": "Retailer listing labels 2.05ct D VS1, GIA2135242286, diverging from forum labels."
+    },
+    {
+      "kind": "related_discussion",
+      "url": "https://www.pricescope.com/community/threads/is-this-a-good-asscher.281732/",
+      "note": "Research archive identifies corroborating discussion."
+    },
+    {
+      "kind": "research_catalogue",
+      "url": "https://github.com/choonkiatlee/sparkles/blob/master/docs/360/external-benchmark/pricescope/source-catalog.json",
+      "note": "Archived benchmark sample: asscher-eval-small-positive. Provenance pointer only; not a certified catalogue identity."
+    }
+  ],
+  "media_sources": [],
+  "topics": [
+    "positive-example",
+    "liveliness",
+    "face-up-pattern",
+    "windmills",
+    "grade-discrepancy",
+    "relative-preference"
+  ],
+  "evidence": []
+}

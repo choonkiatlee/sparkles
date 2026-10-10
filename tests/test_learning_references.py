@@ -127,6 +127,50 @@ class ReferenceContractTests(unittest.TestCase):
         self.assertEqual(records["ps285166-r07"]["media_sources"][0]["provider"], "v360.diamonds")
         self.assertIn("GROUP", records["ps285166-r06"]["commentary"])
 
+    def test_three_thread_reference_expansion_preserves_original_provenance(self):
+        records = {
+            path.stem: json.loads(path.read_text(encoding="utf-8"))
+            for path in REFERENCE_DIR.glob("*.json")
+        }
+        self.assertGreaterEqual(len(records), 23)
+        for num in range(1, 12):
+            self.assertIn(f"ps285166-r{num:02d}", records)
+        for num in range(12, 16):
+            self.assertIn(f"ps282648-r{num}", records)
+        for num in range(16, 24):
+            self.assertIn(f"ps281114-r{num}", records)
+        for num in range(12, 24):
+            key = (f"ps282648-r{num}" if num < 16 else f"ps281114-r{num}")
+            doc = records[key]
+            self.assertEqual(validate_reference(doc, expected_id=key), doc)
+            self.assertTrue(doc["commentary"])
+            self.assertIn("pricescope.com", doc["source_links"][0]["url"])
+            self.assertEqual(doc["evidence"], [])  # New records are curation-only.
+            self.assertIsNone(doc["linked_diamond_id"])
+        # Vendor links, archived research and source albums are distinct from published media.
+        r12, r13 = records["ps282648-r12"], records["ps282648-r13"]
+        self.assertEqual(r12["identity"]["status"], "unverified")
+        self.assertIsNone(r12["identity"]["report_number"])
+        self.assertTrue(any("loupe360" in row["url"] for row in r12["media_sources"]))
+        self.assertIn("Karl_K", r12["commentary"])
+        self.assertIn("#23", r12["commentary"])
+        self.assertEqual(r13["media_sources"], [])
+        r14, r15 = records["ps282648-r14"], records["ps282648-r15"]
+        self.assertNotEqual(r14["diamond_metadata"]["dimensions"], r15["diamond_metadata"]["dimensions"])
+        self.assertEqual(r14["source_links"][1]["url"], r15["source_links"][1]["url"])
+        self.assertEqual(r14["identity"]["status"], "unverified")
+        for num in (17, 18, 20, 22):
+            record = records[f"ps281114-r{num}"]
+            self.assertTrue(any("pricescope-media-recovery" in x["url"] for x in record["source_links"]))
+            self.assertTrue(record["media_sources"])
+        self.assertIn("the buyer—not Karl_K", records["ps281114-r20"]["commentary"])
+        self.assertIn("not necessarily", records["ps281114-r19"]["commentary"].lower().replace("not presumed", "not necessarily"))
+        self.assertEqual(records["ps281114-r21"]["identity"]["report_number"], "2135242286")
+        self.assertIn("E VS1", records["ps281114-r21"]["commentary"])
+        self.assertIn("D VS2", records["ps281114-r21"]["commentary"])
+        self.assertIn("Emerald", records["ps281114-r23"]["diamond_metadata"]["shape"])
+        self.assertIn("#72", records["ps281114-r23"]["commentary"])
+
     def test_index_is_deterministic_checked_in_and_uses_safe_paths(self):
         regenerated = build_repository_index()
         self.assertGreaterEqual(len(regenerated["references"]), 11)

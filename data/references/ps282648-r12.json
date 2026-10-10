@@ -1,0 +1,51 @@
+{
+  "schema": "sparkles-reference/1",
+  "id": "ps282648-r12",
+  "label": "4.10ct H VVS2 — promising 360, revised after ASET",
+  "identity": {
+    "status": "unverified",
+    "lab": null,
+    "report_number": null
+  },
+  "linked_diamond_id": null,
+  "diamond_metadata": {
+    "shape": "Asscher",
+    "carat": "4.10",
+    "colour": "H",
+    "clarity": "VVS2"
+  },
+  "commentary": "A source-dependent reversal, not two separate stones. 0-0-0 initially considered this H's material cleaner-looking than the G in Loupe360 (#16). Karl_K thought its cut slightly more promising on limited comparison video (#17) and, once shown the controllable Loupe360, expected excellent movement without an obvious material concern (#19). After purchase, the buyer suspected leakage in ASET (#20); 0-0-0 suggested cleaning and positioning prongs near the corners to avoid artefacts (#21). The buyer still found the centre dark and insufficiently active after adjustments (#22). Karl_K then described the improved result as a miss and acknowledged the limits of 360-only assessment (#23); lovedogs agreed it disappointed (#24), and the buyer returned it (#25). This does not prove the eventual problem was detectable in the original supplier 360. The Loupe identifier LG524247250 is not independently verified as a certificate here.",
+  "source_links": [
+    {
+      "kind": "discussion",
+      "url": "https://www.pricescope.com/community/threads/are-these-asschers-well-cut.282648/",
+      "note": "Expert sequence #16–#25; compare initial vendor-spin impressions with actual ASET and later buyer outcome."
+    },
+    {
+      "kind": "comparison_video",
+      "url": "https://imgur.com/a/GyYZOSZ",
+      "note": "External album comparing the H and G candidates; not ingested."
+    },
+    {
+      "kind": "aset_photos",
+      "url": "https://imgur.com/a/81qHkb5",
+      "note": "Buyer post-purchase ASET and photographs; external source, not local evidence."
+    }
+  ],
+  "media_sources": [
+    {
+      "kind": "viewer",
+      "provider": "loupe360",
+      "status": "linked_unverified",
+      "url": "https://loupe360.com/diamond/LG524247250"
+    }
+  ],
+  "topics": [
+    "vendor-360-limitations",
+    "aset-reassessment",
+    "quiet-middle",
+    "revised-judgement",
+    "environment-lighting"
+  ],
+  "evidence": []
+}

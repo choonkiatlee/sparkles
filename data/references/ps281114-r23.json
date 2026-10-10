@@ -1,0 +1,58 @@
+{
+  "schema": "sparkles-reference/1",
+  "id": "ps281114-r23",
+  "label": "3.19ct I IF — dark face-up, preferred by wearer",
+  "identity": {
+    "status": "reported",
+    "lab": "GIA",
+    "report_number": "13534682"
+  },
+  "linked_diamond_id": null,
+  "diamond_metadata": {
+    "shape": "Emerald (retailer category; square step cut discussed as Asscher)",
+    "carat": "3.19",
+    "colour": "I",
+    "clarity": "IF",
+    "dimensions": [
+      8.64,
+      8.48,
+      5.53
+    ],
+    "reported_proportions": {
+      "table_percent": 63
+    }
+  },
+  "commentary": "lovedogs disliked the broad simultaneous turn-off, substantial face-up darkness and flat-looking larger table (#55). Ibrakeforpossums observed that a preference for stronger contrast can legitimately differ (#56). The buyer later obtained ASET, purchased this stone and directly compared it with the 3.03ct target-centre candidate in hand (#59/#63/#66). In those home comparisons lovedogs and Ibrakeforpossums preferred the 3.03ct (#67/#69), while Dreamer_D liked the larger corner cuts, apparent face-up size and windmill appearance of this 3.19ct (#68). The eventual wearer preferred this stone, and the buyer reported satisfaction after setting it (#71/#72). Neither a blanket 'bad' judgement nor a blanket technical endorsement fits the full chronology. The Whiteflash listing calls GIA13534682 an EMERALD, despite the forum discussing it among Asscher/square step-cuts: retain the shape classification conflict.",
+  "source_links": [
+    {
+      "kind": "discussion",
+      "url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/page-2",
+      "note": "Initial broad darkness objections #55/#56 and later ASET/selection context."
+    },
+    {
+      "kind": "real_world_comparison",
+      "url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/page-3",
+      "note": "In-hand comparison R16 vs R23 #66–#69; preference and final ring follow-up #71/#72."
+    },
+    {
+      "kind": "listing",
+      "url": "https://www.whiteflash.com/loose-diamonds/3.19-carat-i-color-if-clarity-emerald-sku-4646906",
+      "note": "Retailer describes stone as Emerald; preserve category caveat and source-reported GIA13534682."
+    },
+    {
+      "kind": "research_catalogue",
+      "url": "https://github.com/choonkiatlee/sparkles/blob/master/docs/360/external-benchmark/pricescope/source-catalog.json",
+      "note": "Archived benchmark sample: asscher-eval-large-dark. Provenance pointer only; not a certified catalogue identity."
+    }
+  ],
+  "media_sources": [],
+  "topics": [
+    "simultaneous-darkness",
+    "contrast",
+    "relative-preference",
+    "buyer-choice",
+    "real-world-reassessment",
+    "shape-discrepancy"
+  ],
+  "evidence": []
+}

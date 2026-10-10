@@ -56,6 +56,20 @@ Example of **adding a new category** (one reference is enough to begin):
 
 A future agent should add this object inside the existing `lessons` array, not replace the whole file. **No frontend code, new schema, extra viewer, or automatic LLM pipeline is required.** When the reference is later enriched with stored media, the same guide cards pick up its published thumbnail automatically.
 
+## Three-thread learning reference inventory (R01–R23)
+
+The curated Learning Corner now includes **23 educational diamonds**. As before, each diamond is a separate, named reference; any later media enrichment should add to its existing JSON, never replace curated commentary. This inventory is **not** a blind holdout for the optical-research metrics.
+
+- **R01–R11**: PriceScope *Asscher evaluation — seeking help* (`ps285166-r01` through `r11`).
+- **R12–R15**: PriceScope *Are these Asschers well cut?* (`ps282648-r12` through `r15`). R12 preserves Karl_K's original promising vendor-360 read and his later ASET-informed reassessment. R14 and R15 are distinct same-spec stones sharing an external comparison album.
+- **R16–R23**: PriceScope *Asscher cut evaluation* (`ps281114-r16` through `r23`). Source of truth for existing benchmark identities is [the #64 research source catalog](../../docs/360/external-benchmark/pricescope/source-catalog.json); identifiers and interpretations are restated only as teaching commentary, never re-labelled as untouched validation samples.
+
+**Do not download archived footage a second time.** The #64 [PriceScope research recovery bundle](https://github.com/choonkiatlee/sparkles/releases/download/pricescope-research-2026-10-06-v1/pricescope-media-recovery-2026-10-06-v3.zip) already holds the full original 256-frame D360 sequences for R17/R18 and the original Kashi MP4s for R20/R22. These source pointers live in their `source_links`, while their original vendor URLs live in `media_sources` as `linked_unverified`. **None of the newly curated R12–R23 records declares published `evidence` or playable reference media.** A later enrichment agent should verify/reuse the archive's hashes and storage locators rather than inventing a duplicate release or assuming the research ZIP is a reference playback endpoint.
+
+Other important caveats: R12's Loupe URL is not certificate verification; R21's Whiteflash 2.05ct **D VS1** conflicts with forum **E VS1 / D VS2** descriptions; R23's retailer categorizes its square step cut as **Emerald**, though the forum discusses it with Asschers; R19's original clone is not equated with the later clone #2. Preserve chronology, source attribution and uncertainty.
+
+The [learning-guide.json](../learning-guide.json) is curated with these references: existing four topics have additional examples, and new lessons cover evidence-dependent reassessment, localized P3 leakage, same-spec comparisons, and optical aesthetics versus wearer preferences. **Future agents should keep updating the same guide** using the steps above when new references are curated. 
+
 ## Minimal example (illustrative)
 
     {

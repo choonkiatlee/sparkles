@@ -1,0 +1,48 @@
+{
+  "schema": "sparkles-reference/1",
+  "id": "ps281114-r20",
+  "label": "Messy arrows — irregular contrast in a vendor video",
+  "identity": {
+    "status": "unverified",
+    "lab": null,
+    "report_number": null
+  },
+  "linked_diamond_id": null,
+  "diamond_metadata": {
+    "shape": "Asscher"
+  },
+  "commentary": "In the thread's original examples (#1), the buyer—not Karl_K—described this Kashi-sourced stone as showing poorly organised arrows, many adjacent black facets and brightness displaced away from the centre. This is a useful illustration of how face-up organisation can look disorderly, but the observations are the author's visual impressions, not an expert technical diagnosis. The MP4 was already archived under #64; it is linked here for provenance, not represented as a locally published reference video.",
+  "source_links": [
+    {
+      "kind": "discussion",
+      "url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/",
+      "note": "Thread-author observations in original post #1; do not attribute to Karl_K."
+    },
+    {
+      "kind": "research_catalogue",
+      "url": "https://github.com/choonkiatlee/sparkles/blob/master/docs/360/external-benchmark/pricescope/source-catalog.json",
+      "note": "Archived benchmark sample: asscher-eval-messy-arrows. Provenance pointer only; not a certified catalogue identity."
+    },
+    {
+      "kind": "research_media_archive",
+      "url": "https://github.com/choonkiatlee/sparkles/releases/download/pricescope-research-2026-10-06-v1/pricescope-media-recovery-2026-10-06-v3.zip",
+      "note": "Archived original Kashi MP4 in #64; not a validated Learning Corner playable asset."
+    }
+  ],
+  "media_sources": [
+    {
+      "kind": "video",
+      "provider": "kashiimports",
+      "status": "linked_unverified",
+      "url": "https://www.kashiimports.com/video/22957.mp4"
+    }
+  ],
+  "topics": [
+    "pattern-organisation",
+    "simultaneous-darkness",
+    "contrast",
+    "author-observation",
+    "research-archive"
+  ],
+  "evidence": []
+}
