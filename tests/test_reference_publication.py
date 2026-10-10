@@ -54,8 +54,9 @@ class ReferenceFakeGitHub(FakeGitHub):
         assert self.head == "c0"
         for item in references:
             path = f"data/references/{item['id']}.json"
-            self.blobs[path] = json_document(item)
-            self.trees["t0"][path] = path
+            blob_id = "seed-" + item["id"]
+            self.blobs[blob_id] = json_document(item)
+            self.trees["t0"][path] = blob_id
         self.blobs["seed-index"] = json_document(build_index(references))
         self.trees["t0"]["data/reference-index.json"] = "seed-index"
 
