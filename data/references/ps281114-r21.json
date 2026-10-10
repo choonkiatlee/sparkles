@@ -1,46 +1,111 @@
 {
-  "schema": "sparkles-reference/1",
-  "id": "ps281114-r21",
-  "label": "2.05ct D VS1 — lively smaller contender, disputed grades",
-  "identity": {
-    "status": "reported",
-    "lab": "GIA",
-    "report_number": "2135242286"
-  },
-  "linked_diamond_id": null,
+  "commentary": "The smaller Whiteflash contender attracted positive community comparisons with the larger candidate (#30–#45), particularly for its small table, octagonal outline, noticeable windmills and contrast framing the table without an overly dark centre. lovedogs, Dreamer_D and Ibrakeforpossums generally favoured the appearance; Ibrakeforpossums described liveliness as frequent flashes with little static time (#45). IMPORTANT source conflict: the Whiteflash listing identifies GIA 2135242286 as 2.05ct D VS1, while the original forum table calls it E VS1 (#43) and later posts D VS2 (#57/#61). The listed grading is source-reported rather than independently verified here; retain this discrepancy and do not establish a certified cross-catalogue link from it.",
   "diamond_metadata": {
-    "shape": "Asscher",
     "carat": "2.05",
-    "colour": "D",
     "clarity": "VS1",
+    "colour": "D",
     "reported_proportions": {
       "table_percent": 58
-    }
+    },
+    "shape": "Asscher"
   },
-  "commentary": "The smaller Whiteflash contender attracted positive community comparisons with the larger candidate (#30–#45), particularly for its small table, octagonal outline, noticeable windmills and contrast framing the table without an overly dark centre. lovedogs, Dreamer_D and Ibrakeforpossums generally favoured the appearance; Ibrakeforpossums described liveliness as frequent flashes with little static time (#45). IMPORTANT source conflict: the Whiteflash listing identifies GIA 2135242286 as 2.05ct D VS1, while the original forum table calls it E VS1 (#43) and later posts D VS2 (#57/#61). The listed grading is source-reported rather than independently verified here; retain this discrepancy and do not establish a certified cross-catalogue link from it.",
+  "enrichment_attempts": [
+    {
+      "kind": "rotation",
+      "locator": "loupe360-report:2135242286",
+      "reference_identifier": "ps281114-r21:loupe-report",
+      "status": "resolved"
+    },
+    {
+      "kind": "rotation",
+      "locator": "https://idealbrilliant.s3.amazonaws.com/imaged/P970-3/video.mp4",
+      "reference_identifier": "ps281114-r21:loupe-report:supplier-rotation",
+      "status": "unsupported"
+    },
+    {
+      "kind": "still",
+      "locator": "https://assets-images.pixorac.com/aHR0cHM6Ly9pZGVhbGJyaWxsaWFudC5zMy5hbWF6b25hd3MuY29tL2ltYWdlZC9QOTcwLTMvdmlkZW8ubXA0/1.jpg",
+      "reference_identifier": "ps281114-r21:loupe-report:supplier-still",
+      "status": "success"
+    }
+  ],
+  "evidence": [
+    {
+      "dimensions": [
+        558,
+        396
+      ],
+      "identifier": "ps281114-r21:loupe-report:supplier-still",
+      "identity_observations": [],
+      "kind": "still",
+      "metadata": {
+        "media_type": "image/jpeg",
+        "sha256": "17046dd75889a0b38c23471ae2ad15dc3e029e8c04fe2d565580885f8565daa5"
+      },
+      "payload_asset": {
+        "byte_count": 30552,
+        "media_type": "image/jpeg",
+        "sha256": "17046dd75889a0b38c23471ae2ad15dc3e029e8c04fe2d565580885f8565daa5",
+        "storage": {
+          "backend": "github_release",
+          "locator": "sparkles-reference-ps281114-r21/asset-17046dd75889a0b38c23471ae2ad15dc3e029e8c04fe2d565580885f8565daa5.jpg",
+          "url": "https://github.com/choonkiatlee/sparkles/releases/download/sparkles-reference-ps281114-r21/asset-17046dd75889a0b38c23471ae2ad15dc3e029e8c04fe2d565580885f8565daa5.jpg"
+        }
+      },
+      "provenance": [
+        {
+          "locator": "reference:ps281114-r21",
+          "source": "curated_reference"
+        },
+        {
+          "locator": null,
+          "source": "curated_report"
+        },
+        {
+          "locator": "https://g.nivoda.com/graphql-public-loupe360",
+          "source": "loupe360_exact_certificate"
+        },
+        {
+          "locator": "https://assets-images.pixorac.com/aHR0cHM6Ly9pZGVhbGJyaWxsaWFudC5zMy5hbWF6b25hd3MuY29tL2ltYWdlZC9QOTcwLTMvdmlkZW8ubXA0/1.jpg",
+          "source": "still_image"
+        }
+      ],
+      "record_key": "c520dda7baf5197514e0e89fd3848cae6f598669563233973120e8d5af163e89",
+      "status": "success"
+    }
+  ],
+  "id": "ps281114-r21",
+  "identity": {
+    "lab": "GIA",
+    "report_number": "2135242286",
+    "status": "reported"
+  },
+  "label": "2.05ct D VS1 — lively smaller contender, disputed grades",
+  "linked_diamond_id": null,
+  "media_sources": [],
+  "schema": "sparkles-reference/1",
   "source_links": [
     {
       "kind": "discussion",
-      "url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/page-2",
-      "note": "Community assessments #30–#45; later conflicting grade labels #57/#61."
+      "note": "Community assessments #30–#45; later conflicting grade labels #57/#61.",
+      "url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/page-2"
     },
     {
       "kind": "listing",
-      "url": "https://www.whiteflash.com/loose-diamonds/2.05-carat-d-color-vs1-clarity-asscher-sku-4256451",
-      "note": "Retailer listing labels 2.05ct D VS1, GIA2135242286, diverging from forum labels."
+      "note": "Retailer listing labels 2.05ct D VS1, GIA2135242286, diverging from forum labels.",
+      "url": "https://www.whiteflash.com/loose-diamonds/2.05-carat-d-color-vs1-clarity-asscher-sku-4256451"
     },
     {
       "kind": "related_discussion",
-      "url": "https://www.pricescope.com/community/threads/is-this-a-good-asscher.281732/",
-      "note": "Research archive identifies corroborating discussion."
+      "note": "Research archive identifies corroborating discussion.",
+      "url": "https://www.pricescope.com/community/threads/is-this-a-good-asscher.281732/"
     },
     {
       "kind": "research_catalogue",
-      "url": "https://github.com/choonkiatlee/sparkles/blob/master/docs/360/external-benchmark/pricescope/source-catalog.json",
-      "note": "Archived benchmark sample: asscher-eval-small-positive. Provenance pointer only; not a certified catalogue identity."
+      "note": "Archived benchmark sample: asscher-eval-small-positive. Provenance pointer only; not a certified catalogue identity.",
+      "url": "https://github.com/choonkiatlee/sparkles/blob/master/docs/360/external-benchmark/pricescope/source-catalog.json"
     }
   ],
-  "media_sources": [],
   "topics": [
     "positive-example",
     "liveliness",
@@ -48,6 +113,5 @@
     "windmills",
     "grade-discrepancy",
     "relative-preference"
-  ],
-  "evidence": []
+  ]
 }
