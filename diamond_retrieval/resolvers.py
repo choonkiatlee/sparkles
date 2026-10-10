@@ -165,9 +165,7 @@ class Loupe360CertificateResolver:
             and parts.scheme == "https"
             and parts.path.lower() == "/vision360.html"
             and not parts.fragment
-            and set(query) == {"d"}
-            and len(query["d"]) == 1
-            and bool(re.fullmatch(r"[0-9]{9}", query["d"][0]))
+            and bool(re.fullmatch(r"d=[0-9]{9}", parts.query))
         ):
             return True
         if (
