@@ -7,7 +7,7 @@ import { validateReferenceIndex } from "./reference.mjs";
 import { DRAFT_STORAGE_KEY, emptyDraft, validateCuration, validateDraft,
   flagsFor, setDraftFlag, reconcileDraft, draftCount, archivedCount,
   curationRows } from "./curation.mjs";
-import { createCurationIssueUrl } from "./curation-request.mjs";
+import { openCurationIssueInNewTab } from "./curation-request.mjs";
 
 const $ = id => document.getElementById(id);
 const controls = { search:$("search"), status:$("status-filter"), sort:$("sort") };
@@ -145,10 +145,11 @@ async function saveOnGitHub() {
   if(state.localError) return;
   try {
     const ids=new Set(state.rows.map(row=>row.id));
-    // GitHub will require the signed-in owner to confirm this prefilled issue.
-    // Do not clear the browser draft until new published JSON confirms the save.
+    // Leave the catalogue and browser draft intact while the owner confirms
+    // the prefilled GitHub issue in a separate tab.
     $("save-curation").disabled=true;
-    location.assign(await createCurationIssueUrl(state.published,state.draft,ids));
+    await openCurationIssueInNewTab(state.published,state.draft,ids);
+    $("save-curation").disabled=false;
   } catch(error) {
     state.refreshError="Could not prepare GitHub save ("+error.message+").";
     render();
