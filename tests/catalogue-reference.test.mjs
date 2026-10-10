@@ -12,17 +12,18 @@ const ref=id=>refs.find(row=>row.reference_id===id);
 const doc=row=>readJSON(row.manifest_path);
 
 test("all curated examples validate independently of certificates or local media",()=>{
-  assert.equal(refs.length,11);
+  assert.ok(refs.length>=11);
   for(const row of refs){
-    assert.match(row.id,/^ref-ps285166-r\d\d$/);
+    assert.equal(row.id,"ref-"+row.reference_id);
     assert.equal(referenceManifestURL(row),"../"+row.manifest_path);
     assert.equal(validateReferenceManifest(row,doc(row)).id,row.reference_id);
     const projected=projectReferenceComparison(row,doc(row));
     assert.equal(projected.kind,"reference");
-    assert.equal(projected.rotation.status,"unavailable");
+    assert.ok(["available","unavailable","video_only"].includes(projected.rotation.status));
     assert.ok(projected.commentary.length>20);
     assert.equal(projected.values.price,"Not recorded");
   }
+  for(let i=1;i<=11;i++) assert.ok(ref("ps285166-r"+String(i).padStart(2,"0")));
   const r07=projectReferenceComparison(ref("ps285166-r07"),doc(ref("ps285166-r07")));
   assert.ok(r07.commentary.includes("under-table steps"));
   assert.equal(r07.mediaSources[0].kind,"viewer");

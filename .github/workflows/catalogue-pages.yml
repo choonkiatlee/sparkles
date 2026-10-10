@@ -11,6 +11,7 @@ on:
       - "data/catalog.json"
       - "data/diamonds/**"
       - "data/reference-index.json"
+      - "data/learning-guide.json"
       - "data/references/**"
       - "evaluations/**"
       - "resources/**"

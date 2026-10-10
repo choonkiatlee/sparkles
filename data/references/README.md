@@ -11,13 +11,50 @@ An external ChatGPT/coding-agent session reads a source (PriceScope thread, arti
 3. Supply a short label, one **consolidated commentary** explaining what the experts noticed (with post numbers and disagreements where useful), and at least one source link. Optional identity, specifications, topic slugs and direct media URLs are helpful, but a reference without local media is valid.
 4. Put **viewer/image/direct-video URLs** in media_sources with status linked_unverified. Put PriceScope pages, retailer listings and real-world YouTube videos in source_links. A linked viewer is *not* recovered validated motion.
 5. Use identity.status = unverified when no report is established, or reported when a full report number and lab appear in the source. Numeric/UUID Loupe IDs must **not** be treated as lab reports. Only use linked with linked_diamond_id when the report/lab match an existing locally published certified manifest.
-6. Regenerate the deterministic compact index, add the JSON and index to the PR, and run tests:
+6. **Review the [learning guide](../learning-guide.json)** as part of the *same* reference-ingestion PR: add this stone to relevant existing teaching categories, or author a new category if the experts explain a genuinely new visual phenomenon. The guide can remain unchanged if the source contains no defensible teaching observation.
+7. Regenerate the deterministic compact index, include any guide update in the PR, and run tests:
 
        python -m diamond_catalogue.references --write
        python -m diamond_catalogue.references --check
        python -m unittest tests.test_learning_references tests.test_catalogue_pages_site -v
+       node --test tests/learning-guide.test.mjs
 
 An external agent needs only repository write/PR capability and this small contract. No media publishing privileges or LLM API key are necessary.
+
+## Maintain the Learning Corner guide during reference ingestion
+
+**The teaching categories are editorial data, not hardcoded JavaScript.** Read [`data/learning-guide.json`](../learning-guide.json) before every new reference PR. Each entry in `lessons[]` is one human-friendly visual concept; the same diamond can illustrate multiple concepts. The site's guide and comparison actions automatically render new categories and examples.
+
+When an external agent curates a new stone:
+
+1. Finish `data/references/<id>.json` with the original source links, a single consolidated commentary, and honest media/identity status. Regenerate `data/reference-index.json` with the usual CLI.
+2. **Inspect every existing lesson** in `data/learning-guide.json`. If the stone illustrates that specific phenomenon, append `{"id":"<id>","label":"Short example role","comment":"One concise, reviewer-attributed observation (forum post #...)"}` to its `examples[]`. References don't have to appear in a lesson just because they have a topic tag; include only supported teaching cases.
+3. If none fits and there is a well-supported new phenomenon, append a new lesson with a unique slug `id`, readable `category`/`title`/`summary`/`prompt`, source URL, and **one or more** examples. All display copy is in JSON. Order in `lessons[]` controls the page order; numbering is automatic.
+4. Optionally set `featured_pair: ["<reference-id-1>", "<reference-id-2>"]` using **two distinct IDs already in that lesson's examples**. This powers **Compare this pair** via the existing five-stone shared basket and 360 player. A lesson with one example is fully supported; it simply has no featured-pair button until another suitable example arrives. **Adding a third or fourth example never silently changes the featured pair.**
+5. Optionally link a genuinely existing expert annotated visual via `annotated_source: {"label":"Annotated image + expert explanation","url":"https://..." }`. The UI links to the attributed original. Do not pretend our generic SVG schematic was drawn by a named expert, rehost copyrighted forum attachments, or invent optical evidence.
+6. Run `python -m diamond_catalogue.references --check`, `node --test tests/learning-guide.test.mjs` and `python -m unittest tests.test_catalogue_pages_site -v`. The Pages build rejects nonexistent reference IDs, duplicate examples/category IDs, invalid links and invalid featured pairs; JS tests check deep-link comparison and new-category compatibility.
+
+Example of **adding a new category** (one reference is enough to begin):
+
+```json
+{
+  "id": "environment-reflections",
+  "category": "Lighting & reflections",
+  "title": "Could the surroundings be causing that dark patch?",
+  "summary": "Changes in the environment can look like leakage in some videos.",
+  "prompt": "Check whether the patch moves with lighting or persists across a tilt.",
+  "source_url": "https://www.pricescope.com/community/threads/asscher-evaluation-seeking-help.285166/",
+  "examples": [
+    {
+      "id": "ps285166-r01",
+      "label": "Environment-reflection caution",
+      "comment": "0-0-0 points out that reflections may mimic apparent windowing (#54)."
+    }
+  ]
+}
+```
+
+A future agent should add this object inside the existing `lessons` array, not replace the whole file. **No frontend code, new schema, extra viewer, or automatic LLM pipeline is required.** When the reference is later enriched with stored media, the same guide cards pick up its published thumbnail automatically.
 
 ## Minimal example (illustrative)
 
@@ -52,31 +89,3 @@ An external agent needs only repository write/PR capability and this small contr
 - A reference may legitimately have no report, no price, no local still and no 360. Never imply that a remote Loupe360/V360 URL has been successfully downloaded, and don't infer cut quality scores from the discussion.
 
 See #194 for the original source inventory, #195 for this PR, #196/#197 for enrichment, #198 for the single global comparison basket and #199 for Learning Corner UI.
-
-## Enrich accepted references after curation (#197)
-
-The repository ships a separate **manual** GitHub Actions workflow,
-[`learning-reference-enrich`](../../.github/workflows/learning-reference-enrich.yml).
-Select a reference ID already committed on `master`; the workflow reads the
-accepted JSON from the trusted branch (never from an arbitrary PR or issue).
-Use `mode: metadata` to regenerate/check the static index without network
-media retrieval (default), `media` for an explicit opt-in to image/video and
-rotation retrieval, or `all` for the same media plus an optional IGI PDF.
-
-Standalone, fully validated evidence goes into a stable
-`sparkles-reference-<id>` GitHub Release; verified linked references reuse
-the existing certified stone's published evidence instead of duplicating assets.
-Every successful asset is checked for original bytes, SHA-256, size, and a public
-Release URL before an atomic update to `data/references/<id>.json` and
-`data/reference-index.json`. Repeated runs preserve commentary, stable IDs,
-original curator-provided external links and previously verified media.
-A failed or unsupported source is recorded in the optional
-`enrichment_attempts[]` with its status/locator, not falsely promoted to
-`evidence[]`. A partial retrieval never removes earlier successful media.
-The existing Pages workflow is explicitly invoked after publication because
-commits made using `GITHUB_TOKEN` do not reliably trigger the push workflow.
-
-The existing media/viewer support rules still apply: an external
-`v360.diamonds` page is not interchangeable with `v360.in`. Only complete,
-verified 256-frame progressive rotations can be persisted as playable motion.
-There is no automatic media crawling, supplier HTML parsing or LLM in Actions.

@@ -9,7 +9,7 @@ import shutil
 from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
-STATIC_PATHS = ("index.html", ".nojekyll", "catalogue", "learning", "data/catalog.json", "data/diamonds", "data/reference-index.json", "data/references", "evaluations", "resources")
+STATIC_PATHS = ("index.html", ".nojekyll", "catalogue", "learning", "data/catalog.json", "data/diamonds", "data/reference-index.json", "data/learning-guide.json", "data/references", "evaluations", "resources")
 ID_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 
 class Links(HTMLParser):
@@ -57,6 +57,7 @@ def validate_site(directory: Path) -> None:
             raise ValueError("Reference index/manifest mismatch")
         if row["selection_id"] in seen:
             raise ValueError("Shared basket selection ID collision")
+    validate_learning_guide(directory, reference_ids)
     for rel in ("index.html", "catalogue/index.html", "learning/index.html"):
         doc = directory / rel
         parser = Links()
@@ -70,6 +71,50 @@ def validate_site(directory: Path) -> None:
             resolved = (doc.parent / unquote(parsed.path)).resolve()
             if not resolved.is_relative_to(directory.resolve()) or not resolved.exists():
                 raise ValueError(f"Broken or unsafe local link from {rel}: {href[:160]}")
+
+def validate_learning_guide(directory: Path, reference_ids: set[str]) -> None:
+    """Curated lessons remain valid as references/categories grow; no fixed seed counts."""
+    guide = json.loads((directory / "data/learning-guide.json").read_text(encoding="utf-8"))
+    if guide.get("schema") != "sparkles-learning-guide/1" or not isinstance(guide.get("lessons"), list) or not guide["lessons"]:
+        raise ValueError("Invalid versioned learning guide")
+    categories = set()
+
+    def filled(value):
+        return isinstance(value, str) and bool(value.strip())
+
+    def link(value):
+        if not filled(value):
+            return False
+        url = urlsplit(value)
+        return url.scheme in ("https", "http") and bool(url.hostname) and not url.username and not url.password
+
+    for lesson in guide["lessons"]:
+        if (not isinstance(lesson, dict) or not filled(lesson.get("id"))
+                or not ID_PATTERN.fullmatch(lesson["id"]) or lesson["id"] in categories
+                or not all(filled(lesson.get(key)) for key in ("category", "title", "summary", "prompt"))
+                or not link(lesson.get("source_url"))):
+            raise ValueError("Invalid or duplicate learning guide category")
+        categories.add(lesson["id"])
+        examples = lesson.get("examples")
+        if not isinstance(examples, list) or not examples:
+            raise ValueError(f"Learning category {lesson['id']} needs at least one example")
+        example_ids = set()
+        for example in examples:
+            if (not isinstance(example, dict) or not filled(example.get("id"))
+                    or example["id"] not in reference_ids or example["id"] in example_ids
+                    or not filled(example.get("label")) or not filled(example.get("comment"))):
+                raise ValueError(f"Invalid/missing example in learning category {lesson['id']}")
+            example_ids.add(example["id"])
+        if "featured_pair" in lesson:
+            pair = lesson["featured_pair"]
+            if (not isinstance(pair, list) or len(pair) != 2 or pair[0] == pair[1]
+                    or not all(isinstance(rid, str) and rid in example_ids for rid in pair)):
+                raise ValueError(f"Invalid featured pair in learning category {lesson['id']}")
+        if "annotated_source" in lesson:
+            source = lesson["annotated_source"]
+            if (not isinstance(source, dict) or not filled(source.get("label"))
+                    or not link(source.get("url"))):
+                raise ValueError(f"Invalid annotated original source in {lesson['id']}")
 
 def build(destination: Path) -> None:
     destination = destination.resolve()

@@ -29,6 +29,22 @@
       <strong>What am I looking at?</strong>
       <p>These are curated opinions from diamond discussions, not ground-truth cut scores. Some reviewers disagree or revise their view when new evidence arrives. A linked supplier viewer is not a locally saved 360.</p>
     </section>
+    <section class="learning-guide" id="guide" aria-labelledby="guide-title">
+      <div class="guide-heading">
+        <div>
+          <p class="eyebrow">A field guide to step-cut beauty</p>
+          <h2 id="guide-title">What do experts look for?</h2>
+          <p>Start with <strong>movement, centre activity, leakage and contrast</strong>—not a single bright frame or cut grade. These are questions to ask while watching, not mechanical pass/fail scores.</p>
+        </div>
+        <a href="#references">Skip to all examples ↓</a>
+      </div>
+      <figure class="guide-anatomy">
+        <img src="./where-to-look.svg" alt="Illustrative Asscher diagram highlighting outer steps, central table area and diagonal/corner patterns." width="860" height="310">
+        <figcaption>Illustrative viewing map made for Sparkles—not an expert's annotated photograph or a measured facet map. Check these regions during rotation and tilt.</figcaption>
+      </figure>
+      <div id="guide-cards" class="guide-grid" aria-label="Four things to inspect on an Asscher"></div>
+      <p class="guide-caveat">The reference comments reflect their original forum context and sometimes disagree. Motion needs real video; dark pixels alone do not establish leakage. Use the original sources, and check several lighting conditions where possible.</p>
+    </section>
     <section class="selection" aria-label="Shared comparison selection">
       <div class="selection-line">
         <div><h2>Comparison basket</h2><p id="selected-count" aria-live="polite">Select two to five stones across both pages.</p></div>
@@ -52,6 +68,10 @@
         <label>Learn about
           <select id="topic" disabled><option value="all">All topics</option></select>
         </label>
+      </div>
+      <div id="focused-lesson" class="focused-lesson" hidden>
+        <p id="focused-lesson-label" aria-live="polite"></p>
+        <button type="button" id="show-all" class="outline">Show all references</button>
       </div>
       <div id="error" class="error" role="alert" hidden></div>
       <div id="cards" class="reference-grid"></div>
