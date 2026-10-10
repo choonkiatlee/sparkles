@@ -1,105 +1,273 @@
 {
-  "schema": "sparkles-learning-guide/1",
   "lessons": [
     {
-      "id": "movement",
       "category": "Movement & scintillation",
-      "title": "Do the steps take turns flashing?",
-      "summary": "Watch a full rotation. Bright flashes switching between different facets can feel lively; a large group of steps going dark together can leave the stone looking quiet.",
-      "prompt": "Compare how much of the diamond changes at once. Do the centre and outer steps keep taking turns?",
       "examples": [
         {
+          "comment": "Karl_K praised its face-up pattern and motion (#51); the buyer described crisp flashes after purchase (#45/#48).",
           "id": "ps285166-r01",
-          "label": "Lively example",
-          "comment": "Karl_K praised its face-up pattern and motion (#51); the buyer described crisp flashes after purchase (#45/#48)."
+          "label": "Lively example"
         },
         {
+          "comment": "0-0-0 advised against it after the buyer spotted large areas switching off together (#13–#14).",
           "id": "ps285166-r02",
-          "label": "Broad simultaneous darkness",
-          "comment": "0-0-0 advised against it after the buyer spotted large areas switching off together (#13–#14)."
+          "label": "Broad simultaneous darkness"
+        },
+        {
+          "comment": "The buyer liked its changing table pattern (#22); Ibrakeforpossums was conditionally positive, subject to transparency concerns (#23).",
+          "id": "ps281114-r22",
+          "label": "Attractive dance with caveats"
+        },
+        {
+          "comment": "lovedogs objected to many facets darkening together (#55), but the later wearer valued its different look (#71–#72).",
+          "id": "ps281114-r23",
+          "label": "Broad turn-off, wearer still preferred it"
         }
       ],
-      "source_url": "https://www.pricescope.com/community/threads/asscher-evaluation-seeking-help.285166/",
       "featured_pair": [
         "ps285166-r01",
         "ps285166-r02"
-      ]
+      ],
+      "id": "movement",
+      "prompt": "Compare how much of the diamond changes at once. Do the centre and outer steps keep taking turns?",
+      "source_url": "https://www.pricescope.com/community/threads/asscher-evaluation-seeking-help.285166/",
+      "summary": "Watch a full rotation. Bright flashes switching between different facets can feel lively; a large group of steps going dark together can leave the stone looking quiet.",
+      "title": "Do the steps take turns flashing?"
     },
     {
-      "id": "centre",
       "category": "Movement through the centre",
-      "title": "Does the middle stay awake?",
-      "summary": "Look under the table, not just around the bright outer edge. A relatively static middle may matter even when the outer steps are busy.",
-      "prompt": "Watch the central steps during rotation. Is there changing light return or an area that rarely participates?",
       "examples": [
         {
+          "comment": "Karl_K liked the movement and face-up design (#51). This is not a measured centre-by-centre benchmark.",
           "id": "ps285166-r01",
-          "label": "More active reference",
-          "comment": "Karl_K liked the movement and face-up design (#51). This is not a measured centre-by-centre benchmark."
+          "label": "More active reference"
         },
         {
+          "comment": "Ibrakeforpossums specifically noticed a relatively static middle in the 2.54ct candidate (#40).",
           "id": "ps285166-r10",
-          "label": "Quiet centre",
-          "comment": "Ibrakeforpossums specifically noticed a relatively static middle in the 2.54ct candidate (#40)."
+          "label": "Quiet centre"
+        },
+        {
+          "comment": "Ibrakeforpossums found the first 2.00ct stone comparatively quiet in the centre (#2).",
+          "id": "ps282648-r14",
+          "label": "First of two — quieter centre"
+        },
+        {
+          "comment": "Ibrakeforpossums and the buyer preferred the second stone's movement (#2–#3), without claiming a universal cut grade.",
+          "id": "ps282648-r15",
+          "label": "Second of two — comparatively livelier"
+        },
+        {
+          "comment": "Karl_K called its dark centre a question for ASET (#9); later buyer video showed a face-up versus tilt tradeoff (#59).",
+          "id": "ps281114-r16",
+          "label": "Promising, but dark when static"
         }
       ],
-      "source_url": "https://www.pricescope.com/community/threads/asscher-evaluation-seeking-help.285166/page-2",
       "featured_pair": [
         "ps285166-r01",
         "ps285166-r10"
-      ]
+      ],
+      "id": "centre",
+      "prompt": "Watch the central steps during rotation. Is there changing light return or an area that rarely participates?",
+      "source_url": "https://www.pricescope.com/community/threads/asscher-evaluation-seeking-help.285166/page-2",
+      "summary": "Look under the table, not just around the bright outer edge. A relatively static middle may matter even when the outer steps are busy.",
+      "title": "Does the middle stay awake?"
     },
     {
-      "id": "tilt",
-      "category": "Tilt & light leakage",
-      "title": "Does an area flash, or stay see-through?",
-      "summary": "Tilt the stone slowly. Some grey or dark regions are reflections or temporary contrast; persistently transparent under-table steps can instead signal light leakage.",
-      "prompt": "Can the weak-looking steps flash on and off as you move? Does stronger tilt reveal a view through the stone?",
-      "examples": [
-        {
-          "id": "ps285166-r07",
-          "label": "Leakage concern",
-          "comment": "0-0-0 identified under-table steps that did not flash on rotation and stronger-tilt through-view (#29/#32)."
-        },
-        {
-          "id": "ps285166-r01",
-          "label": "Reflection may mimic leakage",
-          "comment": "0-0-0 cautioned that reflections of the surroundings can resemble tilt windowing in the purchased stone (#54)."
-        }
-      ],
-      "source_url": "https://www.pricescope.com/community/threads/asscher-evaluation-seeking-help.285166/page-2",
       "annotated_source": {
         "label": "See the buyer's outlined screenshot and expert reply (#31–#32)",
         "url": "https://www.pricescope.com/community/threads/asscher-evaluation-seeking-help.285166/page-2"
       },
+      "category": "Tilt & light leakage",
+      "examples": [
+        {
+          "comment": "0-0-0 identified under-table steps that did not flash on rotation and stronger-tilt through-view (#29/#32).",
+          "id": "ps285166-r07",
+          "label": "Leakage concern"
+        },
+        {
+          "comment": "0-0-0 cautioned that reflections of the surroundings can resemble tilt windowing in the purchased stone (#54).",
+          "id": "ps285166-r01",
+          "label": "Reflection may mimic leakage"
+        },
+        {
+          "comment": "Karl_K localized apparent face-up leakage to the top/bottom central V regions between windmills (#9), rather than judging all dark pixels alike.",
+          "id": "ps281114-r18",
+          "label": "Specific P3 leakage concern"
+        }
+      ],
       "featured_pair": [
         "ps285166-r07",
         "ps285166-r01"
-      ]
+      ],
+      "id": "tilt",
+      "prompt": "Can the weak-looking steps flash on and off as you move? Does stronger tilt reveal a view through the stone?",
+      "source_url": "https://www.pricescope.com/community/threads/asscher-evaluation-seeking-help.285166/page-2",
+      "summary": "Tilt the stone slowly. Some grey or dark regions are reflections or temporary contrast; persistently transparent under-table steps can instead signal light leakage.",
+      "title": "Does an area flash, or stay see-through?"
     },
     {
-      "id": "contrast",
       "category": "Contrast & face-up pattern",
-      "title": "Is the darkness useful contrast?",
-      "summary": "Dark facets are not automatically bad. Controlled contrast can give step cuts depth and structure, while excessive face-up obstruction or prolonged darkness may overwhelm the pattern.",
-      "prompt": "Compare the face-up pattern, then rotate. Does contrast alternate into bright flashes—or linger across too much of the stone?",
       "examples": [
         {
+          "comment": "0-0-0 saw more face-up obstruction than preferred, but acknowledged different tastes for contrast (#17).",
           "id": "ps285166-r04",
-          "label": "Stronger obstruction",
-          "comment": "0-0-0 saw more face-up obstruction than preferred, but acknowledged different tastes for contrast (#17)."
+          "label": "Stronger obstruction"
         },
         {
+          "comment": "0-0-0 preferred its cut; lovedogs worried about darkness at some angles; Karl_K saw potential (#20–#28).",
           "id": "ps285166-r05",
-          "label": "Promising, with reservations",
-          "comment": "0-0-0 preferred its cut; lovedogs worried about darkness at some angles; Karl_K saw potential (#20–#28)."
+          "label": "Promising, with reservations"
+        },
+        {
+          "comment": "Karl_K found the very small windmills less satisfactory even though the stone was not uniformly poor (#9).",
+          "id": "ps281114-r17",
+          "label": "Tiny windmills — cut feels off"
+        },
+        {
+          "comment": "Karl_K saw a Royal-Asscher-like facet arrangement but much weaker light performance (#12).",
+          "id": "ps281114-r19",
+          "label": "Facet architecture is not enough"
+        },
+        {
+          "comment": "The thread author—not Karl_K—identified adjacent dark facets and messy arrow organization (#1).",
+          "id": "ps281114-r20",
+          "label": "Disorganized black facets"
+        },
+        {
+          "comment": "Experienced members liked the small table, outline and balanced contrast (#30–#45), though grade labels conflict.",
+          "id": "ps281114-r21",
+          "label": "Positive small-table example"
         }
       ],
-      "source_url": "https://www.pricescope.com/community/threads/asscher-evaluation-seeking-help.285166/",
       "featured_pair": [
         "ps285166-r04",
         "ps285166-r05"
-      ]
+      ],
+      "id": "contrast",
+      "prompt": "Compare the face-up pattern, then rotate. Does contrast alternate into bright flashes—or linger across too much of the stone?",
+      "source_url": "https://www.pricescope.com/community/threads/asscher-evaluation-seeking-help.285166/",
+      "summary": "Dark facets are not automatically bad. Controlled contrast can give step cuts depth and structure, while excessive face-up obstruction or prolonged darkness may overwhelm the pattern.",
+      "title": "Is the darkness useful contrast?"
+    },
+    {
+      "annotated_source": {
+        "label": "View purchaser's original ASET/photo album; see expert reassessment #20–#23",
+        "url": "https://imgur.com/a/81qHkb5"
+      },
+      "category": "From supplier 360 to real-world evidence",
+      "examples": [
+        {
+          "comment": "Karl_K expected excellent motion from Loupe360 (#19), then reassessed after the buyer's improved ASET/photo (#23).",
+          "id": "ps282648-r12",
+          "label": "Judgement reversed after ASET"
+        },
+        {
+          "comment": "Karl_K wanted ASET before committing (#9); the later owner found the static centre dark but enjoyed the tilted flashes (#59).",
+          "id": "ps281114-r16",
+          "label": "Vendor spin and real-life tradeoff"
+        },
+        {
+          "comment": "Inked preferred the G (#14); Karl_K tentatively favoured the H on limited video, without rejecting the G (#17).",
+          "id": "ps282648-r13",
+          "label": "Limited comparison is not a verdict"
+        }
+      ],
+      "featured_pair": [
+        "ps282648-r12",
+        "ps281114-r16"
+      ],
+      "id": "evidence-reassessment",
+      "prompt": "Which evidence did each reviewer see, and which questions remained unresolved?",
+      "source_url": "https://www.pricescope.com/community/threads/are-these-asschers-well-cut.282648/",
+      "summary": "A promising vendor spin may not tell the full story. Compare the original expectation with later photographs, ASET and the buyer's experience; expert opinions can reasonably change.",
+      "title": "What changes after ASET or home viewing?"
+    },
+    {
+      "category": "Look for specific leakage regions",
+      "examples": [
+        {
+          "comment": "Karl_K explicitly identified leakage in the top/bottom central V between windmills (#9), also noting a low crown (#10).",
+          "id": "ps281114-r18",
+          "label": "Crispest: top/bottom P3 region"
+        },
+        {
+          "comment": "0-0-0 described non-flashing central steps and through-view on stronger tilt (#29/#32).",
+          "id": "ps285166-r07",
+          "label": "Under-table steps that fail to flash"
+        }
+      ],
+      "featured_pair": [
+        "ps281114-r18",
+        "ps285166-r07"
+      ],
+      "id": "p3-specific-leakage",
+      "prompt": "Compare the V-shaped steps between the windmills and how those steps change as the stone moves.",
+      "source_url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/",
+      "summary": "Experienced reviewers sometimes point to precise step regions rather than a general dark impression. The same grey-looking area might be leakage, contrast or a video-lighting effect.",
+      "title": "Can you identify which steps fail to return light?"
+    },
+    {
+      "annotated_source": {
+        "label": "Original first-versus-second comparison video",
+        "url": "https://imgur.com/a/mKh7jTv"
+      },
+      "category": "Similar certificates, different motion",
+      "examples": [
+        {
+          "comment": "Ibrakeforpossums observed quieter movement in the first stone (#2), supported by the shared side-by-side source video.",
+          "id": "ps282648-r14",
+          "label": "First: quieter central steps"
+        },
+        {
+          "comment": "Ibrakeforpossums and the buyer preferred the second (#2–#3); the buyer later reported it had sold (#5).",
+          "id": "ps282648-r15",
+          "label": "Second: preferred motion"
+        }
+      ],
+      "featured_pair": [
+        "ps282648-r14",
+        "ps282648-r15"
+      ],
+      "id": "same-spec-comparison",
+      "prompt": "Watch the first and second 2.00ct E VVS2 stones side by side. Which centre changes more often? Neither proportions nor price alone settle the question.",
+      "source_url": "https://www.pricescope.com/community/threads/are-these-asschers-well-cut.282648/",
+      "summary": "Carat, colour and clarity are labels, not direct measurements of how an Asscher dances. Comparing two same-spec stones makes the changing central steps easier to notice.",
+      "title": "Can two almost identical stones look different?"
+    },
+    {
+      "annotated_source": {
+        "label": "Buyer in-hand comparison and final ring reports (#66–#72)",
+        "url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/page-3"
+      },
+      "category": "Cut performance vs personal preference",
+      "examples": [
+        {
+          "comment": "Experienced members preferred its table, octagonal outline and active contrast (#30–#45); forum grade claims conflict.",
+          "id": "ps281114-r21",
+          "label": "Smaller contender: community favourite"
+        },
+        {
+          "comment": "lovedogs objected to broad darkening (#55), but Dreamer_D liked its spread and corners (#68), and the wearer chose it (#71).",
+          "id": "ps281114-r23",
+          "label": "Larger contender: eventual wearer choice"
+        },
+        {
+          "comment": "lovedogs and Ibrakeforpossums preferred the 3.03ct in the buyer's side-by-side comparison (#66–#69).",
+          "id": "ps281114-r16",
+          "label": "Home comparison: different preferred cut"
+        }
+      ],
+      "featured_pair": [
+        "ps281114-r16",
+        "ps281114-r23"
+      ],
+      "id": "performance-vs-preference",
+      "prompt": "Contrast expert criticism with the buyer's later side-by-side videos and eventual choice. Which trade-offs matter to you?",
+      "source_url": "https://www.pricescope.com/community/threads/asscher-cut-evaluation.281114/page-3",
+      "summary": "Reviewers can disagree about contrast, windmill size and apparent spread. A buyer may reasonably choose a different stone after seeing both in real life.",
+      "title": "Does the technically favoured diamond always win?"
     }
-  ]
+  ],
+  "schema": "sparkles-learning-guide/1"
 }
