@@ -28,7 +28,13 @@ test("all curated examples validate independently of certificates or local media
   assert.ok(r07.commentary.includes("under-table steps"));
   assert.equal(r07.mediaSources[0].kind,"viewer");
   assert.match(r07.mediaSources[0].url,/v360\.diamonds/);
-  assert.equal(r07.identityStatus,"unverified");
+  assert.equal(r07.identityStatus,"reported");
+  assert.equal(doc(ref("ps285166-r07")).identity.lab,"IGI");
+  assert.equal(doc(ref("ps285166-r07")).identity.report_number,"625406458");
+  assert.equal(doc(ref("ps285166-r07")).linked_diamond_id,null);
+  assert.ok(r07.sourceLinks.some(source=>
+    source.kind==="certificate_link" &&
+    source.url==="https://www.igi.org/verify-your-report/?r=625406458"));
 });
 
 test("all three educational threads have independent, source-backed reference entries",()=>{

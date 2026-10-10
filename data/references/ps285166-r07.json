@@ -1,5 +1,5 @@
 {
-  "commentary": "lovedogs liked this option (#25/#27), and Karl_K saw potential (#28). 0-0-0 instead noted leakage on tilt (#29), describing under-table steps that fail to flash and stronger-tilt through-view (#32). This is a particularly useful example of different reactions to the same stone. The IGI report was linked in post #24 but its exact number has not been independently established here. The supplied v360.diamonds URL is not proof of a locally recoverable v360.in frame sequence.",
+  "commentary": "lovedogs liked this option (#25/#27), and Karl_K saw potential (#28). 0-0-0 instead noted leakage on tilt (#29), describing under-table steps that fail to flash and stronger-tilt through-view (#32). This is a particularly useful example of different reactions to the same stone. In post #24 the buyer linked IGI's verification page with report parameter `625406458` next to this exact V360 viewer; treat it as a buyer-reported IGI identifier, not independently validated PDF/certificate identity. The supplied v360.diamonds URL is not proof of a locally recoverable v360.in frame sequence.",
   "diamond_metadata": {
     "carat": "2.12",
     "origin": "HPHT lab-grown",
@@ -8,9 +8,9 @@
   "evidence": [],
   "id": "ps285166-r07",
   "identity": {
-    "lab": null,
-    "report_number": null,
-    "status": "unverified"
+    "status": "reported",
+    "lab": "IGI",
+    "report_number": "625406458"
   },
   "label": "2.12ct HPHT - under-table through-view on tilt",
   "linked_diamond_id": null,
@@ -28,6 +28,11 @@
       "kind": "discussion",
       "note": "PriceScope Asscher evaluation thread; post numbers cited in commentary.",
       "url": "https://www.pricescope.com/community/threads/asscher-evaluation-seeking-help.285166/"
+    },
+    {
+      "kind": "certificate_link",
+      "url": "https://www.igi.org/verify-your-report/?r=625406458",
+      "note": "Buyer's original PriceScope post #24 IGI report link accompanying this exact 2.12ct HPHT viewer; source URL observed, PDF contents not independently verified."
     }
   ],
   "topics": [
