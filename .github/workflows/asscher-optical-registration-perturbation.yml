@@ -1,0 +1,144 @@
+name: asscher-optical-registration-perturbation
+
+concurrency:
+  group: asscher-optical-registration-perturbation-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+
+on:
+  pull_request:
+    paths:
+      - "diamond360/asscher_optical_registration_perturbation.py"
+      - "tests/test_asscher_optical_registration_perturbation.py"
+      - "docs/360/asscher-geometry-validation/OPTICAL-REGISTRATION-PERTURBATION.md"
+      - ".github/workflows/asscher-optical-registration-perturbation.yml"
+  workflow_dispatch:
+
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install package
+        run: python -m pip install -e .
+
+      - name: Test gain, offset and mask negative controls
+        run: |
+          python -m unittest \
+            tests.test_asscher_optical_registration_perturbation \
+            tests.test_asscher_dense_optical_regions \
+            tests.test_asscher_optical_neighbor_motion \
+            tests.test_asscher_optical_physical_provenance \
+            tests.test_asscher_geometry_validation -v
+
+      - name: Retrieve exact frozen #96 outer view selection
+        uses: actions/download-artifact@v4
+        with:
+          name: asscher-geometry-stability-outer-v2
+          run-id: 37755387174
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: outputs/frozen-outer-v2
+
+      - name: Retrieve finished #186 dense optical measurements for exact no-perturbation baseline
+        uses: actions/download-artifact@v4
+        with:
+          name: asscher-dense-optical-regions
+          run-id: 37856375493
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: outputs/frozen-dense-optical
+
+      - name: Download all four original source rotations with immutable hashes
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import urllib.request
+          import zipfile
+          from pathlib import Path
+          manifest=json.loads(Path("docs/360/benchmark/source-bundles.json").read_text())
+          root=Path("outputs/optical-perturb-sources")
+          root.mkdir(parents=True,exist_ok=True)
+          for item in manifest["bundles"]:
+              archive=root/item["filename"]
+              urllib.request.urlretrieve(item["download_url"],archive)
+              assert archive.stat().st_size==item["bytes"]
+              assert hashlib.sha256(archive.read_bytes()).hexdigest()==item["sha256"]
+              dest=root/item["certificate"]
+              dest.mkdir(parents=True,exist_ok=True)
+              with zipfile.ZipFile(archive) as z:
+                  z.extractall(dest)
+          PY
+
+      - name: Recompute dense optical change for locked +/-1px gauge mapping and mask controls
+        run: |
+          python -m diamond360.asscher_optical_registration_perturbation \
+            --source-root outputs/optical-perturb-sources \
+            --output outputs/asscher-optical-registration-perturbation
+
+      - name: Validate four-stone exact baseline, missingness and no physical facet claims
+        run: |
+          python - <<'PY'
+          import json
+          import math
+          from pathlib import Path
+          root=Path("outputs/asscher-optical-registration-perturbation")
+          summary=json.loads((root/"summary.json").read_text())
+          assert summary["no_physical_facet_labels"] and summary["no_quality_score"]
+          assert summary["no_production_estimator_change"]
+          assert len(summary["stones"])==4
+          pair_count=0
+          for row in summary["stones"]:
+              cert=row["certificate"]
+              fixed=json.loads((Path("outputs/frozen-outer-v2/per-stone")/
+                                cert/"primary-wireframe.json").read_text())
+              expected=[x["source_index"] for x in fixed["selected_frames"]]
+              assert row["selected_source_indices"]==expected,cert
+              archived=json.loads((Path("outputs/frozen-dense-optical/per-stone")/
+                                   cert/"dense-optical-regions.json").read_text())
+              current=json.loads((root/"per-stone"/cert/
+                                  "optical-perturbation.json").read_text())
+              assert len(current["pairs"])==len(archived["pairs"])
+              for a,b in zip(current["pairs"],archived["pairs"]):
+                  assert a["positions"]==b["positions"]
+                  assert a["source_indices"]==b["source_indices"]
+                  assert a["physical_facet_semantic_ids"] is None
+                  if b["status"]!="observed":
+                      assert a["status"]=="unavailable"
+                      continue
+                  assert a["status"]=="evaluated"
+                  assert a["trial_count"]==18
+                  assert a["baseline"]["status"]=="observed"
+                  assert a["baseline"]["physical_facet_correspondence"]=="unavailable"
+                  for key in ("median_gain_normalized_abs_change",
+                              "total_dark_switch_fraction",
+                              "total_bright_switch_fraction"):
+                      assert math.isclose(
+                          a["baseline"][key],b[key],
+                          rel_tol=0,abs_tol=1e-10),(cert,a["positions"],key)
+                      assert a["sensitivity"][key]["maximum"]>=a["baseline"][key]
+                      assert a["sensitivity"][key]["minimum"]<=a["baseline"][key]
+                  assert all(x["physical_facet_semantic_ids"] is None
+                             for x in a["trials"])
+                  pair_count+=1
+              print(cert,"observed",row["evaluated_pair_count"],
+                    "baseline appearance",row["median_baseline_appearance"],
+                    "median max perturbation delta",
+                    row["median_max_appearance_perturbation_delta"])
+          assert pair_count==74,pair_count
+          print("PASS 4 stones, 74 same-index baseline pairs, no facet claims")
+          PY
+
+      - name: Upload complete per-pair perturbation envelopes and gauge-image visual QC
+        uses: actions/upload-artifact@v4
+        with:
+          name: asscher-optical-registration-perturbation
+          path: outputs/asscher-optical-registration-perturbation
+          retention-days: 90
+          if-no-files-found: error
