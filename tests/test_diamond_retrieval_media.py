@@ -184,6 +184,57 @@ class LoupeResolutionTests(unittest.TestCase):
         self.assertEqual(children[2].metadata["format"], "video")
         self.assertNotIn("format", children[0].metadata)
 
+    def test_nivoda_extensionless_mp4_uses_existing_video_pipeline(self):
+        report = "LG787620286"
+        url = "https://nivoda-inhousemedia.s3.amazonaws.com/inhouse-360-787620286"
+        payload = b"\\x00\\x00\\x00\\x18ftypisom\\x00\\x00\\x02\\x00isommp41fixture"
+        http = FakeHttpClient(
+            posts={
+                GRAPHQL_URL: (
+                    _graphql_payload(cert_number=report, v360_url=url),
+                    "application/json",
+                )
+            },
+            gets={url: (payload, "video/mp4")},
+        )
+        listing = ListingRecord(
+            url="https://retailer.test/exact-stone",
+            metadata=DiamondMetadata(report_number=report, lab="IGI"),
+        )
+        reference = EvidenceReference(
+            identifier="fixture:nivoda",
+            kind=ROTATION,
+            retrieval_key=f"loupe360-report:{report}",
+            locator=f"loupe360-report:{report}",
+            metadata={"lab": "IGI", "report_number": report, "resolver": "loupe360_certificate"},
+        )
+        candidates = Loupe360CertificateResolver(http).resolve(listing, reference)
+        self.assertEqual(len(candidates), 1)
+        candidate = candidates[0]
+        self.assertEqual(candidate.kind, VIDEO)
+        self.assertEqual(candidate.locator, url)
+        self.assertEqual(candidate.metadata["format"], "video")
+        raw = DirectVideoDownloader(http).download(candidate)
+        evidence = DirectVideoProcessor().process(raw)[0]
+        self.assertEqual(evidence.payload, payload)
+        self.assertEqual(evidence.metadata["container"], "mp4")
+        self.assertEqual(evidence.metadata["sha256"], __import__("hashlib").sha256(payload).hexdigest())
+
+    def test_nivoda_extensionless_video_match_is_narrow(self):
+        valid = "https://nivoda-inhousemedia.s3.amazonaws.com/inhouse-360-787620286"
+        resolver = Loupe360CertificateResolver()
+        self.assertTrue(resolver._is_direct_video_url(valid))
+        for invalid in (
+            valid + "/",
+            valid + "?trick=1",
+            valid + "#other",
+            valid.replace("https:", "http:"),
+            valid.replace("nivoda-inhousemedia.s3.amazonaws.com", "evil.test"),
+            valid.replace("787620286", "787620286.mp4"),
+            "https://nivoda-inhousemedia.s3.amazonaws.com/inhouse-360-abc",
+        ):
+            self.assertFalse(resolver._is_direct_video_url(invalid), invalid)
+
     def test_unknown_supplier_viewer_is_explicit_but_does_not_hide_video(self):
         direct = "https://media.example.test/exact-stone.mp4"
         unknown = "https://unknown.example.test/supplier-360"
