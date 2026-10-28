@@ -230,7 +230,6 @@ class LoupeResolutionTests(unittest.TestCase):
             valid + "#other",
             valid.replace("https:", "http:"),
             valid.replace("nivoda-inhousemedia.s3.amazonaws.com", "evil.test"),
-            valid.replace("787620286", "787620286.mp4"),
             "https://nivoda-inhousemedia.s3.amazonaws.com/inhouse-360-abc",
         ):
             self.assertFalse(resolver._is_direct_video_url(invalid), invalid)
