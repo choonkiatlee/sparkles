@@ -76,3 +76,26 @@ jobs:
                   print("LINE", index + 1, sanitize(line)[:650], flush=True)
           print("HTML_CERT", [sanitize(html[max(0, m.start()-100):m.end()+100]) for m in list(re.finditer("LG825640511", html))[:12]], flush=True)
           PY
+
+      - name: Probe exact Jaykar numbered JPEG frame coverage
+        shell: bash
+        run: |
+          python - <<'PY'
+          from urllib.request import Request, urlopen
+          from urllib.error import HTTPError, URLError
+          root = "https://ds-360.jaykar.co.in/ds360/LG825640511/VIDEO/images"
+          for index in (1, 16, 32, 64, 128, 129, 192, 255, 256, 257):
+              url = f"{root}/{index}.jpg"
+              for method in ("HEAD", "GET"):
+                  try:
+                      headers = {"User-Agent": "Mozilla/5.0 (SparklesSourceAudit/1.0)"}
+                      if method == "GET": headers["Range"] = "bytes=0-32"
+                      with urlopen(Request(url, headers=headers, method=method), timeout=15) as response:
+                          sample = response.read(33) if method == "GET" else b""
+                          print(index, method, response.status,
+                                response.headers.get("Content-Type"),
+                                response.headers.get("Content-Length"),
+                                repr(sample[:12]), flush=True)
+                  except (HTTPError, URLError, TimeoutError) as exc:
+                      print(index, method, type(exc).__name__, str(exc)[:140], flush=True)
+          PY
