@@ -1,0 +1,98 @@
+name: Audit LG788643234 Nivoda original frames
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/lg788643234-nivoda-audit.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  inspect-exact-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Inspect certificate-linked Nivoda metadata and actual source format (read-only)
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import base64
+          import json
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+
+          report = "LG788643234"
+          endpoint = "https://g.nivoda.com/graphql-public-loupe360"
+          expected = "https://nivoda-inhousemedia.s3.amazonaws.com/inhouse-360-788643234"
+          query = (
+              "query($cert:String!){certificate_by_cert_number(cert_number:$cert)"
+              "{certNumber lab image video v360{url frame_count top_index id}}}"
+          )
+          req = urllib.request.Request(
+              endpoint,
+              data=json.dumps({"query": query, "variables": {"cert": report}}).encode(),
+              headers={"Content-Type": "application/json", "Accept": "application/json"},
+              method="POST",
+          )
+          print("report=", report)
+          try:
+              with urllib.request.urlopen(req, timeout=15) as response:
+                  payload = json.load(response)
+              data = (payload.get("data") or {}).get("certificate_by_cert_number") or {}
+              print("certificate_matches=", data.get("certNumber") == report)
+              print("lab=", data.get("lab"))
+              print("image_field_type=", type(data.get("image")).__name__)
+              print("video_field_type=", type(data.get("video")).__name__)
+              v = data.get("v360") or {}
+              wrapped = v.get("url") or ""
+              parts = urllib.parse.urlsplit(wrapped)
+              if parts.hostname == "assets-images.pixorac.com":
+                  encoded = parts.path.strip("/").split("/")[0]
+                  try:
+                      resolved = base64.urlsafe_b64decode(encoded + "=" * (-len(encoded) % 4)).decode()
+                  except Exception:
+                      resolved = "<invalid wrapper>"
+              else:
+                  resolved = wrapped
+              print("v360_frame_count=", v.get("frame_count"))
+              print("v360_top_index=", v.get("top_index"))
+              print("v360_wrapper_host=", parts.hostname)
+              print("exact_v360_source_matches=", resolved == expected)
+              print("v360_source_host=", urllib.parse.urlsplit(resolved).hostname)
+              print("v360_source_path=", urllib.parse.urlsplit(resolved).path)
+              print("metadata_contains_indexed_jpeg_urls=", any(
+                  isinstance(x, str) and ".jpg" in x.lower()
+                  for x in [wrapped, resolved, data.get("video")]
+              ))
+          except Exception as exc:
+              print("certificate_lookup_error=", type(exc).__name__, str(exc)[:250])
+
+          # Only the certificate-linked, already recorded S3 URL is contacted:
+          # no guessed sibling keys, directory traversal, sample video download
+          # or image extraction from compressed video.
+          for method in ("HEAD", "GET"):
+              headers = {"Accept-Encoding": "identity"}
+              if method == "GET":
+                  headers["Range"] = "bytes=0-63"
+              req = urllib.request.Request(expected, headers=headers, method=method)
+              try:
+                  with urllib.request.urlopen(req, timeout=20) as response:
+                      buf = response.read(64) if method == "GET" else b""
+                      print(method, "status=", response.status,
+                            "type=", response.headers.get("Content-Type"),
+                            "length=", response.headers.get("Content-Length"),
+                            "content_range=", response.headers.get("Content-Range"),
+                            "final_host=", urllib.parse.urlsplit(response.url).hostname)
+                      if buf:
+                          signature = ("mp4-ftyp" if buf[4:8] == b"ftyp" else
+                                       "jpeg-soi" if buf[:3] == b"\xff\xd8\xff" else
+                                       "other")
+                          print("source_signature=", signature)
+              except urllib.error.HTTPError as exc:
+                  print(method, "http_status=", exc.code,
+                        "type=", exc.headers.get("Content-Type"))
+              except Exception as exc:
+                  print(method, "error=", type(exc).__name__, str(exc)[:180])
+          PY
