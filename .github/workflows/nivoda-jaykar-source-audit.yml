@@ -48,3 +48,27 @@ jobs:
                   except (HTTPError, URLError, TimeoutError, ValueError) as exc:
                       print(method, type(exc).__name__, str(exc)[:400], flush=True)
           PY
+
+      - name: Inspect Jaykar full HTML for original frame and video locators
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib
+          import re
+          from urllib.request import Request, urlopen
+          url = "https://ds-360.jaykar.co.in/ds360/LG825640511/VIDEO/LG825640511.html"
+          with urlopen(Request(url, headers={"User-Agent": "Mozilla/5.0 (SparklesSourceAudit/1.0)"}), timeout=30) as response:
+              payload = response.read(1_500_000)
+          html = payload.decode("utf-8", errors="replace")
+          print("length", len(payload), "sha256", hashlib.sha256(payload).hexdigest(), flush=True)
+          def sanitize(value):
+              value = re.sub(r"(data:image/[^;]+;base64,)[A-Za-z0-9+/=]{100,}", r"\\1[BASE64_IMAGE]", value)
+              return value.replace("\\n", " ")[:500]
+          keys = ["<video", "<source", "<iframe", "<script", "base64", "data:image", ".mp4", ".jpg", ".jpeg", ".png", "frames", "images", "sprite", "canvas", "array", "360", "video"]
+          for key in keys:
+              hits = list(re.finditer(re.escape(key), html, flags=re.IGNORECASE))
+              print("KEY", key, "COUNT", len(hits), flush=True)
+              for match in hits[-3:]:
+                  print("  CONTEXT", sanitize(html[max(0, match.start()-130):match.end()+230]), flush=True)
+          print("HTML_TAIL", sanitize(html[-9000:]), flush=True)
+          PY
