@@ -236,6 +236,16 @@ class Loupe360CertificateResolver:
     @staticmethod
     def _is_direct_video_url(value: str) -> bool:
         parts = urlsplit(value)
+        # Nivoda's in-house S3 media is an MP4 object with no file extension.
+        # Audit: https://github.com/choonkiatlee/sparkles/actions/runs/40785964234
+        if (
+            parts.scheme == "https"
+            and parts.netloc.lower() == "nivoda-inhousemedia.s3.amazonaws.com"
+            and not parts.query
+            and not parts.fragment
+            and re.fullmatch(r"/inhouse-360-[0-9]{9}", parts.path)
+        ):
+            return True
         return (
             parts.scheme in {"http", "https"}
             and bool(parts.netloc)
