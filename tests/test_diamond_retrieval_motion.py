@@ -12,6 +12,7 @@ from diamond_retrieval import (
     EvidenceReference,
     HttpResponse,
     InvalidPayloadError,
+    MissingEvidenceError,
     ProvenanceStep,
     RawEvidence,
 )
@@ -22,9 +23,11 @@ from diamond_retrieval.motion_sources import (
     FilesOnSkyRotationDownloader,
     Gem360RotationDownloader,
     Labgrowns3RotationDownloader,
+    JaykarRotationDownloader,
     RemoteV360RotationDownloader,
     WorkshopRotationDownloader,
 )
+from diamond_retrieval.loupe360_proxy import IndexedProxyRotationProcessor
 from diamond_retrieval.motion import (
     ProgressiveRotationProcessor,
     canonical_progressive_positions,
@@ -654,3 +657,71 @@ class ProgressiveMotionContractTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class JaykarOriginalSourceTests(unittest.TestCase):
+    URL = ("https://jaykar.co.in/DS360VIDEO/dashboard/ds_360_video.php?"
+           "q=https://ds-360.jaykar.co.in/ds360/LG825640511/VIDEO/LG825640511.html")
+    ROOT = "https://ds-360.jaykar.co.in/ds360/LG825640511/VIDEO/images"
+
+    def reference(self, url=None, **metadata):
+        return EvidenceReference(
+            identifier="fixture:jaykar",
+            kind=ROTATION,
+            retrieval_key=url or self.URL,
+            locator=url or self.URL,
+            provenance=(
+                ProvenanceStep("loupe360_exact_certificate",
+                               "https://g.nivoda.com/graphql-public-loupe360"),
+            ),
+            metadata={
+                "lab": "IGI",
+                "report_number": "LG825640511",
+                "supplier_frame_count": 256,
+                "supplier_top_index": None,
+                **metadata,
+            },
+        )
+
+    def test_exact_original_frame_sequence_reuses_indexed_processor(self):
+        responses = {
+            f"{self.ROOT}/{index}.jpg": (_jpeg(index), "image/jpeg")
+            for index in range(1, 257)
+        }
+        http = FakeHttpClient(responses)
+        downloader = JaykarRotationDownloader(http)
+        reference = self.reference()
+        self.assertTrue(downloader.supports(reference))
+        raw = downloader.download(reference)
+        self.assertEqual(raw.format, "jaykar-indexed-rotation-json")
+        self.assertEqual(len(http.calls), 256)
+        self.assertEqual(http.calls[0], f"{self.ROOT}/1.jpg")
+        self.assertEqual(http.calls[-1], f"{self.ROOT}/256.jpg")
+        evidence = IndexedProxyRotationProcessor().process(raw)[0]
+        self.assertEqual(len(evidence.frames), 256)
+        self.assertEqual(evidence.frames[0].payload, _jpeg(1))
+        self.assertEqual(evidence.frames[-1].payload, _jpeg(256))
+        self.assertIsNone(evidence.face_up_hint)
+        self.assertEqual(evidence.metadata["supplier"], "jaykar-ds360")
+        self.assertTrue(evidence.metadata["supplier_original_bytes_verified"])
+
+    def test_reject_wrong_identity_or_wrapper(self):
+        downloader = JaykarRotationDownloader(FakeHttpClient({}))
+        good = self.reference()
+        self.assertTrue(downloader.supports(good))
+        for candidate in (
+            self.reference(report_number="LG999999999"),
+            self.reference(supplier_frame_count=128),
+            self.reference(self.URL.replace("ds-360.jaykar.co.in", "evil.test")),
+            self.reference(self.URL + "&other=1"),
+            self.reference(self.URL.replace("https://", "http://", 1)),
+        ):
+            self.assertFalse(downloader.supports(candidate), candidate.locator)
+
+    def test_missing_frame_never_publishes_partial_rotation(self):
+        responses = {
+            f"{self.ROOT}/{index}.jpg": (_jpeg(index), "image/jpeg")
+            for index in range(1, 256)
+        }
+        with self.assertRaises(MissingEvidenceError):
+            JaykarRotationDownloader(FakeHttpClient(responses)).download(self.reference())

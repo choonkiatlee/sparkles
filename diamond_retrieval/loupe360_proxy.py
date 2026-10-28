@@ -239,20 +239,32 @@ class IndexedProxyRotationProcessor:
     """Network-free validation of a complete, already-indexed rotation."""
 
     def supports(self, raw: RawEvidence) -> bool:
-        return raw.reference.kind == ROTATION and raw.format == "indexed-proxy-rotation-json"
+        return raw.reference.kind == ROTATION and raw.format in {
+            "indexed-proxy-rotation-json", "jaykar-indexed-rotation-json",
+        }
 
     def process(self, raw: RawEvidence) -> tuple[RotationEvidence, ...]:
+        is_jaykar = raw.format == "jaykar-indexed-rotation-json"
+        if is_jaykar:
+            from .motion_sources import JaykarRotationDownloader
+            try:
+                JaykarRotationDownloader.validated_source(raw.reference)
+            except ValueError as exc:
+                raise InvalidPayloadError("Jaykar original source provenance invalid") from exc
         try:
             bundle = json.loads(raw.payload)
         except Exception as exc:
             raise InvalidPayloadError("Pixorac indexed rotation payload is invalid JSON") from exc
-        if not isinstance(bundle, dict) or bundle.get("schema_version") != "sparkles-indexed-proxy-rotation/1":
+        expected_schema = ("sparkles-jaykar-original-rotation/1"
+                           if is_jaykar else "sparkles-indexed-proxy-rotation/1")
+        if (not isinstance(bundle, dict) or bundle.get("schema_version") != expected_schema
+                or (is_jaykar and bundle.get("source") != "jaykar-ds360")):
             raise InvalidPayloadError("Unsupported indexed rotation bundle")
         frames_encoded = bundle.get("frames")
         declared_dimensions = bundle.get("dimensions")
         count = bundle.get("frame_count", FRAME_COUNT)
-        if isinstance(count, bool) or count not in (255, 256):
-            raise InvalidPayloadError("Unexpected indexed proxy frame count")
+        if isinstance(count, bool) or count not in (255, 256) or (is_jaykar and count != 256):
+            raise InvalidPayloadError("Unexpected indexed rotation frame count")
         if count == 255:
             # The ONLY accepted 255-image contract is native R09: actual 0..254
             # verified; original viewer advertised 255 and index 255 was 404.
@@ -300,30 +312,32 @@ class IndexedProxyRotationProcessor:
                 dimensions=size,
                 sha256=sha,
                 stored_position=index,
-                source_batch="indexed-proxy",
+                source_batch="jaykar-original" if is_jaykar else "indexed-proxy",
             ))
         if len(hashes) < 240:
             raise InvalidPayloadError("Indexed proxy rotation is effectively static")
         hint = bundle.get("face_up_hint")
-        if hint is None and raw.reference.metadata.get("loupe360_proxy_exact_viewer") is True:
-            pass  # Reviewer-visible orientation is unknown, not guessed.
+        if hint is None and (is_jaykar or raw.reference.metadata.get("loupe360_proxy_exact_viewer") is True):
+            pass  # Orientation not observed: never fabricate it.
         elif isinstance(hint, bool) or not isinstance(hint, int) or not 0 <= hint < count:
             raise InvalidPayloadError("Indexed proxy face-up hint out of range")
         metadata = {
             **raw.metadata,
-            "supplier": "loupe360-pixorac-proxy",
+            "supplier": "jaykar-ds360" if is_jaykar else "loupe360-pixorac-proxy",
             "frame_count": count,
             "dimensions": tuple(declared_dimensions),
             "sequence_complete": True,
-            "ordering": f"proxy indexed source positions 0..{count - 1}",
+            "ordering": ("original JPEG source positions 1..256" if is_jaykar
+                         else f"proxy indexed source positions 0..{count - 1}"),
             "physical_angle_calibrated": False,
-            "supplier_original_bytes_verified": False,
+            "supplier_original_bytes_verified": is_jaykar,
         }
         provenance = raw.reference.provenance + (
             ProvenanceStep(
-                "loupe360_pixorac_proxy_indexed_jpeg",
+                "jaykar_ds360_original_indexed_jpeg" if is_jaykar
+                else "loupe360_pixorac_proxy_indexed_jpeg",
                 raw.reference.locator,
-                {"frame_count": count, "supplier_original_bytes_verified": False},
+                {"frame_count": count, "supplier_original_bytes_verified": is_jaykar},
             ),
         )
         return (RotationEvidence(

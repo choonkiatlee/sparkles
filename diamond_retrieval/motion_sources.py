@@ -732,3 +732,129 @@ class D360RotationDownloader:
             metadata=raw_metadata,
             source_responses=tuple(responses),
         )
+
+
+class JaykarRotationDownloader:
+    """Read certificate-matched Jaykar DS360's original 1..256 JPEGs.
+
+    Original transport audited on 2026-10-28: exact HTML under
+    /ds360/LG825640511/VIDEO/ uses images/{index}.jpg, and the source
+    supplies images 1..256 (257 is HTTP 404). Other report numbers
+    are accepted only when an exact Loupe certificate match provides the
+    viewer URL; arbitrary URLs never authorize frame retrieval.
+    """
+
+    source_name = "jaykar-ds360"
+    frame_count = 256
+    _ITEM_PATH = re.compile(r"/ds360/(LG[0-9]{9})/VIDEO/\1[.]html")
+
+    def __init__(self, http_client: HttpClient, *, timeout: float = 20.0) -> None:
+        self.http_client = http_client
+        self.timeout = timeout
+
+    @classmethod
+    def validated_source(cls, reference: EvidenceReference) -> tuple[str, str]:
+        if (reference.kind != ROTATION or
+                not any(p.source == "loupe360_exact_certificate" for p in reference.provenance)):
+            raise ValueError("Jaykar requires certificate-matched rotation provenance")
+        if reference.metadata.get("lab") != "IGI":
+            raise ValueError("Jaykar rotation requires matching IGI lab")
+        locator = reference.locator or ""
+        parts = urlsplit(locator)
+        if (parts.scheme != "https" or parts.query == "" and parts.fragment or
+                parts.username is not None or parts.password is not None):
+            raise ValueError("Invalid Jaykar URL")
+        if (parts.netloc.lower() == "jaykar.co.in" and
+                parts.path == "/DS360VIDEO/dashboard/ds_360_video.php" and
+                not parts.fragment):
+            args = parse_qs(parts.query, keep_blank_values=True)
+            if set(args) != {"q"} or len(args["q"]) != 1:
+                raise ValueError("Unexpected Jaykar wrapper parameters")
+            locator = args["q"][0]
+            parts = urlsplit(locator)
+        if (parts.scheme != "https" or
+                parts.netloc.lower() != "ds-360.jaykar.co.in" or
+                parts.query or parts.fragment or
+                parts.username is not None or parts.password is not None):
+            raise ValueError("Not an exact Jaykar DS360 supplier viewer")
+        match = cls._ITEM_PATH.fullmatch(parts.path)
+        if not match:
+            raise ValueError("Invalid Jaykar original viewer path")
+        report = match.group(1)
+        if reference.metadata.get("report_number") != report:
+            raise ValueError("Jaykar source report mismatches exact certificate")
+        declared_count = reference.metadata.get("supplier_frame_count")
+        if declared_count is not None and (
+                isinstance(declared_count, bool) or str(declared_count) != "256"):
+            raise ValueError("Jaykar source frame count is not 256")
+        viewer = f"https://ds-360.jaykar.co.in{parts.path}"
+        return viewer, viewer.rsplit("/", 1)[0] + "/images"
+
+    def supports(self, reference: EvidenceReference) -> bool:
+        try:
+            self.validated_source(reference)
+            return True
+        except ValueError:
+            return False
+
+    def download(self, reference: EvidenceReference) -> RawEvidence:
+        viewer, root = self.validated_source(reference)
+        frames: list[str] = []
+        hashes: set[str] = set()
+        dimension: tuple[int, int] | None = None
+        total_bytes = 0
+        for index in range(1, self.frame_count + 1):
+            url = f"{root}/{index}.jpg"
+            payload, response = _response_bytes(
+                self.http_client, url, timeout=self.timeout, source=self.source_name,
+            )
+            if response.locator != url:
+                raise InvalidPayloadError("Jaykar original frame redirected")
+            if len(payload) > 1024 * 1024:
+                raise InvalidPayloadError("Jaykar frame exceeds 1 MiB")
+            total_bytes += len(payload)
+            if total_bytes > 25 * 1024 * 1024:
+                raise InvalidPayloadError("Jaykar rotation exceeds 25 MiB")
+            size = validate_jpeg_bytes(payload)
+            if dimension is None:
+                dimension = size
+            elif size != dimension:
+                raise InvalidPayloadError("Jaykar frame dimensions changed")
+            hashes.add(hashlib.sha256(payload).hexdigest())
+            frames.append(base64.b64encode(payload).decode("ascii"))
+        if len(hashes) < 240:
+            raise InvalidPayloadError("Jaykar JPEG sequence lacks 240 distinct frames")
+        top = reference.metadata.get("supplier_top_index")
+        if isinstance(top, bool) or top is None:
+            hint = None
+        else:
+            try:
+                hint = int(top)
+            except (TypeError, ValueError):
+                hint = None
+        if hint is not None and not (0 <= hint < self.frame_count):
+            hint = None
+        bundle = {
+            "schema_version": "sparkles-jaykar-original-rotation/1",
+            "source": self.source_name,
+            "source_root": root,
+            "viewer_url": viewer,
+            "frame_count": self.frame_count,
+            "dimensions": list(dimension),
+            "face_up_hint": hint,
+            "frames": frames,
+        }
+        return RawEvidence(
+            reference=reference,
+            payload=json.dumps(bundle, separators=(",", ":")).encode("utf-8"),
+            media_type="application/json",
+            format="jaykar-indexed-rotation-json",
+            metadata={
+                **reference.metadata,
+                "supplier": self.source_name,
+                "source_root": root,
+                "source_transport": "original_numbered_jpeg_1_to_256",
+                "supplier_original_bytes_verified": True,
+                "source_frame_sha256_distinct": len(hashes),
+            },
+        )
