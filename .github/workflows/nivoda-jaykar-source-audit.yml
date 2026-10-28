@@ -1,0 +1,50 @@
+name: Nivoda and Jaykar source layout audit
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/nivoda-jaykar-source-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect-public-source-layout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Probe exact published public source URLs (bounded read only)
+        shell: bash
+        run: |
+          python - <<'PY'
+          import re
+          from urllib.request import Request, urlopen
+          from urllib.error import HTTPError, URLError
+          urls = [
+              "https://nivoda-inhousemedia.s3.amazonaws.com/inhouse-360-787620286",
+              "https://nivoda-inhousemedia.s3.amazonaws.com/inhouse-360-787620286/",
+              "https://ds-360.jaykar.co.in/ds360/LG825640511/VIDEO/LG825640511.html",
+              "https://jaykar.co.in/DS360VIDEO/dashboard/ds_360_video.php?q=https%3A%2F%2Fds-360.jaykar.co.in%2Fds360%2FLG825640511%2FVIDEO%2FLG825640511.html",
+          ]
+          for url in urls:
+              print("\\n=== ", url, flush=True)
+              for method in ("HEAD", "GET"):
+                  try:
+                      headers = {"User-Agent": "Mozilla/5.0 (compatible; SparklesSourceAudit/1.0)"}
+                      if method == "GET": headers["Range"] = "bytes=0-16383"
+                      with urlopen(Request(url, headers=headers, method=method), timeout=20) as response:
+                          print(method, response.status, response.geturl(),
+                                response.headers.get("Content-Type"),
+                                response.headers.get("Content-Length"),
+                                response.headers.get("Content-Range"), flush=True)
+                          if method == "GET":
+                              sample = response.read(16384)
+                              print("first_bytes", repr(sample[:96]), flush=True)
+                              if b"<" in sample[:100] or b"src=" in sample or b"frame" in sample.lower():
+                                  decoded = sample.decode("utf-8", errors="replace")
+                                  print("text_excerpt", decoded[:11000], flush=True)
+                                  print("links", re.findall(r'(?:src|href)=[\\\'\\"](.*?)[\\\'\\"]', decoded, re.I)[:30], flush=True)
+                  except (HTTPError, URLError, TimeoutError, ValueError) as exc:
+                      print(method, type(exc).__name__, str(exc)[:400], flush=True)
+          PY
