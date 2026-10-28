@@ -236,16 +236,6 @@ class Loupe360CertificateResolver:
     @staticmethod
     def _is_direct_video_url(value: str) -> bool:
         parts = urlsplit(value)
-        # Nivoda's in-house S3 media is an MP4 object with no file extension.
-        # Audit: https://github.com/choonkiatlee/sparkles/actions/runs/40785964234
-        if (
-            parts.scheme == "https"
-            and parts.netloc.lower() == "nivoda-inhousemedia.s3.amazonaws.com"
-            and not parts.query
-            and not parts.fragment
-            and re.fullmatch(r"/inhouse-360-[0-9]{9}", parts.path)
-        ):
-            return True
         return (
             parts.scheme in {"http", "https"}
             and bool(parts.netloc)
@@ -360,12 +350,6 @@ class Loupe360CertificateResolver:
                 # media according to the *URL's actual wire format*, never
                 # claim it is a 256-frame rotation.
                 is_video = self._is_direct_video_url(locator)
-                if (
-                    is_video
-                    and urlsplit(locator).netloc.lower() == "nivoda-inhousemedia.s3.amazonaws.com"
-                    and locator.rsplit("-", 1)[-1] != report.removeprefix("LG")
-                ):
-                    raise ValueError("Nivoda in-house MP4 does not match exact IGI certificate")
                 candidate_metadata = {
                     **metadata,
                     "loupe360_v360_id": v360.get("id"),
