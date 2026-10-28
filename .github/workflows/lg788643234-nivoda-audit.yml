@@ -219,3 +219,60 @@ jobs:
                       except Exception as exc:
                           print(ext,i,mode,"error=",type(exc).__name__)
           PY
+
+      - name: Validate all 256 certificate-matched Pixorac JPEGs read-only
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import base64, concurrent.futures, hashlib, json
+          import urllib.error, urllib.parse, urllib.request
+          endpoint="https://g.nivoda.com/graphql-public-loupe360"
+          report="LG788643234"
+          query=("query($cert:String!){certificate_by_cert_number(cert_number:$cert)"
+                 "{certNumber lab v360{url frame_count top_index}}}")
+          req=urllib.request.Request(endpoint,method="POST",
+                data=json.dumps({"query":query,"variables":{"cert":report}}).encode(),
+                headers={"Content-Type":"application/json"})
+          with urllib.request.urlopen(req,timeout=20) as response:
+              d=json.load(response)["data"]["certificate_by_cert_number"]
+          v=d["v360"]; root=v["url"].rstrip("/")
+          p=urllib.parse.urlsplit(root)
+          assert d["certNumber"]==report and str(d["lab"]).upper()=="IGI"
+          assert p.scheme=="https" and p.netloc=="assets-images.pixorac.com"
+          assert p.query=="" and p.fragment=="" and p.path.count("/")==1
+          token=p.path.strip("/")
+          decoded=base64.urlsafe_b64decode(token+"="*(-len(token)%4)).decode()
+          assert decoded=="https://nivoda-inhousemedia.s3.amazonaws.com/inhouse-360-788643234"
+          assert v["frame_count"]==256 and v["top_index"]==254
+          headers={"User-Agent":("Mozilla/5.0 (X11; Linux x86_64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123 Safari/537.36"),
+                   "Referer":"https://loupe360.com/",
+                   "Accept":"image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+                   "Accept-Encoding":"identity"}
+          def get_frame(index):
+              url=f"{root}/{index}.jpg"
+              try:
+                  with urllib.request.urlopen(
+                      urllib.request.Request(url,headers=headers),timeout=20
+                  ) as response:
+                      payload=response.read(1024*1024+1)
+                      if response.status!=200 or response.url!=url:
+                          return(index, "bad-status-or-redirect", "")
+                      if len(payload)>1024*1024 or not payload.startswith(b"\xff\xd8\xff") or not payload.endswith(b"\xff\xd9"):
+                          return(index, "bad-jpeg", "")
+                      return(index,"jpeg",hashlib.sha256(payload).hexdigest())
+              except urllib.error.HTTPError as exc:
+                  return(index,"http-"+str(exc.code),"")
+              except Exception as exc:
+                  return(index,type(exc).__name__,"")
+          with concurrent.futures.ThreadPoolExecutor(max_workers=12) as pool:
+              result=list(pool.map(get_frame,range(256)))
+          good=[digest for index,status,digest in result if status=="jpeg"]
+          bad=[(index,status) for index,status,digest in result if status!="jpeg"]
+          print("reported_frame_count=",v["frame_count"])
+          print("retrieved_jpeg_count=",len(good))
+          print("distinct_jpeg_hashes=",len(set(good)))
+          print("bad_indices=",bad[:15])
+          print("complete_indexed_proxy=",len(good)==256 and len(set(good))>=240)
+          print("supplier_original_bytes_verified=False")
+          PY
