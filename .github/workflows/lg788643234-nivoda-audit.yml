@@ -164,3 +164,58 @@ jobs:
           print("complete_indexed_proxy_available=", len(good)==256 and len(set(good))>=240)
           print("proxy_originality=not_verified_against_supplier")
           PY
+
+      - name: Probe existing Pixorac browser image format and ordinary headers
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import base64, json, urllib.error, urllib.parse, urllib.request
+          endpoint = "https://g.nivoda.com/graphql-public-loupe360"
+          report = "LG788643234"
+          exact_source = "https://nivoda-inhousemedia.s3.amazonaws.com/inhouse-360-788643234"
+          query = ("query($cert:String!){certificate_by_cert_number(cert_number:$cert)"
+                   "{certNumber lab v360{url frame_count top_index}}}")
+          request = urllib.request.Request(endpoint, method="POST",
+                      data=json.dumps({"query":query,"variables":{"cert":report}}).encode(),
+                      headers={"Content-Type":"application/json"})
+          try:
+              with urllib.request.urlopen(request, timeout=12) as response:
+                  d=json.load(response)["data"]["certificate_by_cert_number"]
+              v=d["v360"]; root=v["url"].rstrip("/")
+              p=urllib.parse.urlsplit(root)
+              assert d["certNumber"]==report and d["lab"].upper()=="IGI"
+              assert p.scheme=="https" and p.netloc=="assets-images.pixorac.com"
+              assert p.query=="" and p.fragment=="" and len(p.path)>20 and p.path.count("/")==1
+              token=p.path.strip("/")
+              decoded=base64.urlsafe_b64decode(token+"="*(-len(token)%4)).decode()
+              assert decoded==exact_source and v["frame_count"]==256
+          except Exception as exc:
+              print("provenance_failed=",type(exc).__name__,str(exc)[:100])
+              raise SystemExit(0)
+          print("source=certificate-matched-pixorac-mp4-wrapper")
+          print("frame_count=", v.get("frame_count"))
+          for ext in ("webp","jpg"):
+              for i in (0,254):
+                  for mode in ("bare","browser"):
+                      headers={"Accept":"image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+                               "Accept-Encoding":"identity"}
+                      if mode=="browser":
+                          headers["User-Agent"]=("Mozilla/5.0 (X11; Linux x86_64) "
+                              "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123 Safari/537.36")
+                          headers["Referer"]="https://loupe360.com/"
+                      url=f"{root}/{i}.{ext}"
+                      request=urllib.request.Request(url,headers=headers)
+                      try:
+                          with urllib.request.urlopen(request,timeout=10) as response:
+                              blob=response.read(1024*1024+1)
+                              valid=(blob[:4]==b"RIFF" and blob[8:12]==b"WEBP"
+                                     if ext=="webp" else blob[:3]==b"\xff\xd8\xff")
+                              print(ext,i,mode,"http=",response.status,
+                                   "type=",response.headers.get("Content-Type"),
+                                   "length=",len(blob),"valid_image=",valid,
+                                   "source_host_unchanged=",urllib.parse.urlsplit(response.url).netloc==p.netloc)
+                      except urllib.error.HTTPError as exc:
+                          print(ext,i,mode,"http=",exc.code)
+                      except Exception as exc:
+                          print(ext,i,mode,"error=",type(exc).__name__)
+          PY
