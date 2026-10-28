@@ -761,7 +761,7 @@ class JaykarRotationDownloader:
             raise ValueError("Jaykar rotation requires matching IGI lab")
         locator = reference.locator or ""
         parts = urlsplit(locator)
-        if (parts.scheme != "https" or parts.query == "" and parts.fragment or
+        if (parts.scheme != "https" or parts.fragment or
                 parts.username is not None or parts.password is not None):
             raise ValueError("Invalid Jaykar URL")
         if (parts.netloc.lower() == "jaykar.co.in" and

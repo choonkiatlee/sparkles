@@ -360,6 +360,12 @@ class Loupe360CertificateResolver:
                 # media according to the *URL's actual wire format*, never
                 # claim it is a 256-frame rotation.
                 is_video = self._is_direct_video_url(locator)
+                if (
+                    is_video
+                    and urlsplit(locator).netloc.lower() == "nivoda-inhousemedia.s3.amazonaws.com"
+                    and locator.rsplit("-", 1)[-1] != report.removeprefix("LG")
+                ):
+                    raise ValueError("Nivoda in-house MP4 does not match exact IGI certificate")
                 candidate_metadata = {
                     **metadata,
                     "loupe360_v360_id": v360.get("id"),

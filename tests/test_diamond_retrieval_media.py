@@ -220,6 +220,16 @@ class LoupeResolutionTests(unittest.TestCase):
         self.assertEqual(evidence.metadata["container"], "mp4")
         self.assertEqual(evidence.metadata["sha256"], __import__("hashlib").sha256(payload).hexdigest())
 
+    def test_nivoda_inhouse_mp4_must_match_certificate_number(self):
+        wrong = "https://nivoda-inhousemedia.s3.amazonaws.com/inhouse-360-787620286"
+        http = FakeHttpClient(
+            posts={GRAPHQL_URL: (
+                _graphql_payload(v360_url=wrong), "application/json",
+            )}
+        )
+        with self.assertRaisesRegex(ValueError, "does not match exact IGI certificate"):
+            Loupe360CertificateResolver(http).resolve(_listing(), _loupe_reference())
+
     def test_nivoda_extensionless_video_match_is_narrow(self):
         valid = "https://nivoda-inhousemedia.s3.amazonaws.com/inhouse-360-787620286"
         resolver = Loupe360CertificateResolver()
