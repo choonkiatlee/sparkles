@@ -15,6 +15,7 @@ from .motion_sources import (
     FilesOnSkyRotationDownloader,
     Gem360RotationDownloader,
     Labgrowns3RotationDownloader,
+    JaykarRotationDownloader,
     RemoteV360RotationDownloader,
     WorkshopRotationDownloader,
 )
@@ -81,6 +82,7 @@ def default_config(http_client: HttpClient | None = None) -> RetrievalConfig:
             Labgrowns3RotationDownloader(client),
             FilesOnSkyRotationDownloader(client),
             Gem360RotationDownloader(client),
+            JaykarRotationDownloader(client),
             WorkshopRotationDownloader(client),
             Loupe360ProxyRotationDownloader(client),
             Core360RotationDownloader(client),

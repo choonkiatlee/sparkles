@@ -24,6 +24,7 @@ from .motion_sources import (
     D360RotationDownloader,
     DiajewelRotationDownloader,
     Labgrowns3RotationDownloader,
+    JaykarRotationDownloader,
     RemoteV360RotationDownloader,
     WorkshopRotationDownloader,
 )
@@ -95,6 +96,7 @@ __all__ = [
     "D360RotationDownloader",
     "DiajewelRotationDownloader",
     "Labgrowns3RotationDownloader",
+    "JaykarRotationDownloader",
     "RemoteV360RotationDownloader",
     "DirectVideoDownloader",
     "DirectVideoProcessor",
