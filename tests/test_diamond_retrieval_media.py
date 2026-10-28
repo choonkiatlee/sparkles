@@ -187,7 +187,7 @@ class LoupeResolutionTests(unittest.TestCase):
     def test_nivoda_extensionless_mp4_uses_existing_video_pipeline(self):
         report = "LG787620286"
         url = "https://nivoda-inhousemedia.s3.amazonaws.com/inhouse-360-787620286"
-        payload = b"\\x00\\x00\\x00\\x18ftypisom\\x00\\x00\\x02\\x00isommp41fixture"
+        payload = bytes.fromhex("000000186674797069736f6d0000020069736f6d6d70343166697874757265")
         http = FakeHttpClient(
             posts={
                 GRAPHQL_URL: (
