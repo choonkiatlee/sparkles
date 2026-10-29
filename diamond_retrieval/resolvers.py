@@ -234,6 +234,24 @@ class Loupe360CertificateResolver:
         )
 
     @staticmethod
+    def _is_certificate_matched_nivoda_mp4_proxy_source(value: str, report: str) -> bool:
+        """Allow Pixorac's exact-report JPEG cache for Nivoda in-house MP4 wrappers.
+
+        The source MP4 itself is never ingested or treated as 256 originals.
+        An unrelated Nivoda object cannot be attached to another certificate.
+        """
+        if not isinstance(report, str) or not re.fullmatch(r"LG[0-9]{9}", report):
+            return False
+        parts = urlsplit(value)
+        match = re.fullmatch(r"/inhouse-360-([0-9]{9})", parts.path)
+        return (
+            parts.scheme == "https"
+            and parts.netloc.lower() == "nivoda-inhousemedia.s3.amazonaws.com"
+            and not parts.query and not parts.fragment
+            and match is not None and report == "LG" + match.group(1)
+        )
+
+    @staticmethod
     def _is_direct_video_url(value: str) -> bool:
         parts = urlsplit(value)
         return (
@@ -393,7 +411,10 @@ class Loupe360CertificateResolver:
                     and proxy_parts.netloc == "assets-images.pixorac.com"
                     and not proxy_parts.query and not proxy_parts.fragment
                     and re.fullmatch(r"/[A-Za-z0-9_-]{20,1024}={0,2}", proxy_parts.path)
-                    and self._is_supported_rotation_url(locator)
+                    and (
+                        self._is_supported_rotation_url(locator)
+                        or self._is_certificate_matched_nivoda_mp4_proxy_source(locator, report)
+                    )
                     and v360.get("frame_count") == 256
                     and not isinstance(v360.get("frame_count"), bool)
                     and not isinstance(top, bool)
