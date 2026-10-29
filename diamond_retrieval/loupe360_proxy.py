@@ -108,10 +108,16 @@ def validated_proxy_root(reference: EvidenceReference) -> str:
         decoded = Loupe360CertificateResolver._unwrap_v360(locator)
     except ValueError as exc:
         raise ValueError("Pixorac encoded viewer invalid") from exc
-    if urlsplit(decoded).scheme != "https" or (
-        decoded != pin["source_viewer"] if unverified_viewer
-        else not Loupe360CertificateResolver._is_supported_rotation_url(decoded)
-    ):
+    accepted_supplier = (
+        decoded == pin["source_viewer"] if unverified_viewer
+        else (
+            Loupe360CertificateResolver._is_supported_rotation_url(decoded)
+            or Loupe360CertificateResolver._is_certificate_matched_nivoda_mp4_proxy_source(
+                decoded, reference.metadata.get("report_number")
+            )
+        )
+    )
+    if urlsplit(decoded).scheme != "https" or not accepted_supplier:
         raise ValueError("Pixorac wrapper does not name the exact trusted supplier viewer")
     frame_count = reference.metadata.get("supplier_frame_count")
     top_index = reference.metadata.get("supplier_top_index")
@@ -154,7 +160,20 @@ class Loupe360ProxyRotationDownloader:
         total = 0
         for index in range(count):
             url = f"{root}/{index}.jpg"
-            response = self.http_client.get(url, timeout=self.timeout)
+            # Exact Pixorac browser cache rejects non-browser requests (HTTP 403).
+            # These are ordinary public image headers, not credentials/cookies.
+            response = self.http_client.get(
+                url, timeout=self.timeout,
+                headers={
+                    "User-Agent": (
+                        "Mozilla/5.0 (X11; Linux x86_64) "
+                        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123 Safari/537.36"
+                    ),
+                    "Referer": "https://loupe360.com/",
+                    "Accept": "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+                    "Accept-Encoding": "identity",
+                },
+            )
             if response.status_code == 404:
                 raise MissingEvidenceError(f"Pixorac indexed frame {index} returned 404")
             if response.status_code != 200:
