@@ -243,7 +243,7 @@ jobs:
           token=p.path.strip("/")
           decoded=base64.urlsafe_b64decode(token+"="*(-len(token)%4)).decode()
           assert decoded=="https://nivoda-inhousemedia.s3.amazonaws.com/inhouse-360-788643234"
-          assert v["frame_count"]==256 and v["top_index"]==254
+          assert v["frame_count"]==256 and int(v["top_index"])==254
           headers={"User-Agent":("Mozilla/5.0 (X11; Linux x86_64) "
                     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123 Safari/537.36"),
                    "Referer":"https://loupe360.com/",
