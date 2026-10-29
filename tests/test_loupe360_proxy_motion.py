@@ -452,3 +452,94 @@ class V360DiamondsCertificateProxyTests(unittest.TestCase):
                 self.assertFalse(any(
                     key.startswith(self.ROOT + "/") for _, key in bad.calls
                 ))
+
+
+class NivodaInhouseMp4PixoracTests(unittest.TestCase):
+    """LG788643234: public Pixorac JPEGs are usable even when wrapped S3 is MP4."""
+
+    REPORT = "LG788643234"
+    SOURCE = "https://nivoda-inhousemedia.s3.amazonaws.com/inhouse-360-788643234"
+    ROOT = "https://assets-images.pixorac.com/" + base64.urlsafe_b64encode(
+        SOURCE.encode()
+    ).decode().rstrip("=")
+
+    def _reference(self):
+        return EvidenceReference(
+            identifier="fixture:loupe-rotation",
+            kind=ROTATION,
+            locator="loupe360-report:" + self.REPORT,
+            retrieval_key="loupe360-report:" + self.REPORT,
+            provenance=(),
+            metadata={
+                "resolver": "loupe360_certificate",
+                "lab": "IGI",
+                "report_number": self.REPORT,
+            },
+        )
+
+    def _resolve(self, http):
+        from types import SimpleNamespace
+        from diamond_retrieval.resolvers import Loupe360CertificateResolver
+        listing = SimpleNamespace(metadata=SimpleNamespace(lab="IGI"), url="fixture:listing")
+        refs = Loupe360CertificateResolver(http).resolve(listing, self._reference())
+        return [ref for ref in refs
+                if ref.metadata.get("loupe360_proxy_exact_certificate") is True]
+
+    def test_complete_256_frame_proxy_with_browser_headers(self):
+        root = self.ROOT
+
+        class BrowserHeaderGatedHttp(FakeHttp):
+            def get(self, url, *, timeout, headers=None):
+                if url.startswith(root + "/"):
+                    self.calls.append(("GET", url))
+                    if (not headers
+                            or not headers.get("User-Agent", "").startswith("Mozilla/")
+                            or headers.get("Referer") != "https://loupe360.com/"):
+                        return HttpResponse(403, url, {}, b"")
+                    index = int(url[len(root)+1:-4])
+                    return HttpResponse(
+                        200, url, {"Content-Type": "image/jpeg"}, frame(index)
+                    )
+                return super().get(url, timeout=timeout, headers=headers)
+
+        http = BrowserHeaderGatedHttp(
+            graphql=certificate(report=self.REPORT, proxy_root=self.ROOT, top="254")
+        )
+        refs = self._resolve(http)
+        self.assertEqual(len(refs), 1)
+        ref = refs[0]
+        downloader = Loupe360ProxyRotationDownloader(http)
+        self.assertTrue(downloader.supports(ref))
+        raw = downloader.download(ref)
+        motion = IndexedProxyRotationProcessor().process(raw)[0]
+        self.assertEqual(len(motion.frames), 256)
+        self.assertEqual(len({f.sha256 for f in motion.frames}), 256)
+        self.assertEqual(motion.face_up_hint, 254)
+        self.assertEqual(motion.metadata["supplier"], "loupe360-pixorac-proxy")
+        self.assertFalse(motion.metadata["supplier_original_bytes_verified"])
+        self.assertEqual(len([c for c in http.calls if c[0] == "GET"]), 256)
+
+    def test_wrong_report_or_unsafe_s3_path_never_authorises_proxy(self):
+        from diamond_retrieval.resolvers import Loupe360CertificateResolver
+        source = self.SOURCE
+        for bad in (
+            source.replace("788643234", "000000000"),
+            source.replace("s3.amazonaws.com", "s3.amazonaws.com.evil.test"),
+            source + "?other=1",
+            source + "/0.jpg",
+            "http://" + source.removeprefix("https://"),
+        ):
+            with self.subTest(source=bad):
+                self.assertFalse(
+                    Loupe360CertificateResolver._is_certificate_matched_nivoda_mp4_proxy_source(
+                        bad, self.REPORT
+                    )
+                )
+                root = "https://assets-images.pixorac.com/" + base64.urlsafe_b64encode(
+                    bad.encode()
+                ).decode().rstrip("=")
+                http = FakeHttp(graphql=certificate(
+                    report=self.REPORT, proxy_root=root, top="254"
+                ))
+                self.assertEqual(self._resolve(http), [])
+                self.assertFalse(any(call[0] == "GET" for call in http.calls))
