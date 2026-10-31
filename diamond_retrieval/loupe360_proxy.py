@@ -33,7 +33,7 @@ from .resolvers import Loupe360CertificateResolver
 FRAME_COUNT = 256
 FRAME_LIMIT_BYTES = 1024 * 1024
 TOTAL_LIMIT_BYTES = 25 * 1024 * 1024
-_TOKEN = re.compile(r"/[A-Za-z0-9_-]{20,1024}={0,2}\Z")
+_TOKEN = re.compile(r"/[A-Za-z0-9_+/-]{20,1024}={0,2}\Z")
 
 
 def validated_proxy_root(reference: EvidenceReference) -> str:
