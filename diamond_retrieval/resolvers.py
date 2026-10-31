@@ -122,7 +122,7 @@ class Loupe360CertificateResolver:
         parts = urlsplit(value)
         if parts.netloc.lower() != "assets-images.pixorac.com":
             return value
-        token = parts.path.strip("/").split("/", 1)[0]
+        token = parts.path.removeprefix("/")
         if not token:
             raise ValueError("Loupe360 v360 wrapper has no encoded supplier URL")
         try:
@@ -167,6 +167,20 @@ class Loupe360CertificateResolver:
             and bool(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,90}", query["d"][0]))
         ):
             return True
+        # Public certificate LG739556391 advertises this BlissVideos viewer.
+        # Only its exact single-key player route is eligible for the Pixorac
+        # fallback; this does not add a direct BlissVideos downloader.
+        if (
+            host == "diamond.blissvideos.com"
+            and parts.scheme == "https"
+            and parts.path == "/"
+            and not parts.fragment
+            and set(query) == {"d"}
+            and len(query["d"]) == 1
+            and bool(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,90}", query["d"][0]))
+        ):
+            return True
+
         # Exact IGI/Loupe metadata sometimes points to Gem360's HTTPS
         # Vision360 player. A matched certificate plus this narrow supplier
         # contract permits the separately validated Pixorac indexed fallback;
@@ -410,7 +424,7 @@ class Loupe360CertificateResolver:
                     and proxy_parts.scheme == "https"
                     and proxy_parts.netloc == "assets-images.pixorac.com"
                     and not proxy_parts.query and not proxy_parts.fragment
-                    and re.fullmatch(r"/[A-Za-z0-9_-]{20,1024}={0,2}", proxy_parts.path)
+                    and re.fullmatch(r"/[A-Za-z0-9_+/-]{20,1024}={0,2}", proxy_parts.path)
                     and (
                         self._is_supported_rotation_url(locator)
                         or self._is_certificate_matched_nivoda_mp4_proxy_source(locator, report)
