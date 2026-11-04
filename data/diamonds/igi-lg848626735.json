@@ -1,0 +1,396 @@
+{
+  "diamond_metadata": {
+    "attribution": {
+      "carat": {
+        "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.FDB51B737&limit=1",
+        "source": "diyona_public_supabase"
+      },
+      "clarity": {
+        "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.FDB51B737&limit=1",
+        "source": "diyona_public_supabase"
+      },
+      "colour": {
+        "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.FDB51B737&limit=1",
+        "source": "diyona_public_supabase"
+      },
+      "dimensions": {
+        "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.FDB51B737&limit=1",
+        "source": "diyona_public_supabase"
+      },
+      "origin": {
+        "locator": "https://diyona.com/pages/diamond-detail?sku=FDB51B737",
+        "source": "diyona_listing"
+      },
+      "reported_proportions": {
+        "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.FDB51B737&limit=1",
+        "source": "diyona_public_supabase"
+      },
+      "shape": {
+        "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.FDB51B737&limit=1",
+        "source": "diyona_public_supabase"
+      }
+    },
+    "carat": "3.01",
+    "clarity": "VVS1",
+    "colour": "D",
+    "dimensions": [
+      7.89,
+      7.84,
+      5.37
+    ],
+    "origin": "lab-grown",
+    "reported_proportions": {
+      "depth_percent": 68.5,
+      "fluorescence": "None",
+      "length_width_ratio": 1.01,
+      "polish": "Excellent",
+      "symmetry": "Excellent",
+      "table_percent": 53.0
+    },
+    "shape": "Asscher"
+  },
+  "evidence": [
+    {
+      "dimensions": [
+        786,
+        721
+      ],
+      "identifier": "diyona_public_supabase:FDB51B737:still:0",
+      "identity_observations": [],
+      "kind": "still",
+      "metadata": {
+        "format": "image",
+        "media_type": "image/jpeg",
+        "sha256": "e49e23bc40f4c02127f95b0c0c805c0edb3c3944dd5a84f201e3eb5b2bea677e"
+      },
+      "payload_asset": {
+        "byte_count": 40834,
+        "media_type": "image/jpeg",
+        "sha256": "e49e23bc40f4c02127f95b0c0c805c0edb3c3944dd5a84f201e3eb5b2bea677e",
+        "storage": {
+          "backend": "github_release",
+          "locator": "sparkles-diamond-igi-lg848626735/asset-e49e23bc40f4c02127f95b0c0c805c0edb3c3944dd5a84f201e3eb5b2bea677e.jpg",
+          "url": "https://github.com/choonkiatlee/sparkles/releases/download/sparkles-diamond-igi-lg848626735/asset-e49e23bc40f4c02127f95b0c0c805c0edb3c3944dd5a84f201e3eb5b2bea677e.jpg"
+        }
+      },
+      "provenance": [
+        {
+          "locator": "https://diyona.com/pages/diamond-detail?sku=FDB51B737",
+          "source": "diyona_listing"
+        },
+        {
+          "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.FDB51B737&limit=1",
+          "source": "diyona_public_supabase"
+        },
+        {
+          "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.FDB51B737&limit=1",
+          "source": "diyona_public_supabase"
+        },
+        {
+          "locator": "https://assets-images-saas.nivoda.com/25822311-a33f-4514-87f9-0ec1d3517d99-63e209ed.jpg?d_id=d4f8d0db-5061-487b-95ff-536566adbc3b&c_id=d4bcbf93-b298-49fc-b02b-8f840de7eda7&f_id=592b0a50-a7f5-42a9-a21e-7f55c2588f0f&type=csv",
+          "source": "still_image"
+        }
+      ],
+      "record_key": "c28cb993aaa719022111a4bd8864e83df32b6a0d11c1bcc52b5040a475495e90",
+      "status": "success"
+    }
+  ],
+  "id": "igi-lg848626735",
+  "identity": {
+    "lab": "IGI",
+    "report_number": "LG848626735"
+  },
+  "listings": [
+    {
+      "currency": "USD",
+      "observed_at": "2026-11-04T21:19:40.063588Z",
+      "price": "897.73",
+      "retailer": "diyona.com",
+      "retailer_sku": "FDB51B737",
+      "tax_basis": "public API USD price; storefront/tax basis not verified",
+      "url": "https://diyona.com/pages/diamond-detail?sku=FDB51B737"
+    }
+  ],
+  "retrievals": [
+    {
+      "attempts": [
+        {
+          "kind": "certificate",
+          "locator": "https://dnyvsyhu34v1w.cloudfront.net/pdf/LG848626735.pdf",
+          "message": "Certificate endpoint did not return PDF bytes",
+          "provenance": [
+            {
+              "locator": "https://diyona.com/pages/diamond-detail?sku=FDB51B737",
+              "source": "diyona_listing"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.FDB51B737&limit=1",
+              "source": "diyona_public_supabase"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.FDB51B737&limit=1",
+              "source": "diyona_public_supabase"
+            }
+          ],
+          "reference_identifier": "diyona_public_supabase:LG848626735:certificate",
+          "retrieval_key": "https://dnyvsyhu34v1w.cloudfront.net/pdf/LG848626735.pdf",
+          "status": "invalid_payload"
+        },
+        {
+          "kind": "still",
+          "locator": "https://assets-images-saas.nivoda.com/25822311-a33f-4514-87f9-0ec1d3517d99-63e209ed.jpg?d_id=d4f8d0db-5061-487b-95ff-536566adbc3b&c_id=d4bcbf93-b298-49fc-b02b-8f840de7eda7&f_id=592b0a50-a7f5-42a9-a21e-7f55c2588f0f&type=csv",
+          "message": null,
+          "provenance": [
+            {
+              "locator": "https://diyona.com/pages/diamond-detail?sku=FDB51B737",
+              "source": "diyona_listing"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.FDB51B737&limit=1",
+              "source": "diyona_public_supabase"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.FDB51B737&limit=1",
+              "source": "diyona_public_supabase"
+            }
+          ],
+          "reference_identifier": "diyona_public_supabase:FDB51B737:still:0",
+          "retrieval_key": "https://assets-images-saas.nivoda.com/25822311-a33f-4514-87f9-0ec1d3517d99-63e209ed.jpg?d_id=d4f8d0db-5061-487b-95ff-536566adbc3b&c_id=d4bcbf93-b298-49fc-b02b-8f840de7eda7&f_id=592b0a50-a7f5-42a9-a21e-7f55c2588f0f&type=csv",
+          "status": "success"
+        },
+        {
+          "kind": "rotation",
+          "locator": "https://loupe360.com/diamond/LG848626735/video/500/500?d_id=d4f8d0db-5061-487b-95ff-536566adbc3b&f_id=592b0a50-a7f5-42a9-a21e-7f55c2588f0f&type=csv",
+          "message": null,
+          "provenance": [
+            {
+              "locator": "https://diyona.com/pages/diamond-detail?sku=FDB51B737",
+              "source": "diyona_listing"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.FDB51B737&limit=1",
+              "source": "diyona_public_supabase"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.FDB51B737&limit=1",
+              "source": "diyona_public_supabase"
+            }
+          ],
+          "reference_identifier": "diyona_public_supabase:LG848626735:loupe360:rotation",
+          "retrieval_key": "loupe360-report:LG848626735",
+          "status": "resolved"
+        },
+        {
+          "kind": "video",
+          "locator": "https://loupe360.com/diamond/LG848626735/video/500/500?d_id=d4f8d0db-5061-487b-95ff-536566adbc3b&f_id=592b0a50-a7f5-42a9-a21e-7f55c2588f0f&type=csv",
+          "message": "resolution already visited",
+          "provenance": [
+            {
+              "locator": "https://diyona.com/pages/diamond-detail?sku=FDB51B737",
+              "source": "diyona_listing"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.FDB51B737&limit=1",
+              "source": "diyona_public_supabase"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.FDB51B737&limit=1",
+              "source": "diyona_public_supabase"
+            }
+          ],
+          "reference_identifier": "diyona_public_supabase:LG848626735:loupe360:video",
+          "retrieval_key": "loupe360-report:LG848626735",
+          "status": "duplicate"
+        },
+        {
+          "kind": "rotation",
+          "locator": "https://views.varnivideo.com/index.html?d=836-327",
+          "message": "no downloader supports reference",
+          "provenance": [
+            {
+              "locator": "https://diyona.com/pages/diamond-detail?sku=FDB51B737",
+              "source": "diyona_listing"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.FDB51B737&limit=1",
+              "source": "diyona_public_supabase"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.FDB51B737&limit=1",
+              "source": "diyona_public_supabase"
+            },
+            {
+              "locator": "https://g.nivoda.com/graphql-public-loupe360",
+              "source": "loupe360_exact_certificate"
+            }
+          ],
+          "reference_identifier": "diyona_public_supabase:LG848626735:loupe360:rotation:supplier-rotation",
+          "retrieval_key": "https://views.varnivideo.com/index.html?d=836-327",
+          "status": "unsupported"
+        }
+      ],
+      "certificate_link": "https://dnyvsyhu34v1w.cloudfront.net/pdf/LG848626735.pdf",
+      "completion_reasons": [
+        "missing successful certificate evidence",
+        "missing successful motion evidence",
+        "one or more requested evidence assets failed"
+      ],
+      "identity_comparisons": [
+        {
+          "field": "report_number",
+          "outcome": "missing",
+          "provenance": [
+            {
+              "locator": "https://diyona.com/pages/diamond-detail?sku=FDB51B737",
+              "source": "diyona_listing"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.FDB51B737&limit=1",
+              "source": "diyona_public_supabase"
+            }
+          ],
+          "values": [
+            "LG848626735"
+          ]
+        },
+        {
+          "field": "lab",
+          "outcome": "missing",
+          "provenance": [
+            {
+              "locator": "https://diyona.com/pages/diamond-detail?sku=FDB51B737",
+              "source": "diyona_listing"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.FDB51B737&limit=1",
+              "source": "diyona_public_supabase"
+            }
+          ],
+          "values": [
+            "IGI"
+          ]
+        },
+        {
+          "field": "origin",
+          "outcome": "missing",
+          "provenance": [
+            {
+              "locator": "https://diyona.com/pages/diamond-detail?sku=FDB51B737",
+              "source": "diyona_listing"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.FDB51B737&limit=1",
+              "source": "diyona_public_supabase"
+            }
+          ],
+          "values": [
+            "lab-grown"
+          ]
+        },
+        {
+          "field": "shape",
+          "outcome": "missing",
+          "provenance": [
+            {
+              "locator": "https://diyona.com/pages/diamond-detail?sku=FDB51B737",
+              "source": "diyona_listing"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.FDB51B737&limit=1",
+              "source": "diyona_public_supabase"
+            }
+          ],
+          "values": [
+            "Asscher"
+          ]
+        },
+        {
+          "field": "carat",
+          "outcome": "missing",
+          "provenance": [
+            {
+              "locator": "https://diyona.com/pages/diamond-detail?sku=FDB51B737",
+              "source": "diyona_listing"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.FDB51B737&limit=1",
+              "source": "diyona_public_supabase"
+            }
+          ],
+          "values": [
+            "3.01"
+          ]
+        },
+        {
+          "field": "colour",
+          "outcome": "missing",
+          "provenance": [
+            {
+              "locator": "https://diyona.com/pages/diamond-detail?sku=FDB51B737",
+              "source": "diyona_listing"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.FDB51B737&limit=1",
+              "source": "diyona_public_supabase"
+            }
+          ],
+          "values": [
+            "D"
+          ]
+        },
+        {
+          "field": "clarity",
+          "outcome": "missing",
+          "provenance": [
+            {
+              "locator": "https://diyona.com/pages/diamond-detail?sku=FDB51B737",
+              "source": "diyona_listing"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.FDB51B737&limit=1",
+              "source": "diyona_public_supabase"
+            }
+          ],
+          "values": [
+            "VVS1"
+          ]
+        },
+        {
+          "field": "dimensions",
+          "outcome": "missing",
+          "provenance": [
+            {
+              "locator": "https://diyona.com/pages/diamond-detail?sku=FDB51B737",
+              "source": "diyona_listing"
+            },
+            {
+              "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.FDB51B737&limit=1",
+              "source": "diyona_public_supabase"
+            }
+          ],
+          "values": [
+            [
+              7.89,
+              7.84,
+              5.37
+            ]
+          ]
+        }
+      ],
+      "listing_url": "https://diyona.com/pages/diamond-detail?sku=FDB51B737",
+      "provenance": [
+        {
+          "locator": "https://diyona.com/pages/diamond-detail?sku=FDB51B737",
+          "source": "diyona_listing"
+        },
+        {
+          "locator": "https://ofjwrrqzzbcnmkkmlawl.supabase.co/rest/v1/public_diamonds?select=%2A&sku=eq.FDB51B737&limit=1",
+          "source": "diyona_public_supabase"
+        }
+      ],
+      "retrieved_at": "2026-11-04T21:19:40.063588Z",
+      "status": "partial"
+    }
+  ],
+  "schema": "sparkles-diamond-catalogue/1"
+}
