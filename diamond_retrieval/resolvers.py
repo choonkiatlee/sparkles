@@ -167,6 +167,19 @@ class Loupe360CertificateResolver:
             and bool(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,90}", query["d"][0]))
         ):
             return True
+        # Certificate LG848626735 supplies this exact VarniVideo route via
+        # Loupe360. Permit the certificate-bound indexed Pixorac fallback.
+        if (
+            host == "views.varnivideo.com"
+            and parts.scheme == "https"
+            and parts.path == "/index.html"
+            and not parts.fragment
+            and set(query) == {"d"}
+            and len(query["d"]) == 1
+            and bool(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,90}", query["d"][0]))
+        ):
+            return True
+
         # Public certificate LG739556391 advertises this BlissVideos viewer.
         # Only its exact single-key player route is eligible for the Pixorac
         # fallback; this does not add a direct BlissVideos downloader.
